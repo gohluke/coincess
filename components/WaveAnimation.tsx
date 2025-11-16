@@ -47,6 +47,7 @@ export function WaveCanvas() {
     }
 
     function init() {
+      if (!canvas) return
       resizeCanvas(canvas)
       waves.length = 0
 
@@ -75,11 +76,14 @@ export function WaveCanvas() {
     }
 
     function bounce(nodeArr: WaveNode) {
+      if (!canvas) return
       nodeArr.y = (waveHeight / 2) * Math.sin(nodeArr.tick / 20) + canvas.height / 2
       nodeArr.tick = nodeArr.tick + nodeArr.speed
     }
 
     function drawWave(obj: Wave) {
+      if (!canvas || !ctx) return
+      
       const diff = (a: number, b: number) => {
         return (b - a) / 2 + a
       }
@@ -113,6 +117,8 @@ export function WaveCanvas() {
     }
 
     function update() {
+      if (!canvas || !ctx) return
+      
       // Get background color from .wave-header element
       const waveHeader = document.querySelector(".wave-header")
       let fill = "rgb(255, 255, 255)"
@@ -142,6 +148,7 @@ export function WaveCanvas() {
 
     // Handle window resize
     const handleResize = () => {
+      if (!canvas) return
       resizeCanvas(canvas)
       // Reinitialize nodes for new width
       wavesRef.current.forEach((wave) => {
