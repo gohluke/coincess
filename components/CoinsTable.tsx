@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
-import { ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react"
+import { ArrowUpDown, TrendingUp, TrendingDown, ShoppingCart } from "lucide-react"
 
 interface Coin {
   id: string
@@ -262,6 +262,9 @@ export function CoinsTable() {
                   <ArrowUpDown className="h-4 w-4" />
                 </button>
               </th>
+              <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -312,6 +315,17 @@ export function CoinsTable() {
                 </td>
                 <td className="py-4 px-4 text-right text-gray-700 hidden lg:table-cell">
                   {formatLargeNumber(coin.total_volume)}
+                </td>
+                <td className="py-4 px-4 text-center">
+                  <a
+                    href={`https://trocador.app/?ticker_to=${coin.symbol.toLowerCase()}&ref=2dzDcvfQJY`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#7C3AED] text-white text-sm font-medium rounded-lg hover:bg-[#6D28D9] transition-colors"
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                    Buy
+                  </a>
                 </td>
               </tr>
             ))}

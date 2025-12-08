@@ -22,8 +22,11 @@ export function Header() {
             <Link href="/coins" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
               Coins
             </Link>
+            <Link href="/swap-guide" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+              Swap Guide
+            </Link>
             <Link href="/crypto-leverage-calculator" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-              Crypto Leverage Calculator
+              Calculator
             </Link>
             <Link href="/blog" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
               Blog
@@ -59,11 +62,18 @@ export function Header() {
               Coins
             </Link>
             <Link
+              href="/swap-guide"
+              className="block px-4 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Swap Guide
+            </Link>
+            <Link
               href="/crypto-leverage-calculator"
               className="block px-4 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Crypto Leverage Calculator
+              Calculator
             </Link>
             <Link
               href="/blog"
