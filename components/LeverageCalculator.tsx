@@ -216,7 +216,12 @@ export function LeverageCalculator() {
     return Object.keys(newErrors).length === 0
   }, [leverage, entryPrice, exitPrice, quantity])
 
-  const calculate = useCallback((type?: "margin" | "pnl" | "roe") => {
+  // Main calculation function - calculates derived values from primary inputs
+  // Note: We intentionally exclude initialMargin, pnl, roe from deps because:
+  // - The default calculation (no type) only WRITES to these, doesn't read them
+  // - The blur handlers pass current values via the type-specific logic
+  // - Including them would cause infinite re-render loops
+  const calculate = useCallback((type?: "margin" | "pnl" | "roe", inputValue?: string) => {
     const lev = parseNumber(leverage)
     const qty = parseNumber(quantity)
     const entry = parseNumber(entryPrice)
@@ -230,8 +235,8 @@ export function LeverageCalculator() {
     let calcExitPrice = exit
 
     // Calculate initial margin
-    if (type === "margin") {
-      const margin = parseNumber(initialMargin)
+    if (type === "margin" && inputValue !== undefined) {
+      const margin = parseNumber(inputValue)
       if (margin <= 0) return
       calcInitialMargin = margin
       calcQuantity = (margin * lev) / entry
@@ -244,8 +249,8 @@ export function LeverageCalculator() {
 
     // Calculate PNL
     let calcPnl: number
-    if (type === "pnl") {
-      const pnlValue = parseNumber(pnl)
+    if (type === "pnl" && inputValue !== undefined) {
+      const pnlValue = parseNumber(inputValue)
       calcPnl = pnlValue
       if (direction === "long") {
         calcExitPrice = calcQuantity > 0 ? pnlValue / calcQuantity + entry : entry
@@ -265,8 +270,8 @@ export function LeverageCalculator() {
 
     // Calculate ROE
     let calcRoe: number
-    if (type === "roe") {
-      const roeValue = parseNumber(roe)
+    if (type === "roe" && inputValue !== undefined) {
+      const roeValue = parseNumber(inputValue)
       calcRoe = roeValue
       calcPnl = (roeValue / 100) * calcInitialMargin
       if (direction === "long") {
@@ -289,25 +294,28 @@ export function LeverageCalculator() {
       liquidation = entry + entry / lev
     }
     setLiquidationPrice(formatNumber(Math.max(0, liquidation), 4))
-  }, [leverage, quantity, entryPrice, exitPrice, direction, initialMargin, pnl, roe])
+  }, [leverage, quantity, entryPrice, exitPrice, direction])
 
+  // Recalculate when primary inputs change
   useEffect(() => {
     if (leverage && quantity && entryPrice && exitPrice) {
       validate()
       calculate()
     }
-  }, [leverage, quantity, entryPrice, exitPrice, direction, validate, calculate])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leverage, quantity, entryPrice, exitPrice, direction, validate])
 
+  // Blur handlers pass current input values to avoid stale closures
   const handleMarginBlur = () => {
-    if (initialMargin) calculate("margin")
+    if (initialMargin) calculate("margin", initialMargin)
   }
 
   const handlePnlBlur = () => {
-    if (pnl) calculate("pnl")
+    if (pnl) calculate("pnl", pnl)
   }
 
   const handleRoeBlur = () => {
-    if (roe) calculate("roe")
+    if (roe) calculate("roe", roe)
   }
 
   const isProfitable = parseNumber(pnl) >= 0
