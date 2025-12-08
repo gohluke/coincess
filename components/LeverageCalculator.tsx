@@ -216,16 +216,6 @@ export function LeverageCalculator() {
     return Object.keys(newErrors).length === 0
   }, [leverage, entryPrice, exitPrice, quantity])
 
-  // Use refs to access current state values without adding them to dependencies
-  const initialMarginRef = useRef(initialMargin)
-  const pnlRef = useRef(pnl)
-  const roeRef = useRef(roe)
-  
-  // Keep refs in sync with state
-  useEffect(() => { initialMarginRef.current = initialMargin }, [initialMargin])
-  useEffect(() => { pnlRef.current = pnl }, [pnl])
-  useEffect(() => { roeRef.current = roe }, [roe])
-
   const calculate = useCallback((type?: "margin" | "pnl" | "roe") => {
     const lev = parseNumber(leverage)
     const qty = parseNumber(quantity)
@@ -241,7 +231,7 @@ export function LeverageCalculator() {
 
     // Calculate initial margin
     if (type === "margin") {
-      const margin = parseNumber(initialMarginRef.current)
+      const margin = parseNumber(initialMargin)
       if (margin <= 0) return
       calcInitialMargin = margin
       calcQuantity = (margin * lev) / entry
@@ -255,7 +245,7 @@ export function LeverageCalculator() {
     // Calculate PNL
     let calcPnl: number
     if (type === "pnl") {
-      const pnlValue = parseNumber(pnlRef.current)
+      const pnlValue = parseNumber(pnl)
       calcPnl = pnlValue
       if (direction === "long") {
         calcExitPrice = calcQuantity > 0 ? pnlValue / calcQuantity + entry : entry
@@ -276,7 +266,7 @@ export function LeverageCalculator() {
     // Calculate ROE
     let calcRoe: number
     if (type === "roe") {
-      const roeValue = parseNumber(roeRef.current)
+      const roeValue = parseNumber(roe)
       calcRoe = roeValue
       calcPnl = (roeValue / 100) * calcInitialMargin
       if (direction === "long") {
@@ -299,15 +289,18 @@ export function LeverageCalculator() {
       liquidation = entry + entry / lev
     }
     setLiquidationPrice(formatNumber(Math.max(0, liquidation), 4))
-  }, [leverage, quantity, entryPrice, exitPrice, direction])
+  }, [leverage, quantity, entryPrice, exitPrice, direction, initialMargin, pnl, roe])
 
   // Recalculate when primary inputs change
+  // Note: We intentionally exclude `calculate` from deps to prevent infinite loops
+  // since calculate() sets pnl/roe which would recreate calculate and re-trigger this effect
   useEffect(() => {
     if (leverage && quantity && entryPrice && exitPrice) {
       validate()
       calculate()
     }
-  }, [leverage, quantity, entryPrice, exitPrice, direction, validate, calculate])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leverage, quantity, entryPrice, exitPrice, direction])
 
   const handleMarginBlur = () => {
     if (initialMargin) calculate("margin")
