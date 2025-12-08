@@ -9,26 +9,26 @@ interface Coin {
   symbol: string
   name: string
   image: string
-  current_price: number
-  market_cap: number
-  market_cap_rank: number
-  fully_diluted_valuation: number
-  total_volume: number
-  high_24h: number
-  low_24h: number
-  price_change_24h: number
-  price_change_percentage_24h: number
-  market_cap_change_24h: number
-  market_cap_change_percentage_24h: number
-  circulating_supply: number
-  total_supply: number
+  current_price: number | null
+  market_cap: number | null
+  market_cap_rank: number | null
+  fully_diluted_valuation: number | null
+  total_volume: number | null
+  high_24h: number | null
+  low_24h: number | null
+  price_change_24h: number | null
+  price_change_percentage_24h: number | null
+  market_cap_change_24h: number | null
+  market_cap_change_percentage_24h: number | null
+  circulating_supply: number | null
+  total_supply: number | null
   max_supply: number | null
-  ath: number
-  ath_change_percentage: number
-  ath_date: string
-  atl: number
-  atl_change_percentage: number
-  atl_date: string
+  ath: number | null
+  ath_change_percentage: number | null
+  ath_date: string | null
+  atl: number | null
+  atl_change_percentage: number | null
+  atl_date: string | null
   last_updated: string
 }
 
@@ -39,6 +39,7 @@ export function CoinsTable() {
   const [coins, setCoins] = useState<Coin[]>([])
   const [filteredCoins, setFilteredCoins] = useState<Coin[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<SortField>("market_cap_rank")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
@@ -64,8 +65,8 @@ export function CoinsTable() {
 
     // Apply sorting
     filtered.sort((a, b) => {
-      let aValue: number
-      let bValue: number
+      let aValue: number | null
+      let bValue: number | null
 
       switch (sortField) {
         case "market_cap_rank":
@@ -92,6 +93,11 @@ export function CoinsTable() {
           return 0
       }
 
+      // Handle null values - push them to the end
+      if (aValue === null && bValue === null) return 0
+      if (aValue === null) return 1
+      if (bValue === null) return -1
+
       if (sortDirection === "asc") {
         return aValue - bValue
       } else {
@@ -108,10 +114,25 @@ export function CoinsTable() {
         "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h"
       )
       const data = await response.json()
-      setCoins(data)
+      
+      // Validate that we got an array response (API might return error object when rate limited)
+      if (Array.isArray(data)) {
+        setCoins(data)
+        setError(null)
+      } else {
+        console.error("API returned invalid data:", data)
+        // Check if it's a rate limit error or other API error
+        const errorMsg = data?.status?.error_message || data?.error || "Failed to fetch cryptocurrency data"
+        setError(errorMsg)
+        // Keep existing coins if we already have data
+        if (coins.length === 0) {
+          setCoins([])
+        }
+      }
       setLoading(false)
     } catch (error) {
       console.error("Error fetching coins:", error)
+      setError("Failed to connect to the API. Please try again later.")
       setLoading(false)
     }
   }
@@ -125,7 +146,8 @@ export function CoinsTable() {
     }
   }
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | null) => {
+    if (value === null || value === undefined) return "N/A"
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -134,7 +156,8 @@ export function CoinsTable() {
     }).format(value)
   }
 
-  const formatLargeNumber = (value: number) => {
+  const formatLargeNumber = (value: number | null) => {
+    if (value === null || value === undefined) return "N/A"
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`
     if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`
     if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`
@@ -142,7 +165,8 @@ export function CoinsTable() {
     return `$${value.toFixed(2)}`
   }
 
-  const formatPercentage = (value: number) => {
+  const formatPercentage = (value: number | null) => {
+    if (value === null || value === undefined) return "N/A"
     return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
   }
 
@@ -152,6 +176,23 @@ export function CoinsTable() {
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
           <div className="text-gray-600">Loading cryptocurrency data...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && coins.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="text-red-500 text-lg font-medium">Unable to load data</div>
+          <div className="text-gray-600 max-w-md">{error}</div>
+          <button
+            onClick={fetchCoins}
+            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     )
@@ -229,7 +270,7 @@ export function CoinsTable() {
                 key={coin.id}
                 className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
               >
-                <td className="py-4 px-4 text-gray-600">{coin.market_cap_rank}</td>
+                <td className="py-4 px-4 text-gray-600">{coin.market_cap_rank ?? "-"}</td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     <img
@@ -249,15 +290,19 @@ export function CoinsTable() {
                 <td className="py-4 px-4 text-right">
                   <div
                     className={`flex items-center justify-end gap-1 ${
-                      coin.price_change_percentage_24h >= 0
+                      coin.price_change_percentage_24h === null
+                        ? "text-gray-500"
+                        : coin.price_change_percentage_24h >= 0
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
-                    {coin.price_change_percentage_24h >= 0 ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4" />
+                    {coin.price_change_percentage_24h !== null && (
+                      coin.price_change_percentage_24h >= 0 ? (
+                        <TrendingUp className="h-4 w-4" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4" />
+                      )
                     )}
                     {formatPercentage(coin.price_change_percentage_24h)}
                   </div>
