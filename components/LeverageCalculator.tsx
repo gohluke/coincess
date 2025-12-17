@@ -291,16 +291,12 @@ export function LeverageCalculator() {
     setLiquidationPrice(formatNumber(Math.max(0, liquidation), 4))
   }, [leverage, quantity, entryPrice, exitPrice, direction, initialMargin, pnl, roe])
 
-  // Recalculate when primary inputs change
-  // Note: We intentionally exclude `calculate` from deps to prevent infinite loops
-  // since calculate() sets pnl/roe which would recreate calculate and re-trigger this effect
   useEffect(() => {
     if (leverage && quantity && entryPrice && exitPrice) {
       validate()
       calculate()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leverage, quantity, entryPrice, exitPrice, direction])
+  }, [leverage, quantity, entryPrice, exitPrice, direction, validate, calculate])
 
   const handleMarginBlur = () => {
     if (initialMargin) calculate("margin")

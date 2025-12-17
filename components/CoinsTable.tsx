@@ -2,7 +2,24 @@
 
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
-import { ArrowUpDown, TrendingUp, TrendingDown, ShoppingCart } from "lucide-react"
+import { ArrowUpDown, TrendingUp, TrendingDown, ShoppingCart, Sparkles, Megaphone, ExternalLink } from "lucide-react"
+
+// Sponsored coin configuration - appears as first row in table
+const SPONSORED_COIN = {
+  name: "BOOF",
+  symbol: "BOOF",
+  website: "https://boof.gg",
+  contractAddress: "73xkaJou2EzfNxh2Q14Mw61emuVZjX6xHHv75aD8GqN",
+  blockchain: "solana",
+}
+
+interface SponsoredCoinData {
+  current_price: number | null
+  price_change_percentage_24h: number | null
+  market_cap: number | null
+  total_volume: number | null
+  image: string | null
+}
 
 interface Coin {
   id: string
@@ -43,11 +60,58 @@ export function CoinsTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<SortField>("market_cap_rank")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [sponsoredCoinData, setSponsoredCoinData] = useState<SponsoredCoinData>({
+    current_price: null,
+    price_change_percentage_24h: null,
+    market_cap: null,
+    total_volume: null,
+    image: null,
+  })
+
+  // Fetch sponsored coin data from GeckoTerminal
+  const fetchSponsoredCoin = async () => {
+    try {
+      // First get token info for the image
+      const tokenResponse = await fetch(
+        `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${SPONSORED_COIN.contractAddress}`
+      )
+      const tokenData = await tokenResponse.json()
+      const imageUrl = tokenData?.data?.attributes?.image_url || null
+
+      // Then get pool data for price info
+      const poolsResponse = await fetch(
+        `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${SPONSORED_COIN.contractAddress}/pools`
+      )
+      const poolsData = await poolsResponse.json()
+      
+      if (poolsData.data && poolsData.data.length > 0) {
+        // Get the pool with highest reserve (liquidity)
+        const mainPool = poolsData.data.reduce((best: typeof poolsData.data[0], current: typeof poolsData.data[0]) => 
+          parseFloat(current.attributes?.reserve_in_usd || "0") > parseFloat(best.attributes?.reserve_in_usd || "0") ? current : best
+        , poolsData.data[0])
+        
+        const attrs = mainPool.attributes
+        setSponsoredCoinData({
+          current_price: parseFloat(attrs.base_token_price_usd) || null,
+          price_change_percentage_24h: parseFloat(attrs.price_change_percentage?.h24) || null,
+          market_cap: attrs.market_cap_usd ? parseFloat(attrs.market_cap_usd) : (attrs.fdv_usd ? parseFloat(attrs.fdv_usd) : null),
+          total_volume: parseFloat(attrs.volume_usd?.h24) || null,
+          image: imageUrl,
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching sponsored coin data:", error)
+    }
+  }
 
   useEffect(() => {
     fetchCoins()
+    fetchSponsoredCoin()
     // Refresh every 30 seconds
-    const interval = setInterval(fetchCoins, 30000)
+    const interval = setInterval(() => {
+      fetchCoins()
+      fetchSponsoredCoin()
+    }, 30000)
     return () => clearInterval(interval)
   }, [])
 
@@ -200,6 +264,28 @@ export function CoinsTable() {
 
   return (
     <div className="w-full">
+      {/* Advertise Your Coin CTA */}
+      <div className="mb-8 p-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Megaphone className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">Want to feature your coin here?</h3>
+              <p className="text-purple-100 text-sm">Get your project in front of thousands of crypto enthusiasts</p>
+            </div>
+          </div>
+          <a
+            href="mailto:advertise@coincess.com?subject=Coin%20Sponsorship%20Inquiry&body=Hi%2C%0A%0AI%27d%20like%20to%20advertise%20my%20coin%20on%20Coincess.%0A%0ACoin%20Name%3A%0AWebsite%3A%0ABlockchain%3A%0ADescription%3A%0A%0AThank%20you!"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-colors whitespace-nowrap"
+          >
+            <Megaphone className="h-4 w-4" />
+            Advertise Your Coin
+          </a>
+        </div>
+      </div>
+
       {/* Search Bar */}
       <div className="mb-6">
         <Input
@@ -268,6 +354,77 @@ export function CoinsTable() {
             </tr>
           </thead>
           <tbody>
+            {/* Sponsored Coin Row - Always at top */}
+            <tr className="border-b border-yellow-200 bg-gradient-to-r from-yellow-50/50 via-orange-50/30 to-yellow-50/50 hover:from-yellow-50 hover:via-orange-50/50 hover:to-yellow-50 transition-colors">
+              <td className="py-4 px-4">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded">
+                  <Sparkles className="h-3 w-3" />
+                  AD
+                </span>
+              </td>
+              <td className="py-4 px-4">
+                <a href={SPONSORED_COIN.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
+                  {sponsoredCoinData.image ? (
+                    <img
+                      src={sponsoredCoinData.image}
+                      alt={SPONSORED_COIN.name}
+                      className="w-8 h-8 rounded-full group-hover:scale-110 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow group-hover:scale-110 transition-transform">
+                      B
+                    </div>
+                  )}
+                  <div>
+                    <div className="font-semibold text-gray-900 group-hover:text-[#7C3AED] transition-colors">{SPONSORED_COIN.name}</div>
+                    <div className="text-sm text-gray-500 uppercase">{SPONSORED_COIN.symbol}</div>
+                  </div>
+                </a>
+              </td>
+              <td className="py-4 px-4 text-right font-semibold text-gray-900">
+                {sponsoredCoinData.current_price ? formatCurrency(sponsoredCoinData.current_price) : "-"}
+              </td>
+              <td className="py-4 px-4 text-right">
+                <div
+                  className={`flex items-center justify-end gap-1 ${
+                    sponsoredCoinData.price_change_percentage_24h === null
+                      ? "text-gray-500"
+                      : sponsoredCoinData.price_change_percentage_24h >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {sponsoredCoinData.price_change_percentage_24h !== null && (
+                    sponsoredCoinData.price_change_percentage_24h >= 0 ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4" />
+                    )
+                  )}
+                  {sponsoredCoinData.price_change_percentage_24h !== null 
+                    ? formatPercentage(sponsoredCoinData.price_change_percentage_24h) 
+                    : "-"}
+                </div>
+              </td>
+              <td className="py-4 px-4 text-right text-gray-700 hidden md:table-cell">
+                {sponsoredCoinData.market_cap ? formatLargeNumber(sponsoredCoinData.market_cap) : "-"}
+              </td>
+              <td className="py-4 px-4 text-right text-gray-700 hidden lg:table-cell">
+                {sponsoredCoinData.total_volume ? formatLargeNumber(sponsoredCoinData.total_volume) : "-"}
+              </td>
+              <td className="py-4 px-4 text-center">
+                <a
+                  href={SPONSORED_COIN.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-sm font-medium rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-colors"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Visit
+                </a>
+              </td>
+            </tr>
+
             {filteredCoins.map((coin) => (
               <tr
                 key={coin.id}
