@@ -143,6 +143,8 @@ export default function RootLayout({
             }),
           }}
         />
+        {/* PHI Analytics Tracking */}
+        <script defer src="https://phi.llc/tracker.js" data-id="phi_e43ce3b8844"></script>
       </head>
       <body className="antialiased">{children}</body>
     </html>
