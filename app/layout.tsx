@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next"
+import Script from "next/script"
 import "./globals.css"
 
 const siteUrl = "https://coincess.com"
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Coincess" }],
   creator: "Coincess",
   publisher: "Coincess",
-  
+
   // Favicon and icons
   icons: {
     icon: "/assets/coincess-icon.png",
@@ -143,10 +144,16 @@ export default function RootLayout({
             }),
           }}
         />
-        {/* PHI Analytics Tracking */}
-        <script defer src="https://phi.llc/tracker.js" data-id="phi_e43ce3b8844"></script>
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {/* PHI Analytics Tracking */}
+        <Script
+          src="https://phi.llc/tracker.js"
+          data-id="phi_e43ce3b8844"
+          strategy="afterInteractive"
+        />
+        {children}
+      </body>
     </html>
   )
 }
