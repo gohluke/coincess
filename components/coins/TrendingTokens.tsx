@@ -8,6 +8,7 @@ import {
   chainLabel,
   chainColor,
   formatUsd,
+  formatPrice,
   type BoostedToken,
   type DexPair,
 } from "@/lib/dexscreener/api";
@@ -31,15 +32,40 @@ interface SponsoredData {
   change1h: number | null;
   change24h: number | null;
   volume24h: number | null;
+  marketCap: number | null;
   liquidity: number | null;
   fdv: number | null;
   image: string | null;
 }
 
+function TokenImg({ src, symbol }: { src?: string; symbol: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    const colors = ["#6366f1", "#8b5cf6", "#ec4899", "#f97316", "#14b8a6", "#3b82f6"];
+    const bg = colors[symbol.charCodeAt(0) % colors.length];
+    return (
+      <div
+        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+        style={{ backgroundColor: bg }}
+      >
+        {symbol[0]}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={symbol}
+      className="w-6 h-6 rounded-full shrink-0"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export function TrendingTokens() {
   const [rows, setRows] = useState<TrendingRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [boof, setBoof] = useState<SponsoredData>({ price: null, change5m: null, change1h: null, change24h: null, volume24h: null, liquidity: null, fdv: null, image: null });
+  const [boof, setBoof] = useState<SponsoredData>({ price: null, change5m: null, change1h: null, change24h: null, volume24h: null, marketCap: null, liquidity: null, fdv: null, image: null });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,6 +111,7 @@ export function TrendingTokens() {
           change1h: parseFloat(a.price_change_percentage?.h1) || null,
           change24h: parseFloat(a.price_change_percentage?.h24) || null,
           volume24h: parseFloat(a.volume_usd?.h24) || null,
+          marketCap: a.market_cap_usd ? parseFloat(a.market_cap_usd) : (a.fdv_usd ? parseFloat(a.fdv_usd) : null),
           liquidity: a.reserve_in_usd ? parseFloat(a.reserve_in_usd) / 2 : null,
           fdv: a.fdv_usd ? parseFloat(a.fdv_usd) : null,
           image: imageUrl,
@@ -131,6 +158,7 @@ export function TrendingTokens() {
               <th className="text-right py-2 px-3 font-medium">1h</th>
               <th className="text-right py-2 px-3 font-medium hidden md:table-cell">24h</th>
               <th className="text-right py-2 px-3 font-medium hidden sm:table-cell">Volume 24h</th>
+              <th className="text-right py-2 px-3 font-medium hidden md:table-cell">Mkt Cap</th>
               <th className="text-right py-2 px-3 font-medium hidden md:table-cell">Liquidity</th>
               <th className="text-right py-2 px-3 font-medium hidden lg:table-cell">FDV</th>
               <th className="text-center py-2 px-3 font-medium">Boost</th>
@@ -163,7 +191,7 @@ export function TrendingTokens() {
                   {chainLabel("solana")}
                 </span>
               </td>
-              <td className="py-2.5 px-3 text-right font-mono">{boof.price ? formatUsd(parseFloat(boof.price)) : "-"}</td>
+              <td className="py-2.5 px-3 text-right font-mono">{boof.price ? formatPrice(parseFloat(boof.price)) : "-"}</td>
               <td className={`py-2.5 px-3 text-right hidden sm:table-cell ${(boof.change5m ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                 {boof.change5m != null ? `${boof.change5m >= 0 ? "+" : ""}${boof.change5m.toFixed(1)}%` : "-"}
               </td>
@@ -174,6 +202,7 @@ export function TrendingTokens() {
                 {boof.change24h != null ? `${boof.change24h >= 0 ? "+" : ""}${boof.change24h.toFixed(1)}%` : "-"}
               </td>
               <td className="py-2.5 px-3 text-right hidden sm:table-cell text-[#848e9c]">{boof.volume24h != null ? formatUsd(boof.volume24h) : "-"}</td>
+              <td className="py-2.5 px-3 text-right hidden md:table-cell text-[#848e9c]">{boof.marketCap != null ? formatUsd(boof.marketCap) : "-"}</td>
               <td className="py-2.5 px-3 text-right hidden md:table-cell text-[#848e9c]">{boof.liquidity != null ? formatUsd(boof.liquidity) : "-"}</td>
               <td className="py-2.5 px-3 text-right hidden lg:table-cell text-[#848e9c]">{boof.fdv != null ? formatUsd(boof.fdv) : "-"}</td>
               <td className="py-2.5 px-3 text-center">
@@ -196,13 +225,10 @@ export function TrendingTokens() {
                   <td className="py-2.5 px-3 text-[#848e9c]">{i + 1}</td>
                   <td className="py-2.5 px-3">
                     <div className="flex items-center gap-2">
-                      {row.token.icon ? (
-                        <img src={row.token.icon} alt="" className="w-6 h-6 rounded-full" />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-[#2a2e3e] flex items-center justify-center text-[10px] font-bold">
-                          {(p?.baseToken.symbol ?? "?")[0]}
-                        </div>
-                      )}
+                      <TokenImg
+                        src={p?.info?.imageUrl || row.token.icon}
+                        symbol={p?.baseToken.symbol ?? "?"}
+                      />
                       <div>
                         <span className="font-semibold">{p?.baseToken.symbol ?? row.token.tokenAddress.slice(0, 6)}</span>
                         <span className="text-[#848e9c] ml-1 hidden sm:inline">
@@ -220,7 +246,7 @@ export function TrendingTokens() {
                     </span>
                   </td>
                   <td className="py-2.5 px-3 text-right font-mono">
-                    {p?.priceUsd ? formatUsd(parseFloat(p.priceUsd)) : "-"}
+                    {p?.priceUsd ? formatPrice(parseFloat(p.priceUsd)) : "-"}
                   </td>
                   <td className={`py-2.5 px-3 text-right hidden sm:table-cell ${p?.priceChange?.m5 != null && p.priceChange.m5 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                     {p?.priceChange?.m5 != null ? `${p.priceChange.m5 >= 0 ? "+" : ""}${p.priceChange.m5.toFixed(1)}%` : "-"}
@@ -233,6 +259,9 @@ export function TrendingTokens() {
                   </td>
                   <td className="py-2.5 px-3 text-right hidden sm:table-cell text-[#848e9c]">
                     {p?.volume?.h24 != null ? formatUsd(p.volume.h24) : "-"}
+                  </td>
+                  <td className="py-2.5 px-3 text-right hidden md:table-cell text-[#848e9c]">
+                    {p?.marketCap != null ? formatUsd(p.marketCap) : (p?.fdv != null ? formatUsd(p.fdv) : "-")}
                   </td>
                   <td className="py-2.5 px-3 text-right hidden md:table-cell text-[#848e9c]">
                     {p?.liquidity?.usd != null ? formatUsd(p.liquidity.usd) : "-"}

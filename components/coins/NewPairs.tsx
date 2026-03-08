@@ -9,6 +9,7 @@ import {
   chainColor,
   timeAgo,
   formatUsd,
+  formatPrice,
   type BoostedToken,
   type DexPair,
 } from "@/lib/dexscreener/api";
@@ -18,6 +19,21 @@ const CHAINS = ["all", "solana", "ethereum", "base", "bsc", "arbitrum", "polygon
 interface PairRow {
   profile: BoostedToken;
   pair: DexPair | null;
+}
+
+function PairImg({ src, symbol, size = 6 }: { src?: string; symbol: string; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const cls = `w-${size} h-${size} rounded-full shrink-0`;
+  const colors = ["#6366f1", "#8b5cf6", "#ec4899", "#f97316", "#14b8a6", "#3b82f6"];
+  const bg = colors[symbol.charCodeAt(0) % colors.length];
+  if (!src || failed) {
+    return (
+      <div className={`${cls} flex items-center justify-center font-bold text-white`} style={{ backgroundColor: bg, width: size * 4, height: size * 4, fontSize: size < 8 ? 10 : 14 }}>
+        {symbol[0]}
+      </div>
+    );
+  }
+  return <img src={src} alt={symbol} className={cls} style={{ width: size * 4, height: size * 4 }} onError={() => setFailed(true)} />;
 }
 
 export function NewPairs() {
@@ -108,13 +124,7 @@ export function NewPairs() {
               className="block bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 hover:border-[#3a3e4e] transition-colors"
             >
               <div className="flex items-start gap-3 mb-3">
-                {row.profile.icon ? (
-                  <img src={row.profile.icon} alt="" className="w-10 h-10 rounded-full shrink-0" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#2a2e3e] flex items-center justify-center text-sm font-bold shrink-0">
-                    {(p?.baseToken.symbol ?? "?")[0]}
-                  </div>
-                )}
+                <PairImg src={p?.info?.imageUrl || row.profile.icon} symbol={p?.baseToken.symbol ?? "?"} size={10} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="font-semibold text-sm truncate">
@@ -142,7 +152,7 @@ export function NewPairs() {
                 <div className="grid grid-cols-3 gap-2 text-[10px]">
                   <div>
                     <span className="text-[#848e9c] block">Price</span>
-                    <span className="font-mono font-medium">{formatUsd(parseFloat(p.priceUsd))}</span>
+                    <span className="font-mono font-medium">{formatPrice(parseFloat(p.priceUsd))}</span>
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">24h</span>
@@ -151,16 +161,16 @@ export function NewPairs() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-[#848e9c] block">Liq</span>
-                    <span className="text-[#848e9c] font-medium">{p.liquidity?.usd != null ? formatUsd(p.liquidity.usd) : "-"}</span>
+                    <span className="text-[#848e9c] block">Mkt Cap</span>
+                    <span className="text-[#848e9c] font-medium">{p.marketCap != null ? formatUsd(p.marketCap) : (p.fdv != null ? formatUsd(p.fdv) : "-")}</span>
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">Vol 24h</span>
                     <span className="text-[#848e9c] font-medium">{p.volume?.h24 != null ? formatUsd(p.volume.h24) : "-"}</span>
                   </div>
                   <div>
-                    <span className="text-[#848e9c] block">FDV</span>
-                    <span className="text-[#848e9c] font-medium">{p.fdv != null ? formatUsd(p.fdv) : "-"}</span>
+                    <span className="text-[#848e9c] block">Liq</span>
+                    <span className="text-[#848e9c] font-medium">{p.liquidity?.usd != null ? formatUsd(p.liquidity.usd) : "-"}</span>
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">Age</span>

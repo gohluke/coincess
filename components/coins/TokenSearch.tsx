@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Search, ExternalLink, Loader2 } from "lucide-react";
-import { searchTokens, chainLabel, chainColor, formatUsd, type DexPair } from "@/lib/dexscreener/api";
+import { searchTokens, chainLabel, chainColor, formatUsd, formatPrice, type DexPair } from "@/lib/dexscreener/api";
 
 export function TokenSearch() {
   const [query, setQuery] = useState("");
@@ -106,7 +106,7 @@ export function TokenSearch() {
                 </div>
               </div>
               <div className="text-right shrink-0 ml-2">
-                <div className="text-xs font-mono">{formatUsd(parseFloat(p.priceUsd))}</div>
+                <div className="text-xs font-mono">{formatPrice(parseFloat(p.priceUsd))}</div>
                 <div className={`text-[10px] ${p.priceChange?.h24 != null && p.priceChange.h24 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                   {p.priceChange?.h24 != null ? `${p.priceChange.h24 >= 0 ? "+" : ""}${p.priceChange.h24.toFixed(1)}%` : "-"}
                 </div>

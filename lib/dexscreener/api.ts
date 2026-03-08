@@ -129,6 +129,37 @@ export function formatUsd(val: number): string {
   if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
   if (val >= 1e3) return `$${(val / 1e3).toFixed(1)}K`;
   if (val >= 1) return `$${val.toFixed(2)}`;
+  if (val >= 0.01) return `$${val.toFixed(4)}`;
   if (val >= 0.0001) return `$${val.toFixed(6)}`;
-  return `$${val.toExponential(2)}`;
+  if (val <= 0) return "$0.00";
+  const s = val.toFixed(20);
+  const afterDot = s.split(".")[1] ?? "";
+  let zeros = 0;
+  for (const ch of afterDot) {
+    if (ch === "0") zeros++;
+    else break;
+  }
+  const sig = afterDot.slice(zeros, zeros + 4);
+  return `$0.0…${zeros}${sig}`;
+}
+
+const SUBSCRIPT_DIGITS = "₀₁₂₃₄₅₆₇₈₉";
+export function formatPrice(val: number): string {
+  if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
+  if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
+  if (val >= 1e3) return `$${(val / 1e3).toFixed(1)}K`;
+  if (val >= 1) return `$${val.toFixed(2)}`;
+  if (val >= 0.01) return `$${val.toFixed(4)}`;
+  if (val >= 0.0001) return `$${val.toFixed(6)}`;
+  if (val <= 0) return "$0.00";
+  const s = val.toFixed(20);
+  const afterDot = s.split(".")[1] ?? "";
+  let zeros = 0;
+  for (const ch of afterDot) {
+    if (ch === "0") zeros++;
+    else break;
+  }
+  const sig = afterDot.slice(zeros, zeros + 4);
+  const sub = String(zeros).split("").map((d) => SUBSCRIPT_DIGITS[parseInt(d)]).join("");
+  return `$0.0${sub}${sig}`;
 }
