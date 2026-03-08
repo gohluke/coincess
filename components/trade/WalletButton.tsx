@@ -3,26 +3,32 @@
 import { useEffect } from "react";
 import { Wallet, LogOut } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import { connectWallet, getConnectedAddress, shortenAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
+import { getConnectedAddress, shortenAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
+import { useWallet } from "@/hooks/useWallet";
 
 export function WalletButton() {
-  const { address, setAddress } = useTradingStore();
+  const { address: storeAddr, setAddress } = useTradingStore();
+  const { address: walletAddr, connect, source } = useWallet();
 
   useEffect(() => {
+    if (walletAddr && walletAddr !== storeAddr) {
+      setAddress(walletAddr);
+    }
+  }, [walletAddr, storeAddr, setAddress]);
+
+  useEffect(() => {
+    if (source === "privy") return;
     getConnectedAddress().then((addr) => {
-      if (addr) setAddress(addr);
+      if (addr && !walletAddr) setAddress(addr);
     });
     return onAccountsChanged((accounts) => setAddress(accounts[0] ?? null));
-  }, [setAddress]);
-
-  const handleConnect = async () => {
-    const addr = await connectWallet();
-    if (addr) setAddress(addr);
-  };
+  }, [setAddress, walletAddr, source]);
 
   const handleDisconnect = () => {
     setAddress(null);
   };
+
+  const address = storeAddr || walletAddr;
 
   if (address) {
     return (
@@ -44,11 +50,11 @@ export function WalletButton() {
 
   return (
     <button
-      onClick={handleConnect}
+      onClick={connect}
       className="flex items-center gap-2 bg-[#7C3AED] hover:bg-[#7C3AED]/90 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
     >
       <Wallet className="h-4 w-4" />
-      Connect Wallet
+      Sign In
     </button>
   );
 }

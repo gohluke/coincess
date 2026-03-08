@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction } from "@/lib/hyperliquid/signing";
-import { connectWallet } from "@/lib/hyperliquid/wallet";
+import { useWallet } from "@/hooks/useWallet";
 
 const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 50];
 const SIZE_PRESETS = [25, 50, 75, 100];
@@ -16,6 +16,8 @@ export function OrderForm() {
     selectedMarket, address, setAddress, clearinghouse, orderbook, markets, loadUserState,
     abstractionMode,
   } = useTradingStore();
+
+  const { connect: walletConnect } = useWallet();
 
   const [showTpsl, setShowTpsl] = useState(false);
   const [tpPrice, setTpPrice] = useState("");
@@ -332,13 +334,10 @@ export function OrderForm() {
           </button>
         ) : (
           <button
-            onClick={async () => {
-              const addr = await connectWallet();
-              if (addr) setAddress(addr);
-            }}
+            onClick={() => walletConnect()}
             className="w-full py-3 rounded-lg font-semibold text-sm bg-[#7C3AED] text-white hover:bg-[#7C3AED]/90 transition-colors"
           >
-            Connect Wallet to Trade
+            Sign In to Trade
           </button>
         )}
 
