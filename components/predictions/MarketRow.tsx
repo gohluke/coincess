@@ -3,8 +3,10 @@
 import { useState } from "react";
 import type { PolymarketMarket } from "@/lib/polymarket/types";
 import { getOutcomePrice, formatVolume } from "@/lib/polymarket/api";
+import { useWallet } from "@/hooks/useWallet";
 
 export function MarketRow({ market }: { market: PolymarketMarket }) {
+  const { address, connect } = useWallet();
   const prices = getOutcomePrice(market);
   const yesPct = Math.round(prices.yes * 100);
   const noPct = Math.round(prices.no * 100);
@@ -99,9 +101,28 @@ export function MarketRow({ market }: { market: PolymarketMarket }) {
               <span className="text-[#848e9c]">Potential payout</span>
               <span className="text-white font-medium">${potentialPayout}</span>
             </div>
-            <button className="w-full py-2.5 rounded-lg text-sm font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors">
-              Connect Wallet to Trade
-            </button>
+            {address ? (
+              <button
+                className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                  selectedSide === "yes"
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                    : "bg-red-500 hover:bg-red-600 text-white"
+                }`}
+                onClick={() => {
+                  if (!amount || parseFloat(amount) <= 0) return;
+                  alert(`Trade preview: Buy ${selectedSide?.toUpperCase()} for $${amount}\nPayout: $${potentialPayout}\n\nPolymarket CLOB trading coming soon.`);
+                }}
+              >
+                Buy {selectedSide === "yes" ? "Yes" : "No"} — ${amount || "0"}
+              </button>
+            ) : (
+              <button
+                onClick={connect}
+                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors"
+              >
+                Sign In to Trade
+              </button>
+            )}
             <p className="text-[9px] text-[#848e9c] text-center">
               Trades execute on Polygon via Polymarket CLOB
             </p>

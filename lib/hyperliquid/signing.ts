@@ -17,9 +17,16 @@ type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
 
+let _privyProvider: EthProvider | null = null;
+
+export function setPrivyProvider(provider: EthProvider | null) {
+  _privyProvider = provider;
+}
+
 function getEthereum(): EthProvider {
+  if (_privyProvider) return _privyProvider;
   const eth = (window as unknown as { ethereum?: EthProvider }).ethereum;
-  if (!eth) throw new Error("No wallet detected");
+  if (!eth) throw new Error("No wallet detected. Please sign in first.");
   return eth;
 }
 
