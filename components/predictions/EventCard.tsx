@@ -46,19 +46,19 @@ export function EventCard({ event }: { event: PolymarketEvent }) {
           <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 group-hover:text-[#7C3AED] transition-colors">
             {event.title}
           </h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] text-[#848e9c]">
+          <div className="flex items-center gap-2 mt-1 overflow-hidden">
+            <span className="text-[10px] text-[#848e9c] shrink-0">
               Vol {formatVolume(event.volume_num ?? event.volume)}
             </span>
             {event.volume24hr > 0 && (
-              <span className="text-[10px] text-emerald-400">
+              <span className="text-[10px] text-emerald-400 shrink-0">
                 24h {formatVolume(event.volume24hr)}
               </span>
             )}
-            {event.tags?.map((tag) => (
+            {event.tags?.slice(0, 3).map((tag) => (
               <span
                 key={tag.id}
-                className="text-[9px] px-1.5 py-0.5 rounded bg-[#7C3AED]/10 text-[#7C3AED] uppercase tracking-wide"
+                className="text-[9px] px-1.5 py-0.5 rounded bg-[#7C3AED]/10 text-[#7C3AED] uppercase tracking-wide shrink-0"
               >
                 {tag.label}
               </span>
