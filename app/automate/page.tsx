@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { Plus, Zap, ZapOff, Bot, BarChart3, Activity } from "lucide-react";
-import { Logo } from "@/components/Logo";
 import { useAutomationStore } from "@/lib/automation/store";
 import { StrategyCard } from "@/components/automate/StrategyCard";
 import { ActivityLog } from "@/components/automate/ActivityLog";
@@ -21,16 +20,13 @@ export default function AutomatePage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
-      <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center"><Logo /></Link>
-            <nav className="hidden sm:flex items-center gap-4 text-xs">
-              <Link href="/trade" className="text-[#848e9c] hover:text-white transition-colors">Trade</Link>
-              <Link href="/predictions" className="text-[#848e9c] hover:text-white transition-colors">Predictions</Link>
-              <span className="text-[#7C3AED] font-semibold">Automate</span>
-            </nav>
-          </div>
+      {/* Page toolbar */}
+      <div className="border-b border-[#2a2e39] bg-[#0b0e11]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
+          <h1 className="text-sm font-semibold flex items-center gap-2">
+            <Bot className="h-4 w-4 text-[#7C3AED]" />
+            Automation
+          </h1>
           <div className="flex items-center gap-3">
             <button
               onClick={toggleEngine}
@@ -52,7 +48,7 @@ export default function AutomatePage() {
             </Link>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         {/* Stats */}

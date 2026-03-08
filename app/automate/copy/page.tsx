@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Eye, Copy } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import { Eye, Copy, Plus } from "lucide-react";
 import { useAutomationStore } from "@/lib/automation/store";
 import { StrategyCard } from "@/components/automate/StrategyCard";
 import { fetchClearinghouseState } from "@/lib/hyperliquid/api";
@@ -61,23 +60,14 @@ export default function CopyTradingPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
-      <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/automate" className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              <Logo />
-            </Link>
-            <span className="text-sm font-semibold">Copy Trading</span>
-          </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold">Copy Trading</h2>
           <Link href="/automate/create" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-medium transition-colors">
             <Plus className="h-3.5 w-3.5" />
             New Copy Bot
           </Link>
         </div>
-      </header>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {/* Active copy strategies */}
         {copyStrategies.length > 0 && (
           <>

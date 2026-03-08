@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Plus, Bell, BellOff, Trash2 } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import { Bell, BellOff, Trash2, Plus } from "lucide-react";
 import { useAutomationStore } from "@/lib/automation/store";
 import { AlertForm } from "@/components/automate/AlertForm";
 import { startAlertEngine } from "@/lib/alerts/engine";
@@ -34,15 +32,9 @@ export default function AlertsPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
-      <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/automate" className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              <Logo />
-            </Link>
-            <span className="text-sm font-semibold">Alerts</span>
-          </div>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold">Active Alerts ({alerts.length})</h2>
           <button
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-medium transition-colors"
@@ -51,16 +43,12 @@ export default function AlertsPage() {
             New Alert
           </button>
         </div>
-      </header>
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         {showForm && (
           <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 mb-6">
             <AlertForm onDone={() => setShowForm(false)} />
           </div>
         )}
 
-        <h2 className="text-lg font-semibold mb-4">Active Alerts ({alerts.length})</h2>
         {alerts.length === 0 ? (
           <div className="text-center py-12 border border-dashed border-[#2a2e3e] rounded-xl">
             <Bell className="h-10 w-10 mx-auto mb-3 text-[#2a2e3e]" />

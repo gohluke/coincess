@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Clock, BarChart3, Droplets, Loader2 } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import { Clock, BarChart3, Droplets, Loader2, ExternalLink } from "lucide-react";
 import type { PolymarketEvent } from "@/lib/polymarket/types";
 import { fetchEventBySlug, fetchEventById, formatVolume, getEventEndDate, formatTimeRemaining } from "@/lib/polymarket/api";
 import { MarketRow } from "@/components/predictions/MarketRow";
@@ -53,30 +52,6 @@ export default function EventDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/predictions"
-              className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <Logo />
-            </Link>
-          </div>
-          <a
-            href={`https://polymarket.com/event/${event.slug || event.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-[#848e9c] hover:text-white transition-colors"
-          >
-            View on Polymarket
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
-      </header>
-
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {/* Closed/Resolved banner */}
         {(isClosed || isEnded) && (
@@ -94,7 +69,7 @@ export default function EventDetailPage() {
         )}
 
         {/* Event header */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           {event.image && (
             <img
               src={event.image}
@@ -132,6 +107,15 @@ export default function EventDetailPage() {
               ))}
             </div>
           </div>
+          <a
+            href={`https://polymarket.com/event/${event.slug || event.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-[#848e9c] hover:text-white transition-colors shrink-0"
+          >
+            View on Polymarket
+            <ExternalLink className="h-3 w-3" />
+          </a>
         </div>
 
         {/* Description */}

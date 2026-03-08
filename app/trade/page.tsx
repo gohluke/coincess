@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowLeft } from "lucide-react";
-import { Logo } from "@/components/Logo";
 import { useTradingStore, subscribeToMarket } from "@/lib/hyperliquid/store";
 import { MarketSelector } from "@/components/trade/MarketSelector";
 import { OrderBook } from "@/components/trade/OrderBook";
@@ -44,22 +41,11 @@ export default function TradePage() {
 
   return (
     <div className="h-screen flex flex-col bg-[#0b0e11] text-white overflow-hidden">
-      {/* Top bar */}
-      <header className="flex items-center justify-between h-12 px-4 border-b border-[#2a2e39] shrink-0">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden md:block"><Logo /></span>
-          </Link>
-          <MarketSelector />
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/predictions" className="text-xs text-[#848e9c] hover:text-white transition-colors hidden sm:block">
-            Predictions →
-          </Link>
-          <WalletButton />
-        </div>
-      </header>
+      {/* Market selector bar */}
+      <div className="flex items-center justify-between h-10 px-4 border-b border-[#2a2e39] shrink-0">
+        <MarketSelector />
+        <WalletButton />
+      </div>
 
       {/* Mobile tabs */}
       <div className="md:hidden flex border-b border-[#2a2e39] bg-[#0b0e11]">

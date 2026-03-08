@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { ArrowLeft, RefreshCw, Grid3X3, ShieldAlert, Bot, Clock, Copy } from "lucide-react";
-import { Logo } from "@/components/Logo";
 import { DCAForm } from "@/components/automate/DCAForm";
 import { GridForm } from "@/components/automate/GridForm";
 import { TrailingStopForm } from "@/components/automate/TrailingStopForm";
@@ -27,16 +25,6 @@ export default function CreateStrategyPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
-      <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-4">
-          <Link href="/automate" className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            <Logo />
-          </Link>
-          <span className="text-sm font-semibold">New Strategy</span>
-        </div>
-      </header>
-
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         {!selected ? (
           <>

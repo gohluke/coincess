@@ -15,7 +15,6 @@ import {
   Zap,
   LogIn,
 } from "lucide-react";
-import { Logo } from "@/components/Logo";
 import { connectWallet, getConnectedAddress } from "@/lib/hyperliquid/wallet";
 import { fetchClearinghouseState, fetchOpenOrders, fetchAllMarkets } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition } from "@/lib/hyperliquid/types";
@@ -91,11 +90,6 @@ export default function DashboardPage() {
   if (!address) {
     return (
       <div className="min-h-screen bg-[#0b0e11] text-white flex flex-col">
-        <header className="border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center">
-            <Logo />
-          </div>
-        </header>
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
           <div className="w-16 h-16 rounded-2xl bg-[#7C3AED]/20 flex items-center justify-center mb-6">
             <Wallet className="h-8 w-8 text-[#7C3AED]" />
@@ -111,7 +105,8 @@ export default function DashboardPage() {
             <LogIn className="h-4 w-4" />
             Connect Wallet
           </button>
-          <div className="flex gap-4 mt-8">
+          <p className="text-xs text-[#848e9c] mt-3">Or sign in with the button above</p>
+          <div className="flex gap-4 mt-6">
             <Link href="/trade" className="text-xs text-[#848e9c] hover:text-white transition-colors">Trade &rarr;</Link>
             <Link href="/predictions" className="text-xs text-[#848e9c] hover:text-white transition-colors">Predictions &rarr;</Link>
           </div>
@@ -122,21 +117,18 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
-      <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Logo />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold">Portfolio</h1>
           <div className="flex items-center gap-3">
             <button onClick={() => loadData(address)} className="p-2 text-[#848e9c] hover:text-white transition-colors" disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
-            <span className="text-xs text-[#848e9c] font-mono hidden sm:block">
+            <span className="text-xs text-[#848e9c] font-mono">
               {address.slice(0, 6)}...{address.slice(-4)}
             </span>
           </div>
         </div>
-      </header>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Account overview */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">

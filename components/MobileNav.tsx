@@ -12,8 +12,15 @@ const NAV_ITEMS = [
   { href: "/automate", label: "Automate", icon: Bot },
 ];
 
+const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calculator"];
+
 export function MobileNav() {
   const pathname = usePathname();
+
+  const isMarketing = MARKETING_ROUTES.some(
+    (r) => pathname === r || (r === "/blog" && pathname.startsWith("/blog/"))
+  );
+  if (isMarketing) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#0b0e11]/95 backdrop-blur-md border-t border-[#2a2e39] safe-area-bottom">
