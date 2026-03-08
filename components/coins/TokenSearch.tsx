@@ -107,8 +107,8 @@ export function TokenSearch() {
               </div>
               <div className="text-right shrink-0 ml-2">
                 <div className="text-xs font-mono">{formatUsd(parseFloat(p.priceUsd))}</div>
-                <div className={`text-[10px] ${p.priceChange.h24 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                  {p.priceChange.h24 >= 0 ? "+" : ""}{p.priceChange.h24.toFixed(1)}%
+                <div className={`text-[10px] ${p.priceChange?.h24 != null && p.priceChange.h24 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {p.priceChange?.h24 != null ? `${p.priceChange.h24 >= 0 ? "+" : ""}${p.priceChange.h24.toFixed(1)}%` : "-"}
                 </div>
               </div>
             </a>

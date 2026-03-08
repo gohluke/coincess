@@ -146,21 +146,21 @@ export function NewPairs() {
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">24h</span>
-                    <span className={p.priceChange.h24 >= 0 ? "text-emerald-400" : "text-red-400"}>
-                      {p.priceChange.h24 >= 0 ? "+" : ""}{p.priceChange.h24.toFixed(1)}%
+                    <span className={p.priceChange?.h24 != null && p.priceChange.h24 >= 0 ? "text-emerald-400" : "text-red-400"}>
+                      {p.priceChange?.h24 != null ? `${p.priceChange.h24 >= 0 ? "+" : ""}${p.priceChange.h24.toFixed(1)}%` : "-"}
                     </span>
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">Liq</span>
-                    <span className="text-[#848e9c] font-medium">{formatUsd(p.liquidity.usd)}</span>
+                    <span className="text-[#848e9c] font-medium">{p.liquidity?.usd != null ? formatUsd(p.liquidity.usd) : "-"}</span>
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">Vol 24h</span>
-                    <span className="text-[#848e9c] font-medium">{formatUsd(p.volume.h24)}</span>
+                    <span className="text-[#848e9c] font-medium">{p.volume?.h24 != null ? formatUsd(p.volume.h24) : "-"}</span>
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">FDV</span>
-                    <span className="text-[#848e9c] font-medium">{formatUsd(p.fdv)}</span>
+                    <span className="text-[#848e9c] font-medium">{p.fdv != null ? formatUsd(p.fdv) : "-"}</span>
                   </div>
                   <div>
                     <span className="text-[#848e9c] block">Age</span>

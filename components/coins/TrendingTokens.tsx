@@ -120,25 +120,25 @@ export function TrendingTokens() {
                     </span>
                   </td>
                   <td className="py-2.5 px-3 text-right font-mono">
-                    {p ? formatUsd(parseFloat(p.priceUsd)) : "-"}
+                    {p?.priceUsd ? formatUsd(parseFloat(p.priceUsd)) : "-"}
                   </td>
-                  <td className={`py-2.5 px-3 text-right hidden sm:table-cell ${p && p.priceChange.m5 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {p ? `${p.priceChange.m5 >= 0 ? "+" : ""}${p.priceChange.m5.toFixed(1)}%` : "-"}
+                  <td className={`py-2.5 px-3 text-right hidden sm:table-cell ${p?.priceChange?.m5 != null && p.priceChange.m5 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {p?.priceChange?.m5 != null ? `${p.priceChange.m5 >= 0 ? "+" : ""}${p.priceChange.m5.toFixed(1)}%` : "-"}
                   </td>
-                  <td className={`py-2.5 px-3 text-right ${p && p.priceChange.h1 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {p ? `${p.priceChange.h1 >= 0 ? "+" : ""}${p.priceChange.h1.toFixed(1)}%` : "-"}
+                  <td className={`py-2.5 px-3 text-right ${p?.priceChange?.h1 != null && p.priceChange.h1 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {p?.priceChange?.h1 != null ? `${p.priceChange.h1 >= 0 ? "+" : ""}${p.priceChange.h1.toFixed(1)}%` : "-"}
                   </td>
-                  <td className={`py-2.5 px-3 text-right hidden md:table-cell ${p && p.priceChange.h24 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {p ? `${p.priceChange.h24 >= 0 ? "+" : ""}${p.priceChange.h24.toFixed(1)}%` : "-"}
+                  <td className={`py-2.5 px-3 text-right hidden md:table-cell ${p?.priceChange?.h24 != null && p.priceChange.h24 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {p?.priceChange?.h24 != null ? `${p.priceChange.h24 >= 0 ? "+" : ""}${p.priceChange.h24.toFixed(1)}%` : "-"}
                   </td>
                   <td className="py-2.5 px-3 text-right hidden sm:table-cell text-[#848e9c]">
-                    {p ? formatUsd(p.volume.h24) : "-"}
+                    {p?.volume?.h24 != null ? formatUsd(p.volume.h24) : "-"}
                   </td>
                   <td className="py-2.5 px-3 text-right hidden md:table-cell text-[#848e9c]">
-                    {p ? formatUsd(p.liquidity.usd) : "-"}
+                    {p?.liquidity?.usd != null ? formatUsd(p.liquidity.usd) : "-"}
                   </td>
                   <td className="py-2.5 px-3 text-right hidden lg:table-cell text-[#848e9c]">
-                    {p ? formatUsd(p.fdv) : "-"}
+                    {p?.fdv != null ? formatUsd(p.fdv) : "-"}
                   </td>
                   <td className="py-2.5 px-3 text-center">
                     <span className="inline-flex items-center gap-0.5 text-[10px] text-orange-400 font-bold">
