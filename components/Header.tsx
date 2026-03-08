@@ -25,6 +25,9 @@ export function Header() {
             <Link href="/predictions" className="text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors">
               Predictions
             </Link>
+            <Link href="/automate" className="text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors">
+              Automate
+            </Link>
             <Link href="/coins" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
               Coins
             </Link>
@@ -73,6 +76,13 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               Predictions
+            </Link>
+            <Link
+              href="/automate"
+              className="block px-4 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Automate
             </Link>
             <Link
               href="/coins"

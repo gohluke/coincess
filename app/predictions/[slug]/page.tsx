@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink, Clock, BarChart3, Droplets, Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { PolymarketEvent } from "@/lib/polymarket/types";
-import { fetchEventBySlug, fetchEventById, formatVolume } from "@/lib/polymarket/api";
+import { fetchEventBySlug, fetchEventById, formatVolume, getEventEndDate, formatTimeRemaining } from "@/lib/polymarket/api";
 import { MarketRow } from "@/components/predictions/MarketRow";
 
 export default function EventDetailPage() {
@@ -45,7 +45,11 @@ export default function EventDetailPage() {
     );
   }
 
-  const endDate = event.end_date ? new Date(event.end_date) : null;
+  const endDate = getEventEndDate(event);
+  const timeLeft = formatTimeRemaining(endDate);
+  const isClosed = event.closed;
+  const isEnded = timeLeft === "Ended";
+  const isUrgent = endDate && !isClosed && !isEnded && endDate.getTime() - Date.now() < 24 * 60 * 60 * 1000;
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
@@ -74,13 +78,28 @@ export default function EventDetailPage() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        {/* Closed/Resolved banner */}
+        {(isClosed || isEnded) && (
+          <div className="mb-6 px-4 py-3 rounded-lg bg-[#1a1d2e] border border-[#2a2e3e] flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#848e9c]/20 text-[#848e9c] text-xs font-semibold uppercase">
+              <Clock className="h-3 w-3" />
+              {isClosed ? "Resolved" : "Ended"}
+            </span>
+            {endDate && (
+              <span className="text-xs text-[#848e9c]">
+                on {endDate.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Event header */}
         <div className="flex gap-4 mb-6">
           {event.image && (
             <img
               src={event.image}
               alt=""
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0"
+              className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0 ${isClosed || isEnded ? "grayscale" : ""}`}
             />
           )}
           <div>
@@ -96,10 +115,11 @@ export default function EventDetailPage() {
                 <Droplets className="h-3 w-3" />
                 {formatVolume(event.liquidity ?? 0)} liquidity
               </span>
-              {endDate && (
-                <span className="flex items-center gap-1 text-xs text-[#848e9c]">
+              {endDate && !isClosed && !isEnded && (
+                <span className={`flex items-center gap-1 text-xs font-medium ${isUrgent ? "text-amber-400" : "text-[#848e9c]"}`}>
                   <Clock className="h-3 w-3" />
-                  Ends {endDate.toLocaleDateString()}
+                  {isUrgent ? `⏱ ${timeLeft}` : `Ends ${endDate.toLocaleDateString()}`}
+                  {timeLeft && !isUrgent && ` (${timeLeft})`}
                 </span>
               )}
               {event.tags?.map((tag) => (

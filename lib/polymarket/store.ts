@@ -4,6 +4,7 @@ import {
   fetchTrendingEvents,
   fetchEventsByTag,
   fetchNewEvents,
+  fetchEndingSoonEvents,
   fetchTags,
   searchEvents,
 } from "./api";
@@ -50,6 +51,8 @@ export const usePredictionsStore = create<PredictionsState>((set, get) => ({
       let events: PolymarketEvent[];
       if (selectedCategory === "All") {
         events = await fetchTrendingEvents(20, 0);
+      } else if (selectedCategory === "Ending Soon") {
+        events = await fetchEndingSoonEvents(20, 0);
       } else if (selectedCategory === "New") {
         events = await fetchNewEvents(20);
       } else {
@@ -75,6 +78,8 @@ export const usePredictionsStore = create<PredictionsState>((set, get) => ({
         more = [];
       } else if (selectedCategory === "All") {
         more = await fetchTrendingEvents(20, events.length);
+      } else if (selectedCategory === "Ending Soon") {
+        more = await fetchEndingSoonEvents(20, events.length);
       } else if (selectedCategory === "New") {
         more = [];
       } else {

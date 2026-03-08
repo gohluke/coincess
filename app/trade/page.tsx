@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
@@ -18,11 +18,14 @@ const TradingChart = dynamic(
   { ssr: false },
 );
 
+type MobileTab = "chart" | "book" | "order" | "positions";
+
 export default function TradePage() {
   const loadMarkets = useTradingStore((s) => s.loadMarkets);
   const selectedMarket = useTradingStore((s) => s.selectedMarket);
   const address = useTradingStore((s) => s.address);
   const loadUserState = useTradingStore((s) => s.loadUserState);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("chart");
 
   useEffect(() => {
     loadMarkets();
@@ -44,35 +47,37 @@ export default function TradePage() {
       {/* Top bar */}
       <header className="flex items-center justify-between h-12 px-4 border-b border-[#2a2e39] shrink-0">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors">
+          <Link href="/dashboard" className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors">
             <ArrowLeft className="h-4 w-4" />
-            <Logo />
+            <span className="hidden md:block"><Logo /></span>
           </Link>
-          <div className="h-5 w-px bg-[#2a2e39]" />
           <MarketSelector />
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/predictions"
-            className="text-xs text-[#848e9c] hover:text-white transition-colors hidden sm:block"
-          >
+          <Link href="/predictions" className="text-xs text-[#848e9c] hover:text-white transition-colors hidden sm:block">
             Predictions →
           </Link>
-          <a
-            href="https://app.hyperliquid.xyz"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-[#848e9c] hover:text-white transition-colors hidden sm:block"
-          >
-            Powered by Hyperliquid
-          </a>
           <WalletButton />
         </div>
       </header>
 
-      {/* Main content */}
-      <div className="flex-1 min-h-0 flex">
-        {/* Left: Chart + Positions */}
+      {/* Mobile tabs */}
+      <div className="md:hidden flex border-b border-[#2a2e39] bg-[#0b0e11]">
+        {(["chart", "book", "order", "positions"] as MobileTab[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setMobileTab(tab)}
+            className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+              mobileTab === tab ? "text-[#7C3AED] border-b-2 border-[#7C3AED]" : "text-[#848e9c]"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop layout */}
+      <div className="flex-1 min-h-0 hidden md:flex">
         <div className="flex-1 min-w-0 flex flex-col border-r border-[#2a2e39]">
           <div className="flex-1 min-h-0 border-b border-[#2a2e39]">
             <TradingChart />
@@ -81,9 +86,7 @@ export default function TradePage() {
             <PositionsTable />
           </div>
         </div>
-
-        {/* Middle: Orderbook + Trades */}
-        <div className="hidden md:flex w-[240px] shrink-0 flex-col border-r border-[#2a2e39]">
+        <div className="w-[240px] shrink-0 flex flex-col border-r border-[#2a2e39]">
           <div className="flex-1 min-h-0">
             <OrderBook />
           </div>
@@ -91,11 +94,36 @@ export default function TradePage() {
             <RecentTrades />
           </div>
         </div>
-
-        {/* Right: Order Form */}
-        <div className="hidden md:block w-[280px] shrink-0 overflow-y-auto">
+        <div className="w-[280px] shrink-0 overflow-y-auto">
           <OrderForm />
         </div>
+      </div>
+
+      {/* Mobile layout */}
+      <div className="flex-1 min-h-0 md:hidden">
+        {mobileTab === "chart" && (
+          <div className="h-full">
+            <TradingChart />
+          </div>
+        )}
+        {mobileTab === "book" && (
+          <div className="h-full overflow-y-auto">
+            <OrderBook />
+            <div className="border-t border-[#2a2e39]">
+              <RecentTrades />
+            </div>
+          </div>
+        )}
+        {mobileTab === "order" && (
+          <div className="h-full overflow-y-auto">
+            <OrderForm />
+          </div>
+        )}
+        {mobileTab === "positions" && (
+          <div className="h-full overflow-y-auto">
+            <PositionsTable />
+          </div>
+        )}
       </div>
     </div>
   );

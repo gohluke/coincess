@@ -1,67 +1,61 @@
 import type { Metadata, Viewport } from "next"
 import Script from "next/script"
+import { AppShell } from "@/components/AppShell"
 import "./globals.css"
 
 const siteUrl = "https://coincess.com"
 
 export const metadata: Metadata = {
-  // Basic metadata
   title: {
-    default: "Coincess - Success In Crypto | Buy & Swap Cryptocurrency",
+    default: "Coincess - Trade Perps, Predict & Automate",
     template: "%s | Coincess",
   },
-  description: "Your gateway to cryptocurrency success. Buy any coin instantly with no KYC, compare swap rates, calculate leverage trades, and learn crypto with expert guides.",
+  description: "Trade perpetuals on Hyperliquid, bet on prediction markets, and automate your strategies — all in one app.",
   keywords: [
     "cryptocurrency",
-    "buy crypto",
-    "swap crypto",
-    "no kyc crypto",
-    "bitcoin",
-    "monero",
-    "crypto exchange",
-    "leverage calculator",
-    "privacy coins",
-    "crypto guide",
+    "perpetuals",
+    "hyperliquid",
+    "polymarket",
+    "prediction markets",
+    "crypto trading",
+    "defi",
+    "automation",
   ],
   authors: [{ name: "Coincess" }],
   creator: "Coincess",
   publisher: "Coincess",
 
-  // Favicon and icons
   icons: {
     icon: "/assets/coincess-icon.png",
     shortcut: "/assets/coincess-icon.png",
     apple: "/assets/coincess-icon.png",
   },
 
-  // Open Graph (Facebook, LinkedIn, etc.)
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteUrl,
     siteName: "Coincess",
-    title: "Coincess - Success In Crypto | Buy & Swap Cryptocurrency",
-    description: "Your gateway to cryptocurrency success. Buy any coin instantly with no KYC, compare swap rates, and learn crypto with expert guides.",
+    title: "Coincess - Trade Perps, Predict & Automate",
+    description: "Trade perpetuals on Hyperliquid, bet on prediction markets, and automate your strategies — all in one app.",
     images: [
       {
         url: `${siteUrl}/assets/coincess-logo.png`,
         width: 1200,
         height: 630,
-        alt: "Coincess - Success In Crypto",
+        alt: "Coincess",
       },
     ],
   },
 
-  // Twitter Card
   twitter: {
     card: "summary_large_image",
-    title: "Coincess - Success In Crypto",
-    description: "Buy any coin instantly with no KYC. Compare swap rates and learn crypto with expert guides.",
+    title: "Coincess - Trade Perps, Predict & Automate",
+    description: "Hyperliquid perps + Polymarket predictions + automation in one app.",
     images: [`${siteUrl}/assets/coincess-logo.png`],
     creator: "@coincess",
   },
 
-  // Robots
   robots: {
     index: true,
     follow: true,
@@ -74,27 +68,18 @@ export const metadata: Metadata = {
     },
   },
 
-  // Verification (add your actual verification codes when you have them)
-  // verification: {
-  //   google: "your-google-verification-code",
-  //   yandex: "your-yandex-verification-code",
-  // },
-
-  // Canonical URL
   metadataBase: new URL(siteUrl),
-  alternates: {
-    canonical: "/",
-  },
-
-  // Category
+  alternates: { canonical: "/" },
   category: "Finance",
 }
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
-  themeColor: "#7C3AED",
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#0b0e11",
+  colorScheme: "dark",
 }
 
 export default function RootLayout({
@@ -105,7 +90,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Structured Data - Organization */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Coincess" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -115,44 +104,23 @@ export default function RootLayout({
               name: "Coincess",
               url: siteUrl,
               logo: `${siteUrl}/assets/coincess-logo.png`,
-              description: "Your gateway to cryptocurrency success. Buy, swap, and learn crypto.",
-              sameAs: [
-                // Add your social media URLs here
-                // "https://twitter.com/coincess",
-                // "https://github.com/coincess",
-              ],
-            }),
-          }}
-        />
-        {/* Structured Data - WebSite (for sitelinks search box) */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              name: "Coincess",
-              url: siteUrl,
-              potentialAction: {
-                "@type": "SearchAction",
-                target: {
-                  "@type": "EntryPoint",
-                  urlTemplate: `${siteUrl}/coins?q={search_term_string}`,
-                },
-                "query-input": "required name=search_term_string",
-              },
+              description: "Trade perpetuals, predictions, and automate crypto strategies.",
             }),
           }}
         />
       </head>
-      <body className="antialiased">
-        {/* PHI Analytics Tracking */}
+      <body className="antialiased bg-[#0b0e11]">
         <Script
           src="https://phi.llc/tracker.js"
           data-id="phi_e43ce3b8844"
           strategy="afterInteractive"
         />
-        {children}
+        <Script id="sw-register" strategy="afterInteractive">{`
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+          }
+        `}</Script>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   )

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { PolymarketEvent } from "@/lib/polymarket/types";
-import { formatVolume, getOutcomePrice } from "@/lib/polymarket/api";
+import { formatVolume, getOutcomePrice, getEventEndDate, formatTimeRemaining } from "@/lib/polymarket/api";
 
 function PriceBar({ yes }: { yes: number }) {
   const pct = Math.round(yes * 100);
@@ -28,19 +28,35 @@ export function EventCard({ event }: { event: PolymarketEvent }) {
   const mainMarket = event.markets?.[0];
   const prices = mainMarket ? getOutcomePrice(mainMarket) : { yes: 0.5, no: 0.5 };
   const isMultiMarket = event.markets && event.markets.length > 1;
+  const endDate = getEventEndDate(event);
+  const timeLeft = formatTimeRemaining(endDate);
+  const isClosed = event.closed;
+  const isEnded = timeLeft === "Ended";
+  const isUrgent = endDate && !isClosed && !isEnded && endDate.getTime() - Date.now() < 24 * 60 * 60 * 1000;
 
   return (
     <Link
       href={`/predictions/${event.slug || event.id}`}
-      className="group block bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 hover:border-[#7C3AED]/50 hover:bg-[#1a1d2e] transition-all duration-200"
+      className={`group block bg-[#141620] border rounded-xl p-4 transition-all duration-200 ${
+        isClosed || isEnded
+          ? "border-[#2a2e3e]/50 opacity-70 hover:opacity-90"
+          : "border-[#2a2e3e] hover:border-[#7C3AED]/50 hover:bg-[#1a1d2e]"
+      }`}
     >
       <div className="flex gap-3 mb-3">
         {event.image && (
-          <img
-            src={event.image}
-            alt=""
-            className="w-12 h-12 rounded-lg object-cover shrink-0"
-          />
+          <div className="relative shrink-0">
+            <img
+              src={event.image}
+              alt=""
+              className={`w-12 h-12 rounded-lg object-cover ${isClosed || isEnded ? "grayscale" : ""}`}
+            />
+            {(isClosed || isEnded) && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                <span className="text-[8px] font-bold text-white uppercase">Closed</span>
+              </div>
+            )}
+          </div>
         )}
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 group-hover:text-[#7C3AED] transition-colors">
@@ -55,7 +71,18 @@ export function EventCard({ event }: { event: PolymarketEvent }) {
                 24h {formatVolume(event.volume24hr)}
               </span>
             )}
-            {event.tags?.slice(0, 3).map((tag) => (
+            {timeLeft && (
+              <span className={`text-[10px] font-medium shrink-0 ${
+                isClosed || isEnded
+                  ? "text-[#848e9c]"
+                  : isUrgent
+                    ? "text-amber-400"
+                    : "text-[#848e9c]"
+              }`}>
+                {isClosed ? "Resolved" : isUrgent ? `⏱ ${timeLeft}` : timeLeft}
+              </span>
+            )}
+            {event.tags?.slice(0, 2).map((tag) => (
               <span
                 key={tag.id}
                 className="text-[9px] px-1.5 py-0.5 rounded bg-[#7C3AED]/10 text-[#7C3AED] uppercase tracking-wide shrink-0"

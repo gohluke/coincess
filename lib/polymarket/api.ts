@@ -70,6 +70,21 @@ export async function fetchNewEvents(limit = 20): Promise<PolymarketEvent[]> {
   });
 }
 
+export async function fetchEndingSoonEvents(
+  limit = 20,
+  offset = 0,
+): Promise<PolymarketEvent[]> {
+  return gammaGet<PolymarketEvent[]>("/events", {
+    active: "true",
+    closed: "false",
+    order: "endDate",
+    ascending: "true",
+    limit: String(limit),
+    offset: String(offset),
+    end_date_min: new Date().toISOString(),
+  });
+}
+
 export async function fetchEventBySlug(slug: string): Promise<PolymarketEvent | null> {
   const events = await gammaGet<PolymarketEvent[]>("/events", {
     slug,
@@ -149,3 +164,25 @@ export function getOutcomePrice(market: PolymarketMarket): { yes: number; no: nu
 }
 
 import type { PolymarketMarket } from "./types";
+
+export function getEventEndDate(event: PolymarketEvent): Date | null {
+  const raw = event.endDate || event.end_date;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export function formatTimeRemaining(endDate: Date | null): string | null {
+  if (!endDate) return null;
+  const now = Date.now();
+  const diff = endDate.getTime() - now;
+  if (diff <= 0) return "Ended";
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins}m left`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h left`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d left`;
+  const months = Math.floor(days / 30);
+  return `${months}mo left`;
+}

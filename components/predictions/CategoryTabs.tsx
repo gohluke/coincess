@@ -5,6 +5,7 @@ import { usePredictionsStore } from "@/lib/polymarket/store";
 import {
   Flame,
   Sparkles,
+  Timer,
   Landmark,
   Trophy,
   Bitcoin,
@@ -16,6 +17,7 @@ import {
 
 const CATEGORIES: { label: EventCategory; icon: React.ReactNode }[] = [
   { label: "All", icon: <Flame className="h-3.5 w-3.5" /> },
+  { label: "Ending Soon", icon: <Timer className="h-3.5 w-3.5" /> },
   { label: "New", icon: <Sparkles className="h-3.5 w-3.5" /> },
   { label: "Politics", icon: <Landmark className="h-3.5 w-3.5" /> },
   { label: "Sports", icon: <Trophy className="h-3.5 w-3.5" /> },

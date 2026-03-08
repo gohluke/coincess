@@ -45,6 +45,7 @@ export interface PolymarketEvent {
   description: string;
   start_date: string;
   end_date: string;
+  endDate: string;
   image: string;
   icon: string;
   active: boolean;
@@ -85,6 +86,7 @@ export interface PolymarketBook {
 
 export type EventCategory =
   | "All"
+  | "Ending Soon"
   | "New"
   | "Politics"
   | "Sports"

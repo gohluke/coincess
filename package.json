@@ -4,15 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@nktkas/hyperliquid": "^0.32.1",
+    "@privy-io/react-auth": "^3.16.0",
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "idb": "^8.0.3",
     "lightweight-charts": "^5.1.0",
     "lucide-react": "^0.553.0",
     "next": "16.0.7",
