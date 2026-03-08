@@ -90,15 +90,12 @@ export async function fetchTags(): Promise<PolymarketTag[]> {
   return gammaGet<PolymarketTag[]>("/tags");
 }
 
-export async function searchEvents(query: string, limit = 20): Promise<PolymarketEvent[]> {
-  return gammaGet<PolymarketEvent[]>("/events", {
-    active: "true",
-    closed: "false",
-    title: query,
-    order: "volume24hr",
-    ascending: "false",
-    limit: String(limit),
-  });
+export async function searchEvents(query: string): Promise<PolymarketEvent[]> {
+  const url = new URL("/api/polymarket/search", window.location.origin);
+  url.searchParams.set("q", query);
+  const res = await fetch(url.toString());
+  if (!res.ok) return [];
+  return res.json();
 }
 
 export async function fetchOrderBook(tokenId: string): Promise<PolymarketBook> {

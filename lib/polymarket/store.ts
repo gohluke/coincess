@@ -115,7 +115,7 @@ export const usePredictionsStore = create<PredictionsState>((set, get) => ({
     }
     set({ searchQuery: query, loading: true, hasMore: false });
     try {
-      const events = await searchEvents(query, 30);
+      const events = await searchEvents(query);
       set({ events, loading: false });
     } catch (err) {
       console.error("Search failed:", err);
