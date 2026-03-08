@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Flame, ExternalLink, RefreshCw, Zap } from "lucide-react";
+import { Flame, ExternalLink, RefreshCw, Zap, Sparkles } from "lucide-react";
 import {
   fetchTrendingTokens,
   fetchTokenPairs,
@@ -17,9 +17,29 @@ interface TrendingRow {
   pair: DexPair | null;
 }
 
+const BOOF = {
+  name: "BOOF",
+  symbol: "BOOF",
+  website: "https://boof.gg",
+  contractAddress: "73xkaJou2EzfNxh2Q14Mw61emuVZjX6xHHv75aD8GqN",
+  chainId: "solana",
+};
+
+interface SponsoredData {
+  price: string | null;
+  change5m: number | null;
+  change1h: number | null;
+  change24h: number | null;
+  volume24h: number | null;
+  liquidity: number | null;
+  fdv: number | null;
+  image: string | null;
+}
+
 export function TrendingTokens() {
   const [rows, setRows] = useState<TrendingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [boof, setBoof] = useState<SponsoredData>({ price: null, change5m: null, change1h: null, change24h: null, volume24h: null, liquidity: null, fdv: null, image: null });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,9 +65,38 @@ export function TrendingTokens() {
     setLoading(false);
   }, []);
 
+  const loadBoof = useCallback(async () => {
+    try {
+      const tokenRes = await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${BOOF.contractAddress}`);
+      const tokenData = await tokenRes.json();
+      const imageUrl = tokenData?.data?.attributes?.image_url || null;
+
+      const poolsRes = await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${BOOF.contractAddress}/pools`);
+      const poolsData = await poolsRes.json();
+
+      if (poolsData.data?.length > 0) {
+        const pool = poolsData.data.reduce((best: typeof poolsData.data[0], cur: typeof poolsData.data[0]) =>
+          parseFloat(cur.attributes?.reserve_in_usd || "0") > parseFloat(best.attributes?.reserve_in_usd || "0") ? cur : best
+        , poolsData.data[0]);
+        const a = pool.attributes;
+        setBoof({
+          price: a.base_token_price_usd ?? null,
+          change5m: parseFloat(a.price_change_percentage?.m5) || null,
+          change1h: parseFloat(a.price_change_percentage?.h1) || null,
+          change24h: parseFloat(a.price_change_percentage?.h24) || null,
+          volume24h: parseFloat(a.volume_usd?.h24) || null,
+          liquidity: a.reserve_in_usd ? parseFloat(a.reserve_in_usd) / 2 : null,
+          fdv: a.fdv_usd ? parseFloat(a.fdv_usd) : null,
+          image: imageUrl,
+        });
+      }
+    } catch { /* silent */ }
+  }, []);
+
   useEffect(() => {
     load();
-  }, [load]);
+    loadBoof();
+  }, [load, loadBoof]);
 
   if (loading) {
     return (
@@ -89,6 +138,57 @@ export function TrendingTokens() {
             </tr>
           </thead>
           <tbody>
+            {/* Sponsored: BOOF */}
+            <tr className="border-b border-[#2a2e3e] bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-amber-500/5 hover:from-amber-500/10 hover:to-amber-500/10 transition-colors">
+              <td className="py-2.5 px-3">
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[9px] font-bold rounded">
+                  <Sparkles className="h-2.5 w-2.5" />AD
+                </span>
+              </td>
+              <td className="py-2.5 px-3">
+                <a href={BOOF.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group">
+                  {boof.image ? (
+                    <img src={boof.image} alt="BOOF" className="w-6 h-6 rounded-full group-hover:scale-110 transition-transform" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-bold text-black">B</div>
+                  )}
+                  <div>
+                    <span className="font-semibold group-hover:text-amber-400 transition-colors">BOOF</span>
+                    <span className="text-[#848e9c] ml-1 hidden sm:inline">Booftron 9000</span>
+                  </div>
+                </a>
+              </td>
+              <td className="py-2.5 px-3">
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: `${chainColor("solana")}20`, color: chainColor("solana") }}>
+                  {chainLabel("solana")}
+                </span>
+              </td>
+              <td className="py-2.5 px-3 text-right font-mono">{boof.price ? formatUsd(parseFloat(boof.price)) : "-"}</td>
+              <td className={`py-2.5 px-3 text-right hidden sm:table-cell ${(boof.change5m ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {boof.change5m != null ? `${boof.change5m >= 0 ? "+" : ""}${boof.change5m.toFixed(1)}%` : "-"}
+              </td>
+              <td className={`py-2.5 px-3 text-right ${(boof.change1h ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {boof.change1h != null ? `${boof.change1h >= 0 ? "+" : ""}${boof.change1h.toFixed(1)}%` : "-"}
+              </td>
+              <td className={`py-2.5 px-3 text-right hidden md:table-cell ${(boof.change24h ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {boof.change24h != null ? `${boof.change24h >= 0 ? "+" : ""}${boof.change24h.toFixed(1)}%` : "-"}
+              </td>
+              <td className="py-2.5 px-3 text-right hidden sm:table-cell text-[#848e9c]">{boof.volume24h != null ? formatUsd(boof.volume24h) : "-"}</td>
+              <td className="py-2.5 px-3 text-right hidden md:table-cell text-[#848e9c]">{boof.liquidity != null ? formatUsd(boof.liquidity) : "-"}</td>
+              <td className="py-2.5 px-3 text-right hidden lg:table-cell text-[#848e9c]">{boof.fdv != null ? formatUsd(boof.fdv) : "-"}</td>
+              <td className="py-2.5 px-3 text-center">
+                <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-400 font-bold">
+                  <Sparkles className="h-3 w-3" />
+                  Sponsored
+                </span>
+              </td>
+              <td className="py-2.5 px-3">
+                <a href={BOOF.website} target="_blank" rel="noopener noreferrer" className="p-1 text-amber-400 hover:text-amber-300 transition-colors">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </td>
+            </tr>
+
             {rows.map((row, i) => {
               const p = row.pair;
               return (

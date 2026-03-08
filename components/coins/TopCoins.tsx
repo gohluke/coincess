@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUpDown, TrendingUp, TrendingDown, ShoppingCart, RefreshCw, Coins } from "lucide-react";
+import { ArrowUpDown, TrendingUp, TrendingDown, ShoppingCart, RefreshCw, Coins, Sparkles, ExternalLink } from "lucide-react";
 
 interface Coin {
   id: string;
@@ -15,11 +15,28 @@ interface Coin {
   price_change_percentage_24h: number | null;
 }
 
+const SPONSORED_COIN = {
+  name: "BOOF",
+  symbol: "BOOF",
+  website: "https://boof.gg",
+  contractAddress: "73xkaJou2EzfNxh2Q14Mw61emuVZjX6xHHv75aD8GqN",
+  blockchain: "solana",
+};
+
+interface SponsoredData {
+  price: number | null;
+  change24h: number | null;
+  marketCap: number | null;
+  volume24h: number | null;
+  image: string | null;
+}
+
 type SortField = "market_cap_rank" | "current_price" | "price_change_percentage_24h" | "market_cap" | "total_volume";
 
 export function TopCoins() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sponsored, setSponsored] = useState<SponsoredData>({ price: null, change24h: null, marketCap: null, volume24h: null, image: null });
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState<SortField>("market_cap_rank");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -37,9 +54,37 @@ export function TopCoins() {
     setLoading(false);
   };
 
+  const fetchSponsored = async () => {
+    try {
+      const tokenRes = await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${SPONSORED_COIN.contractAddress}`);
+      const tokenData = await tokenRes.json();
+      const imageUrl = tokenData?.data?.attributes?.image_url || null;
+
+      const poolsRes = await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${SPONSORED_COIN.contractAddress}/pools`);
+      const poolsData = await poolsRes.json();
+
+      if (poolsData.data?.length > 0) {
+        const mainPool = poolsData.data.reduce((best: typeof poolsData.data[0], cur: typeof poolsData.data[0]) =>
+          parseFloat(cur.attributes?.reserve_in_usd || "0") > parseFloat(best.attributes?.reserve_in_usd || "0") ? cur : best
+        , poolsData.data[0]);
+        const a = mainPool.attributes;
+        setSponsored({
+          price: parseFloat(a.base_token_price_usd) || null,
+          change24h: parseFloat(a.price_change_percentage?.h24) || null,
+          marketCap: a.market_cap_usd ? parseFloat(a.market_cap_usd) : (a.fdv_usd ? parseFloat(a.fdv_usd) : null),
+          volume24h: parseFloat(a.volume_usd?.h24) || null,
+          image: imageUrl,
+        });
+      }
+    } catch (err) {
+      console.error("Sponsored coin error:", err);
+    }
+  };
+
   useEffect(() => {
     fetchCoins();
-    const iv = setInterval(fetchCoins, 30000);
+    fetchSponsored();
+    const iv = setInterval(() => { fetchCoins(); fetchSponsored(); }, 30000);
     return () => clearInterval(iv);
   }, []);
 
@@ -143,6 +188,49 @@ export function TopCoins() {
             </tr>
           </thead>
           <tbody>
+            {/* Sponsored: BOOF */}
+            <tr className="border-b border-[#2a2e3e] bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-amber-500/5 hover:from-amber-500/10 hover:to-amber-500/10 transition-colors">
+              <td className="py-2.5 px-3">
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[9px] font-bold rounded">
+                  <Sparkles className="h-2.5 w-2.5" />
+                  AD
+                </span>
+              </td>
+              <td className="py-2.5 px-3">
+                <a href={SPONSORED_COIN.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group">
+                  {sponsored.image ? (
+                    <img src={sponsored.image} alt={SPONSORED_COIN.name} className="w-6 h-6 rounded-full group-hover:scale-110 transition-transform" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-bold text-black">B</div>
+                  )}
+                  <div>
+                    <span className="font-semibold group-hover:text-amber-400 transition-colors">{SPONSORED_COIN.name}</span>
+                    <span className="text-[#848e9c] ml-1 uppercase">{SPONSORED_COIN.symbol}</span>
+                  </div>
+                </a>
+              </td>
+              <td className="py-2.5 px-3 text-right font-mono">{sponsored.price != null ? fmt(sponsored.price) : "-"}</td>
+              <td className={`py-2.5 px-3 text-right ${(sponsored.change24h ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                <div className="flex items-center justify-end gap-0.5">
+                  {sponsored.change24h != null && ((sponsored.change24h >= 0) ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />)}
+                  {sponsored.change24h != null ? `${sponsored.change24h >= 0 ? "+" : ""}${sponsored.change24h.toFixed(2)}%` : "-"}
+                </div>
+              </td>
+              <td className="py-2.5 px-3 text-right text-[#848e9c] hidden md:table-cell">{sponsored.marketCap != null ? fmtLarge(sponsored.marketCap) : "-"}</td>
+              <td className="py-2.5 px-3 text-right text-[#848e9c] hidden lg:table-cell">{sponsored.volume24h != null ? fmtLarge(sponsored.volume24h) : "-"}</td>
+              <td className="py-2.5 px-3">
+                <a
+                  href={SPONSORED_COIN.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-lg text-[10px] font-semibold text-black transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Visit
+                </a>
+              </td>
+            </tr>
+
             {filtered.map((c) => (
               <tr key={c.id} className="border-b border-[#1a1d26] hover:bg-[#1a1d26] transition-colors">
                 <td className="py-2.5 px-3 text-[#848e9c]">{c.market_cap_rank ?? "-"}</td>
