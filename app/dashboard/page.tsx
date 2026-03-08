@@ -15,7 +15,7 @@ import {
   Zap,
   LogIn,
 } from "lucide-react";
-import { connectWallet, getConnectedAddress } from "@/lib/hyperliquid/wallet";
+import { useWallet } from "@/hooks/useWallet";
 import { fetchClearinghouseState, fetchOpenOrders, fetchAllMarkets } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
@@ -37,7 +37,7 @@ function PnlBadge({ value }: { value: number }) {
 }
 
 export default function DashboardPage() {
-  const [address, setAddress] = useState<string | null>(null);
+  const { address, loading: walletLoading, connect } = useWallet();
   const [ch, setCh] = useState<ClearinghouseState | null>(null);
   const [orders, setOrders] = useState<OpenOrder[]>([]);
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
@@ -65,27 +65,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     automationInit();
-    getConnectedAddress().then((addr) => {
-      if (addr) {
-        setAddress(addr);
-        loadData(addr);
-      }
-    });
-  }, [loadData, automationInit]);
+  }, [automationInit]);
 
-  const handleConnect = async () => {
-    const addr = await connectWallet();
-    if (addr) {
-      setAddress(addr);
-      loadData(addr);
-    }
-  };
+  useEffect(() => {
+    if (address) loadData(address);
+  }, [address, loadData]);
 
   const positions = ch?.assetPositions.filter((ap) => parseFloat(ap.position.szi) !== 0) ?? [];
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
   const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
   const totalMarginUsed = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
   const activeStrategies = strategies.filter((s) => s.status === "active").length;
+
+  if (walletLoading) {
+    return (
+      <div className="min-h-screen bg-[#0b0e11] text-white flex items-center justify-center">
+        <RefreshCw className="h-5 w-5 animate-spin text-[#848e9c]" />
+      </div>
+    );
+  }
 
   if (!address) {
     return (
@@ -99,16 +97,16 @@ export default function DashboardPage() {
             Trade perpetuals on Hyperliquid, bet on prediction markets, and automate your strategies — all in one app.
           </p>
           <button
-            onClick={handleConnect}
+            onClick={connect}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold text-sm transition-colors shadow-lg shadow-[#7C3AED]/25"
           >
             <LogIn className="h-4 w-4" />
-            Connect Wallet
+            Sign In / Connect Wallet
           </button>
-          <p className="text-xs text-[#848e9c] mt-3">Or sign in with the button above</p>
-          <div className="flex gap-4 mt-6">
+          <div className="flex gap-4 mt-8">
             <Link href="/trade" className="text-xs text-[#848e9c] hover:text-white transition-colors">Trade &rarr;</Link>
             <Link href="/predictions" className="text-xs text-[#848e9c] hover:text-white transition-colors">Predictions &rarr;</Link>
+            <Link href="/coins" className="text-xs text-[#848e9c] hover:text-white transition-colors">Discover &rarr;</Link>
           </div>
         </div>
       </div>
