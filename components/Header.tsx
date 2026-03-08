@@ -19,6 +19,12 @@ export function Header() {
 
           {/* Navigation Links - Desktop */}
           <nav className="hidden md:flex items-center gap-8">
+            <Link href="/trade" className="text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors">
+              Trade
+            </Link>
+            <Link href="/predictions" className="text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors">
+              Predictions
+            </Link>
             <Link href="/coins" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
               Coins
             </Link>
@@ -54,6 +60,20 @@ export function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <nav className="md:hidden border-t border-gray-100 py-4 space-y-4">
+            <Link
+              href="/trade"
+              className="block px-4 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Trade
+            </Link>
+            <Link
+              href="/predictions"
+              className="block px-4 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Predictions
+            </Link>
             <Link
               href="/coins"
               className="block px-4 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
