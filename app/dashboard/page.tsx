@@ -16,8 +16,8 @@ import {
   LogIn,
 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
-import { fetchClearinghouseState, fetchOpenOrders, fetchAllMarkets } from "@/lib/hyperliquid/api";
-import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition } from "@/lib/hyperliquid/types";
+import { fetchClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills } from "@/lib/hyperliquid/api";
+import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
 
@@ -42,7 +42,9 @@ export default function DashboardPage() {
   const [ch, setCh] = useState<ClearinghouseState | null>(null);
   const [orders, setOrders] = useState<OpenOrder[]>([]);
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
+  const [fills, setFills] = useState<Fill[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const automationInit = useAutomationStore((s) => s.init);
   const strategies = useAutomationStore((s) => s.strategies);
@@ -50,14 +52,17 @@ export default function DashboardPage() {
   const loadData = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, openOrders, allMarkets] = await Promise.all([
+      const [chState, openOrders, allMarkets, userFills] = await Promise.all([
         fetchClearinghouseState(addr),
         fetchOpenOrders(addr),
         fetchAllMarkets(),
+        fetchUserFills(addr),
       ]);
       setCh(chState);
       setOrders(openOrders);
       setMarkets(allMarkets);
+      setFills(userFills);
+      setLastRefresh(new Date());
     } catch (err) {
       console.error("Failed to load dashboard:", err);
     }
@@ -73,6 +78,12 @@ export default function DashboardPage() {
   }, [address, loadData]);
 
   const positions = ch?.assetPositions.filter((ap) => parseFloat(ap.position.szi) !== 0) ?? [];
+
+  useEffect(() => {
+    if (!address) return;
+    const interval = setInterval(() => loadData(address), positions.length > 0 ? 10000 : 30000);
+    return () => clearInterval(interval);
+  }, [address, loadData, positions.length]);
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
   const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
   const totalMarginUsed = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
@@ -121,6 +132,12 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold">Portfolio</h1>
           <div className="flex items-center gap-3">
+            {lastRefresh && (
+              <span className="text-[10px] text-[#848e9c]">
+                {positions.length > 0 ? "Live" : "Updated"}{" "}
+                {lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+            )}
             <button onClick={() => loadData(address)} className="p-2 text-[#848e9c] hover:text-white transition-colors" disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
@@ -225,6 +242,63 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Trade History */}
+        {fills.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">Trade History ({fills.length})</h2>
+              <a
+                href={`https://app.hyperliquid.xyz/explorer/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#7C3AED] hover:underline inline-flex items-center gap-1"
+              >
+                Explorer <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+            <div className="space-y-1">
+              {fills.slice(0, 20).map((f) => {
+                const pnl = parseFloat(f.closedPnl);
+                const notional = parseFloat(f.px) * parseFloat(f.sz);
+                const isOpen = f.dir.toLowerCase().includes("open");
+                return (
+                  <div key={f.tid} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                        f.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                      }`}>
+                        {f.side === "B" ? "BUY" : "SELL"}
+                      </span>
+                      <div>
+                        <span className="text-xs font-medium">{f.coin}</span>
+                        <span className="text-[10px] text-[#848e9c] ml-1.5">{f.dir}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs">
+                        {parseFloat(f.sz).toFixed(4)} @ ${parseFloat(f.px).toLocaleString()}
+                      </p>
+                      <div className="flex items-center gap-2 justify-end">
+                        <span className="text-[10px] text-[#848e9c]">
+                          ${notional.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </span>
+                        {!isOpen && pnl !== 0 && (
+                          <span className={`text-[10px] font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-[#848e9c]">
+                          {new Date(f.time).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Active Strategies preview */}
         {strategies.length > 0 && (
           <div>
@@ -272,27 +346,49 @@ function PositionRow({ ap, markets }: { ap: AssetPosition; markets: MarketInfo[]
   const market = markets.find((m) => m.name === pos.coin);
   const markPx = market ? parseFloat(market.markPx) : 0;
   const roe = parseFloat(pos.returnOnEquity) * 100;
+  const liqPx = pos.liquidationPx ? parseFloat(pos.liquidationPx) : null;
+  const liqDistance = liqPx && markPx ? Math.abs((markPx - liqPx) / markPx * 100) : null;
+  const notional = Math.abs(size) * markPx;
 
   return (
-    <Link href={`/trade?coin=${pos.coin}`} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#3a3e4e] transition-colors">
-      <div className="flex items-center gap-3">
-        <div>
-          <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded font-bold mb-0.5 ${size > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-            {size > 0 ? "LONG" : "SHORT"} {pos.leverage.value}x
-          </span>
-          <p className="text-sm font-semibold">{pos.coin}</p>
+    <Link href={`/trade?coin=${pos.coin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#3a3e4e] transition-colors">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div>
+            <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded font-bold mb-0.5 ${size > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+              {size > 0 ? "LONG" : "SHORT"} {pos.leverage.value}x
+            </span>
+            <p className="text-sm font-semibold">{pos.coin}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="flex items-center gap-2 justify-end">
+            <PnlBadge value={pnl} />
+            <span className={`text-[10px] ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
+            </span>
+          </div>
+          <p className="text-[10px] text-[#848e9c]">
+            {Math.abs(size).toFixed(4)} @ ${entry.toLocaleString()} → ${markPx.toLocaleString()}
+          </p>
         </div>
       </div>
-      <div className="text-right">
-        <div className="flex items-center gap-2 justify-end">
-          <PnlBadge value={pnl} />
-          <span className={`text-[10px] ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-            ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
+      {/* Position details bar */}
+      <div className="flex items-center gap-3 mt-2 pt-2 border-t border-[#2a2e3e]/50">
+        <span className="text-[10px] text-[#848e9c]">
+          Notional: <span className="text-white">{formatUsd(notional)}</span>
+        </span>
+        {liqPx != null && liqPx > 0 && (
+          <span className="text-[10px] text-[#848e9c]">
+            Liq: <span className={liqDistance != null && liqDistance < 10 ? "text-red-400 font-medium" : "text-amber-400"}>${liqPx.toLocaleString()}</span>
+            {liqDistance != null && (
+              <span className={liqDistance < 10 ? "text-red-400" : "text-[#848e9c]"}> ({liqDistance.toFixed(1)}% away)</span>
+            )}
           </span>
-        </div>
-        <p className="text-[10px] text-[#848e9c]">
-          {Math.abs(size).toFixed(4)} @ ${entry.toLocaleString()} → ${markPx.toLocaleString()}
-        </p>
+        )}
+        <span className="text-[10px] text-[#848e9c]">
+          Margin: <span className="text-white">{formatUsd(parseFloat(pos.marginUsed))}</span>
+        </span>
       </div>
     </Link>
   );
