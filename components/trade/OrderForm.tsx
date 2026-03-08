@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction } from "@/lib/hyperliquid/signing";
 import { useWallet } from "@/hooks/useWallet";
+import { FundingBanner } from "@/components/FundingBanner";
 
 const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 50];
 const SIZE_PRESETS = [25, 50, 75, 100];
@@ -316,6 +317,11 @@ export function OrderForm() {
           }`}>
             {feedback.msg}
           </div>
+        )}
+
+        {/* Funding prompt when connected but no balance */}
+        {address && availableBalance <= 0 && (
+          <FundingBanner address={address} balance={availableBalance} compact />
         )}
 
         {/* Submit button */}

@@ -19,6 +19,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { fetchClearinghouseState, fetchOpenOrders, fetchAllMarkets } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
+import { FundingBanner } from "@/components/FundingBanner";
 
 function formatUsd(val: string | number): string {
   const n = typeof val === "string" ? parseFloat(val) : val;
@@ -75,6 +76,7 @@ export default function DashboardPage() {
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
   const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
   const totalMarginUsed = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
+  const availableBalance = parseFloat(ch?.withdrawable ?? "0");
   const activeStrategies = strategies.filter((s) => s.status === "active").length;
 
   if (walletLoading) {
@@ -128,10 +130,14 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* Account overview */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
             <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Account Value</p>
             <p className="text-lg font-bold">{formatUsd(accountValue)}</p>
+          </div>
+          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
+            <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Available</p>
+            <p className="text-lg font-bold text-emerald-400">{formatUsd(availableBalance)}</p>
           </div>
           <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
             <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Unrealized PnL</p>
@@ -146,6 +152,11 @@ export default function DashboardPage() {
             <p className="text-lg font-bold">{activeStrategies}</p>
           </div>
         </div>
+
+        {/* Funding banner when no balance */}
+        {accountValue <= 0 && (
+          <FundingBanner address={address} balance={availableBalance} />
+        )}
 
         {/* Quick actions */}
         <div className="grid grid-cols-3 gap-3">
