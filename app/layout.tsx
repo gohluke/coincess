@@ -26,8 +26,11 @@ export const metadata: Metadata = {
   publisher: "Coincess",
 
   icons: {
-    icon: "/assets/coincess-icon.png",
-    shortcut: "/assets/coincess-icon.png",
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/assets/coincess-icon.png", type: "image/png", sizes: "192x192" },
+    ],
+    shortcut: "/favicon.png",
     apple: "/assets/coincess-icon.png",
   },
 
