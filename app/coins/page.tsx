@@ -1,48 +1,85 @@
-import { Metadata } from "next"
-import { Header } from "@/components/Header"
-import { Footer } from "@/components/Footer"
-import { CoinsTable } from "@/components/CoinsTable"
-import { Coins, ShoppingCart } from "lucide-react"
+"use client";
 
-export const metadata: Metadata = {
-  title: "Cryptocurrency Prices - Buy Any Coin Instantly | Coincess",
-  description: "Real-time cryptocurrency prices, market cap, and volume data. Buy any coin instantly with one click—no account needed, best rates guaranteed.",
-  keywords: ["crypto prices", "cryptocurrency market", "bitcoin price", "buy crypto", "live crypto prices", "no kyc crypto"],
-}
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, Coins, Flame, Sparkles, Shield, Search } from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { TrendingTokens } from "@/components/coins/TrendingTokens";
+import { NewPairs } from "@/components/coins/NewPairs";
+import { SecurityCheck } from "@/components/coins/SecurityCheck";
+import { TopCoins } from "@/components/coins/TopCoins";
+import { TokenSearch } from "@/components/coins/TokenSearch";
+
+const TABS = [
+  { id: "trending", label: "Trending", icon: Flame, color: "text-orange-400" },
+  { id: "new", label: "New Pairs", icon: Sparkles, color: "text-blue-400" },
+  { id: "top", label: "Top 100", icon: Coins, color: "text-[#7C3AED]" },
+  { id: "security", label: "Security", icon: Shield, color: "text-emerald-400" },
+] as const;
+
+type Tab = (typeof TABS)[number]["id"];
 
 export default function CoinsPage() {
+  const [activeTab, setActiveTab] = useState<Tab>("trending");
+
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-12 md:py-16">
-          {/* Hero Section */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3AED]/10 rounded-full text-[#7C3AED] text-sm font-medium mb-6">
-              <Coins className="h-4 w-4" />
-              Live Prices
+    <div className="min-h-screen bg-[#0b0e11] text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="flex items-center gap-2 text-[#848e9c] hover:text-white transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:block"><Logo /></span>
+            </Link>
+            <div className="flex items-center gap-1.5">
+              <Search className="h-4 w-4 text-[#7C3AED]" />
+              <span className="text-sm font-semibold">Discover</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Cryptocurrency Prices
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Real-time prices, market cap, and volume data. Click <span className="inline-flex items-center gap-1 text-[#7C3AED] font-medium"><ShoppingCart className="h-4 w-4" />Buy</span> to instantly purchase any coin—no account needed.
-            </p>
           </div>
-
-          {/* Coins Table */}
-          <CoinsTable />
-
-          {/* Info Box */}
-          <div className="mt-10 bg-gray-50 rounded-xl p-6 text-center">
-            <p className="text-gray-600 text-sm">
-              Prices update every 30 seconds. Data provided by CoinGecko. 
-              Buy buttons link to <a href="https://trocador.app/?ref=2dzDcvfQJY" target="_blank" rel="noopener noreferrer" className="text-[#7C3AED] hover:underline">Trocador</a>—a no-KYC exchange aggregator that finds you the best rates.
-            </p>
+          <div className="flex items-center gap-3">
+            <Link href="/trade" className="text-xs text-[#848e9c] hover:text-white transition-colors hidden sm:block">
+              Trade Perps →
+            </Link>
           </div>
         </div>
-      </main>
-      <Footer />
+      </header>
+
+      {/* Token search bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5">
+        <TokenSearch />
+      </div>
+
+      {/* Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+        <div className="flex gap-1 overflow-x-auto scrollbar-none border-b border-[#2a2e39]">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                  activeTab === tab.id
+                    ? `${tab.color} border-current`
+                    : "text-[#848e9c] border-transparent hover:text-white"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tab content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {activeTab === "trending" && <TrendingTokens />}
+        {activeTab === "new" && <NewPairs />}
+        {activeTab === "top" && <TopCoins />}
+        {activeTab === "security" && <SecurityCheck />}
+      </div>
     </div>
-  )
+  );
 }
