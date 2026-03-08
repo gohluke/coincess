@@ -127,13 +127,21 @@ export function formatLiquidity(liq: number | string | undefined | null): string
 }
 
 export function getOutcomePrice(market: PolymarketMarket): { yes: number; no: number } {
-  try {
-    if (market.outcome_prices) {
-      const prices = JSON.parse(market.outcome_prices);
-      return { yes: parseFloat(prices[0]) || 0, no: parseFloat(prices[1]) || 0 };
+  // API returns outcomePrices (camelCase) as string[] e.g. ["0.65","0.35"]
+  const raw = market.outcomePrices ?? market.outcome_prices;
+  if (raw) {
+    try {
+      const arr = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (Array.isArray(arr) && arr.length >= 2) {
+        return { yes: parseFloat(arr[0]) || 0, no: parseFloat(arr[1]) || 0 };
+      }
+    } catch {
+      // fallback below
     }
-  } catch {
-    // fallback
+  }
+  if (market.lastTradePrice != null) {
+    const p = Number(market.lastTradePrice);
+    if (p > 0 && p < 1) return { yes: p, no: 1 - p };
   }
   const yesToken = market.tokens?.find((t) => t.outcome === "Yes");
   const noToken = market.tokens?.find((t) => t.outcome === "No");

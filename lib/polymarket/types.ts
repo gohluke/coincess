@@ -31,7 +31,10 @@ export interface PolymarketMarket {
   best_bid: number;
   best_ask: number;
   last_trade_price: number;
-  outcome_prices: string; // JSON string e.g. "[0.65,0.35]"
+  outcome_prices: string;
+  outcomePrices: string[] | string;
+  outcomes: string[];
+  lastTradePrice: number;
   spread: number;
 }
 
