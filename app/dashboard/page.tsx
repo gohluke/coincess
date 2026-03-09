@@ -255,6 +255,21 @@ export default function DashboardPage() {
   const availableBalance = parseFloat(ch?.withdrawable ?? "0");
   const activeStrategies = strategies.filter((s) => s.status === "active").length;
 
+  const assetDistribution = useMemo(() => {
+    const items: { label: string; value: number; color: string }[] = [];
+    if (availableBalance > 0.01) items.push({ label: "USDC", value: availableBalance, color: "#7C3AED" });
+    for (const ap of positions) {
+      const pos = ap.position;
+      const bare = stripPrefix(pos.coin);
+      const margin = parseFloat(pos.marginUsed);
+      if (margin > 0.01) items.push({ label: bare, value: margin, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
+    }
+    if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: "#7C3AED" });
+    return items;
+  }, [availableBalance, positions, accountValue]);
+
+  const assetTotal = assetDistribution.reduce((s, a) => s + a.value, 0);
+
   if (walletLoading) {
     return (
       <div className="min-h-screen bg-[#0b0e11] text-white flex items-center justify-center">
@@ -294,21 +309,6 @@ export default function DashboardPage() {
   const perpsBalance = totalMarginUsed + availableBalance;
   const spotBalance = 0;
   const evmBalance = 0;
-
-  const assetDistribution = useMemo(() => {
-    const items: { label: string; value: number; color: string }[] = [];
-    if (availableBalance > 0.01) items.push({ label: "USDC", value: availableBalance, color: "#7C3AED" });
-    for (const ap of positions) {
-      const pos = ap.position;
-      const bare = stripPrefix(pos.coin);
-      const margin = parseFloat(pos.marginUsed);
-      if (margin > 0.01) items.push({ label: bare, value: margin, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
-    }
-    if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: "#7C3AED" });
-    return items;
-  }, [availableBalance, positions, accountValue]);
-
-  const assetTotal = assetDistribution.reduce((s, a) => s + a.value, 0);
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
