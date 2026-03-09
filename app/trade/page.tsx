@@ -63,25 +63,27 @@ export default function TradePage() {
       </div>
 
       {/* Desktop layout */}
-      <div className="flex-1 min-h-0 hidden md:flex">
-        <div className="flex-1 min-w-0 flex flex-col border-r border-[#2a2e39]">
-          <div className="flex-1 min-h-0 border-b border-[#2a2e39]">
+      <div className="flex-1 min-h-0 hidden md:flex flex-col">
+        {/* Top row: chart + orderbook + order form */}
+        <div className="flex-1 min-h-0 flex">
+          <div className="flex-1 min-w-0 border-r border-[#2a2e39]">
             <TradingChart />
           </div>
-          <div className="h-[200px] shrink-0">
-            <PositionsTable />
+          <div className="w-[240px] shrink-0 flex flex-col border-r border-[#2a2e39]">
+            <div className="flex-1 min-h-0">
+              <OrderBook />
+            </div>
+            <div className="h-[250px] shrink-0 border-t border-[#2a2e39]">
+              <RecentTrades />
+            </div>
+          </div>
+          <div className="w-[280px] shrink-0 overflow-y-auto">
+            <OrderForm />
           </div>
         </div>
-        <div className="w-[240px] shrink-0 flex flex-col border-r border-[#2a2e39]">
-          <div className="flex-1 min-h-0">
-            <OrderBook />
-          </div>
-          <div className="h-[250px] shrink-0 border-t border-[#2a2e39]">
-            <RecentTrades />
-          </div>
-        </div>
-        <div className="w-[280px] shrink-0 overflow-y-auto">
-          <OrderForm />
+        {/* Bottom row: full-width positions table */}
+        <div className="h-[200px] shrink-0 border-t border-[#2a2e39]">
+          <PositionsTable />
         </div>
       </div>
 

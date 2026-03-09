@@ -9,8 +9,10 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Real-time order book** and recent trades via WebSocket
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
-- **Position management** — open positions, unrealized PnL, ROE, close positions
+- **Position management** — open positions, unrealized PnL, ROE, close positions (mobile card layout + desktop table)
 - **Order management** — view and cancel open orders
+- **Full-width positions panel** — positions/orders span the entire screen width below the chart (Based.app-style layout)
+- **Share PNL** — generate and share position cards as PNG images with leverage, ROE, entry/current price, and rocket illustration; supports Download, Copy to clipboard, and native Share (mobile)
 
 ### Prediction Markets
 - **Browse trending events** — politics, sports, crypto, pop culture, business, science, technology
@@ -33,10 +35,18 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 
 ### Unified Portfolio Dashboard (`/dashboard`)
 - Total account value, unrealized PnL, margin used, active bots
-- Live positions list with entry/mark prices and ROE
+- Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
+- PnL calendar — daily profit/loss heatmap
+- Trade history with round-trip grouping and per-trade P&L
 - Open orders overview
 - Quick-access cards for Trade, Predict, Automate
 - Active automation strategies preview
+
+### Multi-Chain Deposit Modal
+- Deposit button in navbar with multi-step flow (Based.app-style)
+- Scans 6 blockchains (Ethereum, Arbitrum, Polygon, BNB Chain, Base, Optimism)
+- Shows aggregated wallet value and per-token balances across chains
+- Token selection with chain badges and USD values
 
 ### PWA (Progressive Web App)
 - Installable on iOS/Android home screen — feels like a native app
@@ -47,6 +57,8 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 ### Mobile-First UX
 - Bottom navigation bar (Portfolio, Trade, Predict, Automate)
 - Swipeable tab layout on trading terminal (Chart / Book / Order / Positions)
+- Mobile card layout for positions and orders (replaces table on small screens)
+- Bottom-sheet share modal with safe-area padding
 - Touch-friendly controls, safe area support for notched devices
 - Responsive prediction market browsing
 
