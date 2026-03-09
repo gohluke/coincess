@@ -108,22 +108,6 @@ export async function fetchCombinedClearinghouseState(user: string): Promise<Cle
   };
 }
 
-export interface SpotBalance {
-  coin: string;
-  token: number;
-  total: string;
-  hold: string;
-  entryNtl: string;
-}
-
-export interface SpotClearinghouseState {
-  balances: SpotBalance[];
-}
-
-export async function fetchSpotClearinghouseState(user: string): Promise<SpotClearinghouseState> {
-  return post<SpotClearinghouseState>("/info", { type: "spotClearinghouseState", user });
-}
-
 export async function fetchOpenOrders(user: string): Promise<OpenOrder[]> {
   return post<OpenOrder[]>("/info", { type: "frontendOpenOrders", user });
 }
