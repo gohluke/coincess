@@ -232,22 +232,41 @@ export default function DashboardPage() {
   const winRate = closedTrades.length > 0 ? (winCount / closedTrades.length * 100).toFixed(0) : "–";
 
   const dailyPnl = useMemo(() => {
+    const toLocalDate = (ts: number) => {
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
     const map = new Map<string, { closed: number; fees: number; funding: number }>();
     for (const f of fills) {
-      const day = new Date(f.time).toISOString().slice(0, 10);
+      const day = toLocalDate(f.time);
       const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0 };
       entry.closed += parseFloat(f.closedPnl);
       entry.fees += parseFloat(f.fee);
       map.set(day, entry);
     }
     for (const fp of funding) {
-      const day = new Date(fp.time).toISOString().slice(0, 10);
+      const day = toLocalDate(fp.time);
       const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0 };
       entry.funding += parseFloat(fp.delta.usdc);
       map.set(day, entry);
     }
     return map;
   }, [fills, funding]);
+
+  const dailyFills = useMemo(() => {
+    const toLocalDate = (ts: number) => {
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    const map = new Map<string, Fill[]>();
+    for (const f of fills) {
+      const day = toLocalDate(f.time);
+      const arr = map.get(day) ?? [];
+      arr.push(f);
+      map.set(day, arr);
+    }
+    return map;
+  }, [fills]);
 
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
   const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
@@ -600,7 +619,7 @@ export default function DashboardPage() {
 
         {/* ─── PnL Calendar Tab ─── */}
         {portfolioTab === "calendar" && (
-          <PnlCalendar dailyPnl={dailyPnl} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} />
+          <PnlCalendar dailyPnl={dailyPnl} dailyFills={dailyFills} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} />
         )}
 
         {/* Hyperliquid link */}
@@ -1021,11 +1040,13 @@ function TransactionTable({ fills }: { fills: Fill[] }) {
 
 function PnlCalendar({
   dailyPnl,
+  dailyFills,
   totalClosedPnl,
   totalFundingPnl,
   totalPnlAll,
 }: {
   dailyPnl: Map<string, { closed: number; fees: number; funding: number }>;
+  dailyFills: Map<string, Fill[]>;
   totalClosedPnl: number;
   totalFundingPnl: number;
   totalPnlAll: number;
@@ -1034,6 +1055,7 @@ function PnlCalendar({
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const firstDay = new Date(calMonth.year, calMonth.month, 1);
   const lastDay = new Date(calMonth.year, calMonth.month + 1, 0);
@@ -1046,12 +1068,15 @@ function PnlCalendar({
 
   const monthStr = firstDay.toLocaleString("default", { month: "long", year: "numeric" });
 
-  const prevMonth = () =>
+  const prevMonth = () => {
     setCalMonth((p) => (p.month === 0 ? { year: p.year - 1, month: 11 } : { ...p, month: p.month - 1 }));
-  const nextMonth = () =>
+    setSelectedDay(null);
+  };
+  const nextMonth = () => {
     setCalMonth((p) => (p.month === 11 ? { year: p.year + 1, month: 0 } : { ...p, month: p.month + 1 }));
+    setSelectedDay(null);
+  };
 
-  // Compute monthly P&L
   let monthTotalPnl = 0;
   let monthClosedPnl = 0;
   let monthFunding = 0;
@@ -1060,9 +1085,11 @@ function PnlCalendar({
   let profitAmt = 0;
   let lossAmt = 0;
 
+  const dayKeys: string[] = [];
   const dayPnls: (number | null)[] = [];
   for (let d = 1; d <= totalDays; d++) {
     const key = `${calMonth.year}-${String(calMonth.month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    dayKeys.push(key);
     const entry = dailyPnl.get(key);
     if (entry) {
       const dayNet = entry.closed - entry.fees + entry.funding;
@@ -1079,6 +1106,9 @@ function PnlCalendar({
 
   const totalBarWidth = Math.abs(profitAmt) + Math.abs(lossAmt);
   const profitPct = totalBarWidth > 0 ? (Math.abs(profitAmt) / totalBarWidth) * 100 : 50;
+
+  const selectedFills = selectedDay ? (dailyFills.get(selectedDay) ?? []).sort((a, b) => b.time - a.time) : [];
+  const selectedPnlEntry = selectedDay ? dailyPnl.get(selectedDay) : null;
 
   return (
     <div className="space-y-3">
@@ -1143,16 +1173,21 @@ function PnlCalendar({
           ))}
           {Array.from({ length: totalDays }).map((_, i) => {
             const day = i + 1;
+            const key = dayKeys[i];
             const pnl = dayPnls[i];
             const hasData = pnl !== null;
             const isProfit = hasData && pnl > 0;
             const isLoss = hasData && pnl < 0;
+            const isSelected = selectedDay === key;
             return (
-              <div
+              <button
                 key={day}
-                className={`aspect-square border-r border-b border-[#2a2e3e]/20 p-1 relative transition-colors ${
-                  isProfit ? "bg-emerald-500/15" : isLoss ? "bg-red-500/15" : ""
-                }`}
+                onClick={() => setSelectedDay(isSelected ? null : (hasData ? key : null))}
+                className={`aspect-square border-r border-b border-[#2a2e3e]/20 p-1 relative transition-colors text-left ${
+                  isSelected
+                    ? "ring-2 ring-[#7C3AED] ring-inset bg-[#7C3AED]/10"
+                    : isProfit ? "bg-emerald-500/15 hover:bg-emerald-500/25" : isLoss ? "bg-red-500/15 hover:bg-red-500/25" : hasData ? "hover:bg-[#1a1d2e]" : ""
+                } ${hasData ? "cursor-pointer" : "cursor-default"}`}
               >
                 <span className={`text-[10px] font-medium ${isToday(day) ? "text-[#7C3AED] font-bold" : "text-[#848e9c]"}`}>
                   {day}
@@ -1164,11 +1199,91 @@ function PnlCalendar({
                     </span>
                   </div>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
       </div>
+
+      {/* Selected day detail panel */}
+      {selectedDay && selectedPnlEntry && (
+        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
+            <div className="flex items-center gap-3">
+              <p className="text-xs font-semibold text-white">
+                {new Date(selectedDay + "T00:00:00").toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+              </p>
+              {(() => {
+                const net = selectedPnlEntry.closed - selectedPnlEntry.fees + selectedPnlEntry.funding;
+                return (
+                  <span className={`text-xs font-bold ${net >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {net >= 0 ? "+" : ""}{formatUsd(net)}
+                  </span>
+                );
+              })()}
+            </div>
+            <button onClick={() => setSelectedDay(null)} className="text-[#848e9c] hover:text-white text-xs px-2 py-1 rounded hover:bg-[#2a2e3e] transition-colors">
+              Close
+            </button>
+          </div>
+
+          {/* Day P&L summary */}
+          <div className="flex flex-wrap items-center gap-4 px-4 py-2 text-[10px] border-b border-[#2a2e3e]/50">
+            <div>
+              <span className="text-[#848e9c]">Closed P&L: </span>
+              <span className={selectedPnlEntry.closed >= 0 ? "text-emerald-400 font-medium" : "text-red-400 font-medium"}>
+                {selectedPnlEntry.closed >= 0 ? "+" : ""}{formatUsd(selectedPnlEntry.closed)}
+              </span>
+            </div>
+            <div>
+              <span className="text-[#848e9c]">Fees: </span>
+              <span className="text-amber-400 font-medium">-{formatUsd(selectedPnlEntry.fees)}</span>
+            </div>
+            <div>
+              <span className="text-[#848e9c]">Funding: </span>
+              <span className={selectedPnlEntry.funding >= 0 ? "text-emerald-400 font-medium" : "text-red-400 font-medium"}>
+                {selectedPnlEntry.funding >= 0 ? "+" : ""}{formatUsd(selectedPnlEntry.funding)}
+              </span>
+            </div>
+          </div>
+
+          {/* Fill list */}
+          {selectedFills.length > 0 ? (
+            <div className="divide-y divide-[#2a2e3e]/30 max-h-[300px] overflow-y-auto">
+              {selectedFills.map((f) => {
+                const px = parseFloat(f.px);
+                const sz = parseFloat(f.sz);
+                const pnl = parseFloat(f.closedPnl);
+                const isBuy = f.side === "B";
+                return (
+                  <div key={f.tid} className="flex items-center justify-between px-4 py-2 text-[10px] hover:bg-[#1a1d2e]/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-1.5 py-0.5 rounded font-bold ${isBuy ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
+                        {isBuy ? "BUY" : "SELL"}
+                      </span>
+                      <span className="text-white font-medium">{stripPrefix(f.coin)}</span>
+                      <span className="text-[#848e9c]">{f.dir}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-white">{sz.toFixed(sz < 1 ? 5 : 2)} @ ${px.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                      {pnl !== 0 && (
+                        <span className={`font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                        </span>
+                      )}
+                      <span className="text-[#848e9c]">
+                        {new Date(f.time).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="px-4 py-4 text-center text-[10px] text-[#848e9c]">No fills for this day (funding only)</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
