@@ -37,7 +37,8 @@ import type {
   Fill,
   FundingPayment,
 } from "@/lib/hyperliquid/types";
-import type { LeaderboardEntry, SpotClearinghouseState } from "@/lib/hyperliquid/api";
+import type { LeaderboardEntry } from "@/lib/hyperliquid/api";
+import type { SpotClearinghouseState } from "@/lib/hyperliquid/types";
 
 function stripPrefix(coin: string): string {
   const idx = coin.indexOf(":");
