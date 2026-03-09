@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Wallet,
@@ -14,12 +14,145 @@ import {
   RefreshCw,
   Zap,
   LogIn,
+  Clock,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
+
+// ── Round-trip trade grouping ──────────────────────────────
+
+interface RoundTripTrade {
+  coin: string;
+  direction: "Long" | "Short";
+  entryPx: number;
+  exitPx: number | null;
+  maxSize: number;
+  openTime: number;
+  closeTime: number | null;
+  realizedPnl: number;
+  totalFees: number;
+  netPnl: number;
+  fills: Fill[];
+  isOpen: boolean;
+}
+
+function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
+  const sorted = [...fills].sort((a, b) => a.time - b.time);
+  const byCoin = new Map<string, Fill[]>();
+  for (const f of sorted) {
+    const arr = byCoin.get(f.coin) ?? [];
+    arr.push(f);
+    byCoin.set(f.coin, arr);
+  }
+
+  const trades: RoundTripTrade[] = [];
+
+  for (const [coin, coinFills] of byCoin) {
+    let pos = 0;
+    let tradeFills: Fill[] = [];
+    let openTime = 0;
+    let direction: "Long" | "Short" = "Long";
+    let entryCost = 0;
+    let entrySize = 0;
+
+    for (const f of coinFills) {
+      const sz = parseFloat(f.sz);
+      const px = parseFloat(f.px);
+      const delta = f.side === "B" ? sz : -sz;
+
+      if (tradeFills.length === 0) {
+        openTime = f.time;
+        direction = delta > 0 ? "Long" : "Short";
+        entryCost = 0;
+        entrySize = 0;
+      }
+
+      tradeFills.push(f);
+
+      const isOpening = f.dir.toLowerCase().includes("open");
+      if (isOpening) {
+        entryCost += px * sz;
+        entrySize += sz;
+      }
+
+      const prevPos = pos;
+      pos += delta;
+
+      const crossed = (prevPos > 0 && pos <= 0) || (prevPos < 0 && pos >= 0);
+      if (crossed || Math.abs(pos) < 1e-10) {
+        const pnl = tradeFills.reduce((s, tf) => s + parseFloat(tf.closedPnl), 0);
+        const fees = tradeFills.reduce((s, tf) => s + parseFloat(tf.fee), 0);
+        const closeFills = tradeFills.filter((tf) => tf.dir.toLowerCase().includes("close"));
+        const exitCost = closeFills.reduce((s, tf) => s + parseFloat(tf.px) * parseFloat(tf.sz), 0);
+        const exitSize = closeFills.reduce((s, tf) => s + parseFloat(tf.sz), 0);
+
+        trades.push({
+          coin,
+          direction,
+          entryPx: entrySize > 0 ? entryCost / entrySize : 0,
+          exitPx: exitSize > 0 ? exitCost / exitSize : null,
+          maxSize: entrySize || Math.abs(parseFloat(tradeFills[0].sz)),
+          openTime,
+          closeTime: tradeFills[tradeFills.length - 1].time,
+          realizedPnl: pnl,
+          totalFees: fees,
+          netPnl: pnl - fees,
+          fills: tradeFills,
+          isOpen: false,
+        });
+        tradeFills = [];
+        if (Math.abs(pos) > 1e-10) {
+          tradeFills = [f];
+          openTime = f.time;
+          direction = pos > 0 ? "Long" : "Short";
+          entryCost = px * sz;
+          entrySize = sz;
+        }
+      }
+    }
+
+    if (tradeFills.length > 0) {
+      const pnl = tradeFills.reduce((s, tf) => s + parseFloat(tf.closedPnl), 0);
+      const fees = tradeFills.reduce((s, tf) => s + parseFloat(tf.fee), 0);
+
+      trades.push({
+        coin,
+        direction,
+        entryPx: entrySize > 0 ? entryCost / entrySize : parseFloat(tradeFills[0].px),
+        exitPx: null,
+        maxSize: entrySize || Math.abs(parseFloat(tradeFills[0].sz)),
+        openTime,
+        closeTime: null,
+        realizedPnl: pnl,
+        totalFees: fees,
+        netPnl: pnl - fees,
+        fills: tradeFills,
+        isOpen: true,
+      });
+    }
+  }
+
+  trades.sort((a, b) => (b.closeTime ?? b.openTime) - (a.closeTime ?? a.openTime));
+  return trades;
+}
+
+function formatDuration(ms: number): string {
+  const secs = Math.floor(ms / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  if (hrs < 24) return `${hrs}h ${remMins}m`;
+  const days = Math.floor(hrs / 24);
+  const remHrs = hrs % 24;
+  return `${days}d ${remHrs}h`;
+}
 
 function formatUsd(val: string | number): string {
   const n = typeof val === "string" ? parseFloat(val) : val;
@@ -45,6 +178,7 @@ export default function DashboardPage() {
   const [fills, setFills] = useState<Fill[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [historyView, setHistoryView] = useState<"trades" | "fills">("trades");
 
   const automationInit = useAutomationStore((s) => s.init);
   const strategies = useAutomationStore((s) => s.strategies);
@@ -84,6 +218,13 @@ export default function DashboardPage() {
     const interval = setInterval(() => loadData(address), positions.length > 0 ? 10000 : 30000);
     return () => clearInterval(interval);
   }, [address, loadData, positions.length]);
+  const trades = useMemo(() => groupFillsIntoTrades(fills), [fills]);
+  const closedTrades = trades.filter((t) => !t.isOpen);
+  const totalRealizedPnl = closedTrades.reduce((s, t) => s + t.realizedPnl, 0);
+  const totalFeesPaid = trades.reduce((s, t) => s + t.totalFees, 0);
+  const winCount = closedTrades.filter((t) => t.netPnl > 0).length;
+  const winRate = closedTrades.length > 0 ? (winCount / closedTrades.length * 100).toFixed(0) : "–";
+
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
   const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
   const totalMarginUsed = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
@@ -246,7 +387,23 @@ export default function DashboardPage() {
         {fills.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Trade History ({fills.length})</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold">Trade History</h2>
+                <div className="flex bg-[#1a1d2e] rounded-lg p-0.5 text-[10px]">
+                  <button
+                    onClick={() => setHistoryView("trades")}
+                    className={`px-2.5 py-1 rounded-md font-medium transition-colors ${historyView === "trades" ? "bg-[#7C3AED] text-white" : "text-[#848e9c] hover:text-white"}`}
+                  >
+                    Trades ({trades.length})
+                  </button>
+                  <button
+                    onClick={() => setHistoryView("fills")}
+                    className={`px-2.5 py-1 rounded-md font-medium transition-colors ${historyView === "fills" ? "bg-[#7C3AED] text-white" : "text-[#848e9c] hover:text-white"}`}
+                  >
+                    Fills ({fills.length})
+                  </button>
+                </div>
+              </div>
               <a
                 href={`https://app.hyperliquid.xyz/explorer/address/${address}`}
                 target="_blank"
@@ -256,46 +413,82 @@ export default function DashboardPage() {
                 Explorer <ExternalLink className="h-3 w-3" />
               </a>
             </div>
-            <div className="space-y-1">
-              {fills.slice(0, 20).map((f) => {
-                const pnl = parseFloat(f.closedPnl);
-                const notional = parseFloat(f.px) * parseFloat(f.sz);
-                const isOpen = f.dir.toLowerCase().includes("open");
-                return (
-                  <div key={f.tid} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                        f.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
-                      }`}>
-                        {f.side === "B" ? "BUY" : "SELL"}
-                      </span>
-                      <div>
-                        <span className="text-xs font-medium">{f.coin}</span>
-                        <span className="text-[10px] text-[#848e9c] ml-1.5">{f.dir}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs">
-                        {parseFloat(f.sz).toFixed(4)} @ ${parseFloat(f.px).toLocaleString()}
-                      </p>
-                      <div className="flex items-center gap-2 justify-end">
-                        <span className="text-[10px] text-[#848e9c]">
-                          ${notional.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+
+            {/* Aggregate stats bar */}
+            {closedTrades.length > 0 && historyView === "trades" && (
+              <div className="flex flex-wrap items-center gap-4 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5 mb-3">
+                <div>
+                  <span className="text-[10px] text-[#848e9c]">Realized P&L </span>
+                  <span className={`text-xs font-semibold ${totalRealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {totalRealizedPnl >= 0 ? "+" : ""}{formatUsd(totalRealizedPnl)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#848e9c]">Fees Paid </span>
+                  <span className="text-xs font-semibold text-amber-400">{formatUsd(totalFeesPaid)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#848e9c]">Net P&L </span>
+                  <span className={`text-xs font-semibold ${(totalRealizedPnl - totalFeesPaid) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {(totalRealizedPnl - totalFeesPaid) >= 0 ? "+" : ""}{formatUsd(totalRealizedPnl - totalFeesPaid)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#848e9c]">Win Rate </span>
+                  <span className="text-xs font-semibold text-white">{winRate}%</span>
+                  <span className="text-[10px] text-[#848e9c] ml-1">({winCount}/{closedTrades.length})</span>
+                </div>
+              </div>
+            )}
+
+            {historyView === "trades" ? (
+              <div className="space-y-2">
+                {trades.map((trade, i) => (
+                  <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {fills.slice(0, 30).map((f) => {
+                  const pnl = parseFloat(f.closedPnl);
+                  const notional = parseFloat(f.px) * parseFloat(f.sz);
+                  const isOpen = f.dir.toLowerCase().includes("open");
+                  return (
+                    <div key={f.tid} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                          f.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                        }`}>
+                          {f.side === "B" ? "BUY" : "SELL"}
                         </span>
-                        {!isOpen && pnl !== 0 && (
-                          <span className={`text-[10px] font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                            {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                        <div>
+                          <span className="text-xs font-medium">{stripPrefix(f.coin)}</span>
+                          <span className="text-[10px] text-[#848e9c] ml-1.5">{f.dir}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs">
+                          {parseFloat(f.sz).toFixed(4)} @ ${parseFloat(f.px).toLocaleString()}
+                        </p>
+                        <div className="flex items-center gap-2 justify-end">
+                          <span className="text-[10px] text-[#848e9c]">
+                            ${notional.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </span>
-                        )}
-                        <span className="text-[10px] text-[#848e9c]">
-                          {new Date(f.time).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                        </span>
+                          {!isOpen && pnl !== 0 && (
+                            <span className={`text-[10px] font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                              {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-[#848e9c]">
+                            {new Date(f.time).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -341,6 +534,126 @@ export default function DashboardPage() {
 function stripPrefix(coin: string): string {
   const idx = coin.indexOf(":");
   return idx >= 0 ? coin.slice(idx + 1) : coin;
+}
+
+function TradeRow({ trade }: { trade: RoundTripTrade }) {
+  const [expanded, setExpanded] = useState(false);
+  const bare = stripPrefix(trade.coin);
+  const duration = trade.closeTime ? trade.closeTime - trade.openTime : Date.now() - trade.openTime;
+  const isWin = trade.netPnl > 0;
+
+  const fmtTime = (t: number) =>
+    new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+      <button onClick={() => setExpanded((v) => !v)} className="w-full px-4 py-3 text-left hover:bg-[#1a1d2e]/50 transition-colors">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${trade.direction === "Long" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+              {trade.direction.toUpperCase()}
+            </span>
+            <div>
+              <span className="text-sm font-semibold">{bare}</span>
+              {trade.isOpen && (
+                <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium">OPEN</span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {!trade.isOpen && (
+              <span className={`text-sm font-bold ${isWin ? "text-emerald-400" : "text-red-400"}`}>
+                {trade.netPnl >= 0 ? "+" : ""}{formatUsd(trade.netPnl)}
+              </span>
+            )}
+            {expanded ? <ChevronUp className="h-3.5 w-3.5 text-[#848e9c]" /> : <ChevronDown className="h-3.5 w-3.5 text-[#848e9c]" />}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-[10px] text-[#848e9c]">
+          <span>Size: <span className="text-white">{trade.maxSize.toFixed(4)}</span></span>
+          <span>Entry: <span className="text-white">${trade.entryPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
+          {trade.exitPx != null && (
+            <span>Exit: <span className="text-white">${trade.exitPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
+          )}
+          <span className="inline-flex items-center gap-0.5">
+            <Clock className="h-2.5 w-2.5" />
+            {fmtTime(trade.openTime)}
+            {trade.closeTime ? ` → ${fmtTime(trade.closeTime)}` : " → now"}
+          </span>
+          <span>Duration: <span className="text-white">{formatDuration(duration)}</span></span>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-[#2a2e3e]/50 px-4 py-2.5 space-y-2">
+          {/* P&L breakdown */}
+          <div className="flex flex-wrap items-center gap-4 text-[10px]">
+            <div>
+              <span className="text-[#848e9c]">Realized P&L: </span>
+              <span className={trade.realizedPnl >= 0 ? "text-emerald-400 font-medium" : "text-red-400 font-medium"}>
+                {trade.realizedPnl >= 0 ? "+" : ""}{formatUsd(trade.realizedPnl)}
+              </span>
+            </div>
+            <div>
+              <span className="text-[#848e9c]">Fees: </span>
+              <span className="text-amber-400 font-medium">-{formatUsd(trade.totalFees)}</span>
+            </div>
+            <div>
+              <span className="text-[#848e9c]">Net: </span>
+              <span className={`font-bold ${trade.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {trade.netPnl >= 0 ? "+" : ""}{formatUsd(trade.netPnl)}
+              </span>
+            </div>
+            {trade.exitPx != null && trade.entryPx > 0 && (
+              <div>
+                <span className="text-[#848e9c]">Return: </span>
+                {(() => {
+                  const ret = trade.direction === "Long"
+                    ? ((trade.exitPx - trade.entryPx) / trade.entryPx) * 100
+                    : ((trade.entryPx - trade.exitPx) / trade.entryPx) * 100;
+                  return (
+                    <span className={`font-medium ${ret >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {ret >= 0 ? "+" : ""}{ret.toFixed(2)}%
+                    </span>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Individual fills */}
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-[#848e9c] font-medium mb-1">{trade.fills.length} fill{trade.fills.length > 1 ? "s" : ""}</p>
+            {trade.fills.map((f) => {
+              const pnl = parseFloat(f.closedPnl);
+              return (
+                <div key={f.tid} className="flex items-center justify-between text-[10px] py-1 px-2 rounded bg-[#0b0e11]/50">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`px-1 py-0.5 rounded font-bold ${f.side === "B" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                      {f.side === "B" ? "BUY" : "SELL"}
+                    </span>
+                    <span className="text-[#848e9c]">{f.dir}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white">{parseFloat(f.sz).toFixed(4)} @ ${parseFloat(f.px).toLocaleString()}</span>
+                    {pnl !== 0 && (
+                      <span className={pnl >= 0 ? "text-emerald-400" : "text-red-400"}>
+                        {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                      </span>
+                    )}
+                    <span className="text-[#848e9c]">fee: {formatUsd(parseFloat(f.fee))}</span>
+                    <span className="text-[#848e9c]">
+                      {new Date(f.time).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function PositionRow({ ap, markets }: { ap: AssetPosition; markets: MarketInfo[] }) {
