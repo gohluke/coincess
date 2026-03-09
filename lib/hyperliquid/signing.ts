@@ -11,7 +11,7 @@ const BUILDER_ADDRESS = "0x635b3B453De75e873A02B4898f615C5E8909070a" as const;
 const BUILDER_FEE = 10;
 // Set to true once your builder address has ≥100 USDC on Hyperliquid perps.
 // Trades will work without this — you just won't collect fees yet.
-const BUILDER_FEE_ENABLED = false;
+const BUILDER_FEE_ENABLED = true;
 
 type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
