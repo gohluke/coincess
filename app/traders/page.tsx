@@ -15,6 +15,10 @@ import {
   Trophy,
   ArrowUpDown,
   ChevronLeft,
+  Crosshair,
+  TrendingUp,
+  TrendingDown,
+  Loader2,
 } from "lucide-react";
 import {
   fetchCombinedClearinghouseState,
@@ -59,6 +63,21 @@ function getPerf(entry: LeaderboardEntry, window: TimeWindow) {
   return p ? p[1] : { pnl: "0", roi: "0", vlm: "0" };
 }
 
+interface ScanResult {
+  address: string;
+  displayName: string | null;
+  coin: string;
+  side: "Long" | "Short";
+  size: number;
+  entryPx: number;
+  markPx: number;
+  leverage: number;
+  unrealizedPnl: number;
+  positionValue: number;
+  accountValue: number;
+  returnOnPosition: number;
+}
+
 export default function TradersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -80,12 +99,20 @@ export default function TradersPage() {
   const [sortKey, setSortKey] = useState<SortKey>("pnl");
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("allTime");
   const [lbSearch, setLbSearch] = useState("");
+  const [mainTab, setMainTab] = useState<"leaderboard" | "scanner">("leaderboard");
+
+  const [scanCoin, setScanCoin] = useState("");
+  const [scanResults, setScanResults] = useState<ScanResult[]>([]);
+  const [scanning, setScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState({ done: 0, total: 0 });
+  const [allMarkets, setAllMarkets] = useState<MarketInfo[]>([]);
 
   useEffect(() => {
     fetchLeaderboard()
       .then(setLeaderboard)
       .catch(console.error)
       .finally(() => setLbLoading(false));
+    fetchAllMarkets().then(setAllMarkets).catch(console.error);
   }, []);
 
   const sortedLb = useMemo(() => {
@@ -107,6 +134,65 @@ export default function TradersPage() {
       })
       .slice(0, 50);
   }, [leaderboard, sortKey, timeWindow, lbSearch]);
+
+  const coinSuggestions = useMemo(() => {
+    const names = allMarkets.map((m) => stripPrefix(m.name));
+    return [...new Set(names)].sort();
+  }, [allMarkets]);
+
+  const scanForContract = useCallback(async (coin: string) => {
+    if (!coin || leaderboard.length === 0) return;
+    setScanning(true);
+    setScanResults([]);
+    const target = coin.toUpperCase();
+    const topTraders = [...leaderboard]
+      .sort((a, b) => parseFloat(b.accountValue) - parseFloat(a.accountValue))
+      .slice(0, 100);
+    setScanProgress({ done: 0, total: topTraders.length });
+
+    const results: ScanResult[] = [];
+    const BATCH = 10;
+    for (let i = 0; i < topTraders.length; i += BATCH) {
+      const batch = topTraders.slice(i, i + BATCH);
+      const settled = await Promise.allSettled(
+        batch.map((t) => fetchCombinedClearinghouseState(t.ethAddress).then((ch) => ({ trader: t, ch })))
+      );
+      for (const r of settled) {
+        if (r.status !== "fulfilled") continue;
+        const { trader, ch } = r.value;
+        for (const ap of ch.assetPositions) {
+          const name = stripPrefix(ap.position.coin).toUpperCase();
+          if (name !== target) continue;
+          const szi = parseFloat(ap.position.szi);
+          if (Math.abs(szi) === 0) continue;
+          const entryPx = parseFloat(ap.position.entryPx ?? "0");
+          const markInfo = allMarkets.find(
+            (m) => stripPrefix(m.name).toUpperCase() === target
+          );
+          const markPrice = markInfo ? parseFloat(markInfo.markPx) : entryPx;
+          const uPnl = parseFloat(ap.position.unrealizedPnl);
+          const posVal = parseFloat(ap.position.positionValue);
+          results.push({
+            address: trader.ethAddress,
+            displayName: trader.displayName,
+            coin: ap.position.coin,
+            side: szi > 0 ? "Long" : "Short",
+            size: Math.abs(szi),
+            entryPx,
+            markPx: markPrice,
+            leverage: ap.position.leverage?.value ?? 0,
+            unrealizedPnl: uPnl,
+            positionValue: posVal,
+            accountValue: parseFloat(trader.accountValue),
+            returnOnPosition: posVal > 0 ? (uPnl / posVal) * 100 : 0,
+          });
+        }
+      }
+      setScanProgress({ done: Math.min(i + BATCH, topTraders.length), total: topTraders.length });
+      setScanResults([...results].sort((a, b) => Math.abs(b.unrealizedPnl) - Math.abs(a.unrealizedPnl)));
+    }
+    setScanning(false);
+  }, [leaderboard, allMarkets]);
 
   const loadTrader = useCallback(async (addr: string) => {
     if (!addr || !addr.startsWith("0x")) return;
@@ -236,108 +322,262 @@ export default function TradersPage() {
           </button>
         </div>
 
-        {/* ── Leaderboard (when no address selected) ── */}
+        {/* ── Tab Switch (when no address selected) ── */}
         {!activeAddress && (
           <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
-                <Trophy className="h-3.5 w-3.5 text-amber-400" />
-                Leaderboard
-              </h2>
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="relative flex-1 sm:flex-none">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[#848e9c]" />
-                  <input
-                    type="text"
-                    value={lbSearch}
-                    onChange={(e) => setLbSearch(e.target.value)}
-                    placeholder="Filter by name or address..."
-                    className="bg-[#141620] border border-[#2a2e3e] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED] transition-colors w-full sm:w-52"
-                  />
-                </div>
-                <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
-                  {(["day", "week", "month", "allTime"] as TimeWindow[]).map((tw) => (
-                    <button
-                      key={tw}
-                      onClick={() => setTimeWindow(tw)}
-                      className={`px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
-                        timeWindow === tw ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "text-[#848e9c] hover:text-white"
-                      }`}
-                    >
-                      {tw === "allTime" ? "All" : tw === "day" ? "24h" : tw === "week" ? "7d" : "30d"}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
-                  {([["pnl", "P&L"], ["roi", "ROI"], ["accountValue", "Value"], ["dayPnl", "24h"]] as [SortKey, string][]).map(([k, label]) => (
-                    <button
-                      key={k}
-                      onClick={() => setSortKey(k)}
-                      className={`px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
-                        sortKey === k ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "text-[#848e9c] hover:text-white"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="flex items-center gap-1 bg-[#141620] border border-[#2a2e3e] rounded-lg p-0.5 w-fit">
+              <button
+                onClick={() => setMainTab("leaderboard")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  mainTab === "leaderboard" ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "text-[#848e9c] hover:text-white"
+                }`}
+              >
+                <Trophy className="h-3.5 w-3.5" /> Leaderboard
+              </button>
+              <button
+                onClick={() => setMainTab("scanner")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  mainTab === "scanner" ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "text-[#848e9c] hover:text-white"
+                }`}
+              >
+                <Crosshair className="h-3.5 w-3.5" /> Contract Scanner
+              </button>
             </div>
 
-            {lbLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <RefreshCw className="h-5 w-5 animate-spin text-[#848e9c]" />
-              </div>
-            ) : (
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
-                <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
-                  <span className="col-span-1">#</span>
-                  <span className="col-span-3">Trader</span>
-                  <span className="col-span-2 text-right">Account Value</span>
-                  <span className="col-span-2 text-right">{timeWindow === "allTime" ? "All-Time" : timeWindow === "day" ? "24h" : timeWindow === "week" ? "7d" : "30d"} P&L</span>
-                  <span className="col-span-2 text-right">ROI</span>
-                  <span className="col-span-2 text-right">24h P&L</span>
+            {/* ── Contract Scanner ── */}
+            {mainTab === "scanner" && (
+              <div className="space-y-3">
+                <p className="text-[11px] text-[#848e9c]">
+                  Search a contract to see who among the top 100 traders (by account value) has open positions.
+                </p>
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <Crosshair className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#848e9c]" />
+                    <input
+                      type="text"
+                      value={scanCoin}
+                      onChange={(e) => setScanCoin(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && scanForContract(scanCoin)}
+                      placeholder="Type contract name (e.g. BRENTOIL, BTC, WTI, GOLD...)"
+                      className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED] transition-colors"
+                      list="coin-suggestions"
+                    />
+                    <datalist id="coin-suggestions">
+                      {coinSuggestions.map((c) => (
+                        <option key={c} value={c} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <button
+                    onClick={() => scanForContract(scanCoin)}
+                    disabled={scanning || !scanCoin}
+                    className="px-5 py-2.5 bg-[#7C3AED] text-white rounded-lg text-sm font-medium hover:bg-[#6D28D9] transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                  >
+                    {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    Scan
+                  </button>
                 </div>
-                {sortedLb.map((entry, i) => {
-                  const perf = getPerf(entry, timeWindow);
-                  const dayPerf = getPerf(entry, "day");
-                  const pnl = parseFloat(perf.pnl);
-                  const roi = parseFloat(perf.roi) * 100;
-                  const dayPnl = parseFloat(dayPerf.pnl);
-                  const av = parseFloat(entry.accountValue);
-                  const name = entry.displayName || shortAddr(entry.ethAddress);
-                  const isTop3 = i < 3;
 
-                  return (
+                {/* Quick picks */}
+                <div className="flex flex-wrap gap-1.5">
+                  {["BRENTOIL", "BTC", "ETH", "SOL", "GOLD", "WTI", "HYPE", "DOGE", "XRP", "SUI"].map((c) => (
                     <button
-                      key={entry.ethAddress}
-                      onClick={() => selectTrader(entry.ethAddress)}
-                      className="w-full grid grid-cols-12 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors text-left gap-y-1"
+                      key={c}
+                      onClick={() => { setScanCoin(c); scanForContract(c); }}
+                      className="px-2.5 py-1 bg-[#1a1d2e] border border-[#2a2e3e] rounded-md text-[10px] text-[#848e9c] hover:text-white hover:border-[#7C3AED]/50 transition-colors"
                     >
-                      <span className={`col-span-1 font-bold ${isTop3 ? "text-amber-400" : "text-[#848e9c]"}`}>
-                        {i + 1}
-                      </span>
-                      <div className="col-span-5 sm:col-span-3">
-                        <span className="text-white font-medium text-xs truncate block">{name}</span>
-                        <span className="text-[9px] text-[#848e9c] font-mono sm:hidden">{shortAddr(entry.ethAddress)}</span>
-                        {entry.displayName && (
-                          <span className="text-[9px] text-[#848e9c] font-mono hidden sm:block">{shortAddr(entry.ethAddress)}</span>
-                        )}
-                      </div>
-                      <span className="col-span-2 text-right text-white hidden sm:block">{formatUsd(av)}</span>
-                      <span className={`col-span-3 sm:col-span-2 text-right font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                      </span>
-                      <span className={`col-span-3 sm:col-span-2 text-right font-medium ${roi >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {roi >= 0 ? "+" : ""}{roi.toFixed(1)}%
-                      </span>
-                      <span className={`col-span-2 text-right hidden sm:block ${dayPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {dayPnl >= 0 ? "+" : ""}{formatUsd(dayPnl)}
-                      </span>
+                      {c}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+
+                {/* Progress bar */}
+                {scanning && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[10px] text-[#848e9c]">
+                      <span>Scanning top traders for {scanCoin} positions...</span>
+                      <span>{scanProgress.done}/{scanProgress.total}</span>
+                    </div>
+                    <div className="w-full bg-[#2a2e3e] rounded-full h-1.5">
+                      <div
+                        className="bg-[#7C3AED] h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: scanProgress.total > 0 ? `${(scanProgress.done / scanProgress.total) * 100}%` : "0%" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Results */}
+                {scanResults.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-semibold text-white">
+                      {scanResults.length} trader{scanResults.length === 1 ? "" : "s"} holding {scanCoin}
+                    </h3>
+                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                      <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+                        <span className="col-span-3">Trader</span>
+                        <span className="col-span-1 text-center">Side</span>
+                        <span className="col-span-2 text-right">Size</span>
+                        <span className="col-span-2 text-right">Entry / Mark</span>
+                        <span className="col-span-1 text-right">Lev</span>
+                        <span className="col-span-2 text-right">Unrealized P&L</span>
+                        <span className="col-span-1 text-right">ROI</span>
+                      </div>
+                      {scanResults.map((r, i) => (
+                        <button
+                          key={`${r.address}-${i}`}
+                          onClick={() => selectTrader(r.address)}
+                          className="w-full grid grid-cols-12 items-center px-4 py-3 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors text-left gap-y-1"
+                        >
+                          <div className="col-span-6 sm:col-span-3">
+                            <span className="text-white font-medium text-xs truncate block">
+                              {r.displayName || shortAddr(r.address)}
+                            </span>
+                            {r.displayName && (
+                              <span className="text-[9px] text-[#848e9c] font-mono">{shortAddr(r.address)}</span>
+                            )}
+                          </div>
+                          <div className="col-span-3 sm:col-span-1 text-center">
+                            <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              r.side === "Long" ? "bg-emerald-400/10 text-emerald-400" : "bg-red-400/10 text-red-400"
+                            }`}>
+                              {r.side === "Long" ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                              {r.side}
+                            </span>
+                          </div>
+                          <span className="col-span-3 sm:col-span-2 text-right text-white">{formatUsd(r.positionValue)}</span>
+                          <div className="hidden sm:block col-span-2 text-right">
+                            <span className="text-[#848e9c] text-[10px]">{r.entryPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                            <span className="text-[#848e9c] mx-0.5">/</span>
+                            <span className="text-white text-[10px]">{r.markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                          </div>
+                          <span className="hidden sm:block col-span-1 text-right text-[#848e9c]">{r.leverage}x</span>
+                          <span className={`col-span-6 sm:col-span-2 text-right font-bold ${r.unrealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {r.unrealizedPnl >= 0 ? "+" : ""}{formatUsd(r.unrealizedPnl)}
+                          </span>
+                          <span className={`hidden sm:block col-span-1 text-right text-[10px] font-medium ${r.returnOnPosition >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {r.returnOnPosition >= 0 ? "+" : ""}{r.returnOnPosition.toFixed(1)}%
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!scanning && scanResults.length === 0 && scanProgress.total > 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Crosshair className="h-8 w-8 text-[#2a2e3e] mb-3" />
+                    <p className="text-sm text-[#848e9c]">No top-100 traders have open {scanCoin} positions</p>
+                    <p className="text-xs text-[#2a2e3e] mt-1">Try a different contract or check back later</p>
+                  </div>
+                )}
               </div>
+            )}
+
+            {/* ── Leaderboard ── */}
+            {mainTab === "leaderboard" && (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
+                    <Trophy className="h-3.5 w-3.5 text-amber-400" />
+                    Leaderboard
+                  </h2>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="relative flex-1 sm:flex-none">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[#848e9c]" />
+                      <input
+                        type="text"
+                        value={lbSearch}
+                        onChange={(e) => setLbSearch(e.target.value)}
+                        placeholder="Filter by name or address..."
+                        className="bg-[#141620] border border-[#2a2e3e] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED] transition-colors w-full sm:w-52"
+                      />
+                    </div>
+                    <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
+                      {(["day", "week", "month", "allTime"] as TimeWindow[]).map((tw) => (
+                        <button
+                          key={tw}
+                          onClick={() => setTimeWindow(tw)}
+                          className={`px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
+                            timeWindow === tw ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "text-[#848e9c] hover:text-white"
+                          }`}
+                        >
+                          {tw === "allTime" ? "All" : tw === "day" ? "24h" : tw === "week" ? "7d" : "30d"}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
+                      {([["pnl", "P&L"], ["roi", "ROI"], ["accountValue", "Value"], ["dayPnl", "24h"]] as [SortKey, string][]).map(([k, label]) => (
+                        <button
+                          key={k}
+                          onClick={() => setSortKey(k)}
+                          className={`px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
+                            sortKey === k ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "text-[#848e9c] hover:text-white"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {lbLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <RefreshCw className="h-5 w-5 animate-spin text-[#848e9c]" />
+                  </div>
+                ) : (
+                  <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                    <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+                      <span className="col-span-1">#</span>
+                      <span className="col-span-3">Trader</span>
+                      <span className="col-span-2 text-right">Account Value</span>
+                      <span className="col-span-2 text-right">{timeWindow === "allTime" ? "All-Time" : timeWindow === "day" ? "24h" : timeWindow === "week" ? "7d" : "30d"} P&L</span>
+                      <span className="col-span-2 text-right">ROI</span>
+                      <span className="col-span-2 text-right">24h P&L</span>
+                    </div>
+                    {sortedLb.map((entry, i) => {
+                      const perf = getPerf(entry, timeWindow);
+                      const dayPerf = getPerf(entry, "day");
+                      const pnl = parseFloat(perf.pnl);
+                      const roi = parseFloat(perf.roi) * 100;
+                      const dayPnl = parseFloat(dayPerf.pnl);
+                      const av = parseFloat(entry.accountValue);
+                      const name = entry.displayName || shortAddr(entry.ethAddress);
+                      const isTop3 = i < 3;
+
+                      return (
+                        <button
+                          key={entry.ethAddress}
+                          onClick={() => selectTrader(entry.ethAddress)}
+                          className="w-full grid grid-cols-12 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors text-left gap-y-1"
+                        >
+                          <span className={`col-span-1 font-bold ${isTop3 ? "text-amber-400" : "text-[#848e9c]"}`}>
+                            {i + 1}
+                          </span>
+                          <div className="col-span-5 sm:col-span-3">
+                            <span className="text-white font-medium text-xs truncate block">{name}</span>
+                            <span className="text-[9px] text-[#848e9c] font-mono sm:hidden">{shortAddr(entry.ethAddress)}</span>
+                            {entry.displayName && (
+                              <span className="text-[9px] text-[#848e9c] font-mono hidden sm:block">{shortAddr(entry.ethAddress)}</span>
+                            )}
+                          </div>
+                          <span className="col-span-2 text-right text-white hidden sm:block">{formatUsd(av)}</span>
+                          <span className={`col-span-3 sm:col-span-2 text-right font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                          </span>
+                          <span className={`col-span-3 sm:col-span-2 text-right font-medium ${roi >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {roi >= 0 ? "+" : ""}{roi.toFixed(1)}%
+                          </span>
+                          <span className={`col-span-2 text-right hidden sm:block ${dayPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {dayPnl >= 0 ? "+" : ""}{formatUsd(dayPnl)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
