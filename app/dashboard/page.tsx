@@ -372,7 +372,14 @@ export default function DashboardPage() {
           </div>
           {positions.length === 0 ? (
             <div className="text-center py-8 bg-[#141620] border border-[#2a2e3e] rounded-xl">
+              <Wallet className="h-6 w-6 text-[#848e9c] mx-auto mb-2" />
               <p className="text-sm text-[#848e9c]">No open positions</p>
+              {accountValue > 0 && (
+                <p className="text-xs text-[#848e9c] mt-1">
+                  {formatUsd(accountValue)} USDC available to trade
+                </p>
+              )}
+              <Link href="/trade" className="inline-block mt-3 text-xs text-[#7C3AED] hover:underline">Open a position &rarr;</Link>
             </div>
           ) : (
             <div className="space-y-2">
