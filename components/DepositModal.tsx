@@ -133,7 +133,7 @@ function DepositModal({ address, onClose }: { address: string; onClose: () => vo
 
   useEffect(() => {
     fetchCombinedClearinghouseState(address)
-      .then((ch) => setHlBalance(parseFloat(ch.withdrawable || "0")))
+      .then((ch) => setHlBalance(parseFloat(ch.marginSummary.accountValue || "0")))
       .catch(() => {});
   }, [address]);
 
