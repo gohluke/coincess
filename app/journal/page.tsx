@@ -21,6 +21,8 @@ import {
   LogIn,
   Edit3,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 
 interface JournalEntry {
@@ -467,10 +469,14 @@ export default function JournalPage() {
 
                   {expanded && (
                     <div className="px-4 pb-4 border-t border-[#2a2e3e]/50">
-                      <div className="pt-3 prose prose-invert prose-sm max-w-none">
-                        <div className="text-xs text-[#c0c4cc] whitespace-pre-wrap leading-relaxed font-mono">
-                          {entry.content || "No content"}
-                        </div>
+                      <div className="pt-3 journal-prose">
+                        {entry.content ? (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {entry.content}
+                          </ReactMarkdown>
+                        ) : (
+                          <p className="text-xs text-[#5a6070] italic">No content</p>
+                        )}
                       </div>
                       {entry.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-3">

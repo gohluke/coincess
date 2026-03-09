@@ -4,6 +4,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
 import { useEffect, useRef, useState, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Bot,
   Send,
@@ -217,8 +219,12 @@ export default function ChatPage() {
                         : "bg-[#141620] border border-[#2a2e3e] rounded-2xl rounded-bl-md px-4 py-2.5"
                     }`}>
                       {text && (
-                        <div className="text-xs leading-relaxed whitespace-pre-wrap">
-                          {text}
+                        <div className={msg.role === "assistant" ? "journal-prose text-xs" : "text-xs leading-relaxed whitespace-pre-wrap"}>
+                          {msg.role === "assistant" ? (
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+                          ) : (
+                            text
+                          )}
                         </div>
                       )}
                       {toolParts.length > 0 && (

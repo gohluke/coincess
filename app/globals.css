@@ -89,3 +89,127 @@
   background: #2a2e3e;
   border-radius: 2px;
 }
+
+/* Journal markdown prose */
+.journal-prose {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: #c0c4cc;
+}
+.journal-prose h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 1.25rem 0 0.5rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid #2a2e3e;
+}
+.journal-prose h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 1.25rem 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #2a2e3e;
+}
+.journal-prose h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e0e3ea;
+  margin: 1rem 0 0.375rem;
+}
+.journal-prose h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e0e3ea;
+  margin: 0.75rem 0 0.25rem;
+}
+.journal-prose p {
+  margin: 0.5rem 0;
+}
+.journal-prose strong {
+  color: #fff;
+  font-weight: 600;
+}
+.journal-prose em {
+  color: #a0a8b8;
+  font-style: italic;
+}
+.journal-prose ul,
+.journal-prose ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.journal-prose ul {
+  list-style-type: disc;
+}
+.journal-prose ol {
+  list-style-type: decimal;
+}
+.journal-prose li {
+  margin: 0.25rem 0;
+}
+.journal-prose li::marker {
+  color: #5a6070;
+}
+.journal-prose code {
+  background: #1a1d2e;
+  color: #7C3AED;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+}
+.journal-prose pre {
+  background: #0b0e11;
+  border: 1px solid #2a2e3e;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.journal-prose pre code {
+  background: none;
+  color: #c0c4cc;
+  padding: 0;
+}
+.journal-prose blockquote {
+  border-left: 3px solid #7C3AED;
+  padding-left: 0.75rem;
+  margin: 0.75rem 0;
+  color: #848e9c;
+  font-style: italic;
+}
+.journal-prose hr {
+  border: none;
+  border-top: 1px solid #2a2e3e;
+  margin: 1rem 0;
+}
+.journal-prose a {
+  color: #7C3AED;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.journal-prose a:hover {
+  color: #9b6dff;
+}
+.journal-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.75rem;
+}
+.journal-prose th,
+.journal-prose td {
+  border: 1px solid #2a2e3e;
+  padding: 0.375rem 0.625rem;
+  text-align: left;
+}
+.journal-prose th {
+  background: #1a1d2e;
+  color: #e0e3ea;
+  font-weight: 600;
+}
+.journal-prose > :first-child {
+  margin-top: 0;
+}

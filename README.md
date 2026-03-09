@@ -74,6 +74,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - Polymarket builder attribution via HMAC-signed headers
 
 ### Trade Journal (`/journal`)
+- **Rich markdown rendering** — headings, bold, italic, lists, code blocks, blockquotes, tables, links all render with proper dark-theme styling
 - **Write trade reflections** — title, content (markdown), tags, mood, coin, P&L amount
 - **Tag system** — categorize entries (e.g. `brentoil`, `revenge-trading`, `lesson`, `rules`)
 - **Mood tracking** — confident, tilted, neutral, learning
@@ -83,6 +84,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 
 ### AI Trading Coach (`/chat`)
 - **Gemini-powered coach** — conversational AI that knows your trading history
+- **Rich markdown responses** — AI replies render with headings, bold, lists, code, and tables
 - **Live data tools** — AI fetches your current positions, recent fills, and market data from Hyperliquid
 - **Journal-aware** — reads your journal entries for context when coaching
 - **Rule enforcement** — references your committed trading rules (stop losses, position sizing, revenge trading limits, trend following, daily loss limits)
