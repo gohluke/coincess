@@ -76,6 +76,26 @@ interface ScanResult {
   positionValue: number;
   accountValue: number;
   returnOnPosition: number;
+  entryTime: number | null;
+}
+
+function formatDuration(ms: number): string {
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m`;
+  const hrs = Math.floor(min / 60);
+  if (hrs < 24) return `${hrs}h ${min % 60}m`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ${hrs % 24}h`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ${days % 30}d`;
+}
+
+function formatDateTime(ts: number): string {
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) +
+    " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function TradersPage() {
@@ -185,12 +205,41 @@ export default function TradersPage() {
             positionValue: posVal,
             accountValue: parseFloat(trader.accountValue),
             returnOnPosition: posVal > 0 ? (uPnl / posVal) * 100 : 0,
+            entryTime: null,
           });
         }
       }
       setScanProgress({ done: Math.min(i + BATCH, topTraders.length), total: topTraders.length });
       setScanResults([...results].sort((a, b) => Math.abs(b.unrealizedPnl) - Math.abs(a.unrealizedPnl)));
     }
+
+    // Second pass: fetch fills for matched traders to find entry time
+    if (results.length > 0) {
+      const uniqueAddrs = [...new Set(results.map((r) => r.address))];
+      const FILL_BATCH = 5;
+      for (let i = 0; i < uniqueAddrs.length; i += FILL_BATCH) {
+        const batch = uniqueAddrs.slice(i, i + FILL_BATCH);
+        const settled = await Promise.allSettled(
+          batch.map((addr) => fetchUserFills(addr).then((f) => ({ addr, fills: f })))
+        );
+        for (const r of settled) {
+          if (r.status !== "fulfilled") continue;
+          const { addr, fills: traderFills } = r.value;
+          const coinFills = traderFills
+            .filter((f) => stripPrefix(f.coin).toUpperCase() === target)
+            .sort((a, b) => a.time - b.time);
+          if (coinFills.length > 0) {
+            for (const sr of results) {
+              if (sr.address === addr) {
+                sr.entryTime = coinFills[0].time;
+              }
+            }
+          }
+        }
+        setScanResults([...results].sort((a, b) => Math.abs(b.unrealizedPnl) - Math.abs(a.unrealizedPnl)));
+      }
+    }
+
     setScanning(false);
   }, [leaderboard, allMarkets]);
 
@@ -414,22 +463,26 @@ export default function TradersPage() {
                       {scanResults.length} trader{scanResults.length === 1 ? "" : "s"} holding {scanCoin}
                     </h3>
                     <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
-                      <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
-                        <span className="col-span-3">Trader</span>
-                        <span className="col-span-1 text-center">Side</span>
-                        <span className="col-span-2 text-right">Size</span>
-                        <span className="col-span-2 text-right">Entry / Mark</span>
-                        <span className="col-span-1 text-right">Lev</span>
-                        <span className="col-span-2 text-right">Unrealized P&L</span>
-                        <span className="col-span-1 text-right">ROI</span>
+                      <div className="hidden lg:grid grid-cols-[2.5fr_0.7fr_1.2fr_1.5fr_0.6fr_1.5fr_0.7fr_1.8fr] px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium gap-2">
+                        <span>Trader</span>
+                        <span className="text-center">Side</span>
+                        <span className="text-right">Size</span>
+                        <span className="text-right">Entry / Mark</span>
+                        <span className="text-right">Lev</span>
+                        <span className="text-right">Unrealized P&L</span>
+                        <span className="text-right">ROI</span>
+                        <span className="text-right">Opened</span>
                       </div>
-                      {scanResults.map((r, i) => (
+                      {scanResults.map((r, i) => {
+                        const now = Date.now();
+                        const ago = r.entryTime ? formatDuration(now - r.entryTime) : null;
+                        return (
                         <button
                           key={`${r.address}-${i}`}
                           onClick={() => selectTrader(r.address)}
-                          className="w-full grid grid-cols-12 items-center px-4 py-3 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors text-left gap-y-1"
+                          className="w-full grid grid-cols-12 lg:grid-cols-[2.5fr_0.7fr_1.2fr_1.5fr_0.6fr_1.5fr_0.7fr_1.8fr] items-center px-4 py-3 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors text-left gap-y-1 gap-x-2"
                         >
-                          <div className="col-span-6 sm:col-span-3">
+                          <div className="col-span-6 lg:col-span-1">
                             <span className="text-white font-medium text-xs truncate block">
                               {r.displayName || shortAddr(r.address)}
                             </span>
@@ -437,7 +490,7 @@ export default function TradersPage() {
                               <span className="text-[9px] text-[#848e9c] font-mono">{shortAddr(r.address)}</span>
                             )}
                           </div>
-                          <div className="col-span-3 sm:col-span-1 text-center">
+                          <div className="col-span-3 lg:col-span-1 text-center">
                             <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${
                               r.side === "Long" ? "bg-emerald-400/10 text-emerald-400" : "bg-red-400/10 text-red-400"
                             }`}>
@@ -445,21 +498,34 @@ export default function TradersPage() {
                               {r.side}
                             </span>
                           </div>
-                          <span className="col-span-3 sm:col-span-2 text-right text-white">{formatUsd(r.positionValue)}</span>
-                          <div className="hidden sm:block col-span-2 text-right">
+                          <span className="col-span-3 lg:col-span-1 text-right text-white">{formatUsd(r.positionValue)}</span>
+                          <div className="hidden lg:block text-right">
                             <span className="text-[#848e9c] text-[10px]">{r.entryPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                             <span className="text-[#848e9c] mx-0.5">/</span>
                             <span className="text-white text-[10px]">{r.markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                           </div>
-                          <span className="hidden sm:block col-span-1 text-right text-[#848e9c]">{r.leverage}x</span>
-                          <span className={`col-span-6 sm:col-span-2 text-right font-bold ${r.unrealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          <span className="hidden lg:block text-right text-[#848e9c]">{r.leverage}x</span>
+                          <span className={`col-span-6 lg:col-span-1 text-right font-bold ${r.unrealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {r.unrealizedPnl >= 0 ? "+" : ""}{formatUsd(r.unrealizedPnl)}
                           </span>
-                          <span className={`hidden sm:block col-span-1 text-right text-[10px] font-medium ${r.returnOnPosition >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          <span className={`hidden lg:block text-right text-[10px] font-medium ${r.returnOnPosition >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {r.returnOnPosition >= 0 ? "+" : ""}{r.returnOnPosition.toFixed(1)}%
                           </span>
+                          <div className="col-span-6 lg:col-span-1 text-right">
+                            {r.entryTime ? (
+                              <div>
+                                <span className="text-[10px] text-[#848e9c]">{formatDateTime(r.entryTime)}</span>
+                                <span className="flex items-center justify-end gap-0.5 text-[9px] text-[#5a6070]">
+                                  <Clock className="h-2.5 w-2.5" /> {ago} ago
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-[#2a2e3e]">loading...</span>
+                            )}
+                          </div>
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
