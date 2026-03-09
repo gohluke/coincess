@@ -194,11 +194,12 @@ function DepositModal({ address, onClose }: { address: string; onClose: () => vo
   const shortAddr = `...${address.slice(-4)}`;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#1a1d2e] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/50 w-full max-w-sm max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 z-[100] overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-[#1a1d2e] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/50 w-full max-w-sm">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4">
           {step !== "methods" ? (
             <button onClick={() => setStep(step === "amount" ? "tokens" : "methods")} className="p-1 text-[#848e9c] hover:text-white transition-colors rounded-lg hover:bg-[#2a2e3e]">
               <ChevronLeft className="h-4 w-4" />
@@ -213,7 +214,7 @@ function DepositModal({ address, onClose }: { address: string; onClose: () => vo
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 pb-5">
+        <div className="px-5 pb-5">
           {step === "methods" && (
             <MethodsStep
               address={address}
@@ -242,6 +243,7 @@ function DepositModal({ address, onClose }: { address: string; onClose: () => vo
             />
           )}
         </div>
+      </div>
       </div>
     </div>
   );
