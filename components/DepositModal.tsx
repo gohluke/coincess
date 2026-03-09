@@ -194,9 +194,9 @@ function DepositModal({ address, onClose }: { address: string; onClose: () => vo
   const shortAddr = `...${address.slice(-4)}`;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#1a1d2e] border border-[#2a2e3e] rounded-t-2xl sm:rounded-2xl shadow-2xl shadow-black/50 w-full max-w-sm sm:mx-4 max-h-[85vh] flex flex-col">
+      <div className="relative bg-[#1a1d2e] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/50 w-full max-w-sm max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 shrink-0">
           {step !== "methods" ? (
