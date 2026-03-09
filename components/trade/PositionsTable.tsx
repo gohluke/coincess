@@ -148,8 +148,7 @@ export function PositionsTable() {
                     <th className="text-right px-3 py-2 font-medium">Margin</th>
                     <th className="text-right px-3 py-2 font-medium">PnL</th>
                     <th className="text-right px-3 py-2 font-medium">ROE</th>
-                    <th className="text-right px-3 py-2 font-medium">Action</th>
-                    <th className="text-right px-4 py-2 font-medium">Share</th>
+                    <th className="text-right px-4 py-2 font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,22 +192,22 @@ export function PositionsTable() {
                         <td className={`text-right px-3 py-2 font-medium ${roe >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
                           {roe >= 0 ? "+" : ""}{roe.toFixed(2)}%
                         </td>
-                        <td className="text-right px-3 py-2">
-                          <button
-                            onClick={() => handleClosePosition(pos.coin, pos.szi)}
-                            disabled={closingCoin === pos.coin}
-                            className="px-2 py-1 bg-[#f6465d]/10 text-[#f6465d] rounded hover:bg-[#f6465d]/20 transition-colors disabled:opacity-50 text-[10px] font-medium"
-                          >
-                            {closingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin" /> : "Close"}
-                          </button>
-                        </td>
                         <td className="text-right px-4 py-2">
-                          <button
-                            onClick={() => openShareModal(pos)}
-                            className="p-1 text-[#848e9c] hover:text-[#7C3AED] hover:bg-[#7C3AED]/10 rounded transition-colors"
-                          >
-                            <Share2 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleClosePosition(pos.coin, pos.szi)}
+                              disabled={closingCoin === pos.coin}
+                              className="px-2 py-1 bg-[#f6465d]/10 text-[#f6465d] rounded hover:bg-[#f6465d]/20 transition-colors disabled:opacity-50 text-[10px] font-medium"
+                            >
+                              {closingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin" /> : "Close"}
+                            </button>
+                            <button
+                              onClick={() => openShareModal(pos)}
+                              className="px-2 py-1 bg-[#7C3AED]/15 text-[#7C3AED] rounded hover:bg-[#7C3AED]/25 transition-colors text-[10px] font-medium flex items-center gap-1"
+                            >
+                              <Share2 className="h-3 w-3" /> Share
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
