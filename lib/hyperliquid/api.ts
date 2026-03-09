@@ -215,6 +215,20 @@ export function buildMarketList(data: MetaAndAssetCtxs, dex: string = ""): Marke
   });
 }
 
+export interface LeaderboardEntry {
+  ethAddress: string;
+  accountValue: string;
+  displayName: string | null;
+  windowPerformances: [string, { pnl: string; roi: string; vlm: string }][];
+}
+
+export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+  const res = await fetch("https://stats-data.hyperliquid.xyz/Mainnet/leaderboard");
+  if (!res.ok) throw new Error(`Leaderboard fetch error: ${res.status}`);
+  const data = (await res.json()) as { leaderboardRows: LeaderboardEntry[] };
+  return data.leaderboardRows;
+}
+
 export async function fetchAllMarkets(): Promise<MarketInfo[]> {
   await loadPerpDexOffsets();
 
