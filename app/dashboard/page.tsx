@@ -290,146 +290,254 @@ export default function DashboardPage() {
     );
   }
 
+  const perpsBalance = totalMarginUsed + availableBalance;
+  const spotBalance = 0;
+  const evmBalance = 0;
+
+  type PortfolioTab = "assets" | "history" | "calendar";
+  const [portfolioTab, setPortfolioTab] = useState<PortfolioTab>("assets");
+
+  const assetDistribution = useMemo(() => {
+    const items: { label: string; value: number; color: string }[] = [];
+    if (availableBalance > 0.01) items.push({ label: "USDC", value: availableBalance, color: "#7C3AED" });
+    for (const ap of positions) {
+      const pos = ap.position;
+      const bare = stripPrefix(pos.coin);
+      const margin = parseFloat(pos.marginUsed);
+      if (margin > 0.01) items.push({ label: bare, value: margin, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
+    }
+    if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: "#7C3AED" });
+    return items;
+  }, [availableBalance, positions, accountValue]);
+
+  const assetTotal = assetDistribution.reduce((s, a) => s + a.value, 0);
+
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">Portfolio</h1>
-          <div className="flex items-center gap-3">
-            {lastRefresh && (
-              <span className="text-[10px] text-[#848e9c]">
-                {positions.length > 0 ? "Live" : "Updated"}{" "}
-                {lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-              </span>
-            )}
-            <button onClick={() => loadData(address)} className="p-2 text-[#848e9c] hover:text-white transition-colors" disabled={loading}>
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+
+        {/* ─── Tabs ─── */}
+        <div className="flex items-center gap-6 border-b border-[#2a2e3e] pb-0">
+          {([
+            ["assets", "Assets"],
+            ["history", "Transaction History"],
+            ["calendar", "PnL Calendar"],
+          ] as [PortfolioTab, string][]).map(([t, label]) => (
+            <button
+              key={t}
+              onClick={() => setPortfolioTab(t)}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                portfolioTab === t ? "text-white border-[#7C3AED]" : "text-[#848e9c] border-transparent hover:text-white"
+              }`}
+            >
+              {label}
             </button>
-            <span className="text-xs text-[#848e9c] font-mono">
-              {address.slice(0, 6)}...{address.slice(-4)}
-            </span>
-          </div>
-        </div>
-        {/* Account overview */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
-            <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Account Value</p>
-            <p className="text-lg font-bold">{formatUsd(accountValue)}</p>
-          </div>
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
-            <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Available</p>
-            <p className="text-lg font-bold text-emerald-400">{formatUsd(availableBalance)}</p>
-          </div>
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
-            <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Unrealized PnL</p>
-            <PnlBadge value={totalPnl} />
-          </div>
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
-            <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Margin Used</p>
-            <p className="text-lg font-bold">{formatUsd(totalMarginUsed)}</p>
-          </div>
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
-            <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-1">Active Bots</p>
-            <p className="text-lg font-bold">{activeStrategies}</p>
-          </div>
+          ))}
         </div>
 
-        {/* Funding banner when no balance */}
-        {accountValue <= 0 && (
-          <FundingBanner address={address} balance={availableBalance} />
-        )}
-
-        {/* Quick actions */}
-        <div className="grid grid-cols-3 gap-3">
-          <Link href="/trade" className="flex items-center gap-2 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#7C3AED]/50 transition-colors">
-            <TrendingUp className="h-5 w-5 text-emerald-400" />
-            <div>
-              <p className="text-sm font-semibold">Trade</p>
-              <p className="text-[10px] text-[#848e9c]">Perps</p>
-            </div>
-          </Link>
-          <Link href="/predictions" className="flex items-center gap-2 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#7C3AED]/50 transition-colors">
-            <BarChart3 className="h-5 w-5 text-blue-400" />
-            <div>
-              <p className="text-sm font-semibold">Predict</p>
-              <p className="text-[10px] text-[#848e9c]">Markets</p>
-            </div>
-          </Link>
-          <Link href="/automate" className="flex items-center gap-2 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#7C3AED]/50 transition-colors">
-            <Bot className="h-5 w-5 text-[#7C3AED]" />
-            <div>
-              <p className="text-sm font-semibold">Automate</p>
-              <p className="text-[10px] text-[#848e9c]">{activeStrategies} active</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* Positions */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Positions ({positions.length})</h2>
-            <Link href="/trade" className="text-xs text-[#7C3AED] hover:underline">Open Trade &rarr;</Link>
-          </div>
-          {positions.length === 0 ? (
-            <div className="text-center py-8 bg-[#141620] border border-[#2a2e3e] rounded-xl">
-              <Wallet className="h-6 w-6 text-[#848e9c] mx-auto mb-2" />
-              <p className="text-sm text-[#848e9c]">No open positions</p>
-              {accountValue > 0 && (
-                <p className="text-xs text-[#848e9c] mt-1">
-                  {formatUsd(accountValue)} USDC available to trade
-                </p>
-              )}
-              <Link href="/trade" className="inline-block mt-3 text-xs text-[#7C3AED] hover:underline">Open a position &rarr;</Link>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {positions.map((ap) => (
-                <PositionRow key={ap.position.coin} ap={ap} markets={markets} funding={funding} fills={fills} />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Open Orders */}
-        {orders.length > 0 && (
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Open Orders ({orders.length})</h2>
-            <div className="space-y-1">
-              {orders.slice(0, 10).map((o) => (
-                <div key={o.oid} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${o.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-                      {o.side === "B" ? "BUY" : "SELL"}
+        {/* ─── Assets Tab ─── */}
+        {portfolioTab === "assets" && (
+          <>
+            {/* Hero: Total Balance */}
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[#848e9c] mb-1">Total Balance</p>
+                <p className="text-4xl sm:text-5xl font-bold tracking-tight">{formatUsd(accountValue)}</p>
+                {fills.length > 0 && (
+                  <p className="mt-1.5">
+                    <span className={`text-sm font-semibold ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      ({totalPnlAll >= 0 ? "+" : ""}{formatUsd(totalPnlAll)})
                     </span>
-                    <span className="text-xs font-medium">{o.coin}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs">{o.sz} @ ${parseFloat(o.limitPx).toLocaleString()}</p>
-                    <p className="text-[10px] text-[#848e9c]">{o.orderType}</p>
-                  </div>
-                </div>
-              ))}
+                    {accountValue > 0 && (
+                      <span className={`text-sm font-medium ml-1.5 ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {totalPnlAll >= 0 ? "+" : ""}{((totalPnlAll / Math.max(accountValue, 1)) * 100).toFixed(2)}%
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {lastRefresh && (
+                  <span className="text-[10px] text-[#848e9c] hidden sm:inline">
+                    Updated {lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                  </span>
+                )}
+                <button onClick={() => loadData(address)} className="p-2 text-[#848e9c] hover:text-white transition-colors" disabled={loading}>
+                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                </button>
+                <span className="text-xs text-[#848e9c] font-mono hidden sm:inline">
+                  {address.slice(0, 6)}...{address.slice(-4)}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Trade History */}
-        {fills.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold">Trade History</h2>
-                <div className="flex bg-[#1a1d2e] rounded-lg p-0.5 text-[10px]">
-                  {(["trades", "fills", "calendar"] as const).map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setHistoryView(v)}
-                      className={`px-2.5 py-1 rounded-md font-medium transition-colors capitalize ${historyView === v ? "bg-[#7C3AED] text-white" : "text-[#848e9c] hover:text-white"}`}
-                    >
-                      {v === "trades" ? `Trades (${trades.length})` : v === "fills" ? `Fills (${fills.length})` : "PnL Calendar"}
-                    </button>
+            {/* Balance cards 2x2 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <p className="text-[11px] text-[#848e9c] mb-1">Available Balance</p>
+                <p className="text-xl font-bold">{formatUsd(availableBalance)}</p>
+              </div>
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <p className="text-[11px] text-[#848e9c] mb-1">USDC (Perps)</p>
+                <p className="text-xl font-bold">{formatUsd(perpsBalance)}</p>
+              </div>
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <p className="text-[11px] text-[#848e9c] mb-1">Spot Balance</p>
+                <p className="text-xl font-bold">{formatUsd(spotBalance)}</p>
+              </div>
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <p className="text-[11px] text-[#848e9c] mb-1">EVM Balance</p>
+                <p className="text-xl font-bold">{formatUsd(evmBalance)}</p>
+              </div>
+            </div>
+
+            {/* Donut chart */}
+            <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-6">
+              <div className="flex items-center justify-center">
+                <DonutChart items={assetDistribution} total={assetTotal > 0 ? assetTotal : accountValue} />
+              </div>
+
+              {/* Asset Distribution list */}
+              {assetDistribution.length > 0 && (
+                <div className="mt-6 space-y-1">
+                  <p className="text-sm font-semibold text-[#7C3AED] mb-2">Asset Distribution</p>
+                  {assetDistribution.map((a) => (
+                    <div key={a.label} className="flex items-center justify-between py-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
+                        <span className="text-sm text-white">{a.label}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-[#7C3AED]">{assetTotal > 0 ? ((a.value / assetTotal) * 100).toFixed(1) : "0.0"}%</span>
+                        <span className="text-sm font-semibold">{formatUsd(a.value)}</span>
+                      </div>
+                    </div>
                   ))}
                 </div>
+              )}
+            </div>
+
+            {/* Funding banner when no balance */}
+            {accountValue <= 0 && (
+              <FundingBanner address={address} balance={availableBalance} />
+            )}
+
+            {/* Quick actions */}
+            <div className="grid grid-cols-3 gap-3">
+              <Link href="/trade" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-[#7C3AED]/50 transition-colors">
+                <TrendingUp className="h-5 w-5 text-emerald-400 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">Trade</p>
+                  <p className="text-[10px] text-[#848e9c]">Perps</p>
+                </div>
+              </Link>
+              <Link href="/predictions" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-[#7C3AED]/50 transition-colors">
+                <BarChart3 className="h-5 w-5 text-blue-400 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">Predict</p>
+                  <p className="text-[10px] text-[#848e9c]">Markets</p>
+                </div>
+              </Link>
+              <Link href="/automate" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-[#7C3AED]/50 transition-colors">
+                <Bot className="h-5 w-5 text-[#7C3AED] shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">Automate</p>
+                  <p className="text-[10px] text-[#848e9c]">{activeStrategies} active</p>
+                </div>
+              </Link>
+            </div>
+
+            {/* Positions */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Positions ({positions.length})</h2>
+                <Link href="/trade" className="text-xs text-[#7C3AED] hover:underline">Open Trade &rarr;</Link>
+              </div>
+              {positions.length === 0 ? (
+                <div className="text-center py-8 bg-[#141620] border border-[#2a2e3e] rounded-xl">
+                  <Wallet className="h-6 w-6 text-[#848e9c] mx-auto mb-2" />
+                  <p className="text-sm text-[#848e9c]">No open positions</p>
+                  {accountValue > 0 && (
+                    <p className="text-xs text-[#848e9c] mt-1">{formatUsd(accountValue)} USDC available to trade</p>
+                  )}
+                  <Link href="/trade" className="inline-block mt-3 text-xs text-[#7C3AED] hover:underline">Open a position &rarr;</Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {positions.map((ap) => (
+                    <PositionRow key={ap.position.coin} ap={ap} markets={markets} funding={funding} fills={fills} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Open Orders */}
+            {orders.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3">Open Orders ({orders.length})</h2>
+                <div className="space-y-1">
+                  {orders.slice(0, 10).map((o) => (
+                    <div key={o.oid} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${o.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                          {o.side === "B" ? "BUY" : "SELL"}
+                        </span>
+                        <span className="text-xs font-medium">{o.coin}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs">{o.sz} @ ${parseFloat(o.limitPx).toLocaleString()}</p>
+                        <p className="text-[10px] text-[#848e9c]">{o.orderType}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Active Strategies preview */}
+            {strategies.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold">Automation</h2>
+                  <Link href="/automate" className="text-xs text-[#7C3AED] hover:underline">Manage &rarr;</Link>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {strategies.slice(0, 4).map((s) => (
+                    <div key={s.id} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
+                      <div>
+                        <p className="text-xs font-semibold">{s.name}</p>
+                        <p className="text-[10px] text-[#848e9c]">{s.type} · {s.totalTrades} trades</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        s.status === "active" ? "bg-emerald-500/20 text-emerald-400" :
+                        s.status === "paused" ? "bg-amber-500/20 text-amber-400" :
+                        s.status === "error" ? "bg-red-500/20 text-red-400" :
+                        "bg-[#848e9c]/20 text-[#848e9c]"
+                      }`}>
+                        {s.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ─── Transaction History Tab ─── */}
+        {portfolioTab === "history" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex bg-[#1a1d2e] rounded-lg p-0.5 text-[10px]">
+                {(["trades", "fills"] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setHistoryView(v === "trades" ? "trades" : "fills")}
+                    className={`px-3 py-1.5 rounded-md font-medium transition-colors capitalize ${historyView === v ? "bg-[#7C3AED] text-white" : "text-[#848e9c] hover:text-white"}`}
+                  >
+                    {v === "trades" ? `Trades (${trades.length})` : `Fills (${fills.length})`}
+                  </button>
+                ))}
               </div>
               <a
                 href={`https://app.hyperliquid.xyz/explorer/address/${address}`}
@@ -441,87 +549,128 @@ export default function DashboardPage() {
               </a>
             </div>
 
-            {/* Aggregate stats bar — always visible */}
-            {fills.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
-                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Total PnL</p>
-                  <p className={`text-sm font-bold ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {totalPnlAll >= 0 ? "+" : ""}{formatUsd(totalPnlAll)}
-                  </p>
-                </div>
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
-                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Closed PnL</p>
-                  <p className={`text-sm font-bold ${totalClosedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {totalClosedPnl >= 0 ? "+" : ""}{formatUsd(totalClosedPnl)}
-                  </p>
-                </div>
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
-                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Funding</p>
-                  <p className={`text-sm font-bold ${totalFundingPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {totalFundingPnl >= 0 ? "+" : ""}{formatUsd(totalFundingPnl)}
-                  </p>
-                </div>
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
-                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Win Rate</p>
-                  <p className="text-sm font-bold text-white">
-                    {winRate}%
-                    <span className="text-[10px] text-[#848e9c] font-normal ml-1">({winCount}/{closedTrades.length})</span>
-                  </p>
-                </div>
+            {/* Aggregate stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Total PnL</p>
+                <p className={`text-sm font-bold ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {totalPnlAll >= 0 ? "+" : ""}{formatUsd(totalPnlAll)}
+                </p>
               </div>
-            )}
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Closed PnL</p>
+                <p className={`text-sm font-bold ${totalClosedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {totalClosedPnl >= 0 ? "+" : ""}{formatUsd(totalClosedPnl)}
+                </p>
+              </div>
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Funding</p>
+                <p className={`text-sm font-bold ${totalFundingPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {totalFundingPnl >= 0 ? "+" : ""}{formatUsd(totalFundingPnl)}
+                </p>
+              </div>
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Win Rate</p>
+                <p className="text-sm font-bold text-white">
+                  {winRate}%
+                  <span className="text-[10px] text-[#848e9c] font-normal ml-1">({winCount}/{closedTrades.length})</span>
+                </p>
+              </div>
+            </div>
 
-            {historyView === "trades" ? (
-              <div className="space-y-2">
-                {trades.map((trade, i) => (
-                  <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} />
-                ))}
-              </div>
-            ) : historyView === "fills" ? (
-              <TransactionTable fills={fills} />
-            ) : (
-              <PnlCalendar dailyPnl={dailyPnl} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} />
-            )}
+            {historyView === "trades" || historyView === "fills" ? (
+              historyView === "trades" ? (
+                trades.length > 0 ? (
+                  <div className="space-y-2">
+                    {trades.map((trade, i) => (
+                      <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-[#848e9c] text-sm">No trades yet</div>
+                )
+              ) : (
+                fills.length > 0 ? (
+                  <TransactionTable fills={fills} />
+                ) : (
+                  <div className="text-center py-12 text-[#848e9c] text-sm">No fills yet</div>
+                )
+              )
+            ) : null}
           </div>
         )}
 
-        {/* Active Strategies preview */}
-        {strategies.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Automation</h2>
-              <Link href="/automate" className="text-xs text-[#7C3AED] hover:underline">Manage &rarr;</Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {strategies.slice(0, 4).map((s) => (
-                <div key={s.id} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
-                  <div>
-                    <p className="text-xs font-semibold">{s.name}</p>
-                    <p className="text-[10px] text-[#848e9c]">{s.type} · {s.totalTrades} trades</p>
-                  </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                    s.status === "active" ? "bg-emerald-500/20 text-emerald-400" :
-                    s.status === "paused" ? "bg-amber-500/20 text-amber-400" :
-                    s.status === "error" ? "bg-red-500/20 text-red-400" :
-                    "bg-[#848e9c]/20 text-[#848e9c]"
-                  }`}>
-                    {s.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* ─── PnL Calendar Tab ─── */}
+        {portfolioTab === "calendar" && (
+          <PnlCalendar dailyPnl={dailyPnl} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} />
         )}
 
         {/* Hyperliquid link */}
         <div className="text-center py-4">
-          <a href={`https://app.hyperliquid.xyz/trade`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#848e9c] hover:text-white transition-colors">
+          <a href="https://app.hyperliquid.xyz/trade" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#848e9c] hover:text-white transition-colors">
             Powered by Hyperliquid <ExternalLink className="h-3 w-3" />
           </a>
         </div>
       </div>
     </div>
+  );
+}
+
+/* ---------- Donut Chart ---------- */
+
+function DonutChart({ items, total }: { items: { label: string; value: number; color: string }[]; total: number }) {
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = 85;
+  const stroke = 24;
+
+  if (total <= 0) {
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#2a2e3e" strokeWidth={stroke} />
+        <text x={cx} y={cy - 8} textAnchor="middle" fill="#848e9c" fontSize="12">Total</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">$0.00</text>
+      </svg>
+    );
+  }
+
+  let cumAngle = -90;
+  const arcs = items.map((item) => {
+    const pct = item.value / total;
+    const angle = pct * 360;
+    const startAngle = cumAngle;
+    cumAngle += angle;
+    return { ...item, startAngle, angle };
+  });
+
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {arcs.map((arc, i) => {
+        const largeArc = arc.angle > 180 ? 1 : 0;
+        const startX = cx + radius * Math.cos(toRad(arc.startAngle));
+        const startY = cy + radius * Math.sin(toRad(arc.startAngle));
+        const endX = cx + radius * Math.cos(toRad(arc.startAngle + arc.angle - 0.5));
+        const endY = cy + radius * Math.sin(toRad(arc.startAngle + arc.angle - 0.5));
+
+        return (
+          <path
+            key={i}
+            d={`M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY}`}
+            fill="none"
+            stroke={arc.color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+          />
+        );
+      })}
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="#848e9c" fontSize="12">Total</text>
+      <text x={cx} y={cy + 16} textAnchor="middle" fill="white" fontSize="22" fontWeight="bold">
+        {formatUsd(total)}
+      </text>
+    </svg>
   );
 }
 
