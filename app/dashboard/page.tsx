@@ -581,7 +581,7 @@ export default function DashboardPage() {
                 trades.length > 0 ? (
                   <div className="space-y-2">
                     {trades.map((trade, i) => (
-                      <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} />
+                      <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} markets={markets} />
                     ))}
                   </div>
                 ) : (
@@ -677,7 +677,7 @@ function stripPrefix(coin: string): string {
   return idx >= 0 ? coin.slice(idx + 1) : coin;
 }
 
-function TradeRow({ trade, positions }: { trade: RoundTripTrade; positions: AssetPosition[] }) {
+function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positions: AssetPosition[]; markets: MarketInfo[] }) {
   const [expanded, setExpanded] = useState(false);
   const bare = stripPrefix(trade.coin);
   const duration = trade.closeTime ? trade.closeTime - trade.openTime : Date.now() - trade.openTime;
@@ -685,6 +685,21 @@ function TradeRow({ trade, positions }: { trade: RoundTripTrade; positions: Asse
 
   const matchPos = trade.isOpen ? positions.find((ap) => stripPrefix(ap.position.coin) === bare) : null;
   const leverage = matchPos ? `${matchPos.position.leverage.value}x` : null;
+
+  const market = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === trade.coin);
+  const markPx = market ? parseFloat(market.markPx) : 0;
+
+  const hasPhantom = !trade.isOpen && trade.exitPx != null && markPx > 0;
+  let phantomPnl = 0;
+  let ifHeldPnl = 0;
+  if (hasPhantom) {
+    phantomPnl = trade.direction === "Long"
+      ? (markPx - trade.exitPx!) * trade.maxSize
+      : (trade.exitPx! - markPx) * trade.maxSize;
+    ifHeldPnl = trade.direction === "Long"
+      ? (markPx - trade.entryPx) * trade.maxSize
+      : (trade.entryPx - markPx) * trade.maxSize;
+  }
 
   const fmtTime = (t: number) =>
     new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -706,9 +721,20 @@ function TradeRow({ trade, positions }: { trade: RoundTripTrade; positions: Asse
           </div>
           <div className="flex items-center gap-3">
             {!trade.isOpen && (
-              <span className={`text-sm font-bold ${isWin ? "text-emerald-400" : "text-red-400"}`}>
-                {trade.netPnl >= 0 ? "+" : ""}{formatUsd(trade.netPnl)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-bold ${isWin ? "text-emerald-400" : "text-red-400"}`}>
+                  {trade.netPnl >= 0 ? "+" : ""}{formatUsd(trade.netPnl)}
+                </span>
+                {hasPhantom && Math.abs(phantomPnl) > 0.01 && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                    phantomPnl > 0
+                      ? "bg-amber-500/15 text-amber-400"
+                      : "bg-emerald-500/15 text-emerald-400"
+                  }`}>
+                    {phantomPnl > 0 ? `Missed ${formatUsd(phantomPnl)}` : `Saved ${formatUsd(Math.abs(phantomPnl))}`}
+                  </span>
+                )}
+              </div>
             )}
             {expanded ? <ChevronUp className="h-3.5 w-3.5 text-[#848e9c]" /> : <ChevronDown className="h-3.5 w-3.5 text-[#848e9c]" />}
           </div>
@@ -719,6 +745,9 @@ function TradeRow({ trade, positions }: { trade: RoundTripTrade; positions: Asse
           <span>Entry: <span className="text-white">${trade.entryPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
           {trade.exitPx != null && (
             <span>Exit: <span className="text-white">${trade.exitPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
+          )}
+          {hasPhantom && (
+            <span>Now: <span className="text-[#7C3AED] font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
           )}
           <span className="inline-flex items-center gap-0.5">
             <Clock className="h-2.5 w-2.5" />
@@ -765,6 +794,52 @@ function TradeRow({ trade, positions }: { trade: RoundTripTrade; positions: Asse
               </div>
             )}
           </div>
+
+          {/* Phantom P&L for closed trades */}
+          {hasPhantom && (
+            <div className="bg-[#0b0e11]/80 border border-[#2a2e3e]/60 rounded-lg px-3 py-2">
+              <p className="text-[10px] text-[#848e9c] font-medium mb-1.5 flex items-center gap-1">
+                <span className="text-[#7C3AED]">&#9673;</span> Phantom P&L <span className="text-[#848e9c]/60">— if you had kept this position</span>
+              </p>
+              <div className="flex flex-wrap items-center gap-4 text-[10px]">
+                <div>
+                  <span className="text-[#848e9c]">If Held P&L: </span>
+                  <span className={`font-bold ${ifHeldPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {ifHeldPnl >= 0 ? "+" : ""}{formatUsd(ifHeldPnl)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#848e9c]">You Made: </span>
+                  <span className={`font-medium ${trade.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {trade.netPnl >= 0 ? "+" : ""}{formatUsd(trade.netPnl)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#848e9c]">{phantomPnl > 0 ? "Missed: " : "Saved: "}</span>
+                  <span className={`font-bold ${phantomPnl > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                    {formatUsd(Math.abs(phantomPnl))}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#848e9c]">Mark: </span>
+                  <span className="text-[#7C3AED] font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                </div>
+                {(() => {
+                  const moveFromExit = trade.exitPx! > 0
+                    ? ((markPx - trade.exitPx!) / trade.exitPx!) * 100
+                    : 0;
+                  return (
+                    <div>
+                      <span className="text-[#848e9c]">Since Exit: </span>
+                      <span className={`font-medium ${moveFromExit >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {moveFromExit >= 0 ? "+" : ""}{moveFromExit.toFixed(2)}%
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
 
           {/* Individual fills */}
           <div className="space-y-0.5">
