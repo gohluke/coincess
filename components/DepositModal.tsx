@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Wallet,
@@ -109,7 +110,10 @@ export function DepositButton() {
       >
         Deposit
       </button>
-      {open && <DepositModal address={address} onClose={() => setOpen(false)} />}
+      {open && createPortal(
+        <DepositModal address={address} onClose={() => setOpen(false)} />,
+        document.body
+      )}
     </>
   );
 }
