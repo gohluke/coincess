@@ -73,6 +73,22 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - Builder fees on each Hyperliquid trade
 - Polymarket builder attribution via HMAC-signed headers
 
+### Trade Journal (`/journal`)
+- **Write trade reflections** — title, content (markdown), tags, mood, coin, P&L amount
+- **Tag system** — categorize entries (e.g. `brentoil`, `revenge-trading`, `lesson`, `rules`)
+- **Mood tracking** — confident, tilted, neutral, learning
+- **Search & filter** — find entries by keyword, tag, or mood
+- **Trade data attachment** — link journal entries to specific trades
+- **Persistent storage** — Supabase-backed, entries tied to wallet address
+
+### AI Trading Coach (`/chat`)
+- **Gemini-powered coach** — conversational AI that knows your trading history
+- **Live data tools** — AI fetches your current positions, recent fills, and market data from Hyperliquid
+- **Journal-aware** — reads your journal entries for context when coaching
+- **Rule enforcement** — references your committed trading rules (stop losses, position sizing, revenge trading limits, trend following, daily loss limits)
+- **Quick actions** — "Review my positions", "Analyze recent trades", "Am I following my rules?"
+- **Conversation history** — stored in Supabase per wallet
+
 ### Content & SEO
 - Landing page with crypto education content
 - Blog with articles on wallets, privacy, swapping
@@ -88,6 +104,8 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Lightweight Charts v5** — performant financial charting
 - **@nktkas/hyperliquid** — TypeScript SDK for Hyperliquid signing & API
 - **@privy-io/react-auth** — embedded wallet + social login
+- **Supabase** — journal & chat persistence
+- **Vercel AI SDK + Gemini** — AI trading coach with tool calling
 - **idb** — IndexedDB wrapper for automation persistence
 - **viem** — Ethereum wallet interaction types
 - **Lucide React** — icons
@@ -108,6 +126,10 @@ npm run dev
 | [localhost:3000/automate/create](http://localhost:3000/automate/create) | Create new strategy |
 | [localhost:3000/automate/alerts](http://localhost:3000/automate/alerts) | Price alerts manager |
 | [localhost:3000/automate/copy](http://localhost:3000/automate/copy) | Copy trading dashboard |
+| [localhost:3000/journal](http://localhost:3000/journal) | Trade journal |
+| [localhost:3000/chat](http://localhost:3000/chat) | AI trading coach |
+| [localhost:3000/traders](http://localhost:3000/traders) | Trader lookup & leaderboard |
+| [localhost:3000/scanner](http://localhost:3000/scanner) | Contract scanner |
 
 ## Setup Checklist
 
@@ -120,6 +142,19 @@ npm run dev
   POLYMARKET_BUILDER_KEY=your_key
   POLYMARKET_BUILDER_SECRET=your_secret
   POLYMARKET_BUILDER_PASSPHRASE=your_passphrase
+  ```
+
+### Required for Journal & AI Coach
+
+- [ ] **Supabase** — create a project at [supabase.com](https://supabase.com), run `lib/supabase/schema.sql` in the SQL editor, add to `.env.local`:
+  ```
+  NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+  SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+  ```
+- [ ] **Gemini API key** — get a free key from [Google AI Studio](https://aistudio.google.com/apikey), add to `.env.local`:
+  ```
+  GOOGLE_GENERATIVE_AI_API_KEY=your_key
   ```
 
 ### Recommended
@@ -157,7 +192,13 @@ coincess/
 │   │   ├── create/page.tsx             # Create strategy (DCA, Grid, etc.)
 │   │   ├── alerts/page.tsx             # Price alerts manager
 │   │   └── copy/page.tsx              # Copy trading dashboard
+│   ├── journal/page.tsx                # Trade journal
+│   ├── chat/page.tsx                   # AI trading coach
+│   ├── traders/page.tsx                # Trader lookup & leaderboard
+│   ├── scanner/page.tsx                # Contract scanner
 │   ├── api/
+│   │   ├── journal/route.ts            # Journal CRUD API
+│   │   ├── chat/route.ts              # AI chat streaming (Gemini + tools)
 │   │   ├── polymarket/events/          # Gamma API proxy (CORS)
 │   │   ├── polymarket/tags/            # Tags proxy
 │   │   ├── polymarket/search/          # Search proxy
@@ -200,6 +241,12 @@ coincess/
 │   │       ├── copy-trade.ts           # Copy trading
 │   │       ├── prediction-auto-bet.ts  # Auto-bet on predictions
 │   │       └── prediction-exit.ts      # Auto-exit predictions
+│   ├── ai/
+│   │   ├── system-prompt.ts            # AI coach system prompt + trading rules
+│   │   └── tools.ts                    # AI tools (positions, fills, journal, market data)
+│   ├── supabase/
+│   │   ├── client.ts                   # Supabase client (lazy-initialized)
+│   │   └── schema.sql                  # Database schema (journal + chat tables)
 │   └── alerts/
 │       └── engine.ts                   # Alert evaluation + notifications
 ├── public/
