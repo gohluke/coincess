@@ -121,6 +121,17 @@ export interface Fill {
   tid: number;
 }
 
+export interface FundingPayment {
+  time: number;
+  delta: {
+    type: "funding";
+    coin: string;
+    usdc: string;
+    szi: string;
+    fundingRate: string;
+  };
+}
+
 export interface WsTrade {
   coin: string;
   side: "A" | "B";

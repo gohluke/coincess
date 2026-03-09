@@ -19,8 +19,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
-import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills } from "@/lib/hyperliquid/api";
-import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill } from "@/lib/hyperliquid/types";
+import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding } from "@/lib/hyperliquid/api";
+import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
 
@@ -176,9 +176,10 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<OpenOrder[]>([]);
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [fills, setFills] = useState<Fill[]>([]);
+  const [funding, setFunding] = useState<FundingPayment[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  const [historyView, setHistoryView] = useState<"trades" | "fills">("trades");
+  const [historyView, setHistoryView] = useState<"trades" | "fills" | "calendar">("trades");
 
   const automationInit = useAutomationStore((s) => s.init);
   const strategies = useAutomationStore((s) => s.strategies);
@@ -186,16 +187,18 @@ export default function DashboardPage() {
   const loadData = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, openOrders, allMarkets, userFills] = await Promise.all([
+      const [chState, openOrders, allMarkets, userFills, userFunding] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
         fetchOpenOrders(addr),
         fetchAllMarkets(),
         fetchUserFills(addr),
+        fetchUserFunding(addr),
       ]);
       setCh(chState);
       setOrders(openOrders);
       setMarkets(allMarkets);
       setFills(userFills);
+      setFunding(userFunding);
       setLastRefresh(new Date());
     } catch (err) {
       console.error("Failed to load dashboard:", err);
@@ -220,10 +223,30 @@ export default function DashboardPage() {
   }, [address, loadData, positions.length]);
   const trades = useMemo(() => groupFillsIntoTrades(fills), [fills]);
   const closedTrades = trades.filter((t) => !t.isOpen);
-  const totalRealizedPnl = closedTrades.reduce((s, t) => s + t.realizedPnl, 0);
-  const totalFeesPaid = trades.reduce((s, t) => s + t.totalFees, 0);
+  const totalClosedPnl = fills.reduce((s, f) => s + parseFloat(f.closedPnl), 0);
+  const totalFeesPaid = fills.reduce((s, f) => s + parseFloat(f.fee), 0);
+  const totalFundingPnl = funding.reduce((s, fp) => s + parseFloat(fp.delta.usdc), 0);
+  const totalPnlAll = totalClosedPnl - totalFeesPaid + totalFundingPnl;
   const winCount = closedTrades.filter((t) => t.netPnl > 0).length;
   const winRate = closedTrades.length > 0 ? (winCount / closedTrades.length * 100).toFixed(0) : "–";
+
+  const dailyPnl = useMemo(() => {
+    const map = new Map<string, { closed: number; fees: number; funding: number }>();
+    for (const f of fills) {
+      const day = new Date(f.time).toISOString().slice(0, 10);
+      const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0 };
+      entry.closed += parseFloat(f.closedPnl);
+      entry.fees += parseFloat(f.fee);
+      map.set(day, entry);
+    }
+    for (const fp of funding) {
+      const day = new Date(fp.time).toISOString().slice(0, 10);
+      const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0 };
+      entry.funding += parseFloat(fp.delta.usdc);
+      map.set(day, entry);
+    }
+    return map;
+  }, [fills, funding]);
 
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
   const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
@@ -390,18 +413,15 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-semibold">Trade History</h2>
                 <div className="flex bg-[#1a1d2e] rounded-lg p-0.5 text-[10px]">
-                  <button
-                    onClick={() => setHistoryView("trades")}
-                    className={`px-2.5 py-1 rounded-md font-medium transition-colors ${historyView === "trades" ? "bg-[#7C3AED] text-white" : "text-[#848e9c] hover:text-white"}`}
-                  >
-                    Trades ({trades.length})
-                  </button>
-                  <button
-                    onClick={() => setHistoryView("fills")}
-                    className={`px-2.5 py-1 rounded-md font-medium transition-colors ${historyView === "fills" ? "bg-[#7C3AED] text-white" : "text-[#848e9c] hover:text-white"}`}
-                  >
-                    Fills ({fills.length})
-                  </button>
+                  {(["trades", "fills", "calendar"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setHistoryView(v)}
+                      className={`px-2.5 py-1 rounded-md font-medium transition-colors capitalize ${historyView === v ? "bg-[#7C3AED] text-white" : "text-[#848e9c] hover:text-white"}`}
+                    >
+                      {v === "trades" ? `Trades (${trades.length})` : v === "fills" ? `Fills (${fills.length})` : "PnL Calendar"}
+                    </button>
+                  ))}
                 </div>
               </div>
               <a
@@ -414,29 +434,33 @@ export default function DashboardPage() {
               </a>
             </div>
 
-            {/* Aggregate stats bar */}
-            {closedTrades.length > 0 && historyView === "trades" && (
-              <div className="flex flex-wrap items-center gap-4 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5 mb-3">
-                <div>
-                  <span className="text-[10px] text-[#848e9c]">Realized P&L </span>
-                  <span className={`text-xs font-semibold ${totalRealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {totalRealizedPnl >= 0 ? "+" : ""}{formatUsd(totalRealizedPnl)}
-                  </span>
+            {/* Aggregate stats bar — always visible */}
+            {fills.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Total PnL</p>
+                  <p className={`text-sm font-bold ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {totalPnlAll >= 0 ? "+" : ""}{formatUsd(totalPnlAll)}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-[10px] text-[#848e9c]">Fees Paid </span>
-                  <span className="text-xs font-semibold text-amber-400">{formatUsd(totalFeesPaid)}</span>
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Closed PnL</p>
+                  <p className={`text-sm font-bold ${totalClosedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {totalClosedPnl >= 0 ? "+" : ""}{formatUsd(totalClosedPnl)}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-[10px] text-[#848e9c]">Net P&L </span>
-                  <span className={`text-xs font-semibold ${(totalRealizedPnl - totalFeesPaid) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {(totalRealizedPnl - totalFeesPaid) >= 0 ? "+" : ""}{formatUsd(totalRealizedPnl - totalFeesPaid)}
-                  </span>
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Funding</p>
+                  <p className={`text-sm font-bold ${totalFundingPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {totalFundingPnl >= 0 ? "+" : ""}{formatUsd(totalFundingPnl)}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-[10px] text-[#848e9c]">Win Rate </span>
-                  <span className="text-xs font-semibold text-white">{winRate}%</span>
-                  <span className="text-[10px] text-[#848e9c] ml-1">({winCount}/{closedTrades.length})</span>
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Win Rate</p>
+                  <p className="text-sm font-bold text-white">
+                    {winRate}%
+                    <span className="text-[10px] text-[#848e9c] font-normal ml-1">({winCount}/{closedTrades.length})</span>
+                  </p>
                 </div>
               </div>
             )}
@@ -447,47 +471,10 @@ export default function DashboardPage() {
                   <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} />
                 ))}
               </div>
+            ) : historyView === "fills" ? (
+              <TransactionTable fills={fills} />
             ) : (
-              <div className="space-y-1">
-                {fills.slice(0, 30).map((f) => {
-                  const pnl = parseFloat(f.closedPnl);
-                  const notional = parseFloat(f.px) * parseFloat(f.sz);
-                  const isOpen = f.dir.toLowerCase().includes("open");
-                  return (
-                    <div key={f.tid} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                          f.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
-                        }`}>
-                          {f.side === "B" ? "BUY" : "SELL"}
-                        </span>
-                        <div>
-                          <span className="text-xs font-medium">{stripPrefix(f.coin)}</span>
-                          <span className="text-[10px] text-[#848e9c] ml-1.5">{f.dir}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs">
-                          {parseFloat(f.sz).toFixed(4)} @ ${parseFloat(f.px).toLocaleString()}
-                        </p>
-                        <div className="flex items-center gap-2 justify-end">
-                          <span className="text-[10px] text-[#848e9c]">
-                            ${notional.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                          </span>
-                          {!isOpen && pnl !== 0 && (
-                            <span className={`text-[10px] font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                              {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                            </span>
-                          )}
-                          <span className="text-[10px] text-[#848e9c]">
-                            {new Date(f.time).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <PnlCalendar dailyPnl={dailyPnl} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} />
             )}
           </div>
         )}
@@ -716,5 +703,207 @@ function PositionRow({ ap, markets }: { ap: AssetPosition; markets: MarketInfo[]
         </span>
       </div>
     </Link>
+  );
+}
+
+// ── Based-style Transaction History table ──────────────────
+
+function TransactionTable({ fills }: { fills: Fill[] }) {
+  const sorted = [...fills].sort((a, b) => b.time - a.time);
+  return (
+    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
+        <p className="text-xs font-semibold text-white">Transaction History</p>
+        <p className="text-[10px] text-[#848e9c]">Total: {fills.length}</p>
+      </div>
+      {/* Header */}
+      <div className="grid grid-cols-7 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+        <span>Date</span>
+        <span>Pair</span>
+        <span>Type</span>
+        <span className="text-right">Price</span>
+        <span className="text-right">Amount</span>
+        <span className="text-right">Total</span>
+        <span className="text-right">Status</span>
+      </div>
+      {/* Rows */}
+      {sorted.map((f) => {
+        const px = parseFloat(f.px);
+        const sz = parseFloat(f.sz);
+        const total = px * sz;
+        const isBuy = f.side === "B";
+        return (
+          <div key={f.tid} className="grid grid-cols-7 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors">
+            <span className="text-[#848e9c]">
+              {new Date(f.time).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </span>
+            <span className="text-white font-medium">{stripPrefix(f.coin)}-USDC</span>
+            <span className={`font-medium ${isBuy ? "text-emerald-400" : "text-red-400"}`}>
+              {isBuy ? "Buy" : "Sell"}
+            </span>
+            <span className="text-right text-white">{px.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 4 })}</span>
+            <span className="text-right text-white">{sz.toFixed(sz < 1 ? 5 : 2)}</span>
+            <span className="text-right text-white">{formatUsd(total)}</span>
+            <span className="text-right text-[#848e9c]">Completed</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── PnL Calendar ──────────────────────────────────────────
+
+function PnlCalendar({
+  dailyPnl,
+  totalClosedPnl,
+  totalFundingPnl,
+  totalPnlAll,
+}: {
+  dailyPnl: Map<string, { closed: number; fees: number; funding: number }>;
+  totalClosedPnl: number;
+  totalFundingPnl: number;
+  totalPnlAll: number;
+}) {
+  const [calMonth, setCalMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+
+  const firstDay = new Date(calMonth.year, calMonth.month, 1);
+  const lastDay = new Date(calMonth.year, calMonth.month + 1, 0);
+  const startPad = firstDay.getDay();
+  const totalDays = lastDay.getDate();
+
+  const today = new Date();
+  const isToday = (d: number) =>
+    calMonth.year === today.getFullYear() && calMonth.month === today.getMonth() && d === today.getDate();
+
+  const monthStr = firstDay.toLocaleString("default", { month: "long", year: "numeric" });
+
+  const prevMonth = () =>
+    setCalMonth((p) => (p.month === 0 ? { year: p.year - 1, month: 11 } : { ...p, month: p.month - 1 }));
+  const nextMonth = () =>
+    setCalMonth((p) => (p.month === 11 ? { year: p.year + 1, month: 0 } : { ...p, month: p.month + 1 }));
+
+  // Compute monthly P&L
+  let monthTotalPnl = 0;
+  let monthClosedPnl = 0;
+  let monthFunding = 0;
+  let profitDays = 0;
+  let lossDays = 0;
+  let profitAmt = 0;
+  let lossAmt = 0;
+
+  const dayPnls: (number | null)[] = [];
+  for (let d = 1; d <= totalDays; d++) {
+    const key = `${calMonth.year}-${String(calMonth.month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const entry = dailyPnl.get(key);
+    if (entry) {
+      const dayNet = entry.closed - entry.fees + entry.funding;
+      dayPnls.push(dayNet);
+      monthTotalPnl += dayNet;
+      monthClosedPnl += entry.closed;
+      monthFunding += entry.funding;
+      if (dayNet > 0) { profitDays++; profitAmt += dayNet; }
+      else if (dayNet < 0) { lossDays++; lossAmt += dayNet; }
+    } else {
+      dayPnls.push(null);
+    }
+  }
+
+  const totalBarWidth = Math.abs(profitAmt) + Math.abs(lossAmt);
+  const profitPct = totalBarWidth > 0 ? (Math.abs(profitAmt) / totalBarWidth) * 100 : 50;
+
+  return (
+    <div className="space-y-3">
+      {/* Header with month nav */}
+      <div className="flex items-center gap-4">
+        <button onClick={prevMonth} className="text-[#848e9c] hover:text-white p-1">&lt;</button>
+        <h3 className="text-base font-bold text-white">{monthStr}</h3>
+        <button onClick={nextMonth} className="text-[#848e9c] hover:text-white p-1">&gt;</button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase">Total PnL</p>
+          <p className={`text-sm font-bold ${monthTotalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {monthTotalPnl >= 0 ? "+" : ""}{formatUsd(monthTotalPnl)}
+          </p>
+        </div>
+        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase">Closed PnL</p>
+          <p className={`text-sm font-bold ${monthClosedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {monthClosedPnl >= 0 ? "+" : ""}{formatUsd(monthClosedPnl)}
+          </p>
+        </div>
+        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase">Profitable Days</p>
+          <p className="text-sm font-bold text-white">{profitDays} / {profitDays + lossDays}</p>
+        </div>
+        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase">Funding</p>
+          <p className={`text-sm font-bold ${monthFunding >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {monthFunding >= 0 ? "+" : ""}{formatUsd(monthFunding)}
+          </p>
+        </div>
+      </div>
+
+      {/* Profit/Loss ratio bar */}
+      <div>
+        <p className="text-[10px] text-[#848e9c] mb-1">Profit/Loss Ratio</p>
+        <div className="h-2.5 rounded-full overflow-hidden flex bg-[#1a1d2e]">
+          <div className="bg-emerald-500 transition-all" style={{ width: `${profitPct}%` }} />
+          <div className="bg-red-500 transition-all" style={{ width: `${100 - profitPct}%` }} />
+        </div>
+        <div className="flex justify-between mt-1 text-[10px]">
+          <span className="text-emerald-400">{profitDays}/{formatUsd(profitAmt)}</span>
+          <span className="text-red-400">{lossDays}/{formatUsd(lossAmt)}</span>
+        </div>
+      </div>
+
+      {/* Calendar grid */}
+      <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+        <div className="grid grid-cols-7 border-b border-[#2a2e3e]">
+          {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
+            <div key={d} className="text-center text-[10px] text-[#848e9c] font-medium py-2 border-r border-[#2a2e3e]/30 last:border-r-0">
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {Array.from({ length: startPad }).map((_, i) => (
+            <div key={`pad-${i}`} className="aspect-square border-r border-b border-[#2a2e3e]/20" />
+          ))}
+          {Array.from({ length: totalDays }).map((_, i) => {
+            const day = i + 1;
+            const pnl = dayPnls[i];
+            const hasData = pnl !== null;
+            const isProfit = hasData && pnl > 0;
+            const isLoss = hasData && pnl < 0;
+            return (
+              <div
+                key={day}
+                className={`aspect-square border-r border-b border-[#2a2e3e]/20 p-1 relative transition-colors ${
+                  isProfit ? "bg-emerald-500/15" : isLoss ? "bg-red-500/15" : ""
+                }`}
+              >
+                <span className={`text-[10px] font-medium ${isToday(day) ? "text-[#7C3AED] font-bold" : "text-[#848e9c]"}`}>
+                  {day}
+                </span>
+                {hasData && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-[10px] font-bold ${isProfit ? "text-emerald-400" : "text-red-400"}`}>
+                      {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

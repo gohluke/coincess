@@ -7,6 +7,7 @@ import type {
   MetaAndAssetCtxs,
   OpenOrder,
   Fill,
+  FundingPayment,
   MarketInfo,
 } from "./types";
 
@@ -108,6 +109,10 @@ export async function fetchOpenOrders(user: string): Promise<OpenOrder[]> {
 
 export async function fetchUserFills(user: string): Promise<Fill[]> {
   return post<Fill[]>("/info", { type: "userFills", user });
+}
+
+export async function fetchUserFunding(user: string, startTime = 0, endTime = 9999999999999): Promise<FundingPayment[]> {
+  return post<FundingPayment[]>("/info", { type: "userFunding", user, startTime, endTime });
 }
 
 export async function fetchUserAbstraction(user: string): Promise<string | null> {
