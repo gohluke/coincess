@@ -19,8 +19,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
-import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding } from "@/lib/hyperliquid/api";
-import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment } from "@/lib/hyperliquid/types";
+import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding, fetchSpotClearinghouseState } from "@/lib/hyperliquid/api";
+import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
 
@@ -173,6 +173,7 @@ function PnlBadge({ value }: { value: number }) {
 export default function DashboardPage() {
   const { address, loading: walletLoading, connect } = useEffectiveAddress();
   const [ch, setCh] = useState<ClearinghouseState | null>(null);
+  const [spot, setSpot] = useState<SpotClearinghouseState | null>(null);
   const [orders, setOrders] = useState<OpenOrder[]>([]);
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [fills, setFills] = useState<Fill[]>([]);
@@ -188,14 +189,16 @@ export default function DashboardPage() {
   const loadData = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, openOrders, allMarkets, userFills, userFunding] = await Promise.all([
+      const [chState, spotState, openOrders, allMarkets, userFills, userFunding] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
+        fetchSpotClearinghouseState(addr).catch(() => null),
         fetchOpenOrders(addr),
         fetchAllMarkets(),
         fetchUserFills(addr),
         fetchUserFunding(addr),
       ]);
       setCh(chState);
+      setSpot(spotState);
       setOrders(openOrders);
       setMarkets(allMarkets);
       setFills(userFills);
@@ -269,14 +272,25 @@ export default function DashboardPage() {
   }, [fills]);
 
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
-  const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
+  const perpsAccountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
   const totalMarginUsed = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
   const availableBalance = parseFloat(ch?.withdrawable ?? "0");
+  const spotUsdcBalance = useMemo(() => {
+    if (!spot?.balances) return 0;
+    return spot.balances.reduce((sum, b) => {
+      if (b.coin === "USDC" || b.coin === "USDT0" || b.coin === "USDE") {
+        return sum + parseFloat(b.total);
+      }
+      return sum;
+    }, 0);
+  }, [spot]);
+  const accountValue = perpsAccountValue + spotUsdcBalance;
   const activeStrategies = strategies.filter((s) => s.status === "active").length;
 
   const assetDistribution = useMemo(() => {
     const items: { label: string; value: number; color: string }[] = [];
-    if (availableBalance > 0.01) items.push({ label: "USDC", value: availableBalance, color: "#7C3AED" });
+    if (spotUsdcBalance > 0.01) items.push({ label: "Spot USDC", value: spotUsdcBalance, color: "#2775CA" });
+    if (availableBalance > 0.01) items.push({ label: "Perps USDC", value: availableBalance, color: "#7C3AED" });
     for (const ap of positions) {
       const pos = ap.position;
       const bare = stripPrefix(pos.coin);
@@ -285,7 +299,7 @@ export default function DashboardPage() {
     }
     if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: "#7C3AED" });
     return items;
-  }, [availableBalance, positions, accountValue]);
+  }, [spotUsdcBalance, availableBalance, positions, accountValue]);
 
   const assetTotal = assetDistribution.reduce((s, a) => s + a.value, 0);
 
@@ -325,8 +339,8 @@ export default function DashboardPage() {
     );
   }
 
-  const perpsBalance = totalMarginUsed + availableBalance;
-  const spotBalance = 0;
+  const perpsBalance = perpsAccountValue;
+  const spotBalance = spotUsdcBalance;
   const evmBalance = 0;
 
   return (
@@ -392,7 +406,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
                 <p className="text-[11px] text-[#848e9c] mb-1">Available Balance</p>
-                <p className="text-xl font-bold">{formatUsd(availableBalance)}</p>
+                <p className="text-xl font-bold">{formatUsd(availableBalance + spotUsdcBalance)}</p>
               </div>
               <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
                 <p className="text-[11px] text-[#848e9c] mb-1">USDC (Perps)</p>

@@ -34,7 +34,9 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - All strategies persist in IndexedDB (survives page refresh)
 
 ### Unified Portfolio Dashboard (`/dashboard`)
-- Total account value, unrealized PnL, margin used, active bots
+- **Combined balance** — aggregates Perps clearinghouse + Spot balance + HIP-3 (xyz) into one Total Balance, matching Hyperliquid's portfolio view
+- **Balance breakdown cards** — Available Balance, USDC (Perps), Spot Balance, EVM Balance
+- **Asset distribution donut** — visual split of Spot USDC vs Perps USDC vs open position margins
 - Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
 - PnL calendar — daily profit/loss heatmap
 - Trade history with round-trip grouping and per-trade P&L
@@ -146,7 +148,7 @@ npm run dev
 ### Required
 
 - [ ] **Deploy to production** — Netlify or Vercel, set env vars there too
-- [ ] **Fund builder address** — deposit ≥100 USDC into your Hyperliquid perps account, then flip `BUILDER_FEE_ENABLED = true` in `lib/hyperliquid/signing.ts`
+- [x] **Fund builder address** — deposit ≥100 USDC into your Hyperliquid perps account, then flip `BUILDER_FEE_ENABLED = true` in `lib/hyperliquid/signing.ts`
 - [ ] **Register Polymarket builder** — go to [polymarket.com/settings?tab=builder](https://polymarket.com/settings?tab=builder), get your API keys, add to `.env.local`:
   ```
   POLYMARKET_BUILDER_KEY=your_key

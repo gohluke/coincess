@@ -9,6 +9,7 @@ import type {
   Fill,
   FundingPayment,
   MarketInfo,
+  SpotClearinghouseState,
 } from "./types";
 
 const API_URL = "https://api.hyperliquid.xyz";
@@ -59,6 +60,10 @@ export async function fetchClearinghouseState(user: string, dex?: string): Promi
   const body: Record<string, unknown> = { type: "clearinghouseState", user };
   if (dex) body.dex = dex;
   return post<ClearinghouseState>("/info", body);
+}
+
+export async function fetchSpotClearinghouseState(user: string): Promise<SpotClearinghouseState> {
+  return post<SpotClearinghouseState>("/info", { type: "spotClearinghouseState", user });
 }
 
 export async function fetchCombinedClearinghouseState(user: string): Promise<ClearinghouseState> {

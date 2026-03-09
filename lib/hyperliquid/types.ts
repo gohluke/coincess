@@ -159,6 +159,18 @@ export interface MarketInfo {
   dex: string; // "" for main perps, "xyz" for HIP-3
 }
 
+export interface SpotBalance {
+  coin: string;
+  token: number;
+  total: string;
+  hold: string;
+  entryNtl: string;
+}
+
+export interface SpotClearinghouseState {
+  balances: SpotBalance[];
+}
+
 export type OrderSide = "buy" | "sell";
 export type OrderType = "market" | "limit";
 export type TimeInForce = "Gtc" | "Ioc" | "Alo";
