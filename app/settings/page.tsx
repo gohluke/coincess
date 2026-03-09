@@ -15,9 +15,12 @@ import {
   Settings,
   Radio,
   Pencil,
+  Link2,
+  Unlink,
+  RefreshCw,
 } from "lucide-react";
 import { useSettingsStore } from "@/lib/settings/store";
-import type { LinkedWallet } from "@/lib/settings/store";
+import type { LinkedWallet, DayzeConfig } from "@/lib/settings/store";
 import { shortenAddress } from "@/lib/hyperliquid/wallet";
 
 function WalletCard({
@@ -337,6 +340,157 @@ function ApiWalletSection() {
   );
 }
 
+function DayzeSection() {
+  const dayze = useSettingsStore((s) => s.dayze);
+  const setDayze = useSettingsStore((s) => s.setDayze);
+
+  const [apiKey, setApiKey] = useState(dayze?.apiKey ?? "");
+  const [baseUrl, setBaseUrl] = useState(dayze?.baseUrl ?? "https://ohmydayze.com");
+  const [showKey, setShowKey] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  const handleSave = () => {
+    if (!apiKey.trim()) return;
+    setDayze({
+      apiKey: apiKey.trim(),
+      baseUrl: baseUrl.trim().replace(/\/$/, ""),
+      enabled: true,
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(`${baseUrl.trim().replace(/\/$/, "")}/api/v1/activity?limit=1`, {
+        headers: { Authorization: `Bearer ${apiKey.trim()}` },
+      });
+      if (res.ok) {
+        setTestResult({ ok: true, msg: "Connected to Dayze!" });
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setTestResult({ ok: false, msg: body.error || `HTTP ${res.status}` });
+      }
+    } catch {
+      setTestResult({ ok: false, msg: "Could not reach Dayze server" });
+    }
+    setTesting(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620] space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-white">
+          <Link2 className="h-4 w-4 text-[#7C3AED]" />
+          Dayze Connection
+        </div>
+
+        <p className="text-xs text-[#848e9c]">
+          Connect to Dayze (your Life OS) to sync your trading activity, PnL, and positions
+          into your personal timeline.
+        </p>
+
+        <div>
+          <label className="text-[10px] text-[#848e9c] uppercase tracking-wider font-semibold">
+            Dayze API Key
+          </label>
+          <div className="relative mt-1">
+            <input
+              type={showKey ? "text" : "password"}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="dayze_k_..."
+              className="w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-[#7C3AED] placeholder:text-[#5a6270]"
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey(!showKey)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#848e9c] hover:text-white"
+            >
+              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[10px] text-[#848e9c] uppercase tracking-wider font-semibold">
+            Dayze URL
+          </label>
+          <input
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="https://ohmydayze.com"
+            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#7C3AED] placeholder:text-[#5a6270]"
+          />
+        </div>
+
+        {testResult && (
+          <p className={`text-xs ${testResult.ok ? "text-emerald-400" : "text-red-400"}`}>
+            {testResult.msg}
+          </p>
+        )}
+
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={handleSave}
+            disabled={!apiKey.trim()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-40 text-white text-sm font-semibold transition-colors"
+          >
+            {saved ? <Check className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+            {saved ? "Saved!" : "Save"}
+          </button>
+          <button
+            onClick={handleTest}
+            disabled={!apiKey.trim() || testing}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2a2e39] hover:bg-[#1a1d26] disabled:opacity-40 text-white text-sm font-medium transition-colors"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${testing ? "animate-spin" : ""}`} />
+            Test
+          </button>
+          {dayze && (
+            <button
+              onClick={() => {
+                setDayze(null);
+                setApiKey("");
+              }}
+              className="flex items-center gap-1 px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 text-sm font-medium transition-colors"
+            >
+              <Unlink className="h-3.5 w-3.5" />
+              Disconnect
+            </button>
+          )}
+        </div>
+      </div>
+
+      {dayze?.enabled && (
+        <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+          <div className="flex items-center gap-2 text-xs text-emerald-400 font-semibold">
+            <Check className="h-3.5 w-3.5" />
+            Dayze Connected
+          </div>
+          <p className="text-[11px] text-emerald-200/60 mt-1">
+            Trading activity will sync to your Dayze timeline.
+          </p>
+        </div>
+      )}
+
+      <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620]">
+        <h3 className="text-xs font-bold text-white mb-2">How to get a Dayze API key</h3>
+        <ol className="text-[11px] text-[#848e9c] space-y-1.5 list-decimal list-inside">
+          <li>Log in to your Dayze account</li>
+          <li>Go to Settings &rarr; Developer &rarr; API Keys</li>
+          <li>Create a new key with the <strong>activity</strong> scope</li>
+          <li>Copy the key (starts with <code className="text-[#7C3AED]">dayze_k_</code>) and paste above</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const wallets = useSettingsStore((s) => s.linkedWallets);
   const activeId = useSettingsStore((s) => s.activeWalletId);
@@ -436,6 +590,25 @@ export default function SettingsPage() {
               <li>Paste them into the fields above</li>
             </ol>
           </div>
+        </section>
+
+        {/* Divider */}
+        <div className="border-t border-[#2a2e39]" />
+
+        {/* Dayze Integration */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-[#7C3AED]" />
+              Dayze Integration
+            </h2>
+            <p className="text-xs text-[#848e9c] mt-1">
+              Connect to Dayze &mdash; your Life OS &mdash; to see your trades, PnL, and positions
+              in your personal timeline alongside everything else in your life.
+            </p>
+          </div>
+
+          <DayzeSection />
         </section>
       </div>
     </div>

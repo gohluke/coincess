@@ -133,7 +133,7 @@ export default function ChatPage() {
               <Bot className="h-4 w-4 text-[#7C3AED]" />
               AI Trading Coach
             </h1>
-            <p className="text-[10px] text-[#848e9c]">Powered by GPT-4o with live Hyperliquid data</p>
+            <p className="text-[10px] text-[#848e9c]">Powered by Gemini with live Hyperliquid data</p>
           </div>
         </div>
         <button

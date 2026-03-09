@@ -14,10 +14,17 @@ export interface ApiWalletConfig {
   privateKey: string;
 }
 
+export interface DayzeConfig {
+  apiKey: string;
+  baseUrl: string;
+  enabled: boolean;
+}
+
 interface SettingsState {
   linkedWallets: LinkedWallet[];
   activeWalletId: string | null;
   apiWallet: ApiWalletConfig | null;
+  dayze: DayzeConfig | null;
 
   addWallet: (label: string, address: string) => void;
   removeWallet: (id: string) => void;
@@ -27,6 +34,8 @@ interface SettingsState {
 
   setApiWallet: (config: ApiWalletConfig | null) => void;
   clearApiWallet: () => void;
+
+  setDayze: (config: DayzeConfig | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -35,6 +44,7 @@ export const useSettingsStore = create<SettingsState>()(
       linkedWallets: [],
       activeWalletId: null,
       apiWallet: null,
+      dayze: null,
 
       addWallet: (label, address) => {
         const id = `w_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -81,6 +91,8 @@ export const useSettingsStore = create<SettingsState>()(
 
       setApiWallet: (config) => set({ apiWallet: config }),
       clearApiWallet: () => set({ apiWallet: null }),
+
+      setDayze: (config) => set({ dayze: config }),
     }),
     {
       name: "coincess-settings",
@@ -88,6 +100,7 @@ export const useSettingsStore = create<SettingsState>()(
         linkedWallets: state.linkedWallets,
         activeWalletId: state.activeWalletId,
         apiWallet: state.apiWallet,
+        dayze: state.dayze,
       }),
     },
   ),

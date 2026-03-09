@@ -91,6 +91,13 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Quick actions** — "Review my positions", "Analyze recent trades", "Am I following my rules?"
 - **Conversation history** — stored in Supabase per wallet
 
+### Dayze Integration (Life OS)
+- **Sync trading activity to Dayze** — trades, positions, and daily PnL appear in your Dayze personal timeline
+- **API key auth** — secure connection via Dayze API keys with `activity` scope
+- **Settings UI** — configure Dayze API key, base URL, test connection, enable/disable sync
+- **Activity formatters** — trade closes, position opens, and daily PnL summaries formatted for Dayze's activity feed
+- **Batch sync** — push multiple activities in a single request via `/api/dayze/sync`
+
 ### Content & SEO
 - Landing page with crypto education content
 - Blog with articles on wallets, privacy, swapping
@@ -132,6 +139,7 @@ npm run dev
 | [localhost:3000/chat](http://localhost:3000/chat) | AI trading coach |
 | [localhost:3000/traders](http://localhost:3000/traders) | Trader lookup & leaderboard |
 | [localhost:3000/scanner](http://localhost:3000/scanner) | Contract scanner |
+| [localhost:3000/settings](http://localhost:3000/settings) | Wallets, API keys, Dayze integration |
 
 ## Setup Checklist
 
@@ -201,6 +209,7 @@ coincess/
 │   ├── api/
 │   │   ├── journal/route.ts            # Journal CRUD API
 │   │   ├── chat/route.ts              # AI chat streaming (Gemini + tools)
+│   │   ├── dayze/sync/route.ts        # Dayze activity sync proxy
 │   │   ├── polymarket/events/          # Gamma API proxy (CORS)
 │   │   ├── polymarket/tags/            # Tags proxy
 │   │   ├── polymarket/search/          # Search proxy
@@ -246,6 +255,8 @@ coincess/
 │   ├── ai/
 │   │   ├── system-prompt.ts            # AI coach system prompt + trading rules
 │   │   └── tools.ts                    # AI tools (positions, fills, journal, market data)
+│   ├── dayze/
+│   │   └── sync.ts                     # Dayze activity sync + formatters
 │   ├── supabase/
 │   │   ├── client.ts                   # Supabase client (lazy-initialized)
 │   │   └── schema.sql                  # Database schema (journal + chat tables)
