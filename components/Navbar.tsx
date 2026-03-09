@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search, Settings } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
+import { DepositButton } from "@/components/DepositModal";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
@@ -56,8 +57,9 @@ export function Navbar() {
           </nav>
         </div>
 
-        {/* Right: Auth button */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right: Deposit + Auth */}
+        <div className="flex items-center gap-2 shrink-0">
+          <DepositButton />
           <AuthButton />
         </div>
       </div>
