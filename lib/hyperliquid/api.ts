@@ -54,8 +54,52 @@ export async function fetchCandles(
   });
 }
 
-export async function fetchClearinghouseState(user: string): Promise<ClearinghouseState> {
-  return post<ClearinghouseState>("/info", { type: "clearinghouseState", user });
+export async function fetchClearinghouseState(user: string, dex?: string): Promise<ClearinghouseState> {
+  const body: Record<string, unknown> = { type: "clearinghouseState", user };
+  if (dex) body.dex = dex;
+  return post<ClearinghouseState>("/info", body);
+}
+
+export async function fetchCombinedClearinghouseState(user: string): Promise<ClearinghouseState> {
+  const [main, xyz] = await Promise.all([
+    fetchClearinghouseState(user).catch(() => null),
+    fetchClearinghouseState(user, "xyz").catch(() => null),
+  ]);
+
+  if (!main && !xyz) {
+    return {
+      marginSummary: { accountValue: "0", totalMarginUsed: "0", totalNtlPos: "0", totalRawUsd: "0" },
+      crossMarginSummary: { accountValue: "0", totalMarginUsed: "0", totalNtlPos: "0", totalRawUsd: "0" },
+      crossMaintenanceMarginUsed: "0",
+      withdrawable: "0",
+      assetPositions: [],
+      time: Date.now(),
+    };
+  }
+
+  if (!main) return xyz!;
+  if (!xyz) return main;
+
+  const mainVal = parseFloat(main.marginSummary.accountValue || "0");
+  const xyzVal = parseFloat(xyz.marginSummary.accountValue || "0");
+  const mainMargin = parseFloat(main.marginSummary.totalMarginUsed || "0");
+  const xyzMargin = parseFloat(xyz.marginSummary.totalMarginUsed || "0");
+  const mainWithdrawable = parseFloat(main.withdrawable || "0");
+  const xyzWithdrawable = parseFloat(xyz.withdrawable || "0");
+
+  return {
+    marginSummary: {
+      accountValue: (mainVal + xyzVal).toString(),
+      totalMarginUsed: (mainMargin + xyzMargin).toString(),
+      totalNtlPos: main.marginSummary.totalNtlPos,
+      totalRawUsd: main.marginSummary.totalRawUsd,
+    },
+    crossMarginSummary: main.crossMarginSummary,
+    crossMaintenanceMarginUsed: main.crossMaintenanceMarginUsed,
+    withdrawable: (mainWithdrawable + xyzWithdrawable).toString(),
+    assetPositions: [...main.assetPositions, ...xyz.assetPositions],
+    time: main.time,
+  };
 }
 
 export async function fetchOpenOrders(user: string): Promise<OpenOrder[]> {

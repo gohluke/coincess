@@ -15,8 +15,8 @@ import {
   Zap,
   LogIn,
 } from "lucide-react";
-import { useWallet } from "@/hooks/useWallet";
-import { fetchClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills } from "@/lib/hyperliquid/api";
+import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
+import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
@@ -38,7 +38,7 @@ function PnlBadge({ value }: { value: number }) {
 }
 
 export default function DashboardPage() {
-  const { address, loading: walletLoading, connect } = useWallet();
+  const { address, loading: walletLoading, connect } = useEffectiveAddress();
   const [ch, setCh] = useState<ClearinghouseState | null>(null);
   const [orders, setOrders] = useState<OpenOrder[]>([]);
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
@@ -53,7 +53,7 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const [chState, openOrders, allMarkets, userFills] = await Promise.all([
-        fetchClearinghouseState(addr),
+        fetchCombinedClearinghouseState(addr),
         fetchOpenOrders(addr),
         fetchAllMarkets(),
         fetchUserFills(addr),
@@ -338,27 +338,35 @@ export default function DashboardPage() {
   );
 }
 
+function stripPrefix(coin: string): string {
+  const idx = coin.indexOf(":");
+  return idx >= 0 ? coin.slice(idx + 1) : coin;
+}
+
 function PositionRow({ ap, markets }: { ap: AssetPosition; markets: MarketInfo[] }) {
   const pos = ap.position;
   const size = parseFloat(pos.szi);
   const pnl = parseFloat(pos.unrealizedPnl);
   const entry = parseFloat(pos.entryPx ?? "0");
-  const market = markets.find((m) => m.name === pos.coin);
+  const bare = stripPrefix(pos.coin);
+  const market = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === pos.coin);
   const markPx = market ? parseFloat(market.markPx) : 0;
   const roe = parseFloat(pos.returnOnEquity) * 100;
   const liqPx = pos.liquidationPx ? parseFloat(pos.liquidationPx) : null;
   const liqDistance = liqPx && markPx ? Math.abs((markPx - liqPx) / markPx * 100) : null;
   const notional = Math.abs(size) * markPx;
+  const displayCoin = market?.displayName ?? bare;
+  const tradeCoin = market?.name ?? pos.coin;
 
   return (
-    <Link href={`/trade?coin=${pos.coin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#3a3e4e] transition-colors">
+    <Link href={`/trade?coin=${tradeCoin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#3a3e4e] transition-colors">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div>
             <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded font-bold mb-0.5 ${size > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
               {size > 0 ? "LONG" : "SHORT"} {pos.leverage.value}x
             </span>
-            <p className="text-sm font-semibold">{pos.coin}</p>
+            <p className="text-sm font-semibold">{displayCoin} <span className="text-[10px] text-[#848e9c] font-normal">{bare}</span></p>
           </div>
         </div>
         <div className="text-right">

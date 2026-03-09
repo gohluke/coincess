@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search, Coins } from "lucide-react";
+import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search, Settings } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
 
@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/coins", label: "Discover", icon: Search },
   { href: "/predictions", label: "Predictions", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calculator"];

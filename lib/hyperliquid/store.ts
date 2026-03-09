@@ -10,7 +10,7 @@ import type {
 import {
   fetchAllMarkets,
   fetchL2Book,
-  fetchClearinghouseState,
+  fetchCombinedClearinghouseState,
   fetchOpenOrders,
   fetchUserAbstraction,
 } from "./api";
@@ -110,7 +110,7 @@ export const useTradingStore = create<TradingState>((set, get) => ({
     if (!addr) return;
     try {
       const [ch, orders, abstraction] = await Promise.all([
-        fetchClearinghouseState(addr),
+        fetchCombinedClearinghouseState(addr),
         fetchOpenOrders(addr),
         fetchUserAbstraction(addr),
       ]);
