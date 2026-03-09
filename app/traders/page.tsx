@@ -27,6 +27,7 @@ import {
   fetchUserFills,
   fetchUserFunding,
   fetchLeaderboard,
+  fetchSpotClearinghouseState,
 } from "@/lib/hyperliquid/api";
 import type {
   ClearinghouseState,
@@ -36,7 +37,7 @@ import type {
   Fill,
   FundingPayment,
 } from "@/lib/hyperliquid/types";
-import type { LeaderboardEntry } from "@/lib/hyperliquid/api";
+import type { LeaderboardEntry, SpotClearinghouseState } from "@/lib/hyperliquid/api";
 
 function stripPrefix(coin: string): string {
   const idx = coin.indexOf(":");
@@ -110,9 +111,10 @@ export default function TradersPage() {
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [fills, setFills] = useState<Fill[]>([]);
   const [funding, setFunding] = useState<FundingPayment[]>([]);
+  const [spotState, setSpotState] = useState<SpotClearinghouseState | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [historyTab, setHistoryTab] = useState<"positions" | "fills">("positions");
+  const [historyTab, setHistoryTab] = useState<"positions" | "fills" | "spot">("positions");
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(true);
@@ -247,18 +249,20 @@ export default function TradersPage() {
     if (!addr || !addr.startsWith("0x")) return;
     setLoading(true);
     try {
-      const [chData, ordersData, marketsData, fillsData, fundingData] = await Promise.all([
+      const [chData, ordersData, marketsData, fillsData, fundingData, spotData] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
         fetchOpenOrders(addr),
         fetchAllMarkets(),
         fetchUserFills(addr),
         fetchUserFunding(addr),
+        fetchSpotClearinghouseState(addr).catch(() => null),
       ]);
       setCh(chData);
       setOrders(ordersData);
       setMarkets(marketsData);
       setFills(fillsData);
       setFunding(fundingData);
+      setSpotState(spotData);
     } catch (err) {
       console.error("Failed to load trader data:", err);
     } finally {
@@ -285,6 +289,7 @@ export default function TradersPage() {
     setActiveAddress("");
     setSearchInput("");
     setCh(null);
+    setSpotState(null);
     setFills([]);
     setFunding([]);
     router.push("/traders", { scroll: false });
@@ -308,6 +313,36 @@ export default function TradersPage() {
   const totalUnrealizedPnl = positions.reduce(
     (s, ap) => s + parseFloat(ap.position.unrealizedPnl), 0
   );
+
+  const spotTotalUsd = useMemo(() => {
+    if (!spotState?.balances) return 0;
+    return spotState.balances.reduce((sum, b) => {
+      const total = parseFloat(b.total);
+      if (b.coin === "USDC" || b.coin === "USDT") return sum + total;
+      return sum + parseFloat(b.entryNtl || "0");
+    }, 0);
+  }, [spotState]);
+
+  const totalAccountValue = accountValue + spotTotalUsd;
+
+  const realizedPnl = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    let total = 0, d1 = 0, d2 = 0, d7 = 0, d30 = 0;
+    for (const f of fills) {
+      const pnl = parseFloat(f.closedPnl);
+      if (pnl === 0) continue;
+      total += pnl;
+      const age = now - f.time;
+      if (age <= day) d1 += pnl;
+      if (age <= 2 * day) d2 += pnl;
+      if (age <= 7 * day) d7 += pnl;
+      if (age <= 30 * day) d30 += pnl;
+    }
+    return { total, d1, d2, d7, d30 };
+  }, [fills]);
+
+  const totalPnl = realizedPnl.total + totalUnrealizedPnl;
 
   const copyAddress = () => {
     navigator.clipboard.writeText(activeAddress);
@@ -688,47 +723,110 @@ export default function TradersPage() {
               </div>
 
               {ch && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                  <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                    <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Account Value</p>
-                    <p className="text-sm font-bold text-white">{formatUsd(accountValue)}</p>
+                <>
+                  {/* P&L Summary Row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5 border-l-2 border-[#7C3AED]">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Total P&L</p>
+                      <p className={`text-sm font-bold ${totalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {totalPnl >= 0 ? "+" : ""}{formatUsd(totalPnl)}
+                      </p>
+                    </div>
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">24h P&L</p>
+                      <p className={`text-sm font-bold ${realizedPnl.d1 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {realizedPnl.d1 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d1)}
+                      </p>
+                    </div>
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">48h P&L</p>
+                      <p className={`text-sm font-bold ${realizedPnl.d2 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {realizedPnl.d2 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d2)}
+                      </p>
+                    </div>
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">7d P&L</p>
+                      <p className={`text-sm font-bold ${realizedPnl.d7 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {realizedPnl.d7 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d7)}
+                      </p>
+                    </div>
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">30d P&L</p>
+                      <p className={`text-sm font-bold ${realizedPnl.d30 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {realizedPnl.d30 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d30)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                    <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Unrealized P&L</p>
-                    <p className={`text-sm font-bold ${totalUnrealizedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                      {totalUnrealizedPnl >= 0 ? "+" : ""}{formatUsd(totalUnrealizedPnl)}
-                    </p>
+
+                  {/* Account Overview Row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Perps Position Value</p>
+                      <p className="text-sm font-bold text-white">{formatUsd(accountValue)}</p>
+                      <div className="text-[10px] text-[#5a6070] mt-0.5 space-y-px">
+                        <p>Positions: {positions.length}</p>
+                        <p>Margin: {formatUsd(totalMargin)}</p>
+                      </div>
+                    </div>
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Account Total Value</p>
+                      <p className="text-sm font-bold text-white">{formatUsd(totalAccountValue)}</p>
+                      <div className="text-[10px] text-[#5a6070] mt-0.5 space-y-px">
+                        <p>Perpetual: {formatUsd(accountValue)}</p>
+                        <p>Spot: {formatUsd(spotTotalUsd)}</p>
+                      </div>
+                    </div>
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Free Margin Available</p>
+                      <p className="text-sm font-bold text-white">{formatUsd(withdrawable)}</p>
+                      <div className="text-[10px] text-[#5a6070] mt-0.5 space-y-px">
+                        <p>Withdrawable: {accountValue > 0 ? `${((withdrawable / accountValue) * 100).toFixed(1)}%` : "–"}</p>
+                        <p>Unrealized: <span className={totalUnrealizedPnl >= 0 ? "text-emerald-400/70" : "text-red-400/70"}>{totalUnrealizedPnl >= 0 ? "+" : ""}{formatUsd(totalUnrealizedPnl)}</span></p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                    <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Margin Used</p>
-                    <p className="text-sm font-bold text-white">{formatUsd(totalMargin)}</p>
-                  </div>
-                  <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                    <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Available</p>
-                    <p className="text-sm font-bold text-white">{formatUsd(withdrawable)}</p>
-                  </div>
-                </div>
+
+                  {/* Spot Balances (if any) */}
+                  {spotState && spotState.balances.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1.5">Spot Holdings</p>
+                      <div className="flex flex-wrap gap-2">
+                        {spotState.balances
+                          .filter((b) => parseFloat(b.total) > 0)
+                          .map((b) => (
+                          <div key={b.coin} className="bg-[#0b0e11] rounded-lg px-3 py-1.5 flex items-center gap-2">
+                            <span className="text-xs font-medium text-white">{b.coin}</span>
+                            <span className="text-xs text-[#848e9c]">{parseFloat(b.total).toLocaleString(undefined, { maximumFractionDigits: 6 })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {lbMatch && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-                  {(["day", "week", "month", "allTime"] as TimeWindow[]).map((tw) => {
-                    const p = getPerf(lbMatch, tw);
-                    const pnl = parseFloat(p.pnl);
-                    const roi = parseFloat(p.roi) * 100;
-                    const label = tw === "allTime" ? "All-Time" : tw === "day" ? "24h" : tw === "week" ? "7d" : "30d";
-                    return (
-                      <div key={tw} className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                        <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">{label} P&L</p>
-                        <p className={`text-sm font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                          {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                        </p>
-                        <p className={`text-[10px] ${roi >= 0 ? "text-emerald-400/70" : "text-red-400/70"}`}>
-                          {roi >= 0 ? "+" : ""}{roi.toFixed(2)}% ROI
-                        </p>
-                      </div>
-                    );
-                  })}
+                <div className="mt-3">
+                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1.5">Leaderboard Stats</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {(["day", "week", "month", "allTime"] as TimeWindow[]).map((tw) => {
+                      const p = getPerf(lbMatch, tw);
+                      const pnl = parseFloat(p.pnl);
+                      const roi = parseFloat(p.roi) * 100;
+                      const label = tw === "allTime" ? "All-Time" : tw === "day" ? "24h" : tw === "week" ? "7d" : "30d";
+                      return (
+                        <div key={tw} className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
+                          <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">{label} P&L</p>
+                          <p className={`text-sm font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                          </p>
+                          <p className={`text-[10px] ${roi >= 0 ? "text-emerald-400/70" : "text-red-400/70"}`}>
+                            {roi >= 0 ? "+" : ""}{roi.toFixed(2)}% ROI
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -742,7 +840,7 @@ export default function TradersPage() {
             {ch && (
               <div className="space-y-3">
                 <div className="flex items-center gap-4 border-b border-[#2a2e3e]">
-                  {(["positions", "fills"] as const).map((tab) => (
+                  {(["positions", "fills", "spot"] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setHistoryTab(tab)}
@@ -750,7 +848,7 @@ export default function TradersPage() {
                         historyTab === tab ? "text-white border-[#7C3AED]" : "text-[#848e9c] border-transparent hover:text-white"
                       }`}
                     >
-                      {tab === "positions" ? `Positions (${positions.length})` : `Recent Fills (${Math.min(fills.length, 100)})`}
+                      {tab === "positions" ? `Positions (${positions.length})` : tab === "fills" ? `Recent Fills (${Math.min(fills.length, 100)})` : `Spot Holdings (${spotState?.balances.filter((b) => parseFloat(b.total) > 0).length ?? 0})`}
                     </button>
                   ))}
                 </div>
@@ -858,6 +956,33 @@ export default function TradersPage() {
                     </div>
                   ) : (
                     <div className="text-center py-12 text-[#848e9c] text-sm">No fills found</div>
+                  )
+                )}
+
+                {historyTab === "spot" && (
+                  spotState && spotState.balances.filter((b) => parseFloat(b.total) > 0).length > 0 ? (
+                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                      <div className="grid grid-cols-3 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+                        <span>Token</span>
+                        <span className="text-right">Balance</span>
+                        <span className="text-right">On Hold</span>
+                      </div>
+                      {spotState.balances
+                        .filter((b) => parseFloat(b.total) > 0)
+                        .map((b) => {
+                          const total = parseFloat(b.total);
+                          const hold = parseFloat(b.hold);
+                          return (
+                            <div key={b.coin} className="grid grid-cols-3 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20">
+                              <span className="text-white font-medium">{b.coin}</span>
+                              <span className="text-right text-white">{total.toLocaleString(undefined, { maximumFractionDigits: 6 })}</span>
+                              <span className="text-right text-[#848e9c]">{hold > 0 ? hold.toLocaleString(undefined, { maximumFractionDigits: 6 }) : "–"}</span>
+                            </div>
+                          );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-[#848e9c] text-sm">No spot holdings</div>
                   )
                 )}
               </div>
