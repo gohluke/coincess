@@ -444,7 +444,7 @@ export default function DashboardPage() {
             {historyView === "trades" ? (
               <div className="space-y-2">
                 {trades.map((trade, i) => (
-                  <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} />
+                  <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} />
                 ))}
               </div>
             ) : (
@@ -536,11 +536,14 @@ function stripPrefix(coin: string): string {
   return idx >= 0 ? coin.slice(idx + 1) : coin;
 }
 
-function TradeRow({ trade }: { trade: RoundTripTrade }) {
+function TradeRow({ trade, positions }: { trade: RoundTripTrade; positions: AssetPosition[] }) {
   const [expanded, setExpanded] = useState(false);
   const bare = stripPrefix(trade.coin);
   const duration = trade.closeTime ? trade.closeTime - trade.openTime : Date.now() - trade.openTime;
   const isWin = trade.netPnl > 0;
+
+  const matchPos = trade.isOpen ? positions.find((ap) => stripPrefix(ap.position.coin) === bare) : null;
+  const leverage = matchPos ? `${matchPos.position.leverage.value}x` : null;
 
   const fmtTime = (t: number) =>
     new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -551,7 +554,7 @@ function TradeRow({ trade }: { trade: RoundTripTrade }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${trade.direction === "Long" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-              {trade.direction.toUpperCase()}
+              {trade.direction.toUpperCase()}{leverage ? ` ${leverage}` : ""}
             </span>
             <div>
               <span className="text-sm font-semibold">{bare}</span>
@@ -571,6 +574,7 @@ function TradeRow({ trade }: { trade: RoundTripTrade }) {
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-[10px] text-[#848e9c]">
           <span>Size: <span className="text-white">{trade.maxSize.toFixed(4)}</span></span>
+          <span>Notional: <span className="text-white">{formatUsd(trade.entryPx * trade.maxSize)}</span></span>
           <span>Entry: <span className="text-white">${trade.entryPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
           {trade.exitPx != null && (
             <span>Exit: <span className="text-white">${trade.exitPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
