@@ -377,7 +377,7 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-2">
               {positions.map((ap) => (
-                <PositionRow key={ap.position.coin} ap={ap} markets={markets} />
+                <PositionRow key={ap.position.coin} ap={ap} markets={markets} funding={funding} fills={fills} />
               ))}
             </div>
           )}
@@ -647,7 +647,7 @@ function TradeRow({ trade, positions }: { trade: RoundTripTrade; positions: Asse
   );
 }
 
-function PositionRow({ ap, markets }: { ap: AssetPosition; markets: MarketInfo[] }) {
+function PositionRow({ ap, markets, funding, fills }: { ap: AssetPosition; markets: MarketInfo[]; funding: FundingPayment[]; fills: Fill[] }) {
   const pos = ap.position;
   const size = parseFloat(pos.szi);
   const pnl = parseFloat(pos.unrealizedPnl);
@@ -659,50 +659,86 @@ function PositionRow({ ap, markets }: { ap: AssetPosition; markets: MarketInfo[]
   const liqPx = pos.liquidationPx ? parseFloat(pos.liquidationPx) : null;
   const liqDistance = liqPx && markPx ? Math.abs((markPx - liqPx) / markPx * 100) : null;
   const notional = Math.abs(size) * markPx;
+  const margin = parseFloat(pos.marginUsed);
   const displayCoin = market?.displayName ?? bare;
   const tradeCoin = market?.name ?? pos.coin;
+  const leverageType = pos.leverage.type === "cross" ? "Cross" : "Isolated";
+  const currentFundingRate = market ? parseFloat(market.funding) : 0;
+
+  const cumFunding = useMemo(() =>
+    funding.filter((fp) => stripPrefix(fp.delta.coin) === bare).reduce((s, fp) => s + parseFloat(fp.delta.usdc), 0),
+    [funding, bare]
+  );
+
+  const entryTime = useMemo(() => {
+    const openFills = fills
+      .filter((f) => stripPrefix(f.coin) === bare && f.dir.toLowerCase().includes("open"))
+      .sort((a, b) => a.time - b.time);
+    return openFills.length > 0 ? openFills[0].time : null;
+  }, [fills, bare]);
 
   return (
-    <Link href={`/trade?coin=${tradeCoin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 hover:border-[#3a3e4e] transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <Link href={`/trade?coin=${tradeCoin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
+      {/* Top: coin name, direction, and PnL */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+        <div className="flex items-center gap-2.5">
           <div>
-            <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded font-bold mb-0.5 ${size > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-              {size > 0 ? "LONG" : "SHORT"} {pos.leverage.value}x
-            </span>
-            <p className="text-sm font-semibold">{displayCoin} <span className="text-[10px] text-[#848e9c] font-normal">{bare}</span></p>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${size > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                {size > 0 ? "LONG" : "SHORT"}
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#c0c4cc] font-medium">
+                {pos.leverage.value}x {leverageType}
+              </span>
+            </div>
+            <p className="text-sm font-semibold">{displayCoin} <span className="text-[10px] text-[#848e9c] font-normal">{bare}-USDC</span></p>
           </div>
         </div>
         <div className="text-right">
           <div className="flex items-center gap-2 justify-end">
             <PnlBadge value={pnl} />
-            <span className={`text-[10px] ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
             </span>
           </div>
-          <p className="text-[10px] text-[#848e9c]">
-            {Math.abs(size).toFixed(4)} @ ${entry.toLocaleString()} → ${markPx.toLocaleString()}
-          </p>
+          <p className="text-[10px] text-[#848e9c]">{Math.abs(size).toFixed(size < 1 ? 5 : 2)} @ ${markPx.toLocaleString()}</p>
         </div>
       </div>
-      {/* Position details bar */}
-      <div className="flex items-center gap-3 mt-2 pt-2 border-t border-[#2a2e3e]/50">
-        <span className="text-[10px] text-[#848e9c]">
-          Notional: <span className="text-white">{formatUsd(notional)}</span>
-        </span>
-        {liqPx != null && liqPx > 0 && (
-          <span className="text-[10px] text-[#848e9c]">
-            Liq: <span className={liqDistance != null && liqDistance < 10 ? "text-red-400 font-medium" : "text-amber-400"}>${liqPx.toLocaleString()}</span>
-            {liqDistance != null && (
-              <span className={liqDistance < 10 ? "text-red-400" : "text-[#848e9c]"}> ({liqDistance.toFixed(1)}% away)</span>
-            )}
-          </span>
-        )}
-        <span className="text-[10px] text-[#848e9c]">
-          Margin: <span className="text-white">{formatUsd(parseFloat(pos.marginUsed))}</span>
-        </span>
+
+      {/* Coinglass-style detail grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
+        <DetailCell label="Entry Price" value={`$${entry.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
+        <DetailCell
+          label="Liq. Price"
+          value={liqPx != null && liqPx > 0 ? `$${liqPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}
+          valueColor={liqDistance != null && liqDistance < 10 ? "text-red-400" : "text-amber-400"}
+          sub={liqDistance != null ? `${liqDistance.toFixed(1)}% away` : undefined}
+        />
+        <DetailCell label="Margin" value={formatUsd(margin)} />
+        <DetailCell
+          label="Funding Fee"
+          value={`${cumFunding >= 0 ? "+" : ""}${formatUsd(cumFunding)}`}
+          valueColor={cumFunding >= 0 ? "text-emerald-400" : "text-red-400"}
+          sub={`${(currentFundingRate * 100).toFixed(4)}%/h`}
+        />
+        <DetailCell label="Notional" value={formatUsd(notional)} />
+        <DetailCell
+          label="Entry Time"
+          value={entryTime ? new Date(entryTime).toLocaleString([], { hour: "2-digit", minute: "2-digit" }) : "–"}
+          sub={entryTime ? new Date(entryTime).toLocaleDateString([], { month: "2-digit", day: "2-digit" }) : undefined}
+        />
       </div>
     </Link>
+  );
+}
+
+function DetailCell({ label, value, valueColor, sub }: { label: string; value: string; valueColor?: string; sub?: string }) {
+  return (
+    <div className="bg-[#141620] px-3 py-2">
+      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">{label}</p>
+      <p className={`text-[11px] font-semibold ${valueColor ?? "text-white"}`}>{value}</p>
+      {sub && <p className="text-[9px] text-[#848e9c]">{sub}</p>}
+    </div>
   );
 }
 
