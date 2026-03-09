@@ -180,6 +180,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [historyView, setHistoryView] = useState<"trades" | "fills" | "calendar">("trades");
+  const [portfolioTab, setPortfolioTab] = useState<"assets" | "history" | "calendar">("assets");
 
   const automationInit = useAutomationStore((s) => s.init);
   const strategies = useAutomationStore((s) => s.strategies);
@@ -294,9 +295,6 @@ export default function DashboardPage() {
   const spotBalance = 0;
   const evmBalance = 0;
 
-  type PortfolioTab = "assets" | "history" | "calendar";
-  const [portfolioTab, setPortfolioTab] = useState<PortfolioTab>("assets");
-
   const assetDistribution = useMemo(() => {
     const items: { label: string; value: number; color: string }[] = [];
     if (availableBalance > 0.01) items.push({ label: "USDC", value: availableBalance, color: "#7C3AED" });
@@ -322,7 +320,7 @@ export default function DashboardPage() {
             ["assets", "Assets"],
             ["history", "Transaction History"],
             ["calendar", "PnL Calendar"],
-          ] as [PortfolioTab, string][]).map(([t, label]) => (
+          ] as ["assets" | "history" | "calendar", string][]).map(([t, label]) => (
             <button
               key={t}
               onClick={() => setPortfolioTab(t)}
