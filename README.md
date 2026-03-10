@@ -8,6 +8,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **279 perpetual markets** — crypto (BTC, ETH, SOL, memecoins, AI tokens) + HIP-3 markets (stocks, commodities, forex, indices)
 - **Real-time order book** and recent trades via WebSocket
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
+- **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); order form reads spot clearinghouse balance for accurate "Available" display
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
 - **Position management** — open positions, unrealized PnL, ROE, close positions (mobile card layout + desktop table)
 - **Order management** — view and cancel open orders

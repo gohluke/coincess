@@ -15,7 +15,7 @@ export function OrderForm() {
   const {
     orderSide, orderType, orderPrice, orderSize, orderLeverage,
     setOrderSide, setOrderType, setOrderPrice, setOrderSize, setOrderLeverage,
-    selectedMarket, address, setAddress, clearinghouse, orderbook, markets, loadUserState,
+    selectedMarket, address, setAddress, clearinghouse, spotClearinghouse, orderbook, markets, loadUserState,
     abstractionMode,
   } = useTradingStore();
 
@@ -37,8 +37,27 @@ export function OrderForm() {
       ).toString()
     : market?.markPx ?? "0";
 
-  const availableBalance = clearinghouse ? parseFloat(clearinghouse.withdrawable) : 0;
-  const accountValue = clearinghouse ? parseFloat(clearinghouse.marginSummary.accountValue) : 0;
+  const spotUsdcBalance = useMemo(() => {
+    if (!spotClearinghouse?.balances) return 0;
+    return spotClearinghouse.balances.reduce((sum, b) => {
+      if (b.coin === "USDC" || b.coin === "USDT0" || b.coin === "USDE") {
+        return sum + parseFloat(b.total);
+      }
+      return sum;
+    }, 0);
+  }, [spotClearinghouse]);
+
+  const perpsWithdrawable = clearinghouse ? parseFloat(clearinghouse.withdrawable) : 0;
+  const totalMarginUsed = clearinghouse ? parseFloat(clearinghouse.marginSummary.totalMarginUsed) : 0;
+  const perpsAccountValue = clearinghouse ? parseFloat(clearinghouse.marginSummary.accountValue) : 0;
+
+  // With unified account, balance lives in spot clearinghouse; subtract margin already allocated to perps
+  const availableBalance = spotUsdcBalance > 0
+    ? spotUsdcBalance - totalMarginUsed
+    : perpsWithdrawable;
+  const accountValue = spotUsdcBalance > 0
+    ? spotUsdcBalance + (perpsAccountValue - totalMarginUsed)
+    : perpsAccountValue;
   const hasFunds = accountValue > 0;
 
   const notional = useMemo(() => {

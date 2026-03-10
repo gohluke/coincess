@@ -3,6 +3,7 @@ import type {
   MarketInfo,
   L2Book,
   ClearinghouseState,
+  SpotClearinghouseState,
   OpenOrder,
   CandleInterval,
   WsTrade,
@@ -11,6 +12,7 @@ import {
   fetchAllMarkets,
   fetchL2Book,
   fetchCombinedClearinghouseState,
+  fetchSpotClearinghouseState,
   fetchOpenOrders,
   fetchUserAbstraction,
 } from "./api";
@@ -32,6 +34,7 @@ interface TradingState {
   // User state
   address: string | null;
   clearinghouse: ClearinghouseState | null;
+  spotClearinghouse: SpotClearinghouseState | null;
   openOrders: OpenOrder[];
   abstractionMode: string | null;
 
@@ -68,6 +71,7 @@ export const useTradingStore = create<TradingState>((set, get) => ({
 
   address: null,
   clearinghouse: null,
+  spotClearinghouse: null,
   openOrders: [],
   abstractionMode: null,
 
@@ -102,19 +106,20 @@ export const useTradingStore = create<TradingState>((set, get) => ({
   setAddress: (addr) => {
     set({ address: addr });
     if (addr) get().loadUserState();
-    else set({ clearinghouse: null, openOrders: [] });
+    else set({ clearinghouse: null, spotClearinghouse: null, openOrders: [] });
   },
 
   loadUserState: async () => {
     const addr = get().address;
     if (!addr) return;
     try {
-      const [ch, orders, abstraction] = await Promise.all([
+      const [ch, spotCh, orders, abstraction] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
+        fetchSpotClearinghouseState(addr).catch(() => null),
         fetchOpenOrders(addr),
         fetchUserAbstraction(addr),
       ]);
-      set({ clearinghouse: ch, openOrders: orders, abstractionMode: abstraction });
+      set({ clearinghouse: ch, spotClearinghouse: spotCh, openOrders: orders, abstractionMode: abstraction });
     } catch (err) {
       console.error("Failed to load user state:", err);
     }
