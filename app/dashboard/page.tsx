@@ -23,6 +23,7 @@ import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetc
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
+import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 
 // ── Round-trip trade grouping ──────────────────────────────
 
@@ -352,6 +353,7 @@ export default function DashboardPage() {
   const perpsBalance = perpsAccountValue;
   const freeSpotBalance = spotUsdcBalance > 0 ? spotUsdcBalance - totalMarginUsed : availableBalance;
   const evmBalance = 0;
+  const firstLoad = !ch && loading;
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white">
@@ -383,8 +385,12 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-[#848e9c] mb-1">Total Balance</p>
-                <p className="text-4xl sm:text-5xl font-bold tracking-tight">{formatUsd(accountValue)}</p>
-                {fills.length > 0 && (
+                {firstLoad ? (
+                  <Skeleton className="h-12 w-48 mt-1" />
+                ) : (
+                  <p className="text-4xl sm:text-5xl font-bold tracking-tight">{formatUsd(accountValue)}</p>
+                )}
+                {!firstLoad && fills.length > 0 && (
                   <p className="mt-1.5">
                     <span className={`text-sm font-semibold ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                       ({totalPnlAll >= 0 ? "+" : ""}{formatUsd(totalPnlAll)})
@@ -396,6 +402,7 @@ export default function DashboardPage() {
                     )}
                   </p>
                 )}
+                {firstLoad && <Skeleton className="h-4 w-32 mt-2" />}
               </div>
               <div className="flex items-center gap-2">
                 {lastRefresh && (
@@ -413,50 +420,63 @@ export default function DashboardPage() {
             </div>
 
             {/* Balance cards 2x2 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
-                <p className="text-[11px] text-[#848e9c] mb-1">Available Balance</p>
-                <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
+            {firstLoad ? (
+              <div className="grid grid-cols-2 gap-3">
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
               </div>
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
-                <p className="text-[11px] text-[#848e9c] mb-1">USDC (Perps)</p>
-                <p className="text-xl font-bold">{formatUsd(perpsBalance)}</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                  <p className="text-[11px] text-[#848e9c] mb-1">Available Balance</p>
+                  <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
+                </div>
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                  <p className="text-[11px] text-[#848e9c] mb-1">USDC (Perps)</p>
+                  <p className="text-xl font-bold">{formatUsd(perpsBalance)}</p>
+                </div>
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                  <p className="text-[11px] text-[#848e9c] mb-1">Spot Balance</p>
+                  <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
+                </div>
+                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                  <p className="text-[11px] text-[#848e9c] mb-1">EVM Balance</p>
+                  <p className="text-xl font-bold">{formatUsd(evmBalance)}</p>
+                </div>
               </div>
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
-                <p className="text-[11px] text-[#848e9c] mb-1">Spot Balance</p>
-                <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
-              </div>
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
-                <p className="text-[11px] text-[#848e9c] mb-1">EVM Balance</p>
-                <p className="text-xl font-bold">{formatUsd(evmBalance)}</p>
-              </div>
-            </div>
+            )}
 
             {/* Donut chart */}
-            <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-6">
-              <div className="flex items-center justify-center">
-                <DonutChart items={assetDistribution} total={assetTotal > 0 ? assetTotal : accountValue} />
-              </div>
-
-              {/* Asset Distribution list */}
-              {assetDistribution.length > 0 && (
-                <div className="mt-6 space-y-1">
-                  <p className="text-sm font-semibold text-[#7C3AED] mb-2">Asset Distribution</p>
-                  {assetDistribution.map((a) => (
-                    <div key={a.label} className="flex items-center justify-between py-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
-                        <span className="text-sm text-white">{a.label}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm text-[#7C3AED]">{assetTotal > 0 ? ((a.value / assetTotal) * 100).toFixed(1) : "0.0"}%</span>
-                        <span className="text-sm font-semibold">{formatUsd(a.value)}</span>
-                      </div>
-                    </div>
-                  ))}
+            {firstLoad ? (
+              <SkeletonChart className="h-[280px]" />
+            ) : (
+              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-6">
+                <div className="flex items-center justify-center">
+                  <DonutChart items={assetDistribution} total={assetTotal > 0 ? assetTotal : accountValue} />
                 </div>
-              )}
-            </div>
+
+                {/* Asset Distribution list */}
+                {assetDistribution.length > 0 && (
+                  <div className="mt-6 space-y-1">
+                    <p className="text-sm font-semibold text-[#7C3AED] mb-2">Asset Distribution</p>
+                    {assetDistribution.map((a) => (
+                      <div key={a.label} className="flex items-center justify-between py-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
+                          <span className="text-sm text-white">{a.label}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-[#7C3AED]">{assetTotal > 0 ? ((a.value / assetTotal) * 100).toFixed(1) : "0.0"}%</span>
+                          <span className="text-sm font-semibold">{formatUsd(a.value)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Funding banner when no balance */}
             {accountValue <= 0 && (
@@ -483,7 +503,9 @@ export default function DashboardPage() {
                 <Bot className="h-5 w-5 text-[#7C3AED] shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Automate</p>
-                  <p className="text-[10px] text-[#848e9c]">{activeStrategies} active</p>
+                  <p className="text-[10px] text-[#848e9c]">
+                    {firstLoad ? <Skeleton className="h-3 w-12 inline-block" /> : `${activeStrategies} active`}
+                  </p>
                 </div>
               </Link>
             </div>
@@ -491,10 +513,31 @@ export default function DashboardPage() {
             {/* Positions */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold">Positions ({positions.length})</h2>
+                <h2 className="text-lg font-semibold">
+                  Positions {firstLoad ? "" : `(${positions.length})`}
+                </h2>
                 <Link href="/trade" className="text-xs text-[#7C3AED] hover:underline">Open Trade &rarr;</Link>
               </div>
-              {positions.length === 0 ? (
+              {firstLoad ? (
+                <div className="space-y-2">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-5 w-10 rounded" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                      <div className="flex gap-4">
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : positions.length === 0 ? (
                 <div className="text-center py-8 bg-[#141620] border border-[#2a2e3e] rounded-xl">
                   <Wallet className="h-6 w-6 text-[#848e9c] mx-auto mb-2" />
                   <p className="text-sm text-[#848e9c]">No open positions</p>
@@ -536,14 +579,14 @@ export default function DashboardPage() {
             )}
 
             {/* Active Strategies preview */}
-            {strategies.length > 0 && (
+            {browserStrategies.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold">Automation</h2>
                   <Link href="/automate" className="text-xs text-[#7C3AED] hover:underline">Manage &rarr;</Link>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {strategies.slice(0, 4).map((s) => (
+                  {browserStrategies.slice(0, 4).map((s) => (
                     <div key={s.id} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
                       <div>
                         <p className="text-xs font-semibold">{s.name}</p>

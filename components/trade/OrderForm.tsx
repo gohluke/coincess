@@ -6,6 +6,7 @@ import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction } from "@/lib/hyperliquid/signing";
 import { useWallet } from "@/hooks/useWallet";
 import { FundingBanner } from "@/components/FundingBanner";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 50];
 const SIZE_PRESETS = [25, 50, 75, 100];
@@ -307,7 +308,11 @@ export function OrderForm() {
           {address && (
             <div className="flex justify-between">
               <span className="text-[#848e9c]">Available</span>
-              <span className="text-white">${availableBalance.toFixed(2)}</span>
+              {clearinghouse ? (
+                <span className="text-white">${availableBalance.toFixed(2)}</span>
+              ) : (
+                <Skeleton className="h-3.5 w-16" />
+              )}
             </div>
           )}
         </div>

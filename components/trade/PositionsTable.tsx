@@ -2,10 +2,10 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2, Share2, Download, Copy, Check } from "lucide-react";
+import { X, Loader2, Share2, Download, Copy, Check, Bot } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder } from "@/lib/hyperliquid/signing";
-import { Bot } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type Tab = "positions" | "orders" | "fills";
 
@@ -98,6 +98,33 @@ export function PositionsTable() {
     return (
       <div className="flex items-center justify-center h-full text-[#848e9c] text-sm">
         Connect wallet to view positions
+      </div>
+    );
+  }
+
+  if (address && !clearinghouse) {
+    return (
+      <div className="flex flex-col h-full text-xs">
+        <div className="flex items-center gap-3 px-3 py-2 border-b border-[#2a2e39]">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-12" />
+        </div>
+        <div className="px-3 py-2 space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-10 rounded" />
+                <Skeleton className="h-4 w-14" />
+              </div>
+              <div className="flex gap-4">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

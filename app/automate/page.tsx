@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { useAutomationStore } from "@/lib/automation/store";
+import { Skeleton, SkeletonCard } from "@/components/ui/Skeleton";
 import { StrategyCard } from "@/components/automate/StrategyCard";
 import { ActivityLog } from "@/components/automate/ActivityLog";
 import type { QuantStrategy, QuantState, QuantTrade } from "@/lib/quant/types";
@@ -279,32 +280,41 @@ function ServerStrategies({ address }: { address: string | null }) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          label="Total P&L"
-          value={formatPnl(totalPnl)}
-          icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
-          color={totalPnl >= 0 ? "#10b981" : "#ef4444"}
-        />
-        <StatCard
-          label="Daily P&L"
-          value={formatPnl(dailyPnl)}
-          icon={DollarSign}
-          color={dailyPnl >= 0 ? "#10b981" : "#ef4444"}
-        />
-        <StatCard
-          label="Max Drawdown"
-          value={`${(drawdown * 100).toFixed(2)}%`}
-          icon={Shield}
-          color={drawdown > 0.1 ? "#ef4444" : drawdown > 0.05 ? "#f59e0b" : "#10b981"}
-        />
-        <StatCard
-          label="Exposure"
-          value={`$${exposure.toFixed(0)}`}
-          icon={BarChart3}
-          color="#8b5cf6"
-        />
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard
+            label="Total P&L"
+            value={formatPnl(totalPnl)}
+            icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
+            color={totalPnl >= 0 ? "#10b981" : "#ef4444"}
+          />
+          <StatCard
+            label="Daily P&L"
+            value={formatPnl(dailyPnl)}
+            icon={DollarSign}
+            color={dailyPnl >= 0 ? "#10b981" : "#ef4444"}
+          />
+          <StatCard
+            label="Max Drawdown"
+            value={`${(drawdown * 100).toFixed(2)}%`}
+            icon={Shield}
+            color={drawdown > 0.1 ? "#ef4444" : drawdown > 0.05 ? "#f59e0b" : "#10b981"}
+          />
+          <StatCard
+            label="Exposure"
+            value={`$${exposure.toFixed(0)}`}
+            icon={BarChart3}
+            color="#8b5cf6"
+          />
+        </div>
+      )}
 
       {/* Risk Warning */}
       {drawdown > 0.1 && (
@@ -348,7 +358,29 @@ function ServerStrategies({ address }: { address: string | null }) {
         )}
 
         {loading ? (
-          <div className="text-center text-[#848e9c] text-sm py-8">Loading...</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-7 w-7 rounded" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-5 w-14 rounded" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-20" />
+                  <div className="flex gap-1">
+                    <Skeleton className="h-7 w-7 rounded-lg" />
+                    <Skeleton className="h-7 w-7 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : strategies.length === 0 ? (
           <div className="text-center text-[#848e9c] text-sm py-8 border border-dashed border-[#2a2e39] rounded-xl">
             No server strategies configured. Click &ldquo;Add Strategy&rdquo; to get started.

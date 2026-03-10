@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { getWs } from "@/lib/hyperliquid/websocket";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 const VISIBLE_LEVELS = 14;
 
@@ -85,6 +86,28 @@ export function OrderBook() {
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col">
+        {asks.length === 0 && bids.length === 0 ? (
+          <div className="flex-1 flex flex-col gap-[2px] px-3 py-1">
+            {Array.from({ length: VISIBLE_LEVELS }).map((_, i) => (
+              <div key={`ask-sk-${i}`} className="grid grid-cols-3 gap-2 py-[3px]">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            ))}
+            <div className="py-1.5 border-y border-[#2a2e39] my-0.5">
+              <Skeleton className="h-4 w-24 mx-auto" />
+            </div>
+            {Array.from({ length: VISIBLE_LEVELS }).map((_, i) => (
+              <div key={`bid-sk-${i}`} className="grid grid-cols-3 gap-2 py-[3px]">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : (
+        <>
         {/* Asks (sells) - reversed so lowest ask is at bottom */}
         <div className="flex-1 flex flex-col justify-end overflow-hidden">
           {asks.map((level, i) => (
@@ -140,6 +163,8 @@ export function OrderBook() {
             </button>
           ))}
         </div>
+        </>
+        )}
       </div>
     </div>
   );
