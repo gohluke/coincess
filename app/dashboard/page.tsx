@@ -347,7 +347,7 @@ export default function DashboardPage() {
             Connect Wallet
           </button>
           <div className="flex gap-6 mt-10">
-            <Link href="/trade" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
+            <Link href="/trade/BTC" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
               Trade <span className="text-brand">&rarr;</span>
             </Link>
             <Link href="/predict" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
@@ -497,7 +497,7 @@ export default function DashboardPage() {
 
             {/* Quick actions */}
             <div className="grid grid-cols-3 gap-3">
-              <Link href="/trade" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
+              <Link href="/trade/BTC" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
                 <TrendingUp className="h-5 w-5 text-emerald-400 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Trade</p>
@@ -528,7 +528,7 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-semibold">
                   Positions {firstLoad ? "" : `(${positions.length})`}
                 </h2>
-                <Link href="/trade" className="text-xs text-brand hover:underline">Open Trade &rarr;</Link>
+                <Link href="/trade/BTC" className="text-xs text-brand hover:underline">Open Trade &rarr;</Link>
               </div>
               {firstLoad ? (
                 <div className="space-y-2">
@@ -556,7 +556,7 @@ export default function DashboardPage() {
                   {accountValue > 0 && (
                     <p className="text-xs text-[#848e9c] mt-1">{formatUsd(accountValue)} USDC available to trade</p>
                   )}
-                  <Link href="/trade" className="inline-block mt-3 text-xs text-brand hover:underline">Open a position &rarr;</Link>
+                  <Link href="/trade/BTC" className="inline-block mt-3 text-xs text-brand hover:underline">Open a position &rarr;</Link>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1005,7 +1005,7 @@ function PositionRow({ ap, markets, funding, fills }: { ap: AssetPosition; marke
   }, [fills, bare]);
 
   return (
-    <Link href={`/trade?coin=${tradeCoin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
+    <Link href={`/trade/${tradeCoin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
       {/* Top: coin name, direction, and PnL */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2.5">

@@ -14,7 +14,7 @@ import { DepositButton } from "@/components/DepositModal";
 
 const NAV_ICONS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
-  { href: "/trade", label: "Trade", icon: TrendingUp },
+  { href: "/trade/BTC", label: "Trade", icon: TrendingUp },
   { href: "/predict", label: "Predict", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
 ];
@@ -107,7 +107,8 @@ export function Navbar() {
           {/* Nav icons (desktop) + More */}
           <nav className="hidden md:flex items-center gap-1.5">
             {NAV_ICONS.map(({ href, label, icon }) => {
-              const active = pathname === href || pathname.startsWith(href + "/");
+              const base = href.startsWith("/trade/") ? "/trade" : href;
+              const active = pathname === href || pathname.startsWith(base + "/");
               return <NavIcon key={href} href={href} label={label} icon={icon} active={active} />;
             })}
 

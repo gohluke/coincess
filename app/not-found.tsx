@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 const QUICK_LINKS = [
-  { href: "/trade", label: "Trade", icon: TrendingUp },
+  { href: "/trade/BTC", label: "Trade", icon: TrendingUp },
   { href: "/coins", label: "Discover", icon: Search },
   { href: "/predict", label: "Predict", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
@@ -50,7 +50,7 @@ export default function NotFound() {
             Back to Home
           </Link>
           <Link
-            href="/trade"
+            href="/trade/BTC"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-brand/50 text-white font-semibold text-sm transition-all"
           >
             <TrendingUp className="h-4 w-4" />

@@ -168,7 +168,7 @@ npm run dev
 | Route | What it does |
 |-------|-------------|
 | [localhost:3000/dashboard](http://localhost:3000/dashboard) | Unified portfolio dashboard |
-| [localhost:3000/trade](http://localhost:3000/trade) | Perpetuals trading terminal |
+| [localhost:3000/trade/BTC](http://localhost:3000/trade/BTC) | Perpetuals trading terminal (dynamic: `/trade/{TICKER}`) |
 | [localhost:3000/predict](http://localhost:3000/predict) | Prediction markets browser |
 | [localhost:3000/automate](http://localhost:3000/automate) | Automation dashboard |
 | [localhost:3000/automate/create](http://localhost:3000/automate/create) | Create new strategy |
@@ -233,7 +233,9 @@ npm run dev
 coincess/
 ├── app/
 │   ├── dashboard/page.tsx               # Unified portfolio dashboard
-│   ├── trade/page.tsx                   # Perpetuals trading terminal
+│   ├── trade/
+│   │   ├── page.tsx                     # Redirects to /trade/BTC
+│   │   ├── [coin]/page.tsx              # Perpetuals trading terminal
 │   ├── predict/
 │   │   ├── page.tsx                     # Prediction markets browser
 │   │   └── [slug]/page.tsx             # Event detail + bet slips

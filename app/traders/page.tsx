@@ -875,7 +875,7 @@ export default function TradersPage() {
                         const fundingRate = market ? parseFloat(market.funding) : 0;
 
                         return (
-                          <Link key={pos.coin} href={`/trade?coin=${market?.name ?? pos.coin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
+                          <Link key={pos.coin} href={`/trade/${market?.name ?? pos.coin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
                             <div className="flex items-center justify-between px-4 pt-3 pb-2">
                               <div className="flex items-center gap-2.5">
                                 <div>

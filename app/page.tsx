@@ -18,7 +18,7 @@ const FEATURES = [
     icon: TrendingUp,
     title: "Perpetual Trading",
     desc: "Trade 100+ perpetual futures on Hyperliquid with deep liquidity and sub-second fills.",
-    href: "/trade",
+    href: "/trade/BTC",
     accent: "from-emerald-500/20 to-emerald-500/5",
     iconColor: "text-emerald-400",
   },
@@ -106,7 +106,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/trade"
+              href="/trade/BTC"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand hover:bg-brand-hover text-white font-semibold text-sm transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-brand/25"
             >
               Start Trading

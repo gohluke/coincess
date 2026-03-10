@@ -6,7 +6,7 @@ import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search } from "lucide-reac
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
-  { href: "/trade", label: "Trade", icon: TrendingUp },
+  { href: "/trade/BTC", label: "Trade", icon: TrendingUp },
   { href: "/coins", label: "Discover", icon: Search },
   { href: "/predict", label: "Predict", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
@@ -26,7 +26,8 @@ export function MobileNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#0b0e11]/95 backdrop-blur-md border-t border-[#2a2e39] safe-area-bottom">
       <div className="flex items-stretch justify-around h-14">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
+          const base = href.startsWith("/trade/") ? "/trade" : href;
+          const active = pathname === href || pathname.startsWith(base + "/");
           return (
             <Link
               key={href}
