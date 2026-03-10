@@ -37,6 +37,8 @@ export function OrderForm() {
     : market?.markPx ?? "0";
 
   const availableBalance = clearinghouse ? parseFloat(clearinghouse.withdrawable) : 0;
+  const accountValue = clearinghouse ? parseFloat(clearinghouse.marginSummary.accountValue) : 0;
+  const hasFunds = accountValue > 0;
 
   const notional = useMemo(() => {
     const price = orderType === "market" ? parseFloat(midPrice) : parseFloat(orderPrice || "0");
@@ -319,8 +321,8 @@ export function OrderForm() {
           </div>
         )}
 
-        {/* Funding prompt when connected but no balance */}
-        {address && availableBalance <= 0 && (
+        {/* Funding prompt when connected but no balance at all */}
+        {address && !hasFunds && (
           <FundingBanner address={address} balance={availableBalance} compact />
         )}
 

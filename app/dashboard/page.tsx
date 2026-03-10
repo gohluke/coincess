@@ -284,13 +284,18 @@ export default function DashboardPage() {
       return sum;
     }, 0);
   }, [spot]);
-  const accountValue = perpsAccountValue + spotUsdcBalance;
+
+  // Spot USDC includes the portion backing perps cross-margin.
+  // total = spot + perps uPnL (avoid double-counting the margin drawn from spot)
+  const accountValue = spotUsdcBalance > 0
+    ? spotUsdcBalance + (perpsAccountValue - totalMarginUsed)
+    : perpsAccountValue;
   const activeStrategies = strategies.filter((s) => s.status === "active").length;
 
   const assetDistribution = useMemo(() => {
     const items: { label: string; value: number; color: string }[] = [];
-    if (spotUsdcBalance > 0.01) items.push({ label: "Spot USDC", value: spotUsdcBalance, color: "#2775CA" });
-    if (availableBalance > 0.01) items.push({ label: "Perps USDC", value: availableBalance, color: "#7C3AED" });
+    const freeUsdc = spotUsdcBalance > 0 ? spotUsdcBalance - totalMarginUsed : availableBalance;
+    if (freeUsdc > 0.01) items.push({ label: "USDC", value: freeUsdc, color: "#2775CA" });
     for (const ap of positions) {
       const pos = ap.position;
       const bare = stripPrefix(pos.coin);
@@ -299,7 +304,7 @@ export default function DashboardPage() {
     }
     if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: "#7C3AED" });
     return items;
-  }, [spotUsdcBalance, availableBalance, positions, accountValue]);
+  }, [spotUsdcBalance, totalMarginUsed, availableBalance, positions, accountValue]);
 
   const assetTotal = assetDistribution.reduce((s, a) => s + a.value, 0);
 
@@ -340,7 +345,7 @@ export default function DashboardPage() {
   }
 
   const perpsBalance = perpsAccountValue;
-  const spotBalance = spotUsdcBalance;
+  const freeSpotBalance = spotUsdcBalance > 0 ? spotUsdcBalance - totalMarginUsed : availableBalance;
   const evmBalance = 0;
 
   return (
@@ -406,7 +411,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
                 <p className="text-[11px] text-[#848e9c] mb-1">Available Balance</p>
-                <p className="text-xl font-bold">{formatUsd(availableBalance + spotUsdcBalance)}</p>
+                <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
               </div>
               <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
                 <p className="text-[11px] text-[#848e9c] mb-1">USDC (Perps)</p>
@@ -414,7 +419,7 @@ export default function DashboardPage() {
               </div>
               <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
                 <p className="text-[11px] text-[#848e9c] mb-1">Spot Balance</p>
-                <p className="text-xl font-bold">{formatUsd(spotBalance)}</p>
+                <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
               </div>
               <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
                 <p className="text-[11px] text-[#848e9c] mb-1">EVM Balance</p>

@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Share2, Download, Copy, Check } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder } from "@/lib/hyperliquid/signing";
+import { Bot } from "lucide-react";
 
 type Tab = "positions" | "orders" | "fills";
+
+interface QuantTradeInfo {
+  coin: string;
+  side: string;
+  strategy_type: string;
+  meta: { reason?: string } | null;
+}
 
 export function PositionsTable() {
   const { clearinghouse, openOrders, address, markets, loadUserState } = useTradingStore();
@@ -14,6 +22,16 @@ export function PositionsTable() {
   const [closingCoin, setClosingCoin] = useState<string | null>(null);
   const [cancellingOid, setCancellingOid] = useState<number | null>(null);
   const [sharePosition, setSharePosition] = useState<ShareablePosition | null>(null);
+  const [quantTrades, setQuantTrades] = useState<QuantTradeInfo[]>([]);
+
+  useEffect(() => {
+    fetch("/api/quant/trades?status=open&limit=50")
+      .then((r) => r.ok ? r.json() : { trades: [] })
+      .then((d) => setQuantTrades(d.trades ?? []))
+      .catch(() => {});
+  }, []);
+
+  const getQuantInfo = (coin: string) => quantTrades.find((t) => t.coin === coin);
 
   const positions = clearinghouse?.assetPositions?.filter(
     (p) => parseFloat(p.position.szi) !== 0,
@@ -146,6 +164,7 @@ export function PositionsTable() {
                     <th className="text-right px-3 py-2 font-medium">Mark</th>
                     <th className="text-right px-3 py-2 font-medium">Liq.</th>
                     <th className="text-right px-3 py-2 font-medium">Margin</th>
+                    <th className="text-right px-3 py-2 font-medium">Fund/8h</th>
                     <th className="text-right px-3 py-2 font-medium">PnL</th>
                     <th className="text-right px-3 py-2 font-medium">ROE</th>
                     <th className="text-right px-4 py-2 font-medium">Action</th>
@@ -158,6 +177,10 @@ export function PositionsTable() {
                     const isLong = size > 0;
                     const pnl = parseFloat(pos.unrealizedPnl);
                     const roe = parseFloat(pos.returnOnEquity) * 100;
+                    const market = markets.find((m) => m.name === pos.coin);
+                    const fundingRate = market ? parseFloat(market.funding) : 0;
+                    const fundingPct = (fundingRate * 100).toFixed(4);
+                    const quantInfo = getQuantInfo(pos.coin);
 
                     return (
                       <tr key={pos.coin} className="hover:bg-[#1a1d26] border-b border-[#1a1d26]">
@@ -169,7 +192,15 @@ export function PositionsTable() {
                             }`}>
                               {isLong ? "L" : "S"} {pos.leverage.value}x
                             </span>
+                            {quantInfo && (
+                              <span className="text-[9px] px-1 py-0.5 rounded font-medium bg-[#7C3AED]/15 text-[#7C3AED] flex items-center gap-0.5" title={quantInfo.meta?.reason || quantInfo.strategy_type}>
+                                <Bot className="h-2.5 w-2.5" /> AUTO
+                              </span>
+                            )}
                           </div>
+                          {quantInfo?.meta?.reason && (
+                            <div className="text-[9px] text-[#848e9c] mt-0.5 truncate max-w-[200px]">{quantInfo.meta.reason}</div>
+                          )}
                         </td>
                         <td className={`text-right px-3 py-2 ${isLong ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
                           {Math.abs(size).toFixed(4)}
@@ -186,6 +217,9 @@ export function PositionsTable() {
                           {pos.liquidationPx ? parseFloat(pos.liquidationPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
                         </td>
                         <td className="text-right px-3 py-2 text-[#eaecef]">${parseFloat(pos.marginUsed).toFixed(2)}</td>
+                        <td className={`text-right px-3 py-2 ${fundingRate >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                          {fundingRate >= 0 ? "+" : ""}{fundingPct}%
+                        </td>
                         <td className={`text-right px-3 py-2 font-medium ${pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
                           {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
                         </td>
@@ -224,22 +258,30 @@ export function PositionsTable() {
                 const isLong = size > 0;
                 const pnl = parseFloat(pos.unrealizedPnl);
                 const roe = parseFloat(pos.returnOnEquity) * 100;
-                const market = markets.find((m) => m.name === pos.coin);
-                const markPx = market
-                  ? parseFloat(market.markPx).toLocaleString(undefined, { maximumFractionDigits: 2 })
+                const mkt = markets.find((m) => m.name === pos.coin);
+                const markPx = mkt
+                  ? parseFloat(mkt.markPx).toLocaleString(undefined, { maximumFractionDigits: 2 })
                   : "—";
+                const mFundRate = mkt ? parseFloat(mkt.funding) : 0;
+                const mFundPct = (mFundRate * 100).toFixed(4);
+                const mQuantInfo = getQuantInfo(pos.coin);
 
                 return (
                   <div key={pos.coin} className="px-3 py-3 active:bg-[#1a1d26]">
                     {/* Row 1: coin + badge | PnL + ROE */}
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-white font-semibold text-sm">{pos.coin}</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
                           isLong ? "bg-[#0ecb81]/15 text-[#0ecb81]" : "bg-[#f6465d]/15 text-[#f6465d]"
                         }`}>
                           {isLong ? "LONG" : "SHORT"} {pos.leverage.value}x
                         </span>
+                        {mQuantInfo && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#7C3AED]/15 text-[#7C3AED] flex items-center gap-0.5">
+                            <Bot className="h-2.5 w-2.5" /> AUTO
+                          </span>
+                        )}
                       </div>
                       <div className="text-right">
                         <span className={`text-sm font-bold ${pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
@@ -250,6 +292,10 @@ export function PositionsTable() {
                         </span>
                       </div>
                     </div>
+
+                    {mQuantInfo?.meta?.reason && (
+                      <div className="text-[9px] text-[#848e9c] mb-1.5 truncate">{mQuantInfo.meta.reason}</div>
+                    )}
 
                     {/* Row 2: detail grid */}
                     <div className="grid grid-cols-4 gap-x-2 gap-y-1.5 text-[10px] mb-2.5">
@@ -266,8 +312,8 @@ export function PositionsTable() {
                         <div className="text-[#eaecef]">{markPx}</div>
                       </div>
                       <div>
-                        <div className="text-[#848e9c]">Liq.</div>
-                        <div className="text-[#f0b90b]">{pos.liquidationPx ? parseFloat(pos.liquidationPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}</div>
+                        <div className="text-[#848e9c]">Fund/8h</div>
+                        <div className={mFundRate >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}>{mFundRate >= 0 ? "+" : ""}{mFundPct}%</div>
                       </div>
                     </div>
 

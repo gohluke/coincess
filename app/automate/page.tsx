@@ -29,6 +29,8 @@ import { useAutomationStore } from "@/lib/automation/store";
 import { StrategyCard } from "@/components/automate/StrategyCard";
 import { ActivityLog } from "@/components/automate/ActivityLog";
 import type { QuantStrategy, QuantState, QuantTrade } from "@/lib/quant/types";
+import type { MarketInfo } from "@/lib/hyperliquid/types";
+import { fetchAllMarkets } from "@/lib/hyperliquid/api";
 
 type Tab = "server" | "browser";
 
@@ -129,14 +131,16 @@ function ServerStrategies({ address }: { address: string | null }) {
   const [strategies, setStrategies] = useState<QuantStrategy[]>([]);
   const [openTrades, setOpenTrades] = useState<QuantTrade[]>([]);
   const [trades, setTrades] = useState<QuantTrade[]>([]);
+  const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [addingStrategy, setAddingStrategy] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, tradesRes] = await Promise.all([
+      const [statusRes, tradesRes, marketsData] = await Promise.all([
         fetch("/api/quant/status"),
         fetch("/api/quant/trades?limit=50"),
+        fetchAllMarkets().catch(() => [] as MarketInfo[]),
       ]);
       const statusData = await statusRes.json();
       const tradesData = await tradesRes.json();
@@ -145,6 +149,7 @@ function ServerStrategies({ address }: { address: string | null }) {
       setStrategies(statusData.strategies ?? []);
       setOpenTrades(statusData.openTrades ?? []);
       setTrades(tradesData.trades ?? []);
+      setMarkets(marketsData);
     } catch (err) {
       console.error("Failed to fetch quant data:", err);
     } finally {
@@ -369,94 +374,148 @@ function ServerStrategies({ address }: { address: string | null }) {
             <Activity className="h-4 w-4" />
             Open Positions ({openTrades.length})
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-[#848e9c] border-b border-[#2a2e39]">
-                  <th className="text-left py-2 pr-4">Coin</th>
-                  <th className="text-left py-2 pr-4">Side</th>
-                  <th className="text-right py-2 pr-4">Size</th>
-                  <th className="text-right py-2 pr-4">Entry</th>
-                  <th className="text-left py-2">Strategy</th>
-                </tr>
-              </thead>
-              <tbody>
-                {openTrades.map((trade) => (
-                  <tr key={trade.id} className="border-b border-[#2a2e39]/50">
-                    <td className="py-2 pr-4 text-white font-medium">{trade.coin}</td>
-                    <td className={`py-2 pr-4 ${trade.side === "long" ? "text-green-400" : "text-red-400"}`}>
-                      {trade.side.toUpperCase()}
-                    </td>
-                    <td className="py-2 pr-4 text-right text-[#c8ccd4]">{Number(trade.size).toFixed(4)}</td>
-                    <td className="py-2 pr-4 text-right text-[#c8ccd4]">${Number(trade.entry_px).toFixed(4)}</td>
-                    <td className="py-2">
-                      <span className="text-[#848e9c]">
-                        {STRATEGY_LABELS[trade.strategy_type]?.emoji ?? "🤖"}{" "}
-                        {STRATEGY_LABELS[trade.strategy_type]?.name ?? trade.strategy_type}
+          <div className="space-y-2">
+            {openTrades.map((trade) => {
+              const market = markets.find((m) => m.name === trade.coin);
+              const markPx = market ? parseFloat(market.markPx) : 0;
+              const entryPx = Number(trade.entry_px);
+              const sz = Number(trade.size);
+              const uPnl = trade.side === "long"
+                ? (markPx - entryPx) * sz
+                : (entryPx - markPx) * sz;
+              const roe = entryPx > 0 ? (uPnl / (entryPx * sz)) * 100 : 0;
+              const fundingRate = market ? parseFloat(market.funding) : 0;
+              const fundingPct = (fundingRate * 100).toFixed(4);
+              const meta = STRATEGY_LABELS[trade.strategy_type] ?? { name: trade.strategy_type, emoji: "🤖", color: "#848e9c" };
+              const reason = (trade.meta as { reason?: string } | null)?.reason;
+
+              return (
+                <div key={trade.id} className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                  <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                        trade.side === "long" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                      }`}>
+                        {trade.side.toUpperCase()}
                       </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#7C3AED]/15 text-[#7C3AED] font-medium flex items-center gap-0.5">
+                        <Bot className="h-2.5 w-2.5" /> {meta.emoji} {meta.name}
+                      </span>
+                      <span className="text-sm font-semibold">{trade.coin}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-2 justify-end">
+                        <span className={`text-sm font-bold ${uPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {uPnl >= 0 ? "+" : ""}${uPnl.toFixed(2)}
+                        </span>
+                        <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          ({roe >= 0 ? "+" : ""}{roe.toFixed(2)}%)
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#848e9c]">{sz.toFixed(4)} @ ${markPx.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {reason && (
+                    <div className="px-4 pb-1.5">
+                      <p className="text-[10px] text-[#848e9c]">{reason}</p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
+                    <QuantDetailCell label="Entry" value={`$${entryPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
+                    <QuantDetailCell label="Mark" value={markPx > 0 ? `$${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}` : "—"} />
+                    <QuantDetailCell
+                      label="Fund/8h"
+                      value={`${fundingRate >= 0 ? "+" : ""}${fundingPct}%`}
+                      valueColor={fundingRate >= 0 ? "text-emerald-400" : "text-red-400"}
+                    />
+                    <QuantDetailCell label="Notional" value={`$${(sz * (markPx || entryPx)).toFixed(2)}`} />
+                    <QuantDetailCell label="Opened" value={relativeTime(trade.opened_at)} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* Trade Log */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          Recent Trades
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Transaction History ({trades.length})
+          </h2>
+        </div>
         {trades.length === 0 ? (
           <p className="text-[#848e9c] text-xs py-4 text-center">No trades yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-[#848e9c] border-b border-[#2a2e39]">
-                  <th className="text-left py-2 pr-3">Time</th>
-                  <th className="text-left py-2 pr-3">Coin</th>
-                  <th className="text-left py-2 pr-3">Side</th>
-                  <th className="text-right py-2 pr-3">Entry</th>
-                  <th className="text-right py-2 pr-3">Exit</th>
-                  <th className="text-right py-2 pr-3">P&L</th>
-                  <th className="text-left py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trades.slice(0, 20).map((trade) => (
-                  <tr key={trade.id} className="border-b border-[#2a2e39]/50">
-                    <td className="py-2 pr-3 text-[#848e9c]">{relativeTime(trade.opened_at)}</td>
-                    <td className="py-2 pr-3 text-white font-medium">{trade.coin}</td>
-                    <td className={`py-2 pr-3 ${trade.side === "long" ? "text-green-400" : "text-red-400"}`}>
-                      {trade.side.toUpperCase()}
-                    </td>
-                    <td className="py-2 pr-3 text-right text-[#c8ccd4]">${Number(trade.entry_px).toFixed(4)}</td>
-                    <td className="py-2 pr-3 text-right text-[#c8ccd4]">
-                      {trade.exit_px ? `$${Number(trade.exit_px).toFixed(4)}` : "—"}
-                    </td>
-                    <td className={`py-2 pr-3 text-right ${(trade.pnl ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
-                      {trade.pnl != null ? formatPnl(trade.pnl) : "—"}
-                    </td>
-                    <td className="py-2">
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] ${
-                          trade.status === "open"
-                            ? "bg-blue-500/20 text-blue-400"
-                            : trade.status === "closed"
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-gray-500/20 text-gray-400"
-                        }`}
-                      >
-                        {trade.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-8 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+              <span>Date</span>
+              <span>Pair</span>
+              <span>Side</span>
+              <span>Strategy</span>
+              <span className="text-right">Entry</span>
+              <span className="text-right">Exit</span>
+              <span className="text-right">P&L</span>
+              <span className="text-right">Status</span>
+            </div>
+            {/* Rows */}
+            {trades.slice(0, 30).map((trade) => {
+              const meta = STRATEGY_LABELS[trade.strategy_type] ?? { name: trade.strategy_type, emoji: "🤖", color: "#848e9c" };
+              const reason = (trade.meta as { reason?: string } | null)?.reason;
+              const market = markets.find((m) => m.name === trade.coin);
+              const markPx = market ? parseFloat(market.markPx) : 0;
+              const entryPx = Number(trade.entry_px);
+              const sz = Number(trade.size);
+              const isOpen = trade.status === "open";
+
+              let pnl = trade.pnl;
+              if (isOpen && markPx > 0) {
+                pnl = trade.side === "long"
+                  ? (markPx - entryPx) * sz
+                  : (entryPx - markPx) * sz;
+              }
+
+              return (
+                <div key={trade.id} className="grid grid-cols-8 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors group">
+                  <span className="text-[#848e9c]">
+                    {trade.opened_at
+                      ? new Date(trade.opened_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+                      : "—"}
+                  </span>
+                  <div>
+                    <span className="text-white font-medium">{trade.coin}</span>
+                    {reason && (
+                      <p className="text-[9px] text-[#4a4e59] truncate max-w-[140px] hidden group-hover:block">{reason}</p>
+                    )}
+                  </div>
+                  <span className={`font-medium ${trade.side === "long" ? "text-emerald-400" : "text-red-400"}`}>
+                    {trade.side === "long" ? "Long" : "Short"}
+                  </span>
+                  <span className="text-[#848e9c] text-[10px]">{meta.emoji} {meta.name}</span>
+                  <span className="text-right text-white">${entryPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                  <span className="text-right text-white">
+                    {trade.exit_px ? `$${Number(trade.exit_px).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : isOpen && markPx > 0 ? (
+                      <span className="text-[#7C3AED]">${markPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                    ) : "—"}
+                  </span>
+                  <span className={`text-right font-medium ${(pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {pnl != null ? formatPnl(pnl) : "—"}
+                  </span>
+                  <span className="text-right">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      trade.status === "open" ? "bg-blue-500/20 text-blue-400"
+                        : trade.status === "closed" ? "bg-emerald-500/20 text-emerald-400"
+                        : "bg-gray-500/20 text-gray-400"
+                    }`}>
+                      {trade.status}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -592,6 +651,15 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
     <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
       <div className="flex items-center gap-2 mb-1">{icon}<span className="text-[10px] text-[#848e9c] uppercase tracking-wide">{label}</span></div>
       <p className="text-lg font-bold">{value}</p>
+    </div>
+  );
+}
+
+function QuantDetailCell({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div className="bg-[#141620] px-3 py-2">
+      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">{label}</p>
+      <p className={`text-[11px] font-semibold ${valueColor ?? "text-white"}`}>{value}</p>
     </div>
   );
 }
