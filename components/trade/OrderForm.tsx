@@ -160,10 +160,18 @@ export function OrderForm() {
 
         loadUserState();
       } else {
-        setFeedback({ type: "error", msg: result.error || "Order failed" });
+        const raw = result.error || "Order failed";
+        const msg = raw.includes("does not exist")
+          ? "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading."
+          : raw;
+        setFeedback({ type: "error", msg });
       }
     } catch (err) {
-      setFeedback({ type: "error", msg: (err as Error).message });
+      const raw = (err as Error).message;
+      const msg = raw.includes("does not exist")
+        ? "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading."
+        : raw;
+      setFeedback({ type: "error", msg });
     } finally {
       setSubmitting(false);
       setTimeout(() => setFeedback(null), 5000);
