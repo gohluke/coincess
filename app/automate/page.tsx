@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -53,6 +53,44 @@ function relativeTime(iso: string | null): string {
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
   return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
+function formatElapsed(ms: number): string {
+  if (ms < 0) return "0s";
+  const totalSec = Math.floor(ms / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (d > 0) return `${d}d ${h}h ${m}m ${s}s`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function useTick(intervalMs = 1000): number {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+function LiveTimer({ iso }: { iso: string | null }) {
+  const now = useTick();
+  if (!iso) return <span>—</span>;
+  const opened = new Date(iso).getTime();
+  const elapsed = now - opened;
+  const dateStr = new Date(iso).toLocaleString([], {
+    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  });
+  return (
+    <div>
+      <p className="text-[11px] font-semibold text-white">{formatElapsed(elapsed)}</p>
+      <p className="text-[8px] text-[#4a4e59] mt-0.5">{dateStr}</p>
+    </div>
+  );
 }
 
 export default function AutomatePage() {
@@ -194,10 +232,23 @@ function ServerStrategies({ address }: { address: string | null }) {
     engine?.engine_status === "error" ? "#ef4444" :
     engine?.engine_status === "paused" ? "#f59e0b" : "#848e9c";
 
-  const totalPnl = strategies.reduce((s, st) => s + (st.total_pnl ?? 0), 0);
-  const dailyPnl = engine?.daily_pnl ?? 0;
+  const realizedPnl = strategies.reduce((s, st) => s + (st.total_pnl ?? 0), 0);
+  const unrealizedPnl = openTrades.reduce((sum, trade) => {
+    const market = markets.find((m) => m.name === trade.coin);
+    const markPx = market ? parseFloat(market.markPx) : 0;
+    if (markPx === 0) return sum;
+    const entryPx = Number(trade.entry_px);
+    const sz = Number(trade.size);
+    return sum + (trade.side === "long" ? (markPx - entryPx) * sz : (entryPx - markPx) * sz);
+  }, 0);
+  const totalPnl = realizedPnl + unrealizedPnl;
+  const dailyPnl = (engine?.daily_pnl ?? 0) + unrealizedPnl;
   const drawdown = engine?.max_drawdown ?? 0;
-  const exposure = engine?.current_exposure ?? 0;
+  const exposure = openTrades.reduce((sum, trade) => {
+    const market = markets.find((m) => m.name === trade.coin);
+    const markPx = market ? parseFloat(market.markPx) : Number(trade.entry_px);
+    return sum + Math.abs(Number(trade.size) * markPx);
+  }, 0);
 
   return (
     <div className="space-y-6">
@@ -429,7 +480,10 @@ function ServerStrategies({ address }: { address: string | null }) {
                       valueColor={fundingRate >= 0 ? "text-emerald-400" : "text-red-400"}
                     />
                     <QuantDetailCell label="Notional" value={`$${(sz * (markPx || entryPx)).toFixed(2)}`} />
-                    <QuantDetailCell label="Opened" value={relativeTime(trade.opened_at)} />
+                    <div className="bg-[#141620] px-3 py-2">
+                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Opened</p>
+                      <LiveTimer iso={trade.opened_at} />
+                    </div>
                   </div>
                 </div>
               );
