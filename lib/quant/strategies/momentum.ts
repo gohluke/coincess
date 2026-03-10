@@ -21,8 +21,8 @@ const DEFAULT_CONFIG: MomentumConfig = {
   rsiBuyThreshold: 50,
   rsiSellThreshold: 50,
   trailingStopPct: 0.005,
-  positionSizePct: 0.05,
-  leverage: 5,
+  positionSizePct: 0.10,
+  leverage: 3,
 };
 
 export interface CandleData {

@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: MeanReversionConfig = {
   exitLow: 40,
   exitHigh: 60,
   stopLossPct: 0.015,
-  positionSizePct: 0.03,
+  positionSizePct: 0.08,
   leverage: 3,
   topCoins: 20,
 };

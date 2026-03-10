@@ -2,16 +2,16 @@ import type { StrategySignal, QuantStrategy, TickContext, MarketSnapshot } from 
 
 export interface GridConfig {
   coins: string[];
-  gridLevels: number;        // number of levels each side (default 10)
-  gridSpacing: number;       // spacing as % (default 0.001 = 0.1%)
-  positionSizePct: number;   // % of account per grid level (default 0.01)
+  gridLevels: number;        // number of levels each side (default 5)
+  gridSpacing: number;       // spacing as decimal (default 0.005 = 0.5%)
+  sizePerLevelUsd: number;   // USD per grid level (default 15)
 }
 
 const DEFAULT_CONFIG: GridConfig = {
   coins: ["BTC", "ETH"],
-  gridLevels: 10,
-  gridSpacing: 0.001,
-  positionSizePct: 0.01,
+  gridLevels: 5,
+  gridSpacing: 0.005,
+  sizePerLevelUsd: 15,
 };
 
 interface GridState {
@@ -49,7 +49,14 @@ export function evaluate(
   markets: MarketSnapshot[],
   ctx: TickContext,
 ): StrategySignal[] {
-  const cfg: GridConfig = { ...DEFAULT_CONFIG, ...(strategy.config as Partial<GridConfig>) };
+  const raw = strategy.config as Record<string, unknown>;
+  const cfg: GridConfig = {
+    ...DEFAULT_CONFIG,
+    coins: (raw.coins as string[]) ?? DEFAULT_CONFIG.coins,
+    gridLevels: (raw.gridLevels as number) ?? DEFAULT_CONFIG.gridLevels,
+    gridSpacing: (raw.gridSpacingPct as number) ?? (raw.gridSpacing as number) ?? DEFAULT_CONFIG.gridSpacing,
+    sizePerLevelUsd: (raw.sizePerLevel as number) ?? (raw.sizePerLevelUsd as number) ?? DEFAULT_CONFIG.sizePerLevelUsd,
+  };
   const signals: StrategySignal[] = [];
 
   for (const market of markets) {
@@ -57,7 +64,6 @@ export function evaluate(
 
     let grid = gridStates.get(market.coin);
 
-    // Initialize or rebalance if price moved too far from center
     if (!grid) {
       grid = initGrid(market.coin, market.markPx, cfg);
     } else {
@@ -67,7 +73,7 @@ export function evaluate(
       }
     }
 
-    const sizePerLevel = (ctx.accountValue * cfg.positionSizePct) / market.markPx;
+    const sizePerLevel = cfg.sizePerLevelUsd / market.markPx;
 
     // Check buy levels — if price dropped below a level, trigger buy
     for (let i = 0; i < grid.buyLevels.length; i++) {

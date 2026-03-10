@@ -13,8 +13,8 @@ const DEFAULT_CONFIG: FundingRateConfig = {
   entryThreshold: 0.0001,
   exitThreshold: 0.00005,
   maxHoldHours: 8,
-  maxPositions: 5,
-  positionSizePct: 0.02,
+  maxPositions: 3,
+  positionSizePct: 0.08,
   leverage: 3,
 };
 

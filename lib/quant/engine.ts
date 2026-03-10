@@ -201,6 +201,14 @@ export class QuantEngine {
   ): Promise<void> {
     const isClose = signal.size === 0;
 
+    if (!isClose) {
+      const notional = signal.size * signal.price;
+      if (notional < 10) {
+        console.log(`[engine] SKIP ${signal.coin}: notional $${notional.toFixed(2)} below $10 min`);
+        return;
+      }
+    }
+
     if (isClose) {
       const result = await closePosition({
         coin: signal.coin,
