@@ -14,13 +14,13 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className={`group block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-[#FF455B]/50 hover:shadow-lg transition-all ${
+      className={`group block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-brand/50 hover:shadow-lg transition-all ${
         featured ? "md:col-span-2 md:grid md:grid-cols-2" : ""
       }`}
     >
       {/* Placeholder image area */}
-      <div className={`bg-gradient-to-br from-[#FF455B]/10 to-[#FF455B]/5 ${featured ? "h-full min-h-[200px]" : "h-40"} flex items-center justify-center`}>
-        <div className="text-[#FF455B]/30 text-6xl font-bold">
+      <div className={`bg-gradient-to-br from-brand/10 to-brand/5 ${featured ? "h-full min-h-[200px]" : "h-40"} flex items-center justify-center`}>
+        <div className="text-brand/30 text-6xl font-bold">
           {post.category.charAt(0)}
         </div>
       </div>
@@ -40,7 +40,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           </span>
         </div>
 
-        <h3 className={`font-bold text-gray-900 group-hover:text-[#FF455B] transition-colors mb-2 ${featured ? "text-xl md:text-2xl" : "text-lg"}`}>
+        <h3 className={`font-bold text-gray-900 group-hover:text-brand transition-colors mb-2 ${featured ? "text-xl md:text-2xl" : "text-lg"}`}>
           {post.title}
         </h3>
 
@@ -48,7 +48,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           {post.description}
         </p>
 
-        <span className="inline-flex items-center gap-2 text-[#FF455B] font-medium text-sm group-hover:gap-3 transition-all">
+        <span className="inline-flex items-center gap-2 text-brand font-medium text-sm group-hover:gap-3 transition-all">
           Read Article
           <ArrowRight className="h-4 w-4" />
         </span>
@@ -64,7 +64,7 @@ export function FeaturedPosts() {
   return (
     <div className="mb-16">
       <div className="flex items-center gap-2 mb-6">
-        <Sparkles className="h-5 w-5 text-[#FF455B]" />
+        <Sparkles className="h-5 w-5 text-brand" />
         <h2 className="text-2xl font-bold text-gray-900">Featured Guides</h2>
       </div>
 

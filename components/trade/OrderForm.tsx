@@ -165,7 +165,7 @@ export function OrderForm() {
               onClick={() => setOrderType(type)}
               className={`pb-1 border-b-2 transition-colors capitalize ${
                 orderType === type
-                  ? "border-[#FF455B] text-white"
+                  ? "border-brand text-white"
                   : "border-transparent text-[#848e9c] hover:text-white"
               }`}
             >
@@ -185,7 +185,7 @@ export function OrderForm() {
                 value={orderPrice}
                 onChange={(e) => setOrderPrice(e.target.value)}
                 placeholder={parseFloat(midPrice).toFixed(2)}
-                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-[#FF455B] transition-colors"
+                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#848e9c]">USD</span>
             </div>
@@ -204,7 +204,7 @@ export function OrderForm() {
               value={orderSize}
               onChange={(e) => setOrderSize(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-[#FF455B] transition-colors"
+              className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#848e9c]">{displayName}</span>
           </div>
@@ -235,7 +235,7 @@ export function OrderForm() {
             max={market?.maxLeverage ?? 50}
             value={orderLeverage}
             onChange={(e) => setOrderLeverage(parseInt(e.target.value))}
-            className="w-full accent-[#FF455B] h-1"
+            className="w-full accent-brand h-1"
           />
           <div className="flex flex-wrap gap-1 mt-1.5">
             {LEVERAGE_PRESETS.filter((l) => l <= (market?.maxLeverage ?? 50)).map((l) => (
@@ -244,7 +244,7 @@ export function OrderForm() {
                 onClick={() => setOrderLeverage(l)}
                 className={`px-2 py-1 text-[10px] rounded transition-colors ${
                   orderLeverage === l
-                    ? "bg-[#FF455B] text-white"
+                    ? "bg-brand text-white"
                     : "bg-[#1a1d26] text-[#848e9c] hover:bg-[#2a2e39] hover:text-white"
                 }`}
               >
@@ -348,7 +348,7 @@ export function OrderForm() {
         ) : (
           <button
             onClick={() => walletConnect()}
-            className="w-full py-3 rounded-lg font-semibold text-sm bg-[#FF455B] text-white hover:bg-[#FF455B]/90 transition-colors"
+            className="w-full py-3 rounded-lg font-semibold text-sm bg-brand text-white hover:bg-brand/90 transition-colors"
           >
             Sign In to Trade
           </button>

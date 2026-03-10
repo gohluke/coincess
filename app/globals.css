@@ -24,6 +24,12 @@
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
+
+    /* Brand palette — change these to rebrand the entire site */
+    --brand: 255 69 91;
+    --brand-hex: #FF455B;
+    --brand-hover: 230 59 80;
+    --brand-hover-hex: #E63B50;
   }
 
   .dark {
@@ -46,6 +52,11 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
+
+    --brand: 255 69 91;
+    --brand-hex: #FF455B;
+    --brand-hover: 230 59 80;
+    --brand-hover-hex: #E63B50;
   }
 }
 
@@ -154,7 +165,7 @@
 }
 .journal-prose code {
   background: #1a1d2e;
-  color: #FF455B;
+  color: var(--brand-hex);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
@@ -174,7 +185,7 @@
   padding: 0;
 }
 .journal-prose blockquote {
-  border-left: 3px solid #FF455B;
+  border-left: 3px solid var(--brand-hex);
   padding-left: 0.75rem;
   margin: 0.75rem 0;
   color: #848e9c;
@@ -186,12 +197,12 @@
   margin: 1rem 0;
 }
 .journal-prose a {
-  color: #FF455B;
+  color: var(--brand-hex);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 .journal-prose a:hover {
-  color: #FF8A97;
+  color: var(--brand-hover-hex);
 }
 .journal-prose table {
   width: 100%;

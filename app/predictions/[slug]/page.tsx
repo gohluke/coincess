@@ -28,7 +28,7 @@ export default function EventDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0b0e11] flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-[#FF455B]" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand" />
       </div>
     );
   }
@@ -37,7 +37,7 @@ export default function EventDetailPage() {
     return (
       <div className="min-h-screen bg-[#0b0e11] flex flex-col items-center justify-center text-white">
         <p className="text-sm text-[#848e9c] mb-4">Event not found</p>
-        <Link href="/predictions" className="text-sm text-[#FF455B] hover:underline">
+        <Link href="/predictions" className="text-sm text-brand hover:underline">
           ← Back to predictions
         </Link>
       </div>
@@ -100,7 +100,7 @@ export default function EventDetailPage() {
               {event.tags?.map((tag) => (
                 <span
                   key={tag.id}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-[#FF455B]/10 text-[#FF455B] font-medium"
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-brand/10 text-brand font-medium"
                 >
                   {tag.label}
                 </span>

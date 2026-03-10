@@ -37,7 +37,7 @@ export default function AlertsPage() {
           <h2 className="text-lg font-semibold">Active Alerts ({alerts.length})</h2>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF455B] hover:bg-[#E63B50] text-white text-xs font-medium transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand hover:bg-brand-hover text-white text-xs font-medium transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
             New Alert
@@ -89,7 +89,7 @@ export default function AlertsPage() {
           <div className="space-y-1">
             {alertHistory.map((h) => (
               <div key={h.id} className="flex items-start gap-2 px-3 py-2 rounded-lg hover:bg-[#141620]">
-                <Bell className="h-3.5 w-3.5 text-[#FF455B] shrink-0 mt-0.5" />
+                <Bell className="h-3.5 w-3.5 text-brand shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs text-[#c8ccd8]">{h.message}</p>
                   <span className="text-[10px] text-[#848e9c]">{new Date(h.timestamp).toLocaleString()}</span>

@@ -105,7 +105,7 @@ export function WalletButton() {
                   setShowDropdown(false);
                 }}
                 className={`w-full px-3 py-2.5 flex items-center gap-2 hover:bg-[#1a1d26] transition-colors text-left ${
-                  !activeWalletId ? "bg-[#FF455B]/5" : ""
+                  !activeWalletId ? "bg-brand/5" : ""
                 }`}
               >
                 <Wallet className="h-3.5 w-3.5 text-[#848e9c] shrink-0" />
@@ -113,7 +113,7 @@ export function WalletButton() {
                   <div className="text-xs font-medium text-white">Connected Wallet</div>
                   <div className="text-[10px] text-[#5a6270] font-mono">{shortenAddress(walletAddr)}</div>
                 </div>
-                {!activeWalletId && <Radio className="h-3 w-3 text-[#FF455B] shrink-0" />}
+                {!activeWalletId && <Radio className="h-3 w-3 text-brand shrink-0" />}
               </button>
             )}
 
@@ -122,7 +122,7 @@ export function WalletButton() {
                 key={w.id}
                 onClick={() => handleSelectLinked(w.id, w.address)}
                 className={`w-full px-3 py-2.5 flex items-center gap-2 hover:bg-[#1a1d26] transition-colors text-left ${
-                  w.id === activeWalletId ? "bg-[#FF455B]/5" : ""
+                  w.id === activeWalletId ? "bg-brand/5" : ""
                 }`}
               >
                 <Wallet className="h-3.5 w-3.5 text-[#848e9c] shrink-0" />
@@ -130,7 +130,7 @@ export function WalletButton() {
                   <div className="text-xs font-medium text-white truncate">{w.label}</div>
                   <div className="text-[10px] text-[#5a6270] font-mono">{shortenAddress(w.address)}</div>
                 </div>
-                {w.id === activeWalletId && <Radio className="h-3 w-3 text-[#FF455B] shrink-0" />}
+                {w.id === activeWalletId && <Radio className="h-3 w-3 text-brand shrink-0" />}
               </button>
             ))}
 
@@ -151,7 +151,7 @@ export function WalletButton() {
   return (
     <button
       onClick={connect}
-      className="flex items-center gap-2 bg-[#FF455B] hover:bg-[#FF455B]/90 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+      className="flex items-center gap-2 bg-brand hover:bg-brand/90 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
     >
       <Wallet className="h-4 w-4" />
       Sign In

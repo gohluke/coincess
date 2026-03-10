@@ -376,7 +376,7 @@ export function CoinsTable() {
                     </div>
                   )}
                   <div>
-                    <div className="font-semibold text-gray-900 group-hover:text-[#FF455B] transition-colors">{SPONSORED_COIN.name}</div>
+                    <div className="font-semibold text-gray-900 group-hover:text-brand transition-colors">{SPONSORED_COIN.name}</div>
                     <div className="text-sm text-gray-500 uppercase">{SPONSORED_COIN.symbol}</div>
                   </div>
                 </a>
@@ -478,7 +478,7 @@ export function CoinsTable() {
                     href={`https://trocador.app/?ticker_to=${coin.symbol.toLowerCase()}&ref=2dzDcvfQJY`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FF455B] text-white text-sm font-medium rounded-lg hover:bg-[#E63B50] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand-hover transition-colors"
                   >
                     <ShoppingCart className="h-3.5 w-3.5" />
                     Buy

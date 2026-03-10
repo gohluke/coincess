@@ -54,7 +54,7 @@ export default function TradePage() {
             key={tab}
             onClick={() => setMobileTab(tab)}
             className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-              mobileTab === tab ? "text-[#FF455B] border-b-2 border-[#FF455B]" : "text-[#848e9c]"
+              mobileTab === tab ? "text-brand border-b-2 border-brand" : "text-[#848e9c]"
             }`}
           >
             {tab}

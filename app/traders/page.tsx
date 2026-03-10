@@ -372,7 +372,7 @@ export default function TradersPage() {
                   <ChevronLeft className="h-5 w-5" />
                 </button>
               ) : (
-                <Users className="h-5 w-5 text-[#FF455B]" />
+                <Users className="h-5 w-5 text-brand" />
               )}
               {activeAddress ? "Trader Profile" : "Trader Lookup"}
             </h1>
@@ -394,13 +394,13 @@ export default function TradersPage() {
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Paste wallet address (0x...)"
-              className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B] transition-colors"
+              className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors"
             />
           </div>
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="px-5 py-2.5 bg-[#FF455B] text-white rounded-lg text-sm font-medium hover:bg-[#E63B50] transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-hover transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             Search
@@ -414,7 +414,7 @@ export default function TradersPage() {
               <button
                 onClick={() => setMainTab("leaderboard")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  mainTab === "leaderboard" ? "bg-[#FF455B]/20 text-[#FF455B]" : "text-[#848e9c] hover:text-white"
+                  mainTab === "leaderboard" ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
                 }`}
               >
                 <Trophy className="h-3.5 w-3.5" /> Leaderboard
@@ -422,7 +422,7 @@ export default function TradersPage() {
               <button
                 onClick={() => setMainTab("scanner")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  mainTab === "scanner" ? "bg-[#FF455B]/20 text-[#FF455B]" : "text-[#848e9c] hover:text-white"
+                  mainTab === "scanner" ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
                 }`}
               >
                 <Crosshair className="h-3.5 w-3.5" /> Contract Scanner
@@ -444,7 +444,7 @@ export default function TradersPage() {
                       onChange={(e) => setScanCoin(e.target.value.toUpperCase())}
                       onKeyDown={(e) => e.key === "Enter" && scanForContract(scanCoin)}
                       placeholder="Type contract name (e.g. BRENTOIL, BTC, WTI, GOLD...)"
-                      className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B] transition-colors"
+                      className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors"
                       list="coin-suggestions"
                     />
                     <datalist id="coin-suggestions">
@@ -456,7 +456,7 @@ export default function TradersPage() {
                   <button
                     onClick={() => scanForContract(scanCoin)}
                     disabled={scanning || !scanCoin}
-                    className="px-5 py-2.5 bg-[#FF455B] text-white rounded-lg text-sm font-medium hover:bg-[#E63B50] transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                    className="px-5 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-hover transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
                   >
                     {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     Scan
@@ -469,7 +469,7 @@ export default function TradersPage() {
                     <button
                       key={c}
                       onClick={() => { setScanCoin(c); scanForContract(c); }}
-                      className="px-2.5 py-1 bg-[#1a1d2e] border border-[#2a2e3e] rounded-md text-[10px] text-[#848e9c] hover:text-white hover:border-[#FF455B]/50 transition-colors"
+                      className="px-2.5 py-1 bg-[#1a1d2e] border border-[#2a2e3e] rounded-md text-[10px] text-[#848e9c] hover:text-white hover:border-brand/50 transition-colors"
                     >
                       {c}
                     </button>
@@ -485,7 +485,7 @@ export default function TradersPage() {
                     </div>
                     <div className="w-full bg-[#2a2e3e] rounded-full h-1.5">
                       <div
-                        className="bg-[#FF455B] h-1.5 rounded-full transition-all duration-300"
+                        className="bg-brand h-1.5 rounded-full transition-all duration-300"
                         style={{ width: scanProgress.total > 0 ? `${(scanProgress.done / scanProgress.total) * 100}%` : "0%" }}
                       />
                     </div>
@@ -592,7 +592,7 @@ export default function TradersPage() {
                         value={lbSearch}
                         onChange={(e) => setLbSearch(e.target.value)}
                         placeholder="Filter by name or address..."
-                        className="bg-[#141620] border border-[#2a2e3e] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B] transition-colors w-full sm:w-52"
+                        className="bg-[#141620] border border-[#2a2e3e] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors w-full sm:w-52"
                       />
                     </div>
                     <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
@@ -601,7 +601,7 @@ export default function TradersPage() {
                           key={tw}
                           onClick={() => setTimeWindow(tw)}
                           className={`px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
-                            timeWindow === tw ? "bg-[#FF455B]/20 text-[#FF455B]" : "text-[#848e9c] hover:text-white"
+                            timeWindow === tw ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
                           }`}
                         >
                           {tw === "allTime" ? "All" : tw === "day" ? "24h" : tw === "week" ? "7d" : "30d"}
@@ -614,7 +614,7 @@ export default function TradersPage() {
                           key={k}
                           onClick={() => setSortKey(k)}
                           className={`px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
-                            sortKey === k ? "bg-[#FF455B]/20 text-[#FF455B]" : "text-[#848e9c] hover:text-white"
+                            sortKey === k ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
                           }`}
                         >
                           {label}
@@ -697,7 +697,7 @@ export default function TradersPage() {
                         const atPerf = getPerf(lbMatch, "allTime");
                         const atPnl = parseFloat(atPerf.pnl);
                         if (atPnl > 10_000_000) return <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-medium">Whale</span>;
-                        if (atPnl > 1_000_000) return <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#FF455B]/15 text-[#FF455B] font-medium">Top Trader</span>;
+                        if (atPnl > 1_000_000) return <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand/15 text-brand font-medium">Top Trader</span>;
                         return null;
                       })()}
                     </div>
@@ -716,7 +716,7 @@ export default function TradersPage() {
                   <button onClick={goBack} className="px-3 py-1.5 text-xs text-[#848e9c] border border-[#2a2e3e] rounded-lg hover:text-white hover:border-[#3a3e4e] transition-colors">
                     Back
                   </button>
-                  <button onClick={() => loadTrader(activeAddress)} disabled={loading} className="px-3 py-1.5 text-xs text-[#FF455B] border border-[#FF455B]/30 rounded-lg hover:bg-[#FF455B]/10 transition-colors disabled:opacity-50 flex items-center gap-1">
+                  <button onClick={() => loadTrader(activeAddress)} disabled={loading} className="px-3 py-1.5 text-xs text-brand border border-brand/30 rounded-lg hover:bg-brand/10 transition-colors disabled:opacity-50 flex items-center gap-1">
                     <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
                     Refresh
                   </button>
@@ -727,7 +727,7 @@ export default function TradersPage() {
                 <>
                   {/* P&L Summary Row */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5 border-l-2 border-[#FF455B]">
+                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5 border-l-2 border-brand">
                       <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Total P&L</p>
                       <p className={`text-sm font-bold ${totalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                         {totalPnl >= 0 ? "+" : ""}{formatUsd(totalPnl)}
@@ -846,7 +846,7 @@ export default function TradersPage() {
                       key={tab}
                       onClick={() => setHistoryTab(tab)}
                       className={`pb-2.5 text-xs font-medium border-b-2 transition-colors ${
-                        historyTab === tab ? "text-white border-[#FF455B]" : "text-[#848e9c] border-transparent hover:text-white"
+                        historyTab === tab ? "text-white border-brand" : "text-[#848e9c] border-transparent hover:text-white"
                       }`}
                     >
                       {tab === "positions" ? `Positions (${positions.length})` : tab === "fills" ? `Recent Fills (${Math.min(fills.length, 100)})` : `Spot Holdings (${spotState?.balances.filter((b) => parseFloat(b.total) > 0).length ?? 0})`}

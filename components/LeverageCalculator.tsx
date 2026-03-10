@@ -1,15 +1,20 @@
 "use client"
 
-import { useState, useEffect, useCallback, ChangeEvent, KeyboardEvent } from "react"
-import { ArrowUp, ArrowDown, Calculator, TrendingUp, TrendingDown, AlertCircle } from "lucide-react"
+import { useState, useEffect, useCallback, useRef, ChangeEvent, KeyboardEvent } from "react"
+import {
+  ArrowUp, ArrowDown, Calculator, TrendingUp, TrendingDown,
+  AlertCircle, DollarSign, Percent, Clock, Shield, BarChart3, Target,
+} from "lucide-react"
 
 type Direction = "long" | "short"
+type FeeType = "maker" | "taker"
 
 interface CalculatorInputProps {
   id: string
   label: string
   value: string
   onChange: (value: string) => void
+  onFocus?: () => void
   onBlur?: () => void
   prefix?: string
   suffix?: string
@@ -17,128 +22,75 @@ interface CalculatorInputProps {
   allowNegative?: boolean
   hint?: string
   error?: string
+  compact?: boolean
 }
 
 function CalculatorInput({
-  id,
-  label,
-  value,
-  onChange,
-  onBlur,
-  prefix,
-  suffix,
-  readOnly = false,
-  allowNegative = false,
-  hint,
-  error,
+  id, label, value, onChange, onFocus, onBlur,
+  prefix, suffix, readOnly = false, allowNegative = false,
+  hint, error, compact = false,
 }: CalculatorInputProps) {
-  // Sanitize input to only allow valid numeric characters
   const sanitizeInput = (input: string): string => {
-    // Allow: digits, one decimal point, and optionally one minus sign at start
     let sanitized = input
-
-    // Remove any character that's not a digit, decimal point, or minus
     if (allowNegative) {
-      // Allow minus only at the beginning
       sanitized = sanitized.replace(/[^\d.-]/g, "")
-      // Remove any minus signs that aren't at the start
       const firstChar = sanitized.charAt(0)
       const rest = sanitized.slice(1).replace(/-/g, "")
       sanitized = firstChar + rest
     } else {
       sanitized = sanitized.replace(/[^\d.]/g, "")
     }
-
-    // Ensure only one decimal point
     const parts = sanitized.split(".")
-    if (parts.length > 2) {
-      sanitized = parts[0] + "." + parts.slice(1).join("")
-    }
-
+    if (parts.length > 2) sanitized = parts[0] + "." + parts.slice(1).join("")
     return sanitized
   }
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const sanitized = sanitizeInput(e.target.value)
-    onChange(sanitized)
-  }
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => onChange(sanitizeInput(e.target.value))
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    // Allow: backspace, delete, tab, escape, enter, decimal point
     const allowedKeys = ["Backspace", "Delete", "Tab", "Escape", "Enter", ".", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]
-    
-    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-    if ((e.ctrlKey || e.metaKey) && ["a", "c", "v", "x"].includes(e.key.toLowerCase())) {
-      return
-    }
-
+    if ((e.ctrlKey || e.metaKey) && ["a", "c", "v", "x"].includes(e.key.toLowerCase())) return
     if (allowedKeys.includes(e.key)) {
-      // Prevent multiple decimal points
-      if (e.key === "." && value.includes(".")) {
-        e.preventDefault()
-      }
+      if (e.key === "." && value.includes(".")) e.preventDefault()
       return
     }
-
-    // Allow minus sign only at the beginning if allowNegative
     if (e.key === "-" && allowNegative) {
       const input = e.currentTarget
-      if (input.selectionStart === 0 && !value.includes("-")) {
-        return
-      }
+      if (input.selectionStart === 0 && !value.includes("-")) return
       e.preventDefault()
       return
     }
-
-    // Allow digits
-    if (/^\d$/.test(e.key)) {
-      return
-    }
-
-    // Prevent all other keys
+    if (/^\d$/.test(e.key)) return
     e.preventDefault()
   }
 
-  // Handle paste to sanitize pasted content
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault()
-    const pastedText = e.clipboardData.getData("text")
-    const sanitized = sanitizeInput(pastedText)
-    
+    const sanitized = sanitizeInput(e.clipboardData.getData("text"))
     const input = e.currentTarget
     const start = input.selectionStart || 0
     const end = input.selectionEnd || 0
-    const newValue = value.slice(0, start) + sanitized + value.slice(end)
-    
-    onChange(sanitizeInput(newValue))
+    onChange(sanitizeInput(value.slice(0, start) + sanitized + value.slice(end)))
   }
 
   return (
-    <div className="space-y-2">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+    <div className={compact ? "space-y-1" : "space-y-2"}>
+      <label htmlFor={id} className={`block font-medium text-gray-700 ${compact ? "text-xs" : "text-sm"}`}>
         {label}
       </label>
       <div className="relative">
         {prefix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
-            {prefix}
-          </span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">{prefix}</span>
         )}
         <input
-          type="text"
-          inputMode="decimal"
-          id={id}
-          value={value}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          onBlur={onBlur}
-          readOnly={readOnly}
-          autoComplete="off"
+          type="text" inputMode="decimal" id={id} value={value}
+          onChange={handleChange} onKeyDown={handleKeyDown} onPaste={handlePaste}
+          onFocus={onFocus} onBlur={onBlur}
+          readOnly={readOnly} autoComplete="off"
           className={`
-            w-full h-12 rounded-lg border bg-white text-gray-900
-            transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-[#FF455B]/20 focus:border-[#FF455B]
+            w-full rounded-lg border bg-white text-gray-900 transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand
+            ${compact ? "h-10 text-sm" : "h-12"}
             ${prefix ? "pl-8" : "pl-4"}
             ${suffix ? "pr-16" : "pr-4"}
             ${readOnly ? "bg-gray-50 text-gray-600 cursor-not-allowed" : ""}
@@ -146,20 +98,31 @@ function CalculatorInput({
           `}
         />
         {suffix && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
-            {suffix}
-          </span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs pointer-events-none">{suffix}</span>
         )}
       </div>
-      {hint && !error && (
-        <p className="text-xs text-gray-500">{hint}</p>
-      )}
+      {hint && !error && <p className="text-[11px] text-gray-400">{hint}</p>}
       {error && (
         <p className="text-xs text-red-500 flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" />
-          {error}
+          <AlertCircle className="h-3 w-3" />{error}
         </p>
       )}
+    </div>
+  )
+}
+
+function StatCard({ label, value, sub, color = "gray" }: { label: string; value: string; sub?: string; color?: "green" | "red" | "gray" | "brand" }) {
+  const colors = {
+    green: "bg-green-50 border-green-200 text-green-700",
+    red: "bg-red-50 border-red-200 text-red-700",
+    gray: "bg-gray-50 border-gray-200 text-gray-700",
+    brand: "bg-brand/5 border-brand/20 text-brand",
+  }
+  return (
+    <div className={`p-3 rounded-lg border ${colors[color]}`}>
+      <p className="text-[11px] text-gray-500 mb-0.5">{label}</p>
+      <p className="text-sm font-semibold">{value}</p>
+      {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -169,328 +132,362 @@ export function LeverageCalculator() {
   const [quantity, setQuantity] = useState("1000")
   const [entryPrice, setEntryPrice] = useState("10")
   const [exitPrice, setExitPrice] = useState("20")
-  const [liquidationPrice, setLiquidationPrice] = useState("")
   const [direction, setDirection] = useState<Direction>("long")
+  const [feeType, setFeeType] = useState<FeeType>("taker")
+  const [entryFeeRate, setEntryFeeRate] = useState("0.035")
+  const [exitFeeRate, setExitFeeRate] = useState("0.035")
+  const [fundingRate, setFundingRate] = useState("0.01")
+  const [durationHours, setDurationHours] = useState("24")
+
+  // Derived state
   const [initialMargin, setInitialMargin] = useState("")
   const [pnl, setPnl] = useState("")
   const [roe, setRoe] = useState("")
+  const [liquidationPrice, setLiquidationPrice] = useState("")
+  const [totalFunding, setTotalFunding] = useState("")
+  const [netPnl, setNetPnl] = useState("")
+  const [netRoe, setNetRoe] = useState("")
+  const [entryFee, setEntryFee] = useState("")
+  const [exitFee, setExitFee] = useState("")
+  const [totalFees, setTotalFees] = useState("")
+  const [breakEvenPrice, setBreakEvenPrice] = useState("")
+  const [positionNotional, setPositionNotional] = useState("")
+  const [marginRatio, setMarginRatio] = useState("")
+
+  const [activeField, setActiveField] = useState<"margin" | "pnl" | "roe" | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const parseNumber = (value: string): number => {
-    const cleaned = value.replace(/[^\d.-]/g, "")
-    const num = parseFloat(cleaned)
+    const num = parseFloat(value.replace(/[^\d.-]/g, ""))
     return isNaN(num) ? 0 : num
   }
 
-  const formatNumber = (num: number, decimals: number = 6): string => {
+  const fmt = (num: number, decimals = 6): string => {
     if (!isFinite(num) || isNaN(num)) return "0"
-    // Remove trailing zeros
     return parseFloat(num.toFixed(decimals)).toString()
   }
 
+  const fmtUsd = (num: number): string => {
+    if (!isFinite(num) || isNaN(num)) return "$0.00"
+    const abs = Math.abs(num)
+    const formatted = abs >= 1_000_000
+      ? (abs / 1_000_000).toFixed(2) + "M"
+      : abs >= 1_000
+      ? (abs / 1_000).toFixed(2) + "K"
+      : abs.toFixed(2)
+    return (num < 0 ? "-$" : "$") + formatted
+  }
+
+  // Sync fee rates when fee type toggle changes
+  const prevFeeType = useRef(feeType)
+  useEffect(() => {
+    if (prevFeeType.current !== feeType) {
+      prevFeeType.current = feeType
+      if (feeType === "maker") {
+        setEntryFeeRate("0.01")
+        setExitFeeRate("0.01")
+      } else {
+        setEntryFeeRate("0.035")
+        setExitFeeRate("0.035")
+      }
+    }
+  }, [feeType])
+
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {}
-    
     const lev = parseNumber(leverage)
     const entry = parseNumber(entryPrice)
     const exit = parseNumber(exitPrice)
     const qty = parseNumber(quantity)
-
-    if (lev <= 0) {
-      newErrors.leverage = "Leverage must be greater than 0"
-    }
-    if (lev > 200) {
-      newErrors.leverage = "Leverage cannot exceed 200x"
-    }
-    if (entry <= 0) {
-      newErrors.entryPrice = "Entry price must be greater than 0"
-    }
-    if (exit <= 0) {
-      newErrors.exitPrice = "Exit price must be greater than 0"
-    }
-    if (qty <= 0) {
-      newErrors.quantity = "Quantity must be greater than 0"
-    }
-
+    if (lev <= 0) newErrors.leverage = "Must be > 0"
+    if (lev > 200) newErrors.leverage = "Max 200x"
+    if (entry <= 0) newErrors.entryPrice = "Must be > 0"
+    if (exit <= 0 && activeField !== "pnl" && activeField !== "roe") newErrors.exitPrice = "Must be > 0"
+    if (qty <= 0 && activeField !== "margin") newErrors.quantity = "Must be > 0"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [leverage, entryPrice, exitPrice, quantity])
+  }, [leverage, entryPrice, exitPrice, quantity, activeField])
 
   const calculate = useCallback((type?: "margin" | "pnl" | "roe") => {
     const lev = parseNumber(leverage)
     const qty = parseNumber(quantity)
     const entry = parseNumber(entryPrice)
     const exit = parseNumber(exitPrice)
-
-    // Skip calculation if essential values are missing or invalid
     if (lev <= 0 || entry <= 0) return
 
-    let calcInitialMargin: number
-    let calcQuantity = qty
-    let calcExitPrice = exit
+    let calcMargin: number
+    let calcQty = qty
+    let calcExit = exit
 
-    // Calculate initial margin
+    // Margin ↔ Quantity
     if (type === "margin") {
       const margin = parseNumber(initialMargin)
       if (margin <= 0) return
-      calcInitialMargin = margin
-      calcQuantity = (margin * lev) / entry
-      setQuantity(formatNumber(calcQuantity))
+      calcMargin = margin
+      calcQty = (margin * lev) / entry
+      setQuantity(fmt(calcQty))
     } else {
       if (qty <= 0) return
-      calcInitialMargin = (qty * entry) / lev
-      setInitialMargin(formatNumber(calcInitialMargin, 2))
+      calcMargin = (qty * entry) / lev
+      setInitialMargin(fmt(calcMargin, 2))
     }
 
-    // Calculate PNL
+    const notional = calcQty * entry
+    setPositionNotional(fmt(notional, 2))
+
+    // Trading fees
+    const entryFeeVal = notional * (parseNumber(entryFeeRate) / 100)
+    const exitNotional = calcQty * (calcExit > 0 ? calcExit : entry)
+    const exitFeeVal = exitNotional * (parseNumber(exitFeeRate) / 100)
+    const totalFeesVal = entryFeeVal + exitFeeVal
+    setEntryFee(fmt(entryFeeVal, 2))
+    setExitFee(fmt(exitFeeVal, 2))
+    setTotalFees(fmt(totalFeesVal, 2))
+
+    // Gross PNL
     let calcPnl: number
     if (type === "pnl") {
       const pnlValue = parseNumber(pnl)
       calcPnl = pnlValue
-      if (direction === "long") {
-        calcExitPrice = calcQuantity > 0 ? pnlValue / calcQuantity + entry : entry
-      } else {
-        calcExitPrice = calcQuantity > 0 ? entry - pnlValue / calcQuantity : entry
-      }
-      setExitPrice(formatNumber(calcExitPrice, 4))
+      calcExit = direction === "long"
+        ? (calcQty > 0 ? pnlValue / calcQty + entry : entry)
+        : (calcQty > 0 ? entry - pnlValue / calcQty : entry)
+      setExitPrice(fmt(calcExit, 4))
     } else {
-      if (calcExitPrice <= 0) return
-      if (direction === "long") {
-        calcPnl = (calcExitPrice - entry) * calcQuantity
-      } else {
-        calcPnl = (entry - calcExitPrice) * calcQuantity
-      }
-      setPnl(formatNumber(calcPnl, 2))
+      if (calcExit <= 0) return
+      calcPnl = direction === "long"
+        ? (calcExit - entry) * calcQty
+        : (entry - calcExit) * calcQty
+      setPnl(fmt(calcPnl, 2))
     }
 
-    // Calculate ROE
-    let calcRoe: number
+    // Gross ROE
     if (type === "roe") {
       const roeValue = parseNumber(roe)
-      calcRoe = roeValue
-      calcPnl = (roeValue / 100) * calcInitialMargin
-      if (direction === "long") {
-        calcExitPrice = calcQuantity > 0 ? calcPnl / calcQuantity + entry : entry
-      } else {
-        calcExitPrice = calcQuantity > 0 ? entry - calcPnl / calcQuantity : entry
-      }
-      setExitPrice(formatNumber(calcExitPrice, 4))
-      setPnl(formatNumber(calcPnl, 2))
+      calcPnl = (roeValue / 100) * calcMargin
+      calcExit = direction === "long"
+        ? (calcQty > 0 ? calcPnl / calcQty + entry : entry)
+        : (calcQty > 0 ? entry - calcPnl / calcQty : entry)
+      setExitPrice(fmt(calcExit, 4))
+      setPnl(fmt(calcPnl, 2))
     } else {
-      calcRoe = calcInitialMargin > 0 ? (calcPnl / calcInitialMargin) * 100 : 0
-      setRoe(formatNumber(calcRoe, 2))
+      const calcRoe = calcMargin > 0 ? (calcPnl / calcMargin) * 100 : 0
+      setRoe(fmt(calcRoe, 2))
     }
 
-    // Calculate liquidation price
-    let liquidation: number
+    // Liquidation price (simplified: entry ± entry/leverage)
+    const liq = direction === "long"
+      ? entry - entry / lev
+      : entry + entry / lev
+    setLiquidationPrice(fmt(Math.max(0, liq), 4))
+
+    // Margin ratio: how close current unrealized loss is to margin
+    const unrealizedLoss = Math.max(0, -calcPnl)
+    const mRatio = calcMargin > 0 ? (unrealizedLoss / calcMargin) * 100 : 0
+    setMarginRatio(fmt(Math.min(mRatio, 100), 1))
+
+    // Funding
+    const rate = parseNumber(fundingRate) / 100
+    const hours = parseNumber(durationHours)
+    const fundingCost = notional * rate * hours
+    const directedFunding = direction === "long" ? fundingCost : -fundingCost
+    setTotalFunding(fmt(directedFunding, 2))
+
+    // Net PNL = gross - fees - funding
+    const net = calcPnl - totalFeesVal - directedFunding
+    setNetPnl(fmt(net, 2))
+    const netRoeVal = calcMargin > 0 ? (net / calcMargin) * 100 : 0
+    setNetRoe(fmt(netRoeVal, 2))
+
+    // Break-even price: price where net PNL = 0 (after fees + funding)
+    const totalCosts = totalFeesVal + directedFunding
+    let be: number
     if (direction === "long") {
-      liquidation = entry - entry / lev
+      be = calcQty > 0 ? entry + totalCosts / calcQty : entry
     } else {
-      liquidation = entry + entry / lev
+      be = calcQty > 0 ? entry - totalCosts / calcQty : entry
     }
-    setLiquidationPrice(formatNumber(Math.max(0, liquidation), 4))
-  }, [leverage, quantity, entryPrice, exitPrice, direction, initialMargin, pnl, roe])
+    setBreakEvenPrice(fmt(Math.max(0, be), 4))
+  }, [leverage, quantity, entryPrice, exitPrice, direction, initialMargin, pnl, roe, entryFeeRate, exitFeeRate, fundingRate, durationHours])
 
   useEffect(() => {
-    if (leverage && quantity && entryPrice && exitPrice) {
-      validate()
-      calculate()
-    }
-  }, [leverage, quantity, entryPrice, exitPrice, direction, validate, calculate])
+    validate()
+    if (activeField === "margin" && initialMargin) calculate("margin")
+    else if (activeField === "pnl" && pnl) calculate("pnl")
+    else if (activeField === "roe" && roe) calculate("roe")
+    else if (leverage && quantity && entryPrice && exitPrice) calculate()
+  }, [leverage, quantity, entryPrice, exitPrice, direction, fundingRate, durationHours, initialMargin, pnl, roe, activeField, entryFeeRate, exitFeeRate, validate, calculate])
 
-  const handleMarginBlur = () => {
-    if (initialMargin) calculate("margin")
-  }
-
-  const handlePnlBlur = () => {
-    if (pnl) calculate("pnl")
-  }
-
-  const handleRoeBlur = () => {
-    if (roe) calculate("roe")
-  }
-
-  const isProfitable = parseNumber(pnl) >= 0
-  const roeValue = parseNumber(roe)
+  const netPnlNum = parseNumber(netPnl)
+  const netRoeNum = parseNumber(netRoe)
+  const totalFundingNum = parseNumber(totalFunding)
+  const marginRatioNum = parseNumber(marginRatio)
 
   return (
     <div className="w-full">
-      {/* Calculator Card */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#FF455B] to-[#E63B50] px-6 py-5">
+        <div className="bg-gradient-to-r from-brand to-brand-hover px-6 py-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
               <Calculator className="h-6 w-6 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Perpetual Futures Calculator</h2>
-              <p className="text-white/80 text-sm">Calculate your position's potential outcomes</p>
+              <p className="text-white/80 text-sm">Industry-grade position planner with fees, funding & break-even</p>
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          {/* Direction Toggle */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Position Direction</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setDirection("long")}
-                className={`
-                  flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all
-                  ${direction === "long"
-                    ? "bg-green-500 text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }
-                `}
-              >
-                <ArrowUp className="h-5 w-5" />
-                Long
-              </button>
-              <button
-                type="button"
-                onClick={() => setDirection("short")}
-                className={`
-                  flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all
-                  ${direction === "short"
-                    ? "bg-red-500 text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }
-                `}
-              >
-                <ArrowDown className="h-5 w-5" />
-                Short
-              </button>
+          {/* Direction + Fee Type */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Direction</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setDirection("long")}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                    direction === "long" ? "bg-green-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  <ArrowUp className="h-4 w-4" /> Long
+                </button>
+                <button type="button" onClick={() => setDirection("short")}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                    direction === "short" ? "bg-red-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  <ArrowDown className="h-4 w-4" /> Short
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Order Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setFeeType("maker")}
+                  className={`py-2.5 rounded-lg font-medium text-sm transition-all ${
+                    feeType === "maker" ? "bg-gray-900 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  Maker
+                </button>
+                <button type="button" onClick={() => setFeeType("taker")}
+                  className={`py-2.5 rounded-lg font-medium text-sm transition-all ${
+                    feeType === "taker" ? "bg-gray-900 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  Taker
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Input Fields */}
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
-            <CalculatorInput
-              id="leverage"
-              label="Leverage"
-              value={leverage}
-              onChange={setLeverage}
-              suffix="x"
-              hint="1-200x leverage multiplier"
-              error={errors.leverage}
-            />
-            <CalculatorInput
-              id="quantity"
-              label="Quantity"
-              value={quantity}
-              onChange={setQuantity}
-              hint="Number of contracts/units"
-              error={errors.quantity}
-            />
-            <CalculatorInput
-              id="entryPrice"
-              label="Entry Price"
-              value={entryPrice}
-              onChange={setEntryPrice}
-              prefix="$"
-              hint="Your position's entry price"
-              error={errors.entryPrice}
-            />
-            <CalculatorInput
-              id="exitPrice"
-              label="Exit Price"
-              value={exitPrice}
-              onChange={setExitPrice}
-              prefix="$"
-              hint="Target or stop-loss price"
-              error={errors.exitPrice}
-            />
+          {/* Core Inputs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <CalculatorInput id="leverage" label="Leverage" value={leverage} onChange={setLeverage}
+              suffix="x" hint="1–200x" error={errors.leverage} compact />
+            <CalculatorInput id="quantity" label="Quantity (contracts)" value={quantity} onChange={setQuantity}
+              hint="Position size" error={errors.quantity} compact />
+            <CalculatorInput id="entryPrice" label="Entry Price" value={entryPrice} onChange={setEntryPrice}
+              prefix="$" error={errors.entryPrice} compact />
+            <CalculatorInput id="exitPrice" label="Exit Price" value={exitPrice} onChange={setExitPrice}
+              prefix="$" error={errors.exitPrice} compact />
           </div>
 
-          {/* Liquidation Price (Read-only) */}
-          <div className="mb-6">
-            <CalculatorInput
-              id="liquidationPrice"
-              label="Liquidation Price"
-              value={liquidationPrice}
-              onChange={() => {}}
-              prefix="$"
-              readOnly
-              hint="Price at which your position gets liquidated"
-            />
+          {/* Fee & Funding Inputs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <CalculatorInput id="entryFeeRate" label="Entry Fee" value={entryFeeRate} onChange={setEntryFeeRate}
+              suffix="%" hint={feeType === "maker" ? "Maker: 0.01%" : "Taker: 0.035%"} compact />
+            <CalculatorInput id="exitFeeRate" label="Exit Fee" value={exitFeeRate} onChange={setExitFeeRate}
+              suffix="%" hint="Applied on close" compact />
+            <CalculatorInput id="fundingRate" label="Funding Rate" value={fundingRate} onChange={setFundingRate}
+              suffix="%/hr" allowNegative hint="Hourly rate" compact />
+            <CalculatorInput id="durationHours" label="Duration" value={durationHours} onChange={setDurationHours}
+              suffix="hours" hint="Hold time" compact />
           </div>
 
           {/* Divider */}
-          <div className="border-t border-gray-200 my-6" />
+          <div className="border-t border-gray-200 my-5" />
 
-          {/* Results Section */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <CalculatorInput
-              id="initialMargin"
-              label="Initial Margin"
-              value={initialMargin}
-              onChange={setInitialMargin}
-              onBlur={handleMarginBlur}
-              suffix="USDC"
-              hint="Edit to calculate quantity"
-            />
-            <CalculatorInput
-              id="pnl"
-              label="PNL (Profit/Loss)"
-              value={pnl}
-              onChange={setPnl}
-              onBlur={handlePnlBlur}
-              suffix="USDC"
-              allowNegative
-              hint="Edit to calculate exit price"
-            />
-            <CalculatorInput
-              id="roe"
-              label="ROE (Return on Equity)"
-              value={roe}
-              onChange={setRoe}
-              onBlur={handleRoeBlur}
-              suffix="%"
-              allowNegative
-              hint="Edit to calculate exit price"
-            />
+          {/* Interactive Results */}
+          <div className="grid md:grid-cols-3 gap-3 mb-5">
+            <CalculatorInput id="initialMargin" label="Initial Margin" value={initialMargin}
+              onChange={setInitialMargin} onFocus={() => setActiveField("margin")} onBlur={() => setActiveField(null)}
+              suffix="USDC" hint="Type to set budget" compact />
+            <CalculatorInput id="pnl" label="Target PNL" value={pnl}
+              onChange={setPnl} onFocus={() => setActiveField("pnl")} onBlur={() => setActiveField(null)}
+              suffix="USDC" allowNegative hint="Type to solve exit price" compact />
+            <CalculatorInput id="roe" label="Target ROE" value={roe}
+              onChange={setRoe} onFocus={() => setActiveField("roe")} onBlur={() => setActiveField(null)}
+              suffix="%" allowNegative hint="Type to solve exit price" compact />
           </div>
 
-          {/* Results Summary */}
-          {pnl && roe && (
-            <div className={`mt-6 p-4 rounded-xl ${isProfitable ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+          {/* Results Dashboard */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <StatCard label="Position Notional" value={fmtUsd(parseNumber(positionNotional))} sub={`${leverage}x leveraged`} color="brand" />
+            <StatCard label="Liquidation Price" value={`$${liquidationPrice}`}
+              sub={`${fmt(100 - marginRatioNum, 1)}% margin remaining`}
+              color={marginRatioNum > 80 ? "red" : marginRatioNum > 50 ? "gray" : "green"} />
+            <StatCard label="Break-Even Price" value={`$${breakEvenPrice}`} sub="After fees + funding" color="gray" />
+            <StatCard label="Margin Ratio"
+              value={`${marginRatio}%`}
+              sub={marginRatioNum > 80 ? "Danger zone" : marginRatioNum > 50 ? "Caution" : "Healthy"}
+              color={marginRatioNum > 80 ? "red" : marginRatioNum > 50 ? "gray" : "green"} />
+          </div>
+
+          {/* Cost Breakdown */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
+            <StatCard label="Entry Fee" value={`-$${entryFee}`} sub={`${entryFeeRate}%`} color="red" />
+            <StatCard label="Exit Fee" value={`-$${exitFee}`} sub={`${exitFeeRate}%`} color="red" />
+            <StatCard label="Total Fees" value={`-$${totalFees}`} color="red" />
+            <StatCard label={`Funding (${durationHours}h)`}
+              value={`${totalFundingNum > 0 ? "-" : totalFundingNum < 0 ? "+" : ""}$${Math.abs(totalFundingNum).toFixed(2)}`}
+              sub={totalFundingNum > 0 ? "You pay" : totalFundingNum < 0 ? "You earn" : "Neutral"}
+              color={totalFundingNum > 0 ? "red" : totalFundingNum < 0 ? "green" : "gray"} />
+            <StatCard label="Gross PNL" value={`${parseNumber(pnl) >= 0 ? "+" : ""}$${pnl}`}
+              sub="Before costs" color={parseNumber(pnl) >= 0 ? "green" : "red"} />
+            <StatCard label="Gross ROE" value={`${parseNumber(roe) >= 0 ? "+" : ""}${roe}%`}
+              sub="Before costs" color={parseNumber(roe) >= 0 ? "green" : "red"} />
+          </div>
+
+          {/* Net Result Banner */}
+          {netPnl && netRoe && (
+            <div className={`p-4 rounded-xl border-2 ${netPnlNum >= 0 ? "bg-green-50 border-green-300" : "bg-red-50 border-red-300"}`}>
               <div className="flex items-center gap-3">
-                {isProfitable ? (
-                  <TrendingUp className="h-8 w-8 text-green-600" />
+                {netPnlNum >= 0 ? (
+                  <div className="p-2 rounded-full bg-green-100">
+                    <TrendingUp className="h-6 w-6 text-green-600" />
+                  </div>
                 ) : (
-                  <TrendingDown className="h-8 w-8 text-red-600" />
+                  <div className="p-2 rounded-full bg-red-100">
+                    <TrendingDown className="h-6 w-6 text-red-600" />
+                  </div>
                 )}
-                <div>
-                  <p className={`text-lg font-bold ${isProfitable ? "text-green-700" : "text-red-700"}`}>
-                    {isProfitable ? "+" : ""}{pnl} USDC ({isProfitable ? "+" : ""}{roe}%)
+                <div className="flex-1">
+                  <p className={`text-xl font-bold ${netPnlNum >= 0 ? "text-green-700" : "text-red-700"}`}>
+                    {netPnlNum >= 0 ? "+" : ""}{fmtUsd(netPnlNum)} ({netPnlNum >= 0 ? "+" : ""}{netRoe}%)
                   </p>
-                  <p className={`text-sm ${isProfitable ? "text-green-600" : "text-red-600"}`}>
-                    {isProfitable ? "Potential Profit" : "Potential Loss"} at ${exitPrice}
+                  <p className="text-sm text-gray-600">
+                    Net {netPnlNum >= 0 ? "profit" : "loss"} at ${exitPrice} after {durationHours}h
+                    <span className="text-gray-400"> — fees: ${totalFees}, funding: ${Math.abs(totalFundingNum).toFixed(2)}</span>
                   </p>
+                </div>
+                <div className="text-right hidden md:block">
+                  <p className="text-xs text-gray-500">Break-even</p>
+                  <p className="text-sm font-semibold text-gray-700">${breakEvenPrice}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Disclaimer */}
-          <p className="mt-6 text-xs text-gray-500 leading-relaxed">
-            Initial margin may not be equal to the actual margin required to place an order. 
-            Actual margin required = initial margin + open loss, where open loss reflects 
-            the additional cost due to the difference between order price and mark price.
+          <p className="mt-5 text-[11px] text-gray-400 leading-relaxed">
+            Calculations are estimates. Actual margin = initial margin + open loss (difference between order price and mark price).
+            Liquidation price is simplified and may vary with cross-margin, insurance fund, and maintenance margin requirements.
+            Fee rates shown are Hyperliquid defaults — adjust for your VIP tier. Funding rate compounds each hour and may fluctuate.
           </p>
         </div>
 
         {/* CTA */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <a
-            href="https://dydx.exchange/r/SABZRJKF"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full text-center py-3 px-6 bg-[#FF455B] hover:bg-[#E63B50] text-white font-medium rounded-lg transition-colors"
-          >
+          <a href="https://dydx.exchange/r/SABZRJKF" target="_blank" rel="noopener noreferrer"
+            className="block w-full text-center py-3 px-6 bg-brand hover:bg-brand-hover text-white font-medium rounded-lg transition-colors">
             Trade @ dYdX — Get 5% Off Fees
           </a>
         </div>

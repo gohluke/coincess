@@ -14,6 +14,7 @@ import {
   type CandlestickSeriesOptions,
   type HistogramSeriesOptions,
 } from "lightweight-charts";
+import { BRAND } from "@/lib/brand";
 import { fetchCandles } from "@/lib/hyperliquid/api";
 import { getWs } from "@/lib/hyperliquid/websocket";
 import { useTradingStore } from "@/lib/hyperliquid/store";
@@ -28,6 +29,12 @@ const INTERVALS: { label: string; value: CandleInterval }[] = [
   { label: "1D", value: "1d" },
   { label: "1W", value: "1w" },
 ];
+
+// Shift UTC epoch seconds → local epoch seconds so the chart axis shows local time
+const TZ_OFFSET_SEC = -(new Date().getTimezoneOffset() * 60);
+function toLocal(utcMs: number): UTCTimestamp {
+  return (utcMs / 1000 + TZ_OFFSET_SEC) as UTCTimestamp;
+}
 
 export function TradingChart() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,8 +66,8 @@ export function TradingChart() {
         horzLines: { color: "#1a1d26" },
       },
       crosshair: {
-        vertLine: { color: "#FF455B", width: 1, style: 3 },
-        horzLine: { color: "#FF455B", width: 1, style: 3 },
+        vertLine: { color: BRAND.hex, width: 1, style: 3 },
+        horzLine: { color: BRAND.hex, width: 1, style: 3 },
       },
       rightPriceScale: {
         borderColor: "#2a2e39",
@@ -129,14 +136,14 @@ export function TradingChart() {
     fetchCandles(selectedMarket, selectedInterval, startTime, now)
       .then((candles) => {
         const candleData: CandlestickData[] = candles.map((c) => ({
-          time: (c.t / 1000) as UTCTimestamp,
+          time: toLocal(c.t),
           open: parseFloat(c.o),
           high: parseFloat(c.h),
           low: parseFloat(c.l),
           close: parseFloat(c.c),
         }));
         const volumeData: HistogramData[] = candles.map((c) => ({
-          time: (c.t / 1000) as UTCTimestamp,
+          time: toLocal(c.t),
           value: parseFloat(c.v) * parseFloat(c.c),
           color: parseFloat(c.c) >= parseFloat(c.o) ? "#0ecb8133" : "#f6465d33",
         }));
@@ -151,14 +158,14 @@ export function TradingChart() {
       const candles = Array.isArray(data) ? data : [data];
       for (const c of candles) {
         series.update({
-          time: (c.t / 1000) as UTCTimestamp,
+          time: toLocal(c.t),
           open: parseFloat(c.o),
           high: parseFloat(c.h),
           low: parseFloat(c.l),
           close: parseFloat(c.c),
         });
         volume.update({
-          time: (c.t / 1000) as UTCTimestamp,
+          time: toLocal(c.t),
           value: parseFloat(c.v) * parseFloat(c.c),
           color: parseFloat(c.c) >= parseFloat(c.o) ? "#0ecb8133" : "#f6465d33",
         });
@@ -177,7 +184,7 @@ export function TradingChart() {
             onClick={() => setInterval(iv.value)}
             className={`px-2.5 py-1 text-xs rounded transition-colors ${
               selectedInterval === iv.value
-                ? "bg-[#FF455B] text-white"
+                ? "bg-brand text-white"
                 : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
             }`}
           >

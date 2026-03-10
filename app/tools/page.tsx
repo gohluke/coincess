@@ -111,7 +111,7 @@ export default function ToolsPage() {
             <Link
               key={t.href}
               href={t.href}
-              className="group relative bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/40 rounded-2xl p-5 transition-all hover:shadow-lg hover:shadow-[#FF455B]/5"
+              className="group relative bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-2xl p-5 transition-all hover:shadow-lg hover:shadow-brand/5"
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${t.accent} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity`}
@@ -134,7 +134,7 @@ export default function ToolsPage() {
                     </span>
                   ))}
                 </div>
-                <span className="mt-3 flex items-center gap-1 text-xs font-medium text-[#FF455B] opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="mt-3 flex items-center gap-1 text-xs font-medium text-brand opacity-0 group-hover:opacity-100 transition-opacity">
                   Open <ArrowRight className="h-3 w-3" />
                 </span>
               </div>
@@ -151,7 +151,7 @@ export default function ToolsPage() {
           </h2>
           <Link
             href="/blog"
-            className="text-xs text-[#FF455B] hover:text-[#FF8A97] font-medium transition-colors flex items-center gap-1"
+            className="text-xs text-brand hover:text-brand-hover font-medium transition-colors flex items-center gap-1"
           >
             View all <ArrowRight className="h-3 w-3" />
           </Link>
@@ -161,9 +161,9 @@ export default function ToolsPage() {
             <Link
               key={g.href}
               href={g.href}
-              className="flex items-center gap-4 bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/40 rounded-xl px-4 py-3.5 transition-colors group"
+              className="flex items-center gap-4 bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-xl px-4 py-3.5 transition-colors group"
             >
-              <g.icon className="h-5 w-5 text-[#848e9c] group-hover:text-[#FF455B] transition-colors shrink-0" />
+              <g.icon className="h-5 w-5 text-[#848e9c] group-hover:text-brand transition-colors shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h3 className="text-sm font-semibold text-white truncate">
@@ -175,7 +175,7 @@ export default function ToolsPage() {
                 </div>
                 <p className="text-xs text-[#848e9c] truncate">{g.desc}</p>
               </div>
-              <ArrowRight className="h-3.5 w-3.5 text-[#2a2e3e] group-hover:text-[#FF455B] transition-colors shrink-0" />
+              <ArrowRight className="h-3.5 w-3.5 text-[#2a2e3e] group-hover:text-brand transition-colors shrink-0" />
             </Link>
           ))}
         </div>

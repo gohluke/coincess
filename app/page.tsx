@@ -92,7 +92,7 @@ export default function Home() {
       <section className="relative overflow-hidden">
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-12 md:pt-28 md:pb-20 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF455B]/10 border border-[#FF455B]/20 text-[#FF8A97] text-xs font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand-hover text-xs font-medium mb-6">
             <Zap className="h-3 w-3" />
             Built on Hyperliquid
           </div>
@@ -100,7 +100,7 @@ export default function Home() {
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-[1.1] tracking-tight mb-6">
             Trade. Predict.
             <br />
-            <span className="bg-gradient-to-r from-[#FF455B] to-[#FF8A97] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-brand to-brand-hover bg-clip-text text-transparent">
               Automate.
             </span>
           </h1>
@@ -113,14 +113,14 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/trade"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF455B] hover:bg-[#E63B50] text-white font-semibold text-sm transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-[#FF455B]/25"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand hover:bg-brand-hover text-white font-semibold text-sm transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-brand/25"
             >
               Start Trading
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/coins"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/50 text-white font-semibold text-sm transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#141620] border border-[#2a2e3e] hover:border-brand/50 text-white font-semibold text-sm transition-all"
             >
               Explore Markets
             </Link>
@@ -144,7 +144,7 @@ export default function Home() {
             <Link
               key={f.href}
               href={f.href}
-              className="group relative bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/40 rounded-2xl p-6 transition-all hover:shadow-lg hover:shadow-[#FF455B]/5"
+              className="group relative bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-2xl p-6 transition-all hover:shadow-lg hover:shadow-brand/5"
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${f.accent} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity`}
@@ -157,7 +157,7 @@ export default function Home() {
                 <p className="text-sm text-[#848e9c] leading-relaxed">
                   {f.desc}
                 </p>
-                <span className="mt-4 flex items-center gap-1 text-xs font-medium text-[#FF455B] opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="mt-4 flex items-center gap-1 text-xs font-medium text-brand opacity-0 group-hover:opacity-100 transition-opacity">
                   Explore <ArrowRight className="h-3 w-3" />
                 </span>
               </div>
@@ -174,7 +174,7 @@ export default function Home() {
               key={s.label}
               className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 text-center"
             >
-              <s.icon className="h-5 w-5 text-[#FF455B] mx-auto mb-2" />
+              <s.icon className="h-5 w-5 text-brand mx-auto mb-2" />
               <p className="text-xl md:text-2xl font-bold text-white">
                 {s.value}
               </p>
@@ -196,9 +196,9 @@ export default function Home() {
             <Link
               key={t.href}
               href={t.href}
-              className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/40 rounded-xl p-4 transition-colors"
+              className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-xl p-4 transition-colors"
             >
-              <t.icon className="h-5 w-5 text-[#FF455B] shrink-0" />
+              <t.icon className="h-5 w-5 text-brand shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-white">{t.title}</p>
                 <p className="text-[11px] text-[#848e9c]">{t.desc}</p>

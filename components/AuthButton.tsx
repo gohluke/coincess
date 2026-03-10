@@ -84,7 +84,7 @@ function AuthButtonInner({
     return (
       <button
         onClick={() => privy!.login()}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#FF455B] hover:bg-[#E63B50] text-white text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-95"
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand hover:bg-brand-hover text-white text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-95"
       >
         Sign In
       </button>
@@ -102,7 +102,7 @@ function AuthButtonInner({
     <div className="relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-[#FF455B] to-[#FF5C6E] hover:opacity-90 transition-opacity"
+        className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-brand to-[#FF5C6E] hover:opacity-90 transition-opacity"
         title={displayName}
       >
         <span className="text-xs font-bold text-white leading-none">{avatarLetter}</span>
@@ -115,7 +115,7 @@ function AuthButtonInner({
             {/* User info */}
             <div className="px-4 py-3 border-b border-[#2a2e3e]">
               <div className="flex items-center gap-2.5 mb-1">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF455B] to-[#FF5C6E] flex items-center justify-center text-xs font-bold text-white">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand to-[#FF5C6E] flex items-center justify-center text-xs font-bold text-white">
                   {avatarLetter}
                 </div>
                 <div className="min-w-0">

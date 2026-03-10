@@ -121,10 +121,21 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Activity formatters** — trade closes, position opens, and daily PnL summaries formatted for Dayze's activity feed
 - **Batch sync** — push multiple activities in a single request via `/api/dayze/sync`
 
+### Leverage Calculator (`/crypto-leverage-calculator`)
+- **Industry-grade perpetual futures calculator** with interactive position planning
+- **Maker/taker fee toggle** — Hyperliquid defaults (0.01% maker, 0.035% taker), fully customizable entry & exit rates
+- **Hourly funding rate** — calculates total funding cost over configurable trade duration (hours)
+- **Break-even price** — exact price needed to cover all fees + funding before you profit
+- **Liquidation price** — simplified liq estimate with margin ratio health indicator
+- **Position notional** — shows actual dollar exposure at your leverage
+- **Net PNL & Net ROE** — after subtracting trading fees + funding, not just gross numbers
+- **Interactive solver** — click into Margin (auto-sizes position), PNL (solves exit price), or ROE (solves exit price); all update live as you type
+- **Cost breakdown dashboard** — entry fee, exit fee, total fees, funding cost, gross vs net PNL at a glance
+- **Math reference section** — explains every formula used in the calculator
+
 ### Content & SEO
 - Landing page with crypto education content
 - Blog with articles on wallets, privacy, swapping
-- Crypto leverage calculator tool
 - SEO-optimized pages with sitemap and schema.org markup
 
 ## Tech Stack

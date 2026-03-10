@@ -190,7 +190,7 @@ export function MarketSelector() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={`Search ${totalCount} markets — crypto, stocks, commodities, forex...`}
-                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-[#FF455B]"
+                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand"
               />
             </div>
           </div>
@@ -202,7 +202,7 @@ export function MarketSelector() {
                 onClick={() => setCategory(cat.id)}
                 className={`px-2.5 py-1 text-[11px] rounded-md whitespace-nowrap transition-colors ${
                   category === cat.id
-                    ? "bg-[#FF455B] text-white"
+                    ? "bg-brand text-white"
                     : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
                 }`}
               >

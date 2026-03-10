@@ -18,6 +18,10 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        brand: {
+          DEFAULT: "rgb(var(--brand) / <alpha-value>)",
+          hover: "rgb(var(--brand-hover) / <alpha-value>)",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

@@ -138,7 +138,7 @@ export function TopCoins() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Coins className="h-5 w-5 text-[#FF455B]" />
+          <Coins className="h-5 w-5 text-brand" />
           <h2 className="text-sm font-semibold">Top 100 by Market Cap</h2>
           <span className="text-[10px] text-[#848e9c]">via CoinGecko</span>
         </div>
@@ -150,7 +150,7 @@ export function TopCoins() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name or symbol..."
-          className="w-full sm:max-w-xs bg-[#141620] border border-[#2a2e3e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-[#FF455B]"
+          className="w-full sm:max-w-xs bg-[#141620] border border-[#2a2e3e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand"
         />
       </div>
 
@@ -257,7 +257,7 @@ export function TopCoins() {
                     href={`https://trocador.app/?ticker_to=${c.symbol.toLowerCase()}&ref=2dzDcvfQJY`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#FF455B] hover:bg-[#E63B50] rounded-lg text-[10px] font-semibold text-white transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-brand hover:bg-brand-hover rounded-lg text-[10px] font-semibold text-white transition-colors"
                   >
                     <ShoppingCart className="h-3 w-3" />
                     Buy

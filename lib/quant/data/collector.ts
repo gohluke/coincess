@@ -40,6 +40,7 @@ export class DataCollector {
   private timer: ReturnType<typeof setInterval> | null = null;
   private coins: string[] = [];
   private hip3Coins: Map<string, string> = new Map(); // display name -> @N pair name
+  private xyzCoins: Map<string, number> = new Map(); // xyz:NAME -> xyz asset index
 
   constructor() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -73,7 +74,7 @@ export class DataCollector {
   }
 
   /** Discover all available markets from Hyperliquid */
-  private async discoverMarkets(): Promise<void> {
+  async discoverMarkets(): Promise<void> {
     const [metaRes, spotMetaRes] = await Promise.all([
       fetch(`${HL_API}/info`, {
         method: "POST",
@@ -110,9 +111,32 @@ export class DataCollector {
       }
     }
 
-    this.coins = [...perpCoins, ...Array.from(this.hip3Coins.keys())];
+    // Discover xyz commodity perps (GOLD, SILVER, BRENTOIL)
+    try {
+      const xyzRes = await fetch(`${HL_API}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "meta", dex: "xyz" }),
+      });
+      const xyzMeta = (await xyzRes.json()) as { universe: Array<{ name: string }> };
+      const XYZ_RWA = new Set(["GOLD", "SILVER", "BRENTOIL"]);
+      for (let i = 0; i < xyzMeta.universe.length; i++) {
+        const name = xyzMeta.universe[i].name;
+        if (XYZ_RWA.has(name)) {
+          this.xyzCoins.set(`xyz:${name}`, i);
+        }
+      }
+    } catch (err) {
+      console.error("[collector] XYZ discovery failed:", (err as Error).message);
+    }
+
+    this.coins = [
+      ...perpCoins,
+      ...Array.from(this.hip3Coins.keys()),
+      ...Array.from(this.xyzCoins.keys()),
+    ];
     console.log(
-      `[collector] Tracking ${perpCoins.length} perps + ${this.hip3Coins.size} HIP-3 stocks = ${this.coins.length} total`,
+      `[collector] Tracking ${perpCoins.length} perps + ${this.hip3Coins.size} HIP-3 stocks + ${this.xyzCoins.size} xyz commodities = ${this.coins.length} total`,
     );
   }
 
@@ -145,8 +169,21 @@ export class DataCollector {
     startTime: number,
     endTime: number,
   ): Promise<number> {
-    const candleCoin = this.hip3Coins.get(coin) ?? coin;
+    const isXyz = coin.startsWith("xyz:");
     const isSpot = this.hip3Coins.has(coin);
+    let candleCoin: string;
+    let dex = "perp";
+
+    if (isXyz) {
+      // xyz perps use "xyz:GOLD" format directly in candle API
+      candleCoin = coin;
+      dex = "xyz";
+    } else if (isSpot) {
+      candleCoin = this.hip3Coins.get(coin) ?? coin;
+      dex = "spot";
+    } else {
+      candleCoin = coin;
+    }
 
     const res = await fetch(`${HL_API}/info`, {
       method: "POST",
@@ -169,7 +206,7 @@ export class DataCollector {
       c: parseFloat(c.c),
       v: parseFloat(c.v),
       n: c.n,
-      dex: isSpot ? "spot" : "perp",
+      dex,
     }));
 
     const { error } = await this.supabase
@@ -197,6 +234,9 @@ export class DataCollector {
 
   /** Backfill historical candles for a specific coin */
   async backfill(coin: string, days = 30, interval = "5m"): Promise<number> {
+    if (this.hip3Coins.size === 0 && this.xyzCoins.size === 0) {
+      await this.discoverMarkets();
+    }
     const safeDays = Math.min(days, MAX_BACKFILL_DAYS);
     const now = Date.now();
     const startTime = now - safeDays * 24 * 60 * 60 * 1000;

@@ -37,7 +37,7 @@ function NavIcon({ href, label, icon: Icon, active }: {
       <div
         className={`flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
           active
-            ? "bg-[#FF455B]/12 border-[#FF455B]/25 text-[#FF455B]"
+            ? "bg-brand/12 border-brand/25 text-brand"
             : "bg-[#1a1d26] border-[#2a2e3e] text-[#848e9c] hover:bg-[#252830] hover:text-white"
         }`}
       >
@@ -148,7 +148,7 @@ export function Navbar() {
                       href={href}
                       className={`flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors ${
                         active
-                          ? "text-[#FF455B] bg-[#FF455B]/8"
+                          ? "text-brand bg-brand/8"
                           : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
                       }`}
                     >

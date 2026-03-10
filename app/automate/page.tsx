@@ -111,7 +111,7 @@ export default function AutomatePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-semibold flex items-center gap-2">
-              <Bot className="h-4 w-4 text-[#FF455B]" />
+              <Bot className="h-4 w-4 text-brand" />
               Automation
             </h1>
             <div className="flex items-center bg-[#141620] rounded-lg p-0.5">
@@ -119,7 +119,7 @@ export default function AutomatePage() {
                 onClick={() => setTab("server")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   tab === "server"
-                    ? "bg-[#FF455B]/20 text-[#FF455B]"
+                    ? "bg-brand/20 text-brand"
                     : "text-[#848e9c] hover:text-white"
                 }`}
               >
@@ -130,7 +130,7 @@ export default function AutomatePage() {
                 onClick={() => setTab("browser")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   tab === "browser"
-                    ? "bg-[#FF455B]/20 text-[#FF455B]"
+                    ? "bg-brand/20 text-brand"
                     : "text-[#848e9c] hover:text-white"
                 }`}
               >
@@ -141,7 +141,7 @@ export default function AutomatePage() {
                 onClick={() => setTab("lab")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   tab === "lab"
-                    ? "bg-[#FF455B]/20 text-[#FF455B]"
+                    ? "bg-brand/20 text-brand"
                     : "text-[#848e9c] hover:text-white"
                 }`}
               >
@@ -275,7 +275,7 @@ function ServerStrategies({ address }: { address: string | null }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Zap className="h-5 w-5 text-[#FF455B]" />
+          <Zap className="h-5 w-5 text-brand" />
           <span className="text-sm font-semibold text-white">Quant Engine</span>
           <span
             className="px-2 py-0.5 rounded text-[10px] font-medium"
@@ -354,7 +354,7 @@ function ServerStrategies({ address }: { address: string | null }) {
           <h2 className="text-sm font-semibold text-white">Server Strategies</h2>
           <button
             onClick={() => setAddingStrategy(!addingStrategy)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-[#FF455B]/15 text-[#FF455B] hover:bg-[#FF455B]/25 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-brand/15 text-brand hover:bg-brand/25 transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
             Add Strategy
@@ -367,7 +367,7 @@ function ServerStrategies({ address }: { address: string | null }) {
               <button
                 key={type}
                 onClick={() => addStrategy(type)}
-                className="p-3 rounded-xl border border-[#2a2e39] bg-[#12141a] hover:border-[#FF455B]/40 transition-colors text-left"
+                className="p-3 rounded-xl border border-[#2a2e39] bg-[#12141a] hover:border-brand/40 transition-colors text-left"
               >
                 <span className="text-lg">{emoji}</span>
                 <p className="text-xs text-white mt-1">{name}</p>
@@ -500,7 +500,7 @@ function ServerStrategies({ address }: { address: string | null }) {
                       }`}>
                         {trade.side.toUpperCase()}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#FF455B]/15 text-[#FF455B] font-medium flex items-center gap-0.5">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand/15 text-brand font-medium flex items-center gap-0.5">
                         <Bot className="h-2.5 w-2.5" /> {meta.emoji} {meta.name}
                       </span>
                       <span className="text-sm font-semibold">{trade.coin}</span>
@@ -603,7 +603,7 @@ function ServerStrategies({ address }: { address: string | null }) {
                   <span className="text-right text-white">${entryPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
                   <span className="text-right text-white">
                     {trade.exit_px ? `$${Number(trade.exit_px).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : isOpen && markPx > 0 ? (
-                      <span className="text-[#FF455B]">${markPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                      <span className="text-brand">${markPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
                     ) : "—"}
                   </span>
                   <span className={`text-right font-medium ${(pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
@@ -657,7 +657,7 @@ function BrowserBots() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Monitor className="h-5 w-5 text-[#FF455B]" />
+          <Monitor className="h-5 w-5 text-brand" />
           <span className="text-sm font-semibold text-white">Browser Engine</span>
           <button
             onClick={toggleEngine}
@@ -673,7 +673,7 @@ function BrowserBots() {
         </div>
         <Link
           href="/automate/create"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FF455B]/15 text-[#FF455B] hover:bg-[#FF455B]/25 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-brand/15 text-brand hover:bg-brand/25 transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
           New Strategy
@@ -690,7 +690,7 @@ function BrowserBots() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <MiniStat icon={<Bot className="h-4 w-4 text-[#FF455B]" />} label="Strategies" value={strategies.length.toString()} />
+        <MiniStat icon={<Bot className="h-4 w-4 text-brand" />} label="Strategies" value={strategies.length.toString()} />
         <MiniStat icon={<Zap className="h-4 w-4 text-emerald-400" />} label="Active" value={activeCount.toString()} />
         <MiniStat icon={<BarChart3 className="h-4 w-4 text-blue-400" />} label="Total Trades" value={totalTrades.toString()} />
         <MiniStat icon={<Activity className="h-4 w-4 text-amber-400" />} label="Engine" value={engineRunning ? "Running" : "Stopped"} />
@@ -706,7 +706,7 @@ function BrowserBots() {
             <div className="text-center py-12 border border-dashed border-[#2a2e3e] rounded-xl">
               <Bot className="h-10 w-10 mx-auto mb-3 text-[#2a2e3e]" />
               <p className="text-sm text-[#848e9c] mb-3">No browser strategies yet</p>
-              <Link href="/automate/create" className="text-sm text-[#FF455B] hover:underline">Create your first strategy</Link>
+              <Link href="/automate/create" className="text-sm text-brand hover:underline">Create your first strategy</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -821,7 +821,7 @@ function QuantLab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <FlaskConical className="h-5 w-5 text-[#FF455B]" />
+          <FlaskConical className="h-5 w-5 text-brand" />
           <span className="text-sm font-semibold text-white">Quant Lab</span>
           <span className="text-[10px] text-[#4a4e59]">Backtesting + Analytics</span>
         </div>
@@ -865,7 +865,7 @@ function QuantLab() {
       {/* Run Backtest Panel */}
       <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a] space-y-4">
         <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          <Play className="h-4 w-4 text-[#FF455B]" />
+          <Play className="h-4 w-4 text-brand" />
           Run Backtest
         </h3>
         <div className="flex flex-wrap items-end gap-3">
@@ -874,7 +874,7 @@ function QuantLab() {
             <select
               value={btStrategy}
               onChange={(e) => setBtStrategy(e.target.value)}
-              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF455B]"
+              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
             >
               <option value="momentum">Momentum Scalper</option>
               <option value="grid">Grid Bot</option>
@@ -889,7 +889,7 @@ function QuantLab() {
             <select
               value={btDays}
               onChange={(e) => setBtDays(Number(e.target.value))}
-              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF455B]"
+              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
             >
               <option value={3}>3 days</option>
               <option value={7}>7 days</option>
@@ -900,7 +900,7 @@ function QuantLab() {
           <button
             onClick={runBacktest}
             disabled={runningBacktest || totalCandles < 10}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs bg-[#FF455B] text-white hover:bg-[#FF455B]/80 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs bg-brand text-white hover:bg-brand/80 transition-colors disabled:opacity-40"
           >
             {runningBacktest ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
             {runningBacktest ? "Running..." : "Run Backtest"}
@@ -965,7 +965,7 @@ function QuantLab() {
                     onClick={() => setSelectedBacktest(isSelected ? null : bt)}
                     className={`w-full text-left p-4 rounded-xl border transition-all ${
                       isSelected
-                        ? "border-[#FF455B]/40 bg-[#FF455B]/5"
+                        ? "border-brand/40 bg-brand/5"
                         : "border-[#2a2e39] bg-[#12141a] hover:border-[#3a3e49]"
                     }`}
                   >
@@ -1010,7 +1010,7 @@ function QuantLab() {
 
                   {/* Expanded details */}
                   {isSelected && (
-                    <div className="ml-4 mr-4 -mt-1 p-4 rounded-b-xl border border-t-0 border-[#FF455B]/20 bg-[#0d0f14] space-y-4">
+                    <div className="ml-4 mr-4 -mt-1 p-4 rounded-b-xl border border-t-0 border-brand/20 bg-[#0d0f14] space-y-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <DetailMetric label="Total P&L" value={`$${bt.total_pnl.toFixed(2)}`} />
                         <DetailMetric label="Winning" value={`${bt.winning_trades}/${bt.total_trades}`} />

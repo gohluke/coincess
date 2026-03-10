@@ -28,26 +28,26 @@ export default function Crypto101() {
       <div className="not-prose my-10">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-[#FF455B] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Wallet className="h-8 w-8 text-white" />
             </div>
-            <div className="text-3xl font-bold text-[#FF455B] mb-2">Step 1</div>
+            <div className="text-3xl font-bold text-brand mb-2">Step 1</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Get a Wallet</h3>
             <p className="text-sm text-gray-600">Download an app to store your crypto</p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-[#FF455B] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
               <ArrowRightLeft className="h-8 w-8 text-white" />
             </div>
-            <div className="text-3xl font-bold text-[#FF455B] mb-2">Step 2</div>
+            <div className="text-3xl font-bold text-brand mb-2">Step 2</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Get Crypto</h3>
             <p className="text-sm text-gray-600">Buy, receive, or swap for your first coins</p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-[#FF455B] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
               <PartyPopper className="h-8 w-8 text-white" />
             </div>
-            <div className="text-3xl font-bold text-[#FF455B] mb-2">Step 3</div>
+            <div className="text-3xl font-bold text-brand mb-2">Step 3</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">You're Done!</h3>
             <p className="text-sm text-gray-600">You now own cryptocurrency</p>
           </div>
@@ -77,9 +77,9 @@ export default function Crypto101() {
         <li>Swap between different cryptocurrencies</li>
       </ul>
 
-      <div className="not-prose my-8 bg-[#FF455B]/5 border border-[#FF455B]/20 rounded-xl p-6">
+      <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-[#FF455B]" />
+          <Sparkles className="h-5 w-5 text-brand" />
           Our Recommendation: Cake Wallet
         </h3>
         <p className="text-gray-700 mb-4">
@@ -297,24 +297,24 @@ export default function Crypto101() {
         
         <Link
           href="/blog/hot-wallets-vs-cold-wallets"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#FF455B]/50 hover:bg-[#FF455B]/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">Hot vs Cold Wallets</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-brand">Hot vs Cold Wallets</h4>
             <p className="text-gray-600 text-sm">Learn about wallet security for when your holdings grow</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
+          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
         </Link>
 
         <Link
           href="/blog/why-privacy-matters-anonymous-crypto"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#FF455B]/50 hover:bg-[#FF455B]/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">Why Privacy Matters</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-brand">Why Privacy Matters</h4>
             <p className="text-gray-600 text-sm">Understand why some people prefer private cryptocurrencies</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
+          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

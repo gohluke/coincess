@@ -55,12 +55,12 @@ function WalletCard({
     <div
       className={`relative p-4 rounded-xl border transition-all ${
         isActive
-          ? "border-[#FF455B] bg-[#FF455B]/5"
+          ? "border-brand bg-brand/5"
           : "border-[#2a2e39] bg-[#141620] hover:border-[#3a3e49]"
       }`}
     >
       {isActive && (
-        <div className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-bold text-[#FF455B] uppercase tracking-wider">
+        <div className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-bold text-brand uppercase tracking-wider">
           <Radio className="h-3 w-3" />
           Active
         </div>
@@ -69,10 +69,10 @@ function WalletCard({
       <div className="flex items-start gap-3">
         <div
           className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-            isActive ? "bg-[#FF455B]/20" : "bg-[#1a1d26]"
+            isActive ? "bg-brand/20" : "bg-[#1a1d26]"
           }`}
         >
-          <Wallet className={`h-5 w-5 ${isActive ? "text-[#FF455B]" : "text-[#848e9c]"}`} />
+          <Wallet className={`h-5 w-5 ${isActive ? "text-brand" : "text-[#848e9c]"}`} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -84,7 +84,7 @@ function WalletCard({
                 onKeyDown={(e) => e.key === "Enter" && saveLabel()}
                 onBlur={saveLabel}
                 autoFocus
-                className="bg-[#0b0e11] border border-[#2a2e39] rounded px-2 py-0.5 text-sm text-white outline-none focus:border-[#FF455B] w-full"
+                className="bg-[#0b0e11] border border-[#2a2e39] rounded px-2 py-0.5 text-sm text-white outline-none focus:border-brand w-full"
               />
             </div>
           ) : (
@@ -113,7 +113,7 @@ function WalletCard({
         {!isActive && (
           <button
             onClick={onActivate}
-            className="flex-1 py-1.5 text-xs font-medium text-[#FF455B] hover:bg-[#FF455B]/10 rounded-lg transition-colors"
+            className="flex-1 py-1.5 text-xs font-medium text-brand hover:bg-brand/10 rounded-lg transition-colors"
           >
             Set Active
           </button>
@@ -157,7 +157,7 @@ function AddWalletForm({ onAdd }: { onAdd: (label: string, address: string) => v
   return (
     <form onSubmit={handleSubmit} className="p-4 rounded-xl border border-dashed border-[#2a2e39] bg-[#141620]/50 space-y-3">
       <div className="flex items-center gap-2 text-sm font-semibold text-white">
-        <Plus className="h-4 w-4 text-[#FF455B]" />
+        <Plus className="h-4 w-4 text-brand" />
         Add Wallet
       </div>
 
@@ -167,7 +167,7 @@ function AddWalletForm({ onAdd }: { onAdd: (label: string, address: string) => v
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="e.g. Main Trading, Funding Farm"
-          className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF455B] placeholder:text-[#5a6270]"
+          className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
         />
       </div>
 
@@ -179,7 +179,7 @@ function AddWalletForm({ onAdd }: { onAdd: (label: string, address: string) => v
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="0x..."
-          className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-[#FF455B] placeholder:text-[#5a6270]"
+          className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
         />
       </div>
 
@@ -187,7 +187,7 @@ function AddWalletForm({ onAdd }: { onAdd: (label: string, address: string) => v
 
       <button
         type="submit"
-        className="w-full py-2 rounded-lg bg-[#FF455B] hover:bg-[#E63B50] text-white text-sm font-semibold transition-colors"
+        className="w-full py-2 rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold transition-colors"
       >
         Add Wallet
       </button>
@@ -245,7 +245,7 @@ function ApiWalletSection() {
 
       <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620] space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-white">
-          <Key className="h-4 w-4 text-[#FF455B]" />
+          <Key className="h-4 w-4 text-brand" />
           API Wallet Configuration
         </div>
 
@@ -257,7 +257,7 @@ function ApiWalletSection() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Coincess API"
-            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF455B] placeholder:text-[#5a6270]"
+            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
           />
         </div>
 
@@ -269,7 +269,7 @@ function ApiWalletSection() {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="0x..."
-            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-[#FF455B] placeholder:text-[#5a6270]"
+            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
           />
         </div>
 
@@ -283,7 +283,7 @@ function ApiWalletSection() {
               value={privateKey}
               onChange={(e) => setPrivateKey(e.target.value)}
               placeholder="0x..."
-              className="w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-[#FF455B] placeholder:text-[#5a6270]"
+              className="w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
             />
             <button
               type="button"
@@ -300,7 +300,7 @@ function ApiWalletSection() {
         <div className="flex items-center gap-2 pt-1">
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FF455B] hover:bg-[#E63B50] text-white text-sm font-semibold transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold transition-colors"
           >
             {saved ? <Check className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
             {saved ? "Saved!" : "Save API Wallet"}
@@ -385,7 +385,7 @@ function DayzeSection() {
     <div className="space-y-4">
       <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620] space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-white">
-          <Link2 className="h-4 w-4 text-[#FF455B]" />
+          <Link2 className="h-4 w-4 text-brand" />
           Dayze Connection
         </div>
 
@@ -404,7 +404,7 @@ function DayzeSection() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="dayze_k_..."
-              className="w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-[#FF455B] placeholder:text-[#5a6270]"
+              className="w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
             />
             <button
               type="button"
@@ -424,7 +424,7 @@ function DayzeSection() {
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="https://ohmydayze.com"
-            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#FF455B] placeholder:text-[#5a6270]"
+            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
           />
         </div>
 
@@ -438,7 +438,7 @@ function DayzeSection() {
           <button
             onClick={handleSave}
             disabled={!apiKey.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FF455B] hover:bg-[#E63B50] disabled:opacity-40 text-white text-sm font-semibold transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand hover:bg-brand-hover disabled:opacity-40 text-white text-sm font-semibold transition-colors"
           >
             {saved ? <Check className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
             {saved ? "Saved!" : "Save"}
@@ -484,7 +484,7 @@ function DayzeSection() {
           <li>Log in to your Dayze account</li>
           <li>Go to Settings &rarr; Developer &rarr; API Keys</li>
           <li>Create a new key with the <strong>activity</strong> scope</li>
-          <li>Copy the key (starts with <code className="text-[#FF455B]">dayze_k_</code>) and paste above</li>
+          <li>Copy the key (starts with <code className="text-brand">dayze_k_</code>) and paste above</li>
         </ol>
       </div>
     </div>
@@ -504,8 +504,8 @@ export default function SettingsPage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#FF455B]/20 flex items-center justify-center">
-            <Settings className="h-5 w-5 text-[#FF455B]" />
+          <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center">
+            <Settings className="h-5 w-5 text-brand" />
           </div>
           <div>
             <h1 className="text-xl font-bold">Settings</h1>
@@ -517,7 +517,7 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <div>
             <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-[#FF455B]" />
+              <Wallet className="h-4 w-4 text-brand" />
               Linked Wallets
             </h2>
             <p className="text-xs text-[#848e9c] mt-1">
@@ -559,7 +559,7 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <div>
             <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <Key className="h-4 w-4 text-[#FF455B]" />
+              <Key className="h-4 w-4 text-brand" />
               Programmatic Trading (API Wallet)
             </h2>
             <p className="text-xs text-[#848e9c] mt-1">
@@ -579,7 +579,7 @@ export default function SettingsPage() {
                   href="https://app.hyperliquid.xyz/API"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#FF455B] hover:underline"
+                  className="text-brand hover:underline"
                 >
                   app.hyperliquid.xyz/API
                 </a>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <div>
             <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-[#FF455B]" />
+              <Link2 className="h-4 w-4 text-brand" />
               Dayze Integration
             </h2>
             <p className="text-xs text-[#848e9c] mt-1">

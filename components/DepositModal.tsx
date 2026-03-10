@@ -421,11 +421,11 @@ function MethodsStep({
         rel="noopener noreferrer"
         className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
       >
-        <div className="w-9 h-9 rounded-full bg-[#FF455B]/15 flex items-center justify-center shrink-0">
-          <CreditCard className="h-4 w-4 text-[#FF455B]" />
+        <div className="w-9 h-9 rounded-full bg-brand/15 flex items-center justify-center shrink-0">
+          <CreditCard className="h-4 w-4 text-brand" />
         </div>
         <div className="flex-1 text-left">
-          <p className="text-xs font-semibold text-white group-hover:text-[#FF455B] transition-colors">Deposit with Card</p>
+          <p className="text-xs font-semibold text-white group-hover:text-brand transition-colors">Deposit with Card</p>
           <p className="text-[11px] text-[#848e9c]">$20,000 &middot; 5 min</p>
         </div>
         <div className="flex items-center gap-1.5">
@@ -489,7 +489,7 @@ function TokensStep({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <Loader2 className="h-6 w-6 text-[#FF455B] animate-spin" />
+        <Loader2 className="h-6 w-6 text-brand animate-spin" />
         <p className="text-xs text-[#848e9c]">Loading wallet balances...</p>
       </div>
     );
@@ -593,7 +593,7 @@ function AmountStep({
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         placeholder="0.00"
-        className="w-full text-center bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 text-sm text-white font-medium focus:border-[#FF455B] focus:outline-none transition-colors mb-4"
+        className="w-full text-center bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 text-sm text-white font-medium focus:border-brand focus:outline-none transition-colors mb-4"
         step="any"
         min="0"
         max={token.balance}

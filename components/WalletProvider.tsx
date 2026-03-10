@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { BRAND } from "@/lib/brand";
 
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
@@ -17,7 +18,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           config={{
             appearance: {
               theme: "dark",
-              accentColor: "#FF455B",
+              accentColor: BRAND.hex,
               logo: "/assets/coincess-icon.png",
               showWalletLoginFirst: false,
             },

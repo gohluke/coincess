@@ -19,7 +19,7 @@ export default function BlogPage() {
         <div className="py-12 md:py-20">
           {/* Hero Section */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF455B]/10 rounded-full text-[#FF455B] text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 rounded-full text-brand text-sm font-medium mb-6">
               <BookOpen className="h-4 w-4" />
               Learn & Explore
             </div>
@@ -38,7 +38,7 @@ export default function BlogPage() {
           {/* News Feed Section */}
           <div className="border-t border-gray-200 pt-12">
             <div className="flex items-center gap-2 mb-6">
-              <Rss className="h-5 w-5 text-[#FF455B]" />
+              <Rss className="h-5 w-5 text-brand" />
               <h2 className="text-2xl font-bold text-gray-900">Latest Crypto News</h2>
             </div>
             <p className="text-gray-600 mb-8">

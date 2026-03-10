@@ -28,7 +28,7 @@ export function SearchBar() {
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         placeholder="Search prediction markets…"
-        className="w-full pl-9 pr-9 py-2.5 bg-[#141620] border border-[#2a2e3e] rounded-xl text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B]/50 transition-colors"
+        className="w-full pl-9 pr-9 py-2.5 bg-[#141620] border border-[#2a2e3e] rounded-xl text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand/50 transition-colors"
       />
       {(value || searchQuery) && (
         <button

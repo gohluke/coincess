@@ -19,13 +19,13 @@ export function Header() {
 
           {/* Navigation Links - Desktop */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/trade" className="text-sm font-semibold text-[#FF455B] hover:text-[#E63B50] transition-colors">
+            <Link href="/trade" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
               Trade
             </Link>
-            <Link href="/predictions" className="text-sm font-semibold text-[#FF455B] hover:text-[#E63B50] transition-colors">
+            <Link href="/predictions" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
               Predictions
             </Link>
-            <Link href="/automate" className="text-sm font-semibold text-[#FF455B] hover:text-[#E63B50] transition-colors">
+            <Link href="/automate" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
               Automate
             </Link>
             <Link href="/coins" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
@@ -65,21 +65,21 @@ export function Header() {
           <nav className="md:hidden border-t border-gray-100 py-4 space-y-4">
             <Link
               href="/trade"
-              className="block px-4 text-sm font-semibold text-[#FF455B] hover:text-[#E63B50] transition-colors"
+              className="block px-4 text-sm font-semibold text-brand hover:text-brand-hover transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Trade
             </Link>
             <Link
               href="/predictions"
-              className="block px-4 text-sm font-semibold text-[#FF455B] hover:text-[#E63B50] transition-colors"
+              className="block px-4 text-sm font-semibold text-brand hover:text-brand-hover transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Predictions
             </Link>
             <Link
               href="/automate"
-              className="block px-4 text-sm font-semibold text-[#FF455B] hover:text-[#E63B50] transition-colors"
+              className="block px-4 text-sm font-semibold text-brand hover:text-brand-hover transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Automate

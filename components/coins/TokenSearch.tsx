@@ -64,7 +64,7 @@ export function TokenSearch() {
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Search any token by name, symbol, or contract address..."
-          className="w-full bg-[#141620] border border-[#2a2e3e] rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder:text-[#848e9c] focus:outline-none focus:border-[#FF455B] transition-colors"
+          className="w-full bg-[#141620] border border-[#2a2e3e] rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand transition-colors"
         />
         {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#848e9c] animate-spin" />}
       </div>

@@ -23,6 +23,7 @@ import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetc
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
+import { BRAND } from "@/lib/brand";
 import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 
 // ── Round-trip trade grouping ──────────────────────────────
@@ -308,7 +309,7 @@ export default function DashboardPage() {
       const margin = parseFloat(pos.marginUsed);
       if (margin > 0.01) items.push({ label: bare, value: margin, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
     }
-    if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: "#FF455B" });
+    if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: BRAND.hex });
     return items;
   }, [spotUsdcBalance, totalMarginUsed, availableBalance, positions, accountValue]);
 
@@ -326,8 +327,8 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-[#0b0e11] text-white flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#FF455B]/20 flex items-center justify-center mb-6">
-            <Wallet className="h-8 w-8 text-[#FF455B]" />
+          <div className="w-16 h-16 rounded-2xl bg-brand/20 flex items-center justify-center mb-6">
+            <Wallet className="h-8 w-8 text-brand" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Welcome to Coincess</h1>
           <p className="text-sm text-[#848e9c] mb-8 max-w-sm">
@@ -335,7 +336,7 @@ export default function DashboardPage() {
           </p>
           <button
             onClick={connect}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#FF455B] hover:bg-[#E63B50] text-white font-semibold text-sm transition-colors shadow-lg shadow-[#FF455B]/25"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand hover:bg-brand-hover text-white font-semibold text-sm transition-colors shadow-lg shadow-brand/25"
           >
             <LogIn className="h-4 w-4" />
             Sign In / Connect Wallet
@@ -370,7 +371,7 @@ export default function DashboardPage() {
               key={t}
               onClick={() => setPortfolioTab(t)}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-                portfolioTab === t ? "text-white border-[#FF455B]" : "text-[#848e9c] border-transparent hover:text-white"
+                portfolioTab === t ? "text-white border-brand" : "text-[#848e9c] border-transparent hover:text-white"
               }`}
             >
               {label}
@@ -460,7 +461,7 @@ export default function DashboardPage() {
                 {/* Asset Distribution list */}
                 {assetDistribution.length > 0 && (
                   <div className="mt-6 space-y-1">
-                    <p className="text-sm font-semibold text-[#FF455B] mb-2">Asset Distribution</p>
+                    <p className="text-sm font-semibold text-brand mb-2">Asset Distribution</p>
                     {assetDistribution.map((a) => (
                       <div key={a.label} className="flex items-center justify-between py-1.5">
                         <div className="flex items-center gap-2">
@@ -468,7 +469,7 @@ export default function DashboardPage() {
                           <span className="text-sm text-white">{a.label}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm text-[#FF455B]">{assetTotal > 0 ? ((a.value / assetTotal) * 100).toFixed(1) : "0.0"}%</span>
+                          <span className="text-sm text-brand">{assetTotal > 0 ? ((a.value / assetTotal) * 100).toFixed(1) : "0.0"}%</span>
                           <span className="text-sm font-semibold">{formatUsd(a.value)}</span>
                         </div>
                       </div>
@@ -485,22 +486,22 @@ export default function DashboardPage() {
 
             {/* Quick actions */}
             <div className="grid grid-cols-3 gap-3">
-              <Link href="/trade" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-[#FF455B]/50 transition-colors">
+              <Link href="/trade" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
                 <TrendingUp className="h-5 w-5 text-emerald-400 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Trade</p>
                   <p className="text-[10px] text-[#848e9c]">Perps</p>
                 </div>
               </Link>
-              <Link href="/predictions" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-[#FF455B]/50 transition-colors">
+              <Link href="/predictions" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
                 <BarChart3 className="h-5 w-5 text-blue-400 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Predict</p>
                   <p className="text-[10px] text-[#848e9c]">Markets</p>
                 </div>
               </Link>
-              <Link href="/automate" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-[#FF455B]/50 transition-colors">
-                <Bot className="h-5 w-5 text-[#FF455B] shrink-0" />
+              <Link href="/automate" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
+                <Bot className="h-5 w-5 text-brand shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Automate</p>
                   <p className="text-[10px] text-[#848e9c]">
@@ -516,7 +517,7 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-semibold">
                   Positions {firstLoad ? "" : `(${positions.length})`}
                 </h2>
-                <Link href="/trade" className="text-xs text-[#FF455B] hover:underline">Open Trade &rarr;</Link>
+                <Link href="/trade" className="text-xs text-brand hover:underline">Open Trade &rarr;</Link>
               </div>
               {firstLoad ? (
                 <div className="space-y-2">
@@ -544,7 +545,7 @@ export default function DashboardPage() {
                   {accountValue > 0 && (
                     <p className="text-xs text-[#848e9c] mt-1">{formatUsd(accountValue)} USDC available to trade</p>
                   )}
-                  <Link href="/trade" className="inline-block mt-3 text-xs text-[#FF455B] hover:underline">Open a position &rarr;</Link>
+                  <Link href="/trade" className="inline-block mt-3 text-xs text-brand hover:underline">Open a position &rarr;</Link>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -583,7 +584,7 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold">Automation</h2>
-                  <Link href="/automate" className="text-xs text-[#FF455B] hover:underline">Manage &rarr;</Link>
+                  <Link href="/automate" className="text-xs text-brand hover:underline">Manage &rarr;</Link>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {browserStrategies.slice(0, 4).map((s) => (
@@ -617,7 +618,7 @@ export default function DashboardPage() {
                   <button
                     key={v}
                     onClick={() => setHistoryView(v === "trades" ? "trades" : "fills")}
-                    className={`px-3 py-1.5 rounded-md font-medium transition-colors capitalize ${historyView === v ? "bg-[#FF455B] text-white" : "text-[#848e9c] hover:text-white"}`}
+                    className={`px-3 py-1.5 rounded-md font-medium transition-colors capitalize ${historyView === v ? "bg-brand text-white" : "text-[#848e9c] hover:text-white"}`}
                   >
                     {v === "trades" ? `Trades (${trades.length})` : `Fills (${fills.length})`}
                   </button>
@@ -627,7 +628,7 @@ export default function DashboardPage() {
                 href={`https://app.hyperliquid.xyz/explorer/address/${address}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-[#FF455B] hover:underline inline-flex items-center gap-1"
+                className="text-xs text-brand hover:underline inline-flex items-center gap-1"
               >
                 Explorer <ExternalLink className="h-3 w-3" />
               </a>
@@ -833,7 +834,7 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
             <span>Exit: <span className="text-white">${trade.exitPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
           )}
           {hasPhantom && (
-            <span>Now: <span className="text-[#FF455B] font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
+            <span>Now: <span className="text-brand font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
           )}
           <span className="inline-flex items-center gap-0.5">
             <Clock className="h-2.5 w-2.5" />
@@ -885,7 +886,7 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
           {hasPhantom && (
             <div className="bg-[#0b0e11]/80 border border-[#2a2e3e]/60 rounded-lg px-3 py-2">
               <p className="text-[10px] text-[#848e9c] font-medium mb-1.5 flex items-center gap-1">
-                <span className="text-[#FF455B]">&#9673;</span> Phantom P&L <span className="text-[#848e9c]/60">— if you had kept this position</span>
+                <span className="text-brand">&#9673;</span> Phantom P&L <span className="text-[#848e9c]/60">— if you had kept this position</span>
               </p>
               <div className="flex flex-wrap items-center gap-4 text-[10px]">
                 <div>
@@ -908,7 +909,7 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
                 </div>
                 <div>
                   <span className="text-[#848e9c]">Mark: </span>
-                  <span className="text-[#FF455B] font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                  <span className="text-brand font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                 </div>
                 {(() => {
                   const moveFromExit = trade.exitPx! > 0
@@ -1252,11 +1253,11 @@ function PnlCalendar({
                 onClick={() => setSelectedDay(isSelected ? null : (hasData ? key : null))}
                 className={`aspect-square border-r border-b border-[#2a2e3e]/20 p-1 relative transition-colors text-left ${
                   isSelected
-                    ? "ring-2 ring-[#FF455B] ring-inset bg-[#FF455B]/10"
+                    ? "ring-2 ring-brand ring-inset bg-brand/10"
                     : isProfit ? "bg-emerald-500/15 hover:bg-emerald-500/25" : isLoss ? "bg-red-500/15 hover:bg-red-500/25" : hasData ? "hover:bg-[#1a1d2e]" : ""
                 } ${hasData ? "cursor-pointer" : "cursor-default"}`}
               >
-                <span className={`text-[10px] font-medium ${isToday(day) ? "text-[#FF455B] font-bold" : "text-[#848e9c]"}`}>
+                <span className={`text-[10px] font-medium ${isToday(day) ? "text-brand font-bold" : "text-[#848e9c]"}`}>
                   {day}
                 </span>
                 {hasData && (

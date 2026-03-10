@@ -34,6 +34,9 @@ const HIP3_STOCKS = new Set([
   "SPACEX", "OPENAI", "INTC", "NFLX",
 ]);
 
+// XYZ sub-exchange commodity perps (high-liquidity RWA)
+const XYZ_COMMODITY_NAMES = new Set(["GOLD", "SILVER", "BRENTOIL"]);
+
 function roundPrice(price: number): string {
   if (price >= 100_000) return (Math.round(price / 10) * 10).toString();
   if (price >= 10_000) return (Math.round(price)).toString();
@@ -373,11 +376,12 @@ export class QuantEngine {
   }
 
   private async fetchMarketSnapshots(): Promise<MarketSnapshot[]> {
-    const [perps, hip3] = await Promise.all([
+    const [perps, hip3, xyzCommodities] = await Promise.all([
       this.fetchPerpsSnapshots(),
       this.fetchHip3Snapshots(),
+      this.fetchXyzCommoditySnapshots(),
     ]);
-    return [...perps, ...hip3];
+    return [...perps, ...hip3, ...xyzCommodities];
   }
 
   private async fetchPerpsSnapshots(): Promise<MarketSnapshot[]> {
@@ -474,6 +478,50 @@ export class QuantEngine {
       return snapshots;
     } catch (err) {
       console.error("[engine] HIP-3 fetch failed, continuing with perps only:", (err as Error).message);
+      return [];
+    }
+  }
+
+  private async fetchXyzCommoditySnapshots(): Promise<MarketSnapshot[]> {
+    try {
+      const res = await fetch(`${HL_API}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "metaAndAssetCtxs", dex: "xyz" }),
+      });
+      const [meta, ctxs] = (await res.json()) as [
+        { universe: Array<{ name: string; szDecimals: number }> },
+        Array<{ markPx: string; funding: string; openInterest: string; dayNtlVlm: string }>,
+      ];
+
+      const snapshots: MarketSnapshot[] = [];
+      for (let i = 0; i < meta.universe.length; i++) {
+        const asset = meta.universe[i];
+        if (!XYZ_COMMODITY_NAMES.has(asset.name)) continue;
+
+        const ctx = ctxs[i];
+        const xyzAssetIndex = i;
+        assetMeta.set(xyzAssetIndex, { szDecimals: asset.szDecimals });
+
+        snapshots.push({
+          coin: `xyz:${asset.name}`,
+          assetIndex: xyzAssetIndex,
+          markPx: parseFloat(ctx?.markPx ?? "0"),
+          funding: parseFloat(ctx?.funding ?? "0"),
+          openInterest: parseFloat(ctx?.openInterest ?? "0"),
+          volume24h: parseFloat(ctx?.dayNtlVlm ?? "0"),
+          dex: "perp",
+          candleCoin: asset.name,
+          szDecimals: asset.szDecimals,
+        });
+      }
+
+      if (snapshots.length > 0 && this.tickCount <= 3) {
+        console.log(`[engine] XYZ commodities: ${snapshots.map((s) => `${s.coin} $${s.markPx.toFixed(2)}`).join(", ")}`);
+      }
+      return snapshots;
+    } catch (err) {
+      console.error("[engine] XYZ fetch failed:", (err as Error).message);
       return [];
     }
   }

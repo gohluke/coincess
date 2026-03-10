@@ -40,7 +40,7 @@ export function EventCard({ event }: { event: PolymarketEvent }) {
       className={`group block bg-[#141620] border rounded-xl p-4 transition-all duration-200 ${
         isClosed || isEnded
           ? "border-[#2a2e3e]/50 opacity-70 hover:opacity-90"
-          : "border-[#2a2e3e] hover:border-[#FF455B]/50 hover:bg-[#1a1d2e]"
+          : "border-[#2a2e3e] hover:border-brand/50 hover:bg-[#1a1d2e]"
       }`}
     >
       <div className="flex gap-3 mb-3">
@@ -59,7 +59,7 @@ export function EventCard({ event }: { event: PolymarketEvent }) {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 group-hover:text-[#FF455B] transition-colors">
+          <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 group-hover:text-brand transition-colors">
             {event.title}
           </h3>
           <div className="flex items-center gap-2 mt-1 overflow-hidden">
@@ -85,7 +85,7 @@ export function EventCard({ event }: { event: PolymarketEvent }) {
             {event.tags?.slice(0, 2).map((tag) => (
               <span
                 key={tag.id}
-                className="text-[9px] px-1.5 py-0.5 rounded bg-[#FF455B]/10 text-[#FF455B] uppercase tracking-wide shrink-0"
+                className="text-[9px] px-1.5 py-0.5 rounded bg-brand/10 text-brand uppercase tracking-wide shrink-0"
               >
                 {tag.label}
               </span>

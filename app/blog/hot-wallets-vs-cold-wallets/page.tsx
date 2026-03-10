@@ -175,28 +175,28 @@ export default function HotWalletsVsColdWallets() {
           href="https://shop.ledger.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#FF455B]/50 hover:bg-[#FF455B]/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">Ledger Nano X / Nano S Plus</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-brand">Ledger Nano X / Nano S Plus</h4>
             <p className="text-gray-600 text-sm">Most popular choice. Supports 5,500+ coins including Bitcoin, Ethereum, and Monero.</p>
-            <p className="text-[#FF455B] text-sm font-medium mt-1">From $79</p>
+            <p className="text-brand text-sm font-medium mt-1">From $79</p>
           </div>
-          <ExternalLink className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
+          <ExternalLink className="h-5 w-5 text-gray-400 group-hover:text-brand" />
         </a>
         
         <a
           href="https://trezor.io"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#FF455B]/50 hover:bg-[#FF455B]/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">Trezor Model T / Safe 3</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-brand">Trezor Model T / Safe 3</h4>
             <p className="text-gray-600 text-sm">Open-source firmware. Touchscreen interface. Great for Bitcoin maximalists.</p>
-            <p className="text-[#FF455B] text-sm font-medium mt-1">From $69</p>
+            <p className="text-brand text-sm font-medium mt-1">From $69</p>
           </div>
-          <ExternalLink className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
+          <ExternalLink className="h-5 w-5 text-gray-400 group-hover:text-brand" />
         </a>
       </div>
 
@@ -206,9 +206,9 @@ export default function HotWalletsVsColdWallets() {
         Most experienced crypto users follow this approach:
       </p>
 
-      <div className="not-prose my-8 bg-[#FF455B]/5 border border-[#FF455B]/20 rounded-xl p-6">
+      <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Shield className="h-5 w-5 text-[#FF455B]" />
+          <Shield className="h-5 w-5 text-brand" />
           Recommended Setup
         </h3>
         <div className="grid md:grid-cols-2 gap-6">

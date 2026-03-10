@@ -94,7 +94,7 @@ export function MarketRow({ market }: { market: PolymarketMarket }) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-7 pr-3 py-2 bg-[#141620] border border-[#2a2e3e] rounded-lg text-sm text-white placeholder-[#4a4e5c] focus:outline-none focus:border-[#FF455B]/50"
+                className="w-full pl-7 pr-3 py-2 bg-[#141620] border border-[#2a2e3e] rounded-lg text-sm text-white placeholder-[#4a4e5c] focus:outline-none focus:border-brand/50"
               />
             </div>
             <div className="flex items-center justify-between text-xs">
@@ -118,7 +118,7 @@ export function MarketRow({ market }: { market: PolymarketMarket }) {
             ) : (
               <button
                 onClick={connect}
-                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-[#FF455B] text-white hover:bg-[#E63B50] transition-colors"
+                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-brand text-white hover:bg-brand-hover transition-colors"
               >
                 Sign In to Trade
               </button>

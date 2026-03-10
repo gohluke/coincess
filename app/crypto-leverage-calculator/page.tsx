@@ -2,12 +2,17 @@ import { Metadata } from "next"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { LeverageCalculator } from "@/components/LeverageCalculator"
-import { Calculator, TrendingUp, Shield, Target, AlertTriangle, CheckCircle2, Zap, BarChart3 } from "lucide-react"
+import { Calculator, TrendingUp, Shield, Target, AlertTriangle, CheckCircle2, Zap, BarChart3, DollarSign, Clock } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Crypto Leverage Calculator - Perpetual Futures | Coincess",
-  description: "Calculate potential profits and losses for leveraged cryptocurrency trades. Our professional perpetual futures calculator helps you manage risk and plan trades effectively.",
-  keywords: ["crypto leverage calculator", "perpetual futures", "trading calculator", "PNL calculator", "liquidation price", "ROE calculator"],
+  title: "Crypto Leverage Calculator — Fees, Funding & Break-Even | Coincess",
+  description: "Industry-grade perpetual futures calculator with maker/taker fees, hourly funding rates, break-even price, liquidation risk, and interactive PNL/ROE solving. Plan every trade before you execute.",
+  keywords: [
+    "crypto leverage calculator", "perpetual futures calculator", "PNL calculator",
+    "liquidation price calculator", "funding rate calculator", "break-even price",
+    "trading fees calculator", "ROE calculator", "margin calculator",
+    "hyperliquid calculator", "dydx calculator", "bybit calculator",
+  ],
 }
 
 export default function CryptoLeverageCalculatorPage() {
@@ -16,155 +21,207 @@ export default function CryptoLeverageCalculatorPage() {
       <Header />
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-20">
-          {/* Hero Section */}
+          {/* Hero */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF455B]/10 rounded-full text-[#FF455B] text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 rounded-full text-brand text-sm font-medium mb-6">
               <Calculator className="h-4 w-4" />
-              Trading Tools
+              Professional Trading Tools
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Crypto Leverage Calculator
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Strategically gauge the leverage potential of your position. Calculate profits, losses, and liquidation prices before you trade.
+              The only calculator that factors in trading fees, hourly funding rates, and trade duration —
+              so you see your <strong>real</strong> profit, not just the headline number.
             </p>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <Zap className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-900">Real-Time</p>
-              <p className="text-xs text-gray-500">Instant calculations</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <TrendingUp className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-900">Long & Short</p>
-              <p className="text-xs text-gray-500">Both directions</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <Shield className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-900">Risk Analysis</p>
-              <p className="text-xs text-gray-500">Liquidation prices</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <BarChart3 className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-900">ROE Tracking</p>
-              <p className="text-xs text-gray-500">Return on equity</p>
-            </div>
+          {/* Feature Pills */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-12">
+            {[
+              { icon: Zap, label: "Real-Time" },
+              { icon: TrendingUp, label: "Long & Short" },
+              { icon: DollarSign, label: "Maker/Taker Fees" },
+              { icon: Clock, label: "Funding Rates" },
+              { icon: Target, label: "Break-Even Price" },
+              { icon: Shield, label: "Liquidation Risk" },
+              { icon: BarChart3, label: "Net ROE" },
+              { icon: Calculator, label: "Interactive Solver" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+                <Icon className="h-5 w-5 text-brand mx-auto mb-1.5" />
+                <p className="text-xs font-medium text-gray-900">{label}</p>
+              </div>
+            ))}
           </div>
 
           {/* Calculator */}
-          <div className="max-w-3xl mx-auto mb-16">
+          <div className="max-w-4xl mx-auto mb-16">
             <LeverageCalculator />
           </div>
 
-          {/* Understanding Leverage Section */}
-          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+          {/* What Makes This Different */}
+          <div className="grid lg:grid-cols-3 gap-6 mb-12">
             <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-[#FF455B]/10 text-[#FF455B]">
-                  <TrendingUp className="h-6 w-6" />
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2.5 rounded-xl bg-brand/10 text-brand">
+                  <DollarSign className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Understanding Leverage</h2>
+                  <h2 className="text-lg font-bold text-gray-900 mb-1">Real Fee Accounting</h2>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Leverage in cryptocurrency trading allows you to control larger positions with less capital. 
-                    A 10x leverage means $100 controls a $1,000 position. While this amplifies potential profits, 
-                    it equally magnifies losses.
+                    Most calculators ignore fees. We include maker/taker rates on both entry and exit,
+                    so a &ldquo;profitable&rdquo; trade that loses money to fees is flagged before you execute.
                   </p>
                 </div>
               </div>
-              <div className="space-y-2 mt-4">
+              <div className="space-y-2 mt-3">
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-600">Multiply your buying power</span>
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Hyperliquid default: 0.01% maker / 0.035% taker</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-600">Trade both directions (long/short)</span>
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Separate entry & exit fee rates</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-600">Capital efficient trading</span>
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">One-click maker/taker toggle</span>
                 </div>
               </div>
             </div>
 
             <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-[#FF455B]/10 text-[#FF455B]">
-                  <Target className="h-6 w-6" />
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2.5 rounded-xl bg-brand/10 text-brand">
+                  <Clock className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Calculator Features</h2>
+                  <h2 className="text-lg font-bold text-gray-900 mb-1">Funding Rate Impact</h2>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Our calculator helps you plan trades before execution. Input your parameters to see 
-                    potential outcomes, identify liquidation prices, and make data-driven decisions.
+                    Perpetual futures charge funding every hour (Hyperliquid) or 8 hours (Binance/Bybit).
+                    Over days or weeks, funding can exceed your gross profit.
                   </p>
                 </div>
               </div>
-              <div className="space-y-2 mt-4">
+              <div className="space-y-2 mt-3">
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#FF455B] flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-600">Calculate PNL for any exit price</span>
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Hourly funding rate input</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#FF455B] flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-600">Find liquidation price instantly</span>
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Adjustable trade duration (hours)</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#FF455B] flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-600">Reverse calculate from ROE targets</span>
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Negative rates = shorts pay, longs earn</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-gray-200 rounded-xl p-6 bg-white">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2.5 rounded-xl bg-brand/10 text-brand">
+                  <Target className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-1">Interactive Solver</h2>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Click any result field to reverse-solve. Type a target PNL to find the exit price.
+                    Set a budget (margin) to calculate your max position size. All updates live.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2 mt-3">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Type margin → auto-sizes position</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Type PNL → solves required exit price</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-gray-600">Type ROE → solves required exit price</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Warning Box */}
+          {/* How It Works */}
+          <div className="bg-gray-50 rounded-2xl p-8 mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How the Math Works</h2>
+            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Position & Margin</h3>
+                <div className="space-y-1.5 text-sm text-gray-600">
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Notional = Quantity x Entry Price</code></p>
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Margin = Notional / Leverage</code></p>
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Liq. Price = Entry +/- Entry / Leverage</code></p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Costs</h3>
+                <div className="space-y-1.5 text-sm text-gray-600">
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Entry Fee = Notional x Fee Rate</code></p>
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Exit Fee = Exit Notional x Fee Rate</code></p>
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Funding = Notional x Rate x Hours</code></p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Profit & Loss</h3>
+                <div className="space-y-1.5 text-sm text-gray-600">
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Gross PNL = (Exit - Entry) x Qty</code></p>
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Net PNL = Gross - Fees - Funding</code></p>
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">ROE = Net PNL / Margin x 100</code></p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Break-Even</h3>
+                <div className="space-y-1.5 text-sm text-gray-600">
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Total Costs = Fees + Funding</code></p>
+                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Break-Even = Entry + Costs / Qty</code></p>
+                  <p className="text-xs text-gray-400">For shorts: Entry - Costs / Qty</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Warning */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-12">
             <div className="flex gap-4">
               <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
               <div>
                 <h3 className="font-semibold text-amber-900 mb-2">Important Risk Warning</h3>
                 <ul className="space-y-2 text-sm text-amber-800">
-                  <li>• <strong>Leverage amplifies both gains AND losses.</strong> You can lose more than your initial investment.</li>
-                  <li>• <strong>Liquidation risk is real.</strong> If the price moves against you beyond your margin, your position is automatically closed.</li>
-                  <li>• <strong>Start with low leverage</strong> (2-5x) until you understand market dynamics.</li>
-                  <li>• <strong>Always set stop-losses</strong> to limit potential downside.</li>
+                  <li>&bull; <strong>Leverage amplifies both gains AND losses.</strong> You can lose more than your initial margin.</li>
+                  <li>&bull; <strong>Funding rates fluctuate.</strong> A position profitable today may bleed via funding tomorrow.</li>
+                  <li>&bull; <strong>Liquidation risk is real.</strong> Cross-margin and maintenance margin rules affect your actual liquidation price.</li>
+                  <li>&bull; <strong>Start with low leverage</strong> (2–5x) and always set stop-losses.</li>
                 </ul>
               </div>
             </div>
           </div>
 
           {/* Best Practices */}
-          <div className="bg-gradient-to-br from-[#FF455B] to-[#E63B50] rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-br from-brand to-brand-hover rounded-2xl p-8 text-white">
             <h2 className="text-2xl font-bold mb-6 text-center">Trading Best Practices</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-white/10 rounded-xl p-4">
-                <span className="text-2xl font-bold text-white/60">01</span>
-                <p className="mt-2 text-white/90">Start with lower leverage (2-5x) to understand market dynamics before scaling up</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4">
-                <span className="text-2xl font-bold text-white/60">02</span>
-                <p className="mt-2 text-white/90">Always set stop-loss orders to limit potential losses on every position</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4">
-                <span className="text-2xl font-bold text-white/60">03</span>
-                <p className="mt-2 text-white/90">Never invest more than you can afford to lose—crypto is highly volatile</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4">
-                <span className="text-2xl font-bold text-white/60">04</span>
-                <p className="mt-2 text-white/90">Use this calculator to plan every trade before execution</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4">
-                <span className="text-2xl font-bold text-white/60">05</span>
-                <p className="mt-2 text-white/90">Monitor positions regularly and be ready to adjust or exit</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4">
-                <span className="text-2xl font-bold text-white/60">06</span>
-                <p className="mt-2 text-white/90">Keep learning—follow market news and continuously improve your strategy</p>
-              </div>
+              {[
+                "Start with 2–5x leverage to understand market dynamics before scaling up",
+                "Always set stop-loss orders — use the calculator to find your max acceptable loss",
+                "Factor in funding rates for any trade you plan to hold longer than a few hours",
+                "Check the break-even price to know the minimum move needed to cover costs",
+                "Use maker orders (limit) instead of taker (market) to reduce fees by 3.5x",
+                "Monitor your margin ratio — exit before it approaches the danger zone",
+              ].map((tip, i) => (
+                <div key={i} className="bg-white/10 rounded-xl p-4">
+                  <span className="text-2xl font-bold text-white/60">{String(i + 1).padStart(2, "0")}</span>
+                  <p className="mt-2 text-white/90 text-sm">{tip}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>

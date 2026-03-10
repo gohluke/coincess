@@ -6,6 +6,7 @@ import { X, Loader2, Share2, Download, Copy, Check, Bot } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder } from "@/lib/hyperliquid/signing";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { BRAND } from "@/lib/brand";
 
 type Tab = "positions" | "orders" | "fills";
 
@@ -146,7 +147,7 @@ export function PositionsTable() {
               key={t}
               onClick={() => setTab(t)}
               className={`pb-1 border-b-2 transition-colors whitespace-nowrap ${
-                tab === t ? "text-white border-[#FF455B]" : "text-[#848e9c] border-transparent hover:text-white"
+                tab === t ? "text-white border-brand" : "text-[#848e9c] border-transparent hover:text-white"
               }`}
             >
               {label}
@@ -220,7 +221,7 @@ export function PositionsTable() {
                               {isLong ? "L" : "S"} {pos.leverage.value}x
                             </span>
                             {quantInfo && (
-                              <span className="text-[9px] px-1 py-0.5 rounded font-medium bg-[#FF455B]/15 text-[#FF455B] flex items-center gap-0.5" title={quantInfo.meta?.reason || quantInfo.strategy_type}>
+                              <span className="text-[9px] px-1 py-0.5 rounded font-medium bg-brand/15 text-brand flex items-center gap-0.5" title={quantInfo.meta?.reason || quantInfo.strategy_type}>
                                 <Bot className="h-2.5 w-2.5" /> AUTO
                               </span>
                             )}
@@ -264,7 +265,7 @@ export function PositionsTable() {
                             </button>
                             <button
                               onClick={() => openShareModal(pos)}
-                              className="px-2 py-1 bg-[#FF455B]/15 text-[#FF455B] rounded hover:bg-[#FF455B]/25 transition-colors text-[10px] font-medium flex items-center gap-1"
+                              className="px-2 py-1 bg-brand/15 text-brand rounded hover:bg-brand/25 transition-colors text-[10px] font-medium flex items-center gap-1"
                             >
                               <Share2 className="h-3 w-3" /> Share
                             </button>
@@ -305,7 +306,7 @@ export function PositionsTable() {
                           {isLong ? "LONG" : "SHORT"} {pos.leverage.value}x
                         </span>
                         {mQuantInfo && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#FF455B]/15 text-[#FF455B] flex items-center gap-0.5">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-brand/15 text-brand flex items-center gap-0.5">
                             <Bot className="h-2.5 w-2.5" /> AUTO
                           </span>
                         )}
@@ -355,7 +356,7 @@ export function PositionsTable() {
                       </button>
                       <button
                         onClick={() => openShareModal(pos)}
-                        className="px-3 py-1.5 bg-[#FF455B]/10 text-[#FF455B] rounded-lg hover:bg-[#FF455B]/20 transition-colors"
+                        className="px-3 py-1.5 bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors"
                       >
                         <Share2 className="h-3.5 w-3.5" />
                       </button>
@@ -515,7 +516,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
     drawStars(ctx, W, H);
     drawRocket(ctx, W, H, isProfit);
 
-    ctx.fillStyle = "#FF455B";
+    ctx.fillStyle = BRAND.hex;
     ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
     ctx.fillText("coincess", 32, 44);
 
@@ -631,7 +632,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
                   key={r}
                   onClick={() => setAspectRatio(r)}
                   className={`flex-1 py-2.5 sm:py-2 text-xs font-medium transition-colors ${
-                    aspectRatio === r ? "bg-[#FF455B] text-white" : "text-[#848e9c] hover:text-white"
+                    aspectRatio === r ? "bg-brand text-white" : "text-[#848e9c] hover:text-white"
                   }`}
                 >
                   {r === "16:9" ? "Rectangle (16:9)" : "Square (1:1)"}
@@ -657,7 +658,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
                 {copied ? <Check className="h-4 w-4 shrink-0 text-[#0ecb81]" /> : <Copy className="h-4 w-4 shrink-0" />}
                 {copied ? "Done" : "Copy"}
               </button>
-              <button onClick={handleShare} className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 bg-[#FF455B] text-white rounded-xl hover:bg-[#E63B50] active:bg-[#E63B50] transition-colors text-xs sm:text-sm font-bold">
+              <button onClick={handleShare} className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 bg-brand text-white rounded-xl hover:bg-brand-hover active:bg-brand-hover transition-colors text-xs sm:text-sm font-bold">
                 <Share2 className="h-4 w-4 shrink-0" /> Share
               </button>
             </div>
@@ -668,7 +669,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
                 type="checkbox"
                 checked={showPnlAmount}
                 onChange={(e) => setShowPnlAmount(e.target.checked)}
-                className="w-4 h-4 rounded border-[#2a2e3e] bg-[#0b0e11] text-[#FF455B] focus:ring-[#FF455B]"
+                className="w-4 h-4 rounded border-[#2a2e3e] bg-[#0b0e11] text-brand focus:ring-brand"
               />
               Include P&L amount
             </label>
@@ -717,15 +718,15 @@ function ShareCardPreview({ position, aspectRatio, showPnlAmount }: {
           <svg className="w-[80px] sm:w-[140px] h-auto" viewBox="0 0 140 200" fill="none">
             <ellipse cx="70" cy="180" rx="40" ry="12" fill={isProfit ? "#0ecb81" : "#f6465d"} opacity="0.3" />
             <path d="M70 20 L90 80 L85 140 L70 150 L55 140 L50 80 Z" fill="#e8e8e8" stroke="#ccc" strokeWidth="1" />
-            <circle cx="70" cy="80" r="12" fill="#1a1028" stroke="#FF455B" strokeWidth="2" />
-            <path d="M50 80 L35 130 L55 120 Z" fill="#FF455B" opacity="0.7" />
-            <path d="M90 80 L105 130 L85 120 Z" fill="#FF455B" opacity="0.7" />
+            <circle cx="70" cy="80" r="12" fill="#1a1028" stroke={BRAND.hex} strokeWidth="2" />
+            <path d="M50 80 L35 130 L55 120 Z" fill={BRAND.hex} opacity="0.7" />
+            <path d="M90 80 L105 130 L85 120 Z" fill={BRAND.hex} opacity="0.7" />
             <path d="M60 150 L55 190 L70 165 L85 190 L80 150 Z" fill={isProfit ? "#0ecb81" : "#f6465d"} opacity="0.8" />
           </svg>
         </div>
 
         {/* Logo */}
-        <div className="text-[#FF455B] font-bold text-lg sm:text-xl mb-auto relative z-10">coincess</div>
+        <div className="text-brand font-bold text-lg sm:text-xl mb-auto relative z-10">coincess</div>
 
         {/* Position info */}
         <div className="relative z-10 flex-1 flex flex-col justify-center">
@@ -796,12 +797,12 @@ function drawRocket(ctx: CanvasRenderingContext2D, w: number, h: number, isProfi
   ctx.bezierCurveTo(-20, 0, -15, -50, 0, -70);
   ctx.fill();
 
-  ctx.fillStyle = "#FF455B";
+  ctx.fillStyle = BRAND.hex;
   ctx.beginPath();
   ctx.arc(0, -5, 10, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#FF455B";
+  ctx.fillStyle = BRAND.hex;
   ctx.globalAlpha = 0.18;
   ctx.beginPath();
   ctx.moveTo(-20, 20);

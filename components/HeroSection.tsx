@@ -46,7 +46,7 @@ export function HeroSection() {
           />
           <Button
             type="submit"
-            className="w-full sm:w-auto h-14 px-8 rounded-lg bg-[#FF455B] hover:bg-[#E63B50] text-white font-medium text-base"
+            className="w-full sm:w-auto h-14 px-8 rounded-lg bg-brand hover:bg-brand-hover text-white font-medium text-base"
           >
             Get Started
           </Button>
