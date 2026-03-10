@@ -206,7 +206,7 @@ export default function Home() {
       <footer className="border-t border-[#1e2130] py-8 mt-4">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[#4a4e59]">
-            &copy; 2025 Coincess.
+            &copy; {new Date().getFullYear()} Coincess.
           </p>
           <div className="flex items-center gap-4 text-xs text-[#4a4e59]">
             <Link
