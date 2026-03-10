@@ -309,7 +309,10 @@ export function OrderForm() {
             <div className="flex justify-between">
               <span className="text-[#848e9c]">Available</span>
               {clearinghouse ? (
-                <span className="text-white">${availableBalance.toFixed(2)}</span>
+                <span className={availableBalance <= 0 ? "text-[#f0b90b]" : "text-white"}>
+                  ${availableBalance.toFixed(2)}
+                  {availableBalance <= 0 && !hasFunds && " ⚠"}
+                </span>
               ) : (
                 <Skeleton className="h-3.5 w-16" />
               )}
@@ -354,27 +357,33 @@ export function OrderForm() {
           </button>
         )}
 
-        {/* HIP-3 abstraction warning */}
+        {/* HIP-3 / XYZ unified account activation */}
         {address && market?.dex && abstractionMode !== "unifiedAccount" && abstractionMode !== "portfolioMargin" && (
-          <button
-            onClick={async () => {
-              setFeedback(null);
-              try {
-                const result = await signAndEnableDexAbstraction();
-                if (result.success) {
-                  setFeedback({ type: "success", msg: "Unified account enabled! You can now trade stocks & commodities." });
-                  loadUserState();
-                } else {
-                  setFeedback({ type: "error", msg: result.error || "Failed" });
+          <div className="space-y-2">
+            <button
+              onClick={async () => {
+                setFeedback(null);
+                try {
+                  const result = await signAndEnableDexAbstraction();
+                  if (result.success) {
+                    setFeedback({ type: "success", msg: "Unified account enabled! You can now trade stocks & commodities." });
+                    loadUserState();
+                  } else {
+                    setFeedback({ type: "error", msg: result.error || "Failed to enable unified account" });
+                  }
+                } catch (err) {
+                  setFeedback({ type: "error", msg: (err as Error).message });
                 }
-              } catch (err) {
-                setFeedback({ type: "error", msg: (err as Error).message });
-              }
-            }}
-            className="w-full py-2 rounded-lg text-xs font-medium bg-[#f0b90b]/10 text-[#f0b90b] hover:bg-[#f0b90b]/20 transition-colors"
-          >
-            Enable Unified Account to trade {displayName}
-          </button>
+              }}
+              className="w-full py-2.5 rounded-lg text-xs font-medium bg-[#f0b90b]/10 text-[#f0b90b] hover:bg-[#f0b90b]/20 transition-colors border border-[#f0b90b]/20"
+            >
+              Enable Unified Account to trade {displayName}
+            </button>
+            <p className="text-[10px] text-[#848e9c] text-center leading-tight">
+              Unified Account lets you trade stocks, commodities &amp; forex using your main USDC balance.
+              {!hasFunds && " You also need to deposit USDC to Hyperliquid first."}
+            </p>
+          </div>
         )}
 
         <p className="text-[10px] text-[#848e9c] text-center">

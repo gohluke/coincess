@@ -282,19 +282,42 @@ export async function signAndApproveBuilderFee(
   }
 }
 
+// EIP-712 types for userSetAbstraction (from @nktkas/hyperliquid SDK)
+const UserSetAbstractionTypes = {
+  "HyperliquidTransaction:UserSetAbstraction": [
+    { name: "hyperliquidChain", type: "string" },
+    { name: "user", type: "address" },
+    { name: "abstraction", type: "string" },
+    { name: "nonce", type: "uint64" },
+  ],
+};
+
 /**
- * Enable unified account / dex abstraction so user can trade HIP-3 markets
- * using their main USDC balance. Uses the agent variant (L1 action).
+ * Enable unified account so user can trade HIP-3/XYZ markets (stocks,
+ * commodities, forex) using their main USDC balance.
+ * Uses userSetAbstraction (EIP-712 user-signed action) for browser wallets.
  */
 export async function signAndEnableDexAbstraction(): Promise<{ success: boolean; error?: string }> {
   try {
     const wallet = getWalletAdapter();
-    await getAddress();
+    const address = await getAddress();
+    const chainId = await wallet.getChainId();
 
     const nonce = Date.now();
-    const action = { type: "agentSetAbstraction", abstraction: "u" };
+    const action = {
+      type: "userSetAbstraction" as const,
+      hyperliquidChain: "Mainnet" as const,
+      signatureChainId: `0x${chainId.toString(16)}` as `0x${string}`,
+      user: address as `0x${string}`,
+      abstraction: "unifiedAccount",
+      nonce,
+    };
 
-    const signature = await signL1Action({ wallet, action, nonce });
+    const signature = await signUserSignedAction({
+      wallet,
+      action,
+      types: UserSetAbstractionTypes,
+    });
 
     const res = await fetch(EXCHANGE_URL, {
       method: "POST",
@@ -304,7 +327,11 @@ export async function signAndEnableDexAbstraction(): Promise<{ success: boolean;
 
     const data = await res.json();
     if (data.status === "ok") return { success: true };
-    return { success: false, error: "Failed to enable unified account" };
+    const apiError = data.response?.data?.statuses?.[0]?.error
+      || data.response?.error
+      || data.error
+      || JSON.stringify(data);
+    return { success: false, error: apiError };
   } catch (err) {
     return { success: false, error: (err as Error).message };
   }
