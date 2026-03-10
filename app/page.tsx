@@ -90,8 +90,6 @@ export default function Home() {
     <div className="min-h-[calc(100vh-3.5rem)]">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FF455B]/8 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#FF455B]/5 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-12 md:pt-28 md:pb-20 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF455B]/10 border border-[#FF455B]/20 text-[#FF8A97] text-xs font-medium mb-6">
