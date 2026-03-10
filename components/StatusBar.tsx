@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { fetchCombinedClearinghouseState, fetchOpenOrders } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder } from "@/lib/hyperliquid/types";
-import { Activity } from "lucide-react";
 
 const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calculator"];
 
@@ -106,7 +105,6 @@ export function StatusBar() {
   return (
     <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-40 bg-[#0f1116] border-t border-[#1e2130]">
       <div className="flex items-center gap-4 px-3 h-7 text-[11px] font-medium overflow-x-auto scrollbar-none whitespace-nowrap">
-        <Activity className="h-3 w-3 text-[#7C3AED] shrink-0" />
         <Stat label="Open" value={fmt(stats.open)} />
         <Stat label="Longs" value={fmt(stats.longs)} color="text-[#0ecb81]" />
         <Stat label="Shorts" value={fmt(stats.shorts)} color="text-[#f6465d]" />

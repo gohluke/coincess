@@ -1,19 +1,26 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search, Settings, Users, BookOpen, MessageSquare } from "lucide-react";
+import {
+  TrendingUp, BarChart3, Bot, LayoutDashboard, Search,
+  Settings, Users, BookOpen, MessageSquare, ChevronDown,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
 import { DepositButton } from "@/components/DepositModal";
 
-const NAV_LINKS = [
+const PRIMARY_LINKS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
   { href: "/trade", label: "Trade", icon: TrendingUp },
   { href: "/coins", label: "Discover", icon: Search },
-  { href: "/traders", label: "Traders", icon: Users },
   { href: "/predictions", label: "Predictions", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
+];
+
+const MORE_LINKS = [
+  { href: "/traders", label: "Traders", icon: Users },
   { href: "/journal", label: "Journal", icon: BookOpen },
   { href: "/chat", label: "AI Coach", icon: MessageSquare },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -23,11 +30,29 @@ const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calcula
 
 export function Navbar() {
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => { setMoreOpen(false); }, [pathname]);
 
   const isMarketing = MARKETING_ROUTES.some(
     (r) => pathname === r || (r === "/blog" && pathname.startsWith("/blog/"))
   );
   if (isMarketing) return null;
+
+  const isMoreActive = MORE_LINKS.some(
+    ({ href }) => pathname === href || pathname.startsWith(href + "/")
+  );
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-md">
@@ -40,7 +65,7 @@ export function Navbar() {
 
           {/* Desktop nav links */}
           <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+            {PRIMARY_LINKS.map(({ href, label, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link
@@ -57,6 +82,42 @@ export function Navbar() {
                 </Link>
               );
             })}
+
+            {/* More dropdown */}
+            <div ref={moreRef} className="relative">
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  isMoreActive
+                    ? "bg-[#7C3AED]/15 text-[#7C3AED]"
+                    : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
+                }`}
+              >
+                More
+                <ChevronDown className={`h-3 w-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+              </button>
+              {moreOpen && (
+                <div className="absolute top-full left-0 mt-1 w-44 bg-[#141620] border border-[#2a2e3e] rounded-xl shadow-xl shadow-black/40 py-1 z-50">
+                  {MORE_LINKS.map(({ href, label, icon: Icon }) => {
+                    const active = pathname === href || pathname.startsWith(href + "/");
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium transition-colors ${
+                          active
+                            ? "text-[#7C3AED] bg-[#7C3AED]/10"
+                            : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 
