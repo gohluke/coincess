@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, BarChart3, Bot, LayoutDashboard, Users, BookOpen, MessageSquare, Zap } from "lucide-react";
+import { TrendingUp, BarChart3, Bot, LayoutDashboard, Users, BookOpen, MessageSquare } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
   { href: "/trade", label: "Trade", icon: TrendingUp },
   { href: "/traders", label: "Traders", icon: Users },
   { href: "/journal", label: "Journal", icon: BookOpen },
+  { href: "/automate", label: "Automate", icon: Bot },
   { href: "/chat", label: "AI Coach", icon: MessageSquare },
-  { href: "/quant", label: "Quant", icon: Zap },
 ];
 
 const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calculator"];
