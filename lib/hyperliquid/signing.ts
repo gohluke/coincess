@@ -146,7 +146,7 @@ export async function signAndPlaceOrder(
 ): Promise<{ success: boolean; error?: string; oid?: number }> {
   try {
     const wallet = getWalletAdapter();
-    await getAddress();
+    const userAddr = await getAddress();
 
     const orderWire = buildOrderWire(params);
     const nonce = Date.now();
@@ -157,8 +157,8 @@ export async function signAndPlaceOrder(
       orders: [orderWire],
       grouping: "na",
     };
-
-    if (BUILDER_FEE_ENABLED) {
+    const isBuilder = userAddr.toLowerCase() === BUILDER_ADDRESS.toLowerCase();
+    if (BUILDER_FEE_ENABLED && !isBuilder) {
       action.builder = { b: BUILDER_ADDRESS, f: BUILDER_FEE };
     }
 
