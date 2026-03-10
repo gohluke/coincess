@@ -11,7 +11,6 @@
  */
 
 import type { StrategySignal, QuantStrategy, TickContext, QuantState } from "./types";
-import { atr } from "./indicators";
 
 export interface CombinerConfig {
   /** Lookback window for strategy performance (hours) */

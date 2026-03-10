@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -23,6 +23,11 @@ import {
   Copy,
   Server,
   Monitor,
+  FlaskConical,
+  Database,
+  LineChart,
+  CheckCircle2,
+  Layers,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { useAutomationStore } from "@/lib/automation/store";
@@ -33,13 +38,14 @@ import type { QuantStrategy, QuantState, QuantTrade } from "@/lib/quant/types";
 import type { MarketInfo } from "@/lib/hyperliquid/types";
 import { fetchAllMarkets } from "@/lib/hyperliquid/api";
 
-type Tab = "server" | "browser";
+type Tab = "server" | "browser" | "lab";
 
 const STRATEGY_LABELS: Record<string, { name: string; emoji: string; color: string }> = {
   funding_rate: { name: "Funding Rate Harvester", emoji: "🌾", color: "#10b981" },
   momentum: { name: "Momentum Scalper", emoji: "⚡", color: "#8b5cf6" },
   grid: { name: "Grid Bot", emoji: "📊", color: "#3b82f6" },
   mean_reversion: { name: "Mean Reversion", emoji: "🔄", color: "#f59e0b" },
+  market_maker: { name: "Market Maker", emoji: "🏪", color: "#ec4899" },
 };
 
 function formatPnl(n: number): string {
@@ -131,6 +137,17 @@ export default function AutomatePage() {
                 <Monitor className="h-3 w-3" />
                 Browser Bots
               </button>
+              <button
+                onClick={() => setTab("lab")}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                  tab === "lab"
+                    ? "bg-[#FF455B]/20 text-[#FF455B]"
+                    : "text-[#848e9c] hover:text-white"
+                }`}
+              >
+                <FlaskConical className="h-3 w-3" />
+                Quant Lab
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -155,8 +172,10 @@ export default function AutomatePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {tab === "server" ? (
           <ServerStrategies address={address} />
-        ) : (
+        ) : tab === "browser" ? (
           <BrowserBots />
+        ) : (
+          <QuantLab />
         )}
       </div>
     </div>
@@ -705,6 +724,402 @@ function BrowserBots() {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ─── QUANT LAB (Backtesting + Performance Analytics) ─── */
+
+interface BacktestRun {
+  id: string;
+  strategy_type: string;
+  config: Record<string, unknown>;
+  start_time: number;
+  end_time: number;
+  coins: string[];
+  interval: string;
+  total_trades: number;
+  winning_trades: number;
+  total_pnl: number;
+  max_drawdown: number;
+  sharpe_ratio: number | null;
+  sortino_ratio: number | null;
+  win_rate: number | null;
+  profit_factor: number | null;
+  avg_trade_pnl: number | null;
+  equity_curve: number[];
+  created_at: string;
+}
+
+interface DataStatus {
+  coin: string;
+  total_candles: number;
+}
+
+function QuantLab() {
+  const [backtests, setBacktests] = useState<BacktestRun[]>([]);
+  const [dataStatus, setDataStatus] = useState<DataStatus[]>([]);
+  const [totalCandles, setTotalCandles] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [selectedBacktest, setSelectedBacktest] = useState<BacktestRun | null>(null);
+  const [runningBacktest, setRunningBacktest] = useState(false);
+  const [btStrategy, setBtStrategy] = useState("momentum");
+  const [btDays, setBtDays] = useState(7);
+
+  const fetchLabData = useCallback(async () => {
+    try {
+      const [btRes, candleRes] = await Promise.all([
+        fetch("/api/quant/backtest?limit=30"),
+        fetch("/api/quant/candles"),
+      ]);
+      const btData = await btRes.json();
+      const candleData = await candleRes.json();
+      setBacktests(btData.runs ?? []);
+      setDataStatus(candleData.coins ?? []);
+      setTotalCandles(candleData.totalCandles ?? 0);
+    } catch (err) {
+      console.error("Lab fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLabData();
+  }, [fetchLabData]);
+
+  const runBacktest = async () => {
+    setRunningBacktest(true);
+    try {
+      const res = await fetch("/api/quant/backtest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ strategy_type: btStrategy, days: btDays }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        alert("Backtest queued. Run via CLI:\nnpx tsx scripts/backtest.ts run " + btStrategy);
+      }
+    } finally {
+      setRunningBacktest(false);
+    }
+  };
+
+  const bestBacktest = backtests.length > 0
+    ? backtests.reduce((best, bt) => (bt.sharpe_ratio ?? 0) > (best.sharpe_ratio ?? 0) ? bt : best)
+    : null;
+
+  const avgSharpe = backtests.length > 0
+    ? backtests.reduce((s, bt) => s + (bt.sharpe_ratio ?? 0), 0) / backtests.length
+    : 0;
+
+  const totalBacktestTrades = backtests.reduce((s, bt) => s + bt.total_trades, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <FlaskConical className="h-5 w-5 text-[#FF455B]" />
+          <span className="text-sm font-semibold text-white">Quant Lab</span>
+          <span className="text-[10px] text-[#4a4e59]">Backtesting + Analytics</span>
+        </div>
+        <button
+          onClick={fetchLabData}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#848e9c] hover:text-white hover:bg-[#1a1d26] transition-colors"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          Refresh
+        </button>
+      </div>
+
+      {/* Data Pipeline Status */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Candles Stored"
+          value={totalCandles.toLocaleString()}
+          icon={Database}
+          color="#3b82f6"
+        />
+        <StatCard
+          label="Coins Tracked"
+          value={dataStatus.length.toString()}
+          icon={Layers}
+          color="#8b5cf6"
+        />
+        <StatCard
+          label="Backtests Run"
+          value={backtests.length.toString()}
+          icon={FlaskConical}
+          color="#ec4899"
+        />
+        <StatCard
+          label="Avg Sharpe"
+          value={avgSharpe.toFixed(2)}
+          icon={LineChart}
+          color={avgSharpe > 1 ? "#10b981" : avgSharpe > 0 ? "#f59e0b" : "#ef4444"}
+        />
+      </div>
+
+      {/* Run Backtest Panel */}
+      <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a] space-y-4">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <Play className="h-4 w-4 text-[#FF455B]" />
+          Run Backtest
+        </h3>
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="text-[10px] text-[#848e9c] uppercase tracking-wider block mb-1">Strategy</label>
+            <select
+              value={btStrategy}
+              onChange={(e) => setBtStrategy(e.target.value)}
+              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF455B]"
+            >
+              <option value="momentum">Momentum Scalper</option>
+              <option value="grid">Grid Bot</option>
+              <option value="mean_reversion">Mean Reversion</option>
+              <option value="funding_rate">Funding Rate</option>
+              <option value="market_maker">Market Maker</option>
+              <option value="all">All Strategies</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] text-[#848e9c] uppercase tracking-wider block mb-1">Days</label>
+            <select
+              value={btDays}
+              onChange={(e) => setBtDays(Number(e.target.value))}
+              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF455B]"
+            >
+              <option value={3}>3 days</option>
+              <option value={7}>7 days</option>
+              <option value={14}>14 days</option>
+              <option value={30}>30 days</option>
+            </select>
+          </div>
+          <button
+            onClick={runBacktest}
+            disabled={runningBacktest || totalCandles < 10}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs bg-[#FF455B] text-white hover:bg-[#FF455B]/80 transition-colors disabled:opacity-40"
+          >
+            {runningBacktest ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+            {runningBacktest ? "Running..." : "Run Backtest"}
+          </button>
+        </div>
+        {totalCandles < 10 && (
+          <p className="text-[10px] text-amber-400">
+            No candle data. Run: <code className="bg-[#1a1d26] px-1 rounded">npx tsx scripts/backtest.ts backfill</code>
+          </p>
+        )}
+      </div>
+
+      {/* Data Coverage */}
+      {dataStatus.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            Data Coverage
+          </h3>
+          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2">
+            {dataStatus.slice(0, 24).map((d) => (
+              <div key={d.coin} className="bg-[#141620] border border-[#2a2e3e] rounded-lg px-2.5 py-2 text-center">
+                <p className="text-[10px] font-medium text-white">{d.coin}</p>
+                <p className="text-[9px] text-[#4a4e59]">{d.total_candles.toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Backtest Results */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          Backtest Results ({backtests.length})
+        </h3>
+
+        {loading ? (
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a]">
+                <Skeleton className="h-4 w-48 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            ))}
+          </div>
+        ) : backtests.length === 0 ? (
+          <div className="text-center text-[#848e9c] text-sm py-8 border border-dashed border-[#2a2e39] rounded-xl">
+            No backtests yet. Run one above or via CLI.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {backtests.map((bt) => {
+              const meta = STRATEGY_LABELS[bt.strategy_type] ?? { name: bt.strategy_type, emoji: "🤖", color: "#848e9c" };
+              const isSelected = selectedBacktest?.id === bt.id;
+              const profitable = bt.total_pnl > 0;
+              const sharpe = bt.sharpe_ratio ?? 0;
+
+              return (
+                <div key={bt.id}>
+                  <button
+                    onClick={() => setSelectedBacktest(isSelected ? null : bt)}
+                    className={`w-full text-left p-4 rounded-xl border transition-all ${
+                      isSelected
+                        ? "border-[#FF455B]/40 bg-[#FF455B]/5"
+                        : "border-[#2a2e39] bg-[#12141a] hover:border-[#3a3e49]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">{meta.emoji}</span>
+                        <div>
+                          <p className="text-sm font-medium text-white">{meta.name}</p>
+                          <p className="text-[10px] text-[#848e9c]">
+                            {bt.coins.slice(0, 5).join(", ")}{bt.coins.length > 5 ? ` +${bt.coins.length - 5}` : ""} |{" "}
+                            {new Date(bt.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex items-center gap-4">
+                        <div>
+                          <p className={`text-sm font-bold ${profitable ? "text-emerald-400" : "text-red-400"}`}>
+                            {profitable ? "+" : ""}${bt.total_pnl.toFixed(2)}
+                          </p>
+                          <p className="text-[10px] text-[#848e9c]">{bt.total_trades} trades</p>
+                        </div>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          sharpe > 1 ? "bg-emerald-500/20" : sharpe > 0 ? "bg-amber-500/20" : "bg-red-500/20"
+                        }`}>
+                          <span className={`text-xs font-bold ${
+                            sharpe > 1 ? "text-emerald-400" : sharpe > 0 ? "text-amber-400" : "text-red-400"
+                          }`}>
+                            {sharpe.toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick metrics row */}
+                    <div className="grid grid-cols-4 gap-3 mt-3 pt-3 border-t border-[#2a2e39]/50">
+                      <BacktestMetric label="Win Rate" value={bt.win_rate != null ? `${(bt.win_rate * 100).toFixed(1)}%` : "—"} good={bt.win_rate != null && bt.win_rate > 0.5} />
+                      <BacktestMetric label="Max DD" value={`${(bt.max_drawdown * 100).toFixed(1)}%`} good={bt.max_drawdown < 0.1} />
+                      <BacktestMetric label="Sharpe" value={sharpe.toFixed(2)} good={sharpe > 1} />
+                      <BacktestMetric label="Avg P&L" value={bt.avg_trade_pnl != null ? `$${bt.avg_trade_pnl.toFixed(2)}` : "—"} good={bt.avg_trade_pnl != null && bt.avg_trade_pnl > 0} />
+                    </div>
+                  </button>
+
+                  {/* Expanded details */}
+                  {isSelected && (
+                    <div className="ml-4 mr-4 -mt-1 p-4 rounded-b-xl border border-t-0 border-[#FF455B]/20 bg-[#0d0f14] space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <DetailMetric label="Total P&L" value={`$${bt.total_pnl.toFixed(2)}`} />
+                        <DetailMetric label="Winning" value={`${bt.winning_trades}/${bt.total_trades}`} />
+                        <DetailMetric label="Profit Factor" value={bt.profit_factor?.toFixed(2) ?? "—"} />
+                        <DetailMetric label="Sortino" value={bt.sortino_ratio?.toFixed(2) ?? "—"} />
+                        <DetailMetric label="Period" value={`${Math.round((bt.end_time - bt.start_time) / 86400_000)}d`} />
+                        <DetailMetric label="Interval" value={bt.interval} />
+                        <DetailMetric label="Coins" value={bt.coins.length.toString()} />
+                        <DetailMetric label="Max Drawdown" value={`${(bt.max_drawdown * 100).toFixed(2)}%`} />
+                      </div>
+
+                      {/* Mini equity curve */}
+                      {bt.equity_curve && bt.equity_curve.length > 1 && (
+                        <div>
+                          <p className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-2">Equity Curve</p>
+                          <MiniEquityCurve data={bt.equity_curve} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Best Strategy Highlight */}
+      {bestBacktest && (
+        <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <span className="text-sm font-semibold text-emerald-400">Best Performing Strategy</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm font-medium">
+                {STRATEGY_LABELS[bestBacktest.strategy_type]?.emoji ?? "🤖"}{" "}
+                {STRATEGY_LABELS[bestBacktest.strategy_type]?.name ?? bestBacktest.strategy_type}
+              </p>
+              <p className="text-[10px] text-emerald-400/70">
+                Sharpe: {(bestBacktest.sharpe_ratio ?? 0).toFixed(2)} | Win Rate: {((bestBacktest.win_rate ?? 0) * 100).toFixed(1)}% | {bestBacktest.total_trades} trades
+              </p>
+            </div>
+            <p className={`text-lg font-bold ${bestBacktest.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {bestBacktest.total_pnl >= 0 ? "+" : ""}${bestBacktest.total_pnl.toFixed(2)}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BacktestMetric({ label, value, good }: { label: string; value: string; good: boolean }) {
+  return (
+    <div>
+      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">{label}</p>
+      <p className={`text-xs font-semibold ${good ? "text-emerald-400" : "text-[#848e9c]"}`}>{value}</p>
+    </div>
+  );
+}
+
+function DetailMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-[#12141a] rounded-lg px-3 py-2">
+      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">{label}</p>
+      <p className="text-xs font-medium text-white">{value}</p>
+    </div>
+  );
+}
+
+function MiniEquityCurve({ data }: { data: number[] }) {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const height = 60;
+  const width = 100;
+
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * height;
+    return `${x},${y}`;
+  }).join(" ");
+
+  const startVal = data[0];
+  const endVal = data[data.length - 1];
+  const color = endVal >= startVal ? "#10b981" : "#ef4444";
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-16" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={`eq-grad-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon
+        points={`0,${height} ${points} ${width},${height}`}
+        fill={`url(#eq-grad-${color})`}
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   );
 }
 

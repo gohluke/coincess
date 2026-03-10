@@ -133,3 +133,95 @@ export function latestRsi(prices: number[], period = 14): number {
   const vals = rsi(prices, period);
   return vals[vals.length - 1] ?? NaN;
 }
+
+export interface MACDResult {
+  macd: number;
+  signal: number;
+  histogram: number;
+}
+
+export function macd(
+  prices: number[],
+  fastPeriod = 12,
+  slowPeriod = 26,
+  signalPeriod = 9,
+): MACDResult[] {
+  if (prices.length === 0) return [];
+  const fastEma = ema(prices, fastPeriod);
+  const slowEma = ema(prices, slowPeriod);
+  const macdLine: number[] = [];
+  for (let i = 0; i < prices.length; i++) {
+    macdLine.push(fastEma[i] - slowEma[i]);
+  }
+  const signalLine = ema(macdLine, signalPeriod);
+  const result: MACDResult[] = [];
+  for (let i = 0; i < prices.length; i++) {
+    const macdVal = macdLine[i];
+    const sigVal = signalLine[i];
+    const valid = i >= slowPeriod + signalPeriod - 1;
+    result.push({
+      macd: valid ? macdVal : NaN,
+      signal: valid ? sigVal : NaN,
+      histogram: valid ? macdVal - sigVal : NaN,
+    });
+  }
+  return result;
+}
+
+export function latestMacd(
+  prices: number[],
+  fastPeriod = 12,
+  slowPeriod = 26,
+  signalPeriod = 9,
+): MACDResult {
+  const vals = macd(prices, fastPeriod, slowPeriod, signalPeriod);
+  return vals[vals.length - 1] ?? { macd: NaN, signal: NaN, histogram: NaN };
+}
+
+export function vwap(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  volumes: number[],
+): number[] {
+  const len = Math.min(highs.length, lows.length, closes.length, volumes.length);
+  if (len === 0) return [];
+  const result: number[] = [];
+  let cumTpVol = 0;
+  let cumVol = 0;
+  for (let i = 0; i < len; i++) {
+    const tp = (highs[i] + lows[i] + closes[i]) / 3;
+    cumTpVol += tp * volumes[i];
+    cumVol += volumes[i];
+    result.push(cumVol === 0 ? NaN : cumTpVol / cumVol);
+  }
+  return result;
+}
+
+export function latestVwap(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  volumes: number[],
+): number {
+  const vals = vwap(highs, lows, closes, volumes);
+  return vals[vals.length - 1] ?? NaN;
+}
+
+export function obv(closes: number[], volumes: number[]): number[] {
+  const len = Math.min(closes.length, volumes.length);
+  if (len === 0) return [];
+  const result: number[] = [0];
+  for (let i = 1; i < len; i++) {
+    const prev = result[i - 1];
+    if (closes[i] > closes[i - 1]) result.push(prev + volumes[i]);
+    else if (closes[i] < closes[i - 1]) result.push(prev - volumes[i]);
+    else result.push(prev);
+  }
+  return result;
+}
+
+export function latestObv(closes: number[], volumes: number[]): number {
+  const vals = obv(closes, volumes);
+  return vals[vals.length - 1] ?? NaN;
+}
