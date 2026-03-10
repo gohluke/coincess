@@ -66,11 +66,16 @@ function getWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount
     async signTypedData(params) {
       const address = await resolveSigningAddress();
 
+      // Strip EIP712Domain from types — eth_signTypedData_v4 providers
+      // (especially Privy embedded wallets) derive it from the domain object
+      // and reject/conflict when it appears explicitly in types.
+      const { EIP712Domain: _, ...filteredTypes } = params.types as Record<string, unknown>;
+
       const result = await eth.request({
         method: "eth_signTypedData_v4",
         params: [address, JSON.stringify({
           domain: params.domain,
-          types: params.types,
+          types: filteredTypes,
           primaryType: params.primaryType,
           message: params.message,
         })],
