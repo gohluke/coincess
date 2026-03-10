@@ -5,6 +5,7 @@ export interface RiskLimits {
   maxPerPositionPct: number;
   dailyLossLimitPct: number;
   maxDrawdownPct: number;
+  reserveUsd: number;
 }
 
 const DEFAULT_LIMITS: RiskLimits = {
@@ -12,6 +13,7 @@ const DEFAULT_LIMITS: RiskLimits = {
   maxPerPositionPct: 0.1,
   dailyLossLimitPct: 0.05,
   maxDrawdownPct: 0.15,
+  reserveUsd: 100,
 };
 
 export class RiskManager {
@@ -41,8 +43,13 @@ export class RiskManager {
       this.pausedUntil = null;
     }
 
+    const tradableValue = ctx.accountValue - this.limits.reserveUsd;
+    if (tradableValue <= 0) {
+      return { allowed: false, reason: `Balance $${ctx.accountValue.toFixed(0)} below $${this.limits.reserveUsd} reserve` };
+    }
+
     const positionValue = signal.size * signal.price;
-    const maxPerPos = ctx.accountValue * this.limits.maxPerPositionPct;
+    const maxPerPos = tradableValue * this.limits.maxPerPositionPct;
     if (positionValue > maxPerPos) {
       return {
         allowed: false,
@@ -54,7 +61,7 @@ export class RiskManager {
       (sum, p) => sum + Math.abs(p.szi * p.entryPx),
       0,
     );
-    const maxExposure = ctx.accountValue * this.limits.maxTotalExposurePct;
+    const maxExposure = tradableValue * this.limits.maxTotalExposurePct;
     if (currentExposure + positionValue > maxExposure) {
       return {
         allowed: false,

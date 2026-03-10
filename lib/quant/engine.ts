@@ -151,10 +151,11 @@ export class QuantEngine {
       });
 
       const elapsed = Date.now() - start;
-      if (this.tickCount % 10 === 0) {
+      const logEvery = allSignals.length > 0 ? 1 : 10;
+      if (this.tickCount % logEvery === 0 || allSignals.length > 0) {
         console.log(
           `[engine] Tick #${this.tickCount}: $${accountValue.toFixed(2)} | ` +
-          `${positions.length} pos | ${allSignals.length} signals | ${elapsed}ms`,
+          `${strategies.length} strats | ${positions.length} pos | ${allSignals.length} signals | ${elapsed}ms`,
         );
       }
     } catch (err) {

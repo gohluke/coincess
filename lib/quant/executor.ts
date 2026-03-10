@@ -88,13 +88,30 @@ export async function closePosition(params: {
 
 export async function fetchAccountValue(): Promise<number> {
   const { accountAddress } = getCredentials();
-  const res = await fetch(`${HL_API}/info`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "clearinghouseState", user: accountAddress }),
-  });
-  const data = (await res.json()) as { marginSummary: { accountValue: string } };
-  return parseFloat(data.marginSummary.accountValue);
+  const [perpsRes, spotRes] = await Promise.all([
+    fetch(`${HL_API}/info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "clearinghouseState", user: accountAddress }),
+    }),
+    fetch(`${HL_API}/info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "spotClearinghouseState", user: accountAddress }),
+    }),
+  ]);
+
+  const perpsData = (await perpsRes.json()) as { marginSummary: { accountValue: string } };
+  const spotData = (await spotRes.json()) as {
+    balances: Array<{ coin: string; total: string }>;
+  };
+
+  const perpsValue = parseFloat(perpsData.marginSummary.accountValue);
+  const spotUsdc = spotData.balances
+    ?.filter((b) => ["USDC", "USDE", "USDT0"].includes(b.coin))
+    .reduce((sum, b) => sum + parseFloat(b.total), 0) ?? 0;
+
+  return perpsValue + spotUsdc;
 }
 
 export async function fetchPositions() {
