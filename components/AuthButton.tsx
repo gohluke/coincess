@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { LogOut, User, Copy, Check, ExternalLink } from "lucide-react";
+import { LogOut, User, Copy, Check, ExternalLink, Settings } from "lucide-react";
 
 interface PrivyHook {
   ready: boolean;
@@ -27,26 +27,37 @@ function hashCode(str: string): number {
   return Math.abs(hash);
 }
 
+const BRAND_PALETTE = [
+  "#FF455B",
+  "#E63B50",
+  "#CC3045",
+  "#FF5C6E",
+  "#B3283C",
+  "#0b0e11",
+  "#141620",
+  "#1a1d26",
+  "#FF7A8A",
+  "#991E30",
+];
+
 function Identicon({ seed, size = 32 }: { seed: string; size?: number }) {
-  const colors = useMemo(() => {
+  const { bg, fg1, fg2 } = useMemo(() => {
     const h = hashCode(seed);
-    const hue1 = h % 360;
-    const hue2 = (h * 7 + 137) % 360;
-    const hue3 = (h * 13 + 53) % 360;
-    return [
-      `hsl(${hue1}, 70%, 55%)`,
-      `hsl(${hue2}, 65%, 45%)`,
-      `hsl(${hue3}, 75%, 60%)`,
-    ];
+    const pick = (offset: number) => BRAND_PALETTE[(h + offset) % BRAND_PALETTE.length];
+    return { bg: pick(0), fg1: pick(3), fg2: pick(7) };
   }, [seed]);
 
   const grid = useMemo(() => {
     const h = hashCode(seed);
+    const h2 = hashCode(seed + "x");
     const cells: boolean[][] = [];
     for (let row = 0; row < 5; row++) {
       const r: boolean[] = [];
       for (let col = 0; col < 3; col++) {
-        r.push(((h >> (row * 3 + col)) & 1) === 1);
+        const bit = row < 3
+          ? ((h >> (row * 3 + col)) & 1) === 1
+          : ((h2 >> ((row - 3) * 3 + col)) & 1) === 1;
+        r.push(bit);
       }
       r.push(r[1]);
       r.push(r[0]);
@@ -58,8 +69,8 @@ function Identicon({ seed, size = 32 }: { seed: string; size?: number }) {
   const cellSize = size / 5;
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-full">
-      <rect width={size} height={size} fill={colors[2]} />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-full shrink-0">
+      <rect width={size} height={size} fill={bg} />
       {grid.map((row, ri) =>
         row.map((on, ci) =>
           on ? (
@@ -69,7 +80,7 @@ function Identicon({ seed, size = 32 }: { seed: string; size?: number }) {
               y={ri * cellSize}
               width={cellSize}
               height={cellSize}
-              fill={ri % 2 === 0 ? colors[0] : colors[1]}
+              fill={ri % 2 === 0 ? fg1 : fg2}
             />
           ) : null
         )
@@ -100,9 +111,7 @@ export function AuthButton() {
   }, []);
 
   if (!loaded) {
-    return (
-      <div className="h-9 w-20 rounded-full bg-[#141620] animate-pulse" />
-    );
+    return <div className="h-9 w-9 rounded-full bg-[#141620] animate-pulse" />;
   }
 
   return <AuthButtonInner showMenu={showMenu} setShowMenu={setShowMenu} copied={copied} setCopied={setCopied} />;
@@ -133,9 +142,7 @@ function AuthButtonInner({
   }, [setCopied]);
 
   if (!privy || !privy.ready) {
-    return (
-      <div className="h-9 w-20 rounded-full bg-[#141620] animate-pulse" />
-    );
+    return <div className="h-9 w-9 rounded-full bg-[#141620] animate-pulse" />;
   }
 
   if (!privy.authenticated) {
@@ -153,27 +160,22 @@ function AuthButtonInner({
   const email = user?.email?.address || user?.google?.email;
   const name = user?.google?.name;
   const walletAddr = user?.wallet?.address;
-  const shortAddr = walletAddr ? `${walletAddr.slice(0, 6)}...${walletAddr.slice(-4)}` : null;
   const identiconSeed = walletAddr ?? user?.id ?? "default";
 
   return (
     <div className="relative">
-      {/* Trigger: avatar + address pill (based.app style) */}
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 rounded-full bg-[#1a1d26] border border-[#2a2e3e] hover:border-[#3a3e4e] pl-1 pr-3 py-1 transition-colors"
+        className="flex items-center justify-center w-9 h-9 rounded-full hover:ring-2 hover:ring-brand/30 transition-all"
       >
-        <Identicon seed={identiconSeed} size={28} />
-        <span className="text-[12px] font-mono text-[#c0c4cc]">
-          {shortAddr ?? "Connected"}
-        </span>
+        <Identicon seed={identiconSeed} size={34} />
       </button>
 
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
           <div className="absolute right-0 top-full mt-1.5 z-50 bg-[#141620] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/40 min-w-[240px] overflow-hidden">
-            {/* Header: identicon + address */}
+            {/* Header */}
             <div className="px-4 py-3.5 border-b border-[#2a2e3e]">
               <div className="flex items-center gap-3">
                 <Identicon seed={identiconSeed} size={36} />
@@ -218,6 +220,14 @@ function AuthButtonInner({
                   View on Explorer
                 </a>
               )}
+              <a
+                href="/settings"
+                className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-[13px] text-white hover:bg-[#1a1d26] transition-colors"
+              >
+                <Settings className="h-4 w-4 text-[#848e9c]" />
+                Settings
+              </a>
+              <div className="mx-3 my-1 border-t border-[#2a2e3e]" />
               <button
                 onClick={async () => {
                   setShowMenu(false);

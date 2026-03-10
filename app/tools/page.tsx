@@ -33,7 +33,7 @@ const TRADING_TOOLS = [
     icon: BarChart3,
     title: "Prediction Markets",
     desc: "Bet on real-world outcomes — elections, sports, crypto events — powered by Polymarket.",
-    href: "/predictions",
+    href: "/predict",
     tags: ["Polymarket", "Events", "Binary"],
     accent: "from-blue-500/20 to-blue-500/5",
     iconColor: "text-blue-400",

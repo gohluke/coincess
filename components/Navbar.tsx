@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   TrendingUp, BarChart3, Bot, LayoutDashboard, Search,
-  Settings, Users, BookOpen, MessageSquare, Wrench, LayoutGrid,
+  Users, BookOpen, MessageSquare, Wrench, LayoutGrid,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
@@ -15,7 +15,7 @@ import { DepositButton } from "@/components/DepositModal";
 const NAV_ICONS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
   { href: "/trade", label: "Trade", icon: TrendingUp },
-  { href: "/predictions", label: "Predictions", icon: BarChart3 },
+  { href: "/predict", label: "Predict", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
 ];
 
@@ -24,7 +24,6 @@ const MORE_LINKS = [
   { href: "/journal", label: "Journal", icon: BookOpen },
   { href: "/chat", label: "AI Coach", icon: MessageSquare },
   { href: "/tools", label: "Tools", icon: Wrench },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const MARKETING_ROUTES = ["/blog", "/swap-guide", "/crypto-leverage-calculator"];

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function PredictionsLayout({
+export default function PredictLayout({
   children,
 }: {
   children: React.ReactNode;

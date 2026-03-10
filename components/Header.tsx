@@ -22,8 +22,8 @@ export function Header() {
             <Link href="/trade" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
               Trade
             </Link>
-            <Link href="/predictions" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
-              Predictions
+            <Link href="/predict" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
+              Predict
             </Link>
             <Link href="/automate" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
               Automate
@@ -71,11 +71,11 @@ export function Header() {
               Trade
             </Link>
             <Link
-              href="/predictions"
+              href="/predict"
               className="block px-4 text-sm font-semibold text-brand hover:text-brand-hover transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Predictions
+              Predict
             </Link>
             <Link
               href="/automate"

@@ -36,7 +36,7 @@ export function EventCard({ event }: { event: PolymarketEvent }) {
 
   return (
     <Link
-      href={`/predictions/${event.slug || event.id}`}
+      href={`/predict/${event.slug || event.id}`}
       className={`group block bg-[#141620] border rounded-xl p-4 transition-all duration-200 ${
         isClosed || isEnded
           ? "border-[#2a2e3e]/50 opacity-70 hover:opacity-90"

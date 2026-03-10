@@ -13,7 +13,7 @@ import {
 const QUICK_LINKS = [
   { href: "/trade", label: "Trade", icon: TrendingUp },
   { href: "/coins", label: "Discover", icon: Search },
-  { href: "/predictions", label: "Predictions", icon: BarChart3 },
+  { href: "/predict", label: "Predict", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
   { href: "/crypto-leverage-calculator", label: "Calculator", icon: Calculator },
   { href: "/swap-guide", label: "Swap Guide", icon: ArrowRightLeft },

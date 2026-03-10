@@ -58,14 +58,14 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - Dark splash screen matching app theme
 
 ### Coinbase-Style Navigation
-- **Desktop** — all-icon circular navbar: Logo + Search pill + circular nav icons (Portfolio, Trade, Predictions, Automate) with hover tooltips, separator, then utility icons (Deposit, More grid, Avatar)
-- **More dropdown** — grid icon opens Traders, Journal, AI Coach, Tools, Settings
+- **Desktop** — all-icon circular navbar: Logo + Search pill + circular nav icons (Portfolio, Trade, Predict, Automate) with hover tooltips, separator, then utility icons (Deposit, More grid, Avatar)
+- **More dropdown** — grid icon opens Traders, Journal, AI Coach, Tools
 - **Search** — unified rounded pill replaces the old Discover link, searches markets on Enter
 - **Brand font** — Plus Jakarta Sans (geometric, Circular Std-like) via `next/font/google`
 - **Text wordmark** — logo icon + "coincess" rendered in the brand font
 
 ### Mobile-First UX
-- Bottom navigation bar (Portfolio, Trade, Discover, Predictions, Automate)
+- Bottom navigation bar (Portfolio, Trade, Discover, Predict, Automate)
 - Swipeable tab layout on trading terminal (Chart / Book / Order / Positions)
 - Mobile card layout for positions and orders (replaces table on small screens)
 - Bottom-sheet share modal with safe-area padding
@@ -169,7 +169,7 @@ npm run dev
 |-------|-------------|
 | [localhost:3000/dashboard](http://localhost:3000/dashboard) | Unified portfolio dashboard |
 | [localhost:3000/trade](http://localhost:3000/trade) | Perpetuals trading terminal |
-| [localhost:3000/predictions](http://localhost:3000/predictions) | Prediction markets browser |
+| [localhost:3000/predict](http://localhost:3000/predict) | Prediction markets browser |
 | [localhost:3000/automate](http://localhost:3000/automate) | Automation dashboard |
 | [localhost:3000/automate/create](http://localhost:3000/automate/create) | Create new strategy |
 | [localhost:3000/automate/alerts](http://localhost:3000/automate/alerts) | Price alerts manager |
@@ -234,7 +234,7 @@ coincess/
 ├── app/
 │   ├── dashboard/page.tsx               # Unified portfolio dashboard
 │   ├── trade/page.tsx                   # Perpetuals trading terminal
-│   ├── predictions/
+│   ├── predict/
 │   │   ├── page.tsx                     # Prediction markets browser
 │   │   └── [slug]/page.tsx             # Event detail + bet slips
 │   ├── automate/

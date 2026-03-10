@@ -1,5 +1,5 @@
 const CACHE_NAME = "coincess-v1";
-const STATIC_ASSETS = ["/trade", "/predictions", "/automate"];
+const STATIC_ASSETS = ["/trade", "/predict", "/automate"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

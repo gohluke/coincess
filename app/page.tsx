@@ -26,7 +26,7 @@ const FEATURES = [
     icon: BarChart3,
     title: "Prediction Markets",
     desc: "Bet on real-world outcomes — politics, sports, crypto events — powered by Polymarket.",
-    href: "/predictions",
+    href: "/predict",
     accent: "from-blue-500/20 to-blue-500/5",
     iconColor: "text-blue-400",
   },

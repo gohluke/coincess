@@ -350,8 +350,8 @@ export default function DashboardPage() {
             <Link href="/trade" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
               Trade <span className="text-brand">&rarr;</span>
             </Link>
-            <Link href="/predictions" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
-              Predictions <span className="text-brand">&rarr;</span>
+            <Link href="/predict" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
+              Predict <span className="text-brand">&rarr;</span>
             </Link>
             <Link href="/coins" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
               Discover <span className="text-brand">&rarr;</span>
@@ -504,7 +504,7 @@ export default function DashboardPage() {
                   <p className="text-[10px] text-[#848e9c]">Perps</p>
                 </div>
               </Link>
-              <Link href="/predictions" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
+              <Link href="/predict" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
                 <BarChart3 className="h-5 w-5 text-blue-400 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Predict</p>

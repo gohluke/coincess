@@ -53,7 +53,7 @@ export function PredictionBetForm() {
   return (
     <div className="space-y-4 max-w-md">
       <p className="text-xs text-[#848e9c] bg-[#141620] rounded-lg p-3 border border-[#2a2e3e]">
-        Find the event on the <a href="/predictions" className="text-brand hover:underline">Predictions</a> page, then copy the event ID and token ID from the URL or market data.
+        Find the event on the <a href="/predict" className="text-brand hover:underline">Predict</a> page, then copy the event ID and token ID from the URL or market data.
       </p>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Event Title</label>
