@@ -64,6 +64,7 @@ export function WalletButton() {
   const hasLinkedWallets = linkedWallets.length > 0;
   const activeWallet = linkedWallets.find((w) => w.id === activeWalletId);
   const displayLabel = activeWallet?.label ?? (address ? shortenAddress(address) : null);
+  const isLinkedOnly = !walletAddr && !!activeLinkedAddr;
 
   if (address) {
     return (
@@ -72,7 +73,7 @@ export function WalletButton() {
           onClick={() => hasLinkedWallets ? setShowDropdown(!showDropdown) : undefined}
           className="flex items-center gap-2 bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-1.5 hover:border-[#3a3e49] transition-colors"
         >
-          <div className="w-2 h-2 rounded-full bg-[#0ecb81]" />
+          <div className={`w-2 h-2 rounded-full ${isLinkedOnly ? "bg-[#f0b90b]" : "bg-[#0ecb81]"}`} />
           <span className="text-sm text-white font-medium max-w-[120px] truncate">
             {displayLabel}
           </span>

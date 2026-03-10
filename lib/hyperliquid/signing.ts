@@ -32,23 +32,42 @@ function getEthereum(): EthProvider {
 
 /**
  * Build a wallet adapter matching AbstractViemJsonRpcAccount interface.
- * Wraps window.ethereum for MetaMask / injected providers.
+ * When preferredAddress is provided, we ensure that specific account is used
+ * for signing — critical when the store shows a linked wallet address that
+ * differs from the wallet's default active account.
  */
-function getWalletAdapter(): AbstractViemJsonRpcAccount {
+function getWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount {
   const eth = getEthereum();
+
+  async function resolveSigningAddress(): Promise<string> {
+    const accounts = (await eth.request({ method: "eth_accounts" })) as string[];
+    if (!accounts.length) throw new Error("No account connected");
+
+    if (preferredAddress) {
+      const match = accounts.find(
+        (a) => a.toLowerCase() === preferredAddress.toLowerCase(),
+      );
+      if (match) return match;
+      const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
+      throw new Error(
+        `Wallet mismatch: trading as ${short(preferredAddress)} but your wallet is on ${short(accounts[0])}. ` +
+        `Switch to ${short(preferredAddress)} in Zerion/MetaMask, or go to Settings and remove the linked wallet.`,
+      );
+    }
+    return accounts[0];
+  }
 
   return {
     async getAddresses() {
-      const accounts = (await eth.request({ method: "eth_accounts" })) as string[];
-      return accounts as `0x${string}`[];
+      const addr = await resolveSigningAddress();
+      return [addr] as `0x${string}`[];
     },
     async getChainId() {
       const chainId = (await eth.request({ method: "eth_chainId" })) as string;
       return Number(chainId);
     },
     async signTypedData(params) {
-      const [address] = (await eth.request({ method: "eth_accounts" })) as string[];
-      if (!address) throw new Error("No account connected");
+      const address = await resolveSigningAddress();
 
       const result = await eth.request({
         method: "eth_signTypedData_v4",
@@ -64,10 +83,16 @@ function getWalletAdapter(): AbstractViemJsonRpcAccount {
   };
 }
 
-async function getAddress(): Promise<string> {
+async function getAddress(preferredAddress?: string): Promise<string> {
   const eth = getEthereum();
   const accounts = (await eth.request({ method: "eth_accounts" })) as string[];
   if (!accounts[0]) throw new Error("No account connected");
+  if (preferredAddress) {
+    const match = accounts.find(
+      (a) => a.toLowerCase() === preferredAddress.toLowerCase(),
+    );
+    if (match) return match;
+  }
   return accounts[0];
 }
 
@@ -150,11 +175,11 @@ export function getMarketOrderPrice(isBuy: boolean, markPx: number): string {
 }
 
 export async function signAndPlaceOrder(
-  params: PlaceOrderParams,
+  params: PlaceOrderParams & { expectedAddress?: string },
 ): Promise<{ success: boolean; error?: string; oid?: number }> {
   try {
-    const wallet = getWalletAdapter();
-    const userAddr = await getAddress();
+    const wallet = getWalletAdapter(params.expectedAddress);
+    const userAddr = await getAddress(params.expectedAddress);
 
     const orderWire = buildOrderWire(params);
     const nonce = Date.now();
@@ -196,10 +221,11 @@ export async function signAndPlaceOrder(
 export async function signAndCancelOrder(
   asset: number,
   oid: number,
+  expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter();
-    await getAddress();
+    const wallet = getWalletAdapter(expectedAddress);
+    await getAddress(expectedAddress);
 
     const nonce = Date.now();
     const action = { type: "cancel", cancels: [{ a: asset, o: oid }] };
@@ -224,10 +250,11 @@ export async function signAndUpdateLeverage(
   asset: number,
   leverage: number,
   isCross: boolean = true,
+  expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter();
-    await getAddress();
+    const wallet = getWalletAdapter(expectedAddress);
+    await getAddress(expectedAddress);
 
     const nonce = Date.now();
     const action = { type: "updateLeverage", asset, isCross, leverage };
@@ -255,9 +282,10 @@ export async function signAndUpdateLeverage(
 export async function signAndApproveBuilderFee(
   builderAddress: string = BUILDER_ADDRESS,
   maxFeeRate: string = "0.01%",
+  expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter();
+    const wallet = getWalletAdapter(expectedAddress);
     const chainId = await wallet.getChainId();
 
     const nonce = Date.now();
@@ -305,10 +333,12 @@ const UserSetAbstractionTypes = {
  * commodities, forex) using their main USDC balance.
  * Uses userSetAbstraction (EIP-712 user-signed action) for browser wallets.
  */
-export async function signAndEnableDexAbstraction(): Promise<{ success: boolean; error?: string }> {
+export async function signAndEnableDexAbstraction(
+  expectedAddress?: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter();
-    const address = await getAddress();
+    const wallet = getWalletAdapter(expectedAddress);
+    const address = await getAddress(expectedAddress);
     const chainId = await wallet.getChainId();
 
     const nonce = Date.now();

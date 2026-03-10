@@ -27,14 +27,22 @@ export function OrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [signingAddr, setSigningAddr] = useState<string | null>(null);
+  const [signingAddrLoaded, setSigningAddrLoaded] = useState(false);
 
   useEffect(() => {
     if (address) {
-      getSigningAddress().then(setSigningAddr);
+      setSigningAddrLoaded(false);
+      getSigningAddress().then((addr) => {
+        setSigningAddr(addr);
+        setSigningAddrLoaded(true);
+      });
+    } else {
+      setSigningAddr(null);
+      setSigningAddrLoaded(false);
     }
   }, [address]);
 
-  const addressMismatch = address && signingAddr &&
+  const addressMismatch = signingAddrLoaded && address && signingAddr &&
     address.toLowerCase() !== signingAddr.toLowerCase();
 
   const market = markets.find((m) => m.name === selectedMarket);
@@ -116,6 +124,7 @@ export function OrderForm() {
         size: orderSize,
         orderType,
         markets,
+        expectedAddress: address ?? undefined,
       });
 
       if (result.success) {
@@ -125,13 +134,14 @@ export function OrderForm() {
         if (tpPrice) {
           await signAndPlaceOrder({
             coin: selectedMarket,
-            isBuy: orderSide !== "buy", // opposite side for TP
+            isBuy: orderSide !== "buy",
             price: tpPrice,
             size: orderSize,
             orderType: "limit",
             reduceOnly: true,
             tpsl: { triggerPx: tpPrice, type: "tp" },
             markets,
+            expectedAddress: address ?? undefined,
           });
         }
         if (slPrice) {
@@ -144,6 +154,7 @@ export function OrderForm() {
             reduceOnly: true,
             tpsl: { triggerPx: slPrice, type: "sl" },
             markets,
+            expectedAddress: address ?? undefined,
           });
         }
 
@@ -404,7 +415,7 @@ export function OrderForm() {
               onClick={async () => {
                 setFeedback(null);
                 try {
-                  const result = await signAndEnableDexAbstraction();
+                  const result = await signAndEnableDexAbstraction(address ?? undefined);
                   if (result.success) {
                     setFeedback({ type: "success", msg: "Unified account enabled! You can now trade stocks & commodities." });
                     loadUserState();

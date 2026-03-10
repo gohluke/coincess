@@ -55,6 +55,7 @@ export function PositionsTable() {
         orderType: "market",
         reduceOnly: true,
         markets,
+        expectedAddress: address ?? undefined,
       });
       loadUserState();
     } catch (err) {
@@ -69,7 +70,7 @@ export function PositionsTable() {
     try {
       const market = markets.find((m) => m.name === coin);
       if (market) {
-        await signAndCancelOrder(market.assetIndex, oid);
+        await signAndCancelOrder(market.assetIndex, oid, address ?? undefined);
         loadUserState();
       }
     } catch (err) {

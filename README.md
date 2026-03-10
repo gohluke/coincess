@@ -75,11 +75,15 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 ### Embedded Wallet (Privy)
 - **Email / Google / wallet login** — no MetaMask extension required
 - Auto-creates a self-custody embedded wallet on Arbitrum
+- **External wallet priority** — when Privy detects an external wallet (Zerion, MetaMask), it uses that for signing instead of the embedded wallet, since external wallets are more likely to hold Hyperliquid deposits
 - Falls back to MetaMask when Privy is not configured
 
 ### Wallet & Signing
 - MetaMask / injected wallet connection
 - EIP-712 signing via Hyperliquid's phantom agent scheme
+- **Address-validated signing** — every trade, cancel, and leverage update verifies the signing wallet matches the expected trading address before submitting; prevents "User does not exist" errors when a linked wallet differs from the active wallet account
+- **Wallet mismatch detection** — order form and positions table detect address mismatches between the displayed (linked) wallet and the actual signing wallet, showing a clear warning and disabling trades until resolved
+- Builder fee exemption for the platform owner's address
 - Builder fees on each Hyperliquid trade
 - Polymarket builder attribution via HMAC-signed headers
 
