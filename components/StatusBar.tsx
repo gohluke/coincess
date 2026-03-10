@@ -79,7 +79,7 @@ export function StatusBar() {
     }
 
     const delta = longsNotional - shortsNotional;
-    const accountValue = parseFloat(ch.marginSummary.accountValue);
+    const openNotional = longsNotional + shortsNotional;
 
     const buyOrders = orders.filter((o) => o.side === "B");
     const sellOrders = orders.filter((o) => o.side === "A");
@@ -87,7 +87,7 @@ export function StatusBar() {
     const sellNotional = sellOrders.reduce((s, o) => s + parseFloat(o.sz) * parseFloat(o.limitPx), 0);
 
     return {
-      open: accountValue,
+      open: openNotional,
       longs: longsNotional,
       shorts: shortsNotional,
       delta,
