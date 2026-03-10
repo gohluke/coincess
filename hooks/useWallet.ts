@@ -72,16 +72,22 @@ export function useWallet(): WalletState {
 
   useEffect(() => {
     if (privyAddr) {
-      // Prefer external (injected) wallet over Privy's embedded wallet for signing,
-      // because external wallets are more likely to have Hyperliquid deposits.
-      const externalWallet = privyWallets.find(
-        (w) => w.chainType === "ethereum" && w.address.toLowerCase() !== privyAddr!.toLowerCase()
+      // Identify wallets by connector type, not by address comparison.
+      // Privy embedded wallets have walletClientType "privy"; external
+      // wallets (MetaMask, Coinbase, etc.) have other values.
+      const typed = privyWallets as (PrivyWallet & { walletClientType?: string })[];
+      const externalWallet = typed.find(
+        (w) => w.chainType === "ethereum" && w.walletClientType !== "privy",
       );
-      const preferredWallet = externalWallet ?? privyWallets.find(
-        (w) => w.address.toLowerCase() === privyAddr!.toLowerCase()
+      const embeddedWallet = typed.find(
+        (w) => w.chainType === "ethereum" && w.walletClientType === "privy",
       );
 
-      const effectiveAddr = externalWallet?.address ?? privyAddr;
+      // Prefer the external wallet if available (it's the one with HL deposits)
+      const preferredWallet = externalWallet ?? embeddedWallet ?? typed.find(
+        (w) => w.address.toLowerCase() === privyAddr!.toLowerCase(),
+      );
+      const effectiveAddr = preferredWallet?.address ?? privyAddr;
       setAddress(effectiveAddr);
       setSource("privy");
       setLoading(false);
