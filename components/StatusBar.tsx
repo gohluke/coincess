@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { useTradingStore } from "@/lib/hyperliquid/store";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
+import { fetchCombinedClearinghouseState, fetchOpenOrders } from "@/lib/hyperliquid/api";
+import type { ClearinghouseState, OpenOrder } from "@/lib/hyperliquid/types";
 import { Activity } from "lucide-react";
 
 const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calculator"];
@@ -29,16 +30,36 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 export function StatusBar() {
   const pathname = usePathname();
   const { address } = useEffectiveAddress();
-  const clearinghouse = useTradingStore((s) => s.clearinghouse);
-  const openOrders = useTradingStore((s) => s.openOrders);
+  const [ch, setCh] = useState<ClearinghouseState | null>(null);
+  const [orders, setOrders] = useState<OpenOrder[]>([]);
+
+  const load = useCallback(async (addr: string) => {
+    try {
+      const [chState, openOrders] = await Promise.all([
+        fetchCombinedClearinghouseState(addr),
+        fetchOpenOrders(addr),
+      ]);
+      setCh(chState);
+      setOrders(openOrders);
+    } catch {
+      /* silent */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!address) { setCh(null); setOrders([]); return; }
+    load(address);
+    const id = setInterval(() => load(address), 10_000);
+    return () => clearInterval(id);
+  }, [address, load]);
 
   const isMarketing = MARKETING_ROUTES.some(
     (r) => pathname === r || (r === "/blog" && pathname.startsWith("/blog/"))
   );
 
   const stats = useMemo(() => {
-    if (!clearinghouse) return null;
-    const positions = clearinghouse.assetPositions?.filter(
+    if (!ch) return null;
+    const positions = ch.assetPositions?.filter(
       (p) => parseFloat(p.position.szi) !== 0,
     ) ?? [];
 
@@ -58,10 +79,10 @@ export function StatusBar() {
     }
 
     const delta = longsNotional - shortsNotional;
-    const accountValue = parseFloat(clearinghouse.marginSummary.accountValue);
+    const accountValue = parseFloat(ch.marginSummary.accountValue);
 
-    const buyOrders = openOrders.filter((o) => o.side === "B");
-    const sellOrders = openOrders.filter((o) => o.side === "A");
+    const buyOrders = orders.filter((o) => o.side === "B");
+    const sellOrders = orders.filter((o) => o.side === "A");
     const buyNotional = buyOrders.reduce((s, o) => s + parseFloat(o.sz) * parseFloat(o.limitPx), 0);
     const sellNotional = sellOrders.reduce((s, o) => s + parseFloat(o.sz) * parseFloat(o.limitPx), 0);
 
@@ -71,14 +92,14 @@ export function StatusBar() {
       shorts: shortsNotional,
       delta,
       upnl: totalUpnl,
-      orderCount: openOrders.length,
+      orderCount: orders.length,
       orderNotional: buyNotional + sellNotional,
       buyCount: buyOrders.length,
       buyNotional,
       sellCount: sellOrders.length,
       sellNotional,
     };
-  }, [clearinghouse, openOrders]);
+  }, [ch, orders]);
 
   if (isMarketing || !address || !stats) return null;
 
