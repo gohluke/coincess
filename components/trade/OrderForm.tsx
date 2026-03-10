@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Loader2, AlertTriangle } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction } from "@/lib/hyperliquid/signing";
+import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction, getSigningAddress } from "@/lib/hyperliquid/signing";
 import { useWallet } from "@/hooks/useWallet";
 import { FundingBanner } from "@/components/FundingBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -26,6 +26,16 @@ export function OrderForm() {
   const [slPrice, setSlPrice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [signingAddr, setSigningAddr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (address) {
+      getSigningAddress().then(setSigningAddr);
+    }
+  }, [address]);
+
+  const addressMismatch = address && signingAddr &&
+    address.toLowerCase() !== signingAddr.toLowerCase();
 
   const market = markets.find((m) => m.name === selectedMarket);
   const displayName = market?.displayName || selectedMarket;
@@ -353,11 +363,22 @@ export function OrderForm() {
           <FundingBanner address={address} balance={availableBalance} compact />
         )}
 
+        {/* Address mismatch warning */}
+        {addressMismatch && (
+          <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[#f0b90b]/10 border border-[#f0b90b]/20">
+            <AlertTriangle className="h-3.5 w-3.5 text-[#f0b90b] shrink-0 mt-0.5" />
+            <div className="text-[10px] text-[#f0b90b] leading-tight">
+              <p className="font-semibold mb-0.5">Wallet mismatch</p>
+              <p>Viewing {address.slice(0, 6)}...{address.slice(-4)} but signing wallet is {signingAddr!.slice(0, 6)}...{signingAddr!.slice(-4)}. Switch wallet in Zerion or go to Settings to update.</p>
+            </div>
+          </div>
+        )}
+
         {/* Submit button */}
         {address ? (
           <button
             onClick={handleSubmit}
-            disabled={submitting || !orderSize || parseFloat(orderSize) <= 0}
+            disabled={submitting || !orderSize || parseFloat(orderSize) <= 0 || !!addressMismatch}
             className={`w-full py-3 rounded-lg font-semibold text-sm text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
               orderSide === "buy"
                 ? "bg-[#0ecb81] hover:bg-[#0ecb81]/90"

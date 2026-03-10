@@ -71,6 +71,14 @@ async function getAddress(): Promise<string> {
   return accounts[0];
 }
 
+export async function getSigningAddress(): Promise<string | null> {
+  try {
+    return await getAddress();
+  } catch {
+    return null;
+  }
+}
+
 interface OrderWire {
   a: number;
   b: boolean;

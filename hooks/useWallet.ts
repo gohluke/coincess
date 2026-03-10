@@ -72,15 +72,22 @@ export function useWallet(): WalletState {
 
   useEffect(() => {
     if (privyAddr) {
-      setAddress(privyAddr);
+      // Prefer external (injected) wallet over Privy's embedded wallet for signing,
+      // because external wallets are more likely to have Hyperliquid deposits.
+      const externalWallet = privyWallets.find(
+        (w) => w.chainType === "ethereum" && w.address.toLowerCase() !== privyAddr!.toLowerCase()
+      );
+      const preferredWallet = externalWallet ?? privyWallets.find(
+        (w) => w.address.toLowerCase() === privyAddr!.toLowerCase()
+      );
+
+      const effectiveAddr = externalWallet?.address ?? privyAddr;
+      setAddress(effectiveAddr);
       setSource("privy");
       setLoading(false);
 
-      const wallet = privyWallets.find(
-        (w) => w.address.toLowerCase() === privyAddr!.toLowerCase()
-      );
-      if (wallet) {
-        wallet.getEthereumProvider().then((provider) => {
+      if (preferredWallet) {
+        preferredWallet.getEthereumProvider().then((provider) => {
           setPrivyProvider(provider);
         }).catch(() => {});
       }
