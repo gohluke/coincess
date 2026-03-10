@@ -15,7 +15,7 @@ import * as fundingRate from "./strategies/funding-rate";
 import * as momentum from "./strategies/momentum";
 import * as grid from "./strategies/grid";
 import * as meanReversion from "./strategies/mean-reversion";
-import { ema, rsi } from "./indicators";
+import * as marketMaker from "./strategies/market-maker";
 import type {
   QuantStrategy,
   StrategySignal,
@@ -347,8 +347,22 @@ export class Backtester {
     currentTime: number,
   ): StrategySignal[] {
     switch (strat.type) {
-      case "funding_rate":
-        return fundingRate.evaluate(strat, markets, ctx);
+      case "funding_rate": {
+        // Synthesize funding rates from price momentum for backtesting.
+        // In live mode, actual funding rates come from the API.
+        const marketsWithFunding = markets.map((m) => {
+          const candles = candleMap.get(m.coin) ?? [];
+          const recent = candles.filter((c) => c.open_time <= currentTime).slice(-24);
+          if (recent.length < 2) return m;
+          const first = recent[0].c;
+          const last = recent[recent.length - 1].c;
+          const pctChange = (last - first) / first;
+          // Synthetic funding: positive price momentum = positive funding
+          const syntheticFunding = pctChange * 0.005;
+          return { ...m, funding: syntheticFunding };
+        });
+        return fundingRate.evaluate(strat, marketsWithFunding, ctx);
+      }
 
       case "grid":
         return grid.evaluate(strat, markets, ctx);
@@ -382,6 +396,9 @@ export class Backtester {
         return meanReversion.evaluate(strat, candleData, ctx);
       }
 
+      case "market_maker":
+        return marketMaker.evaluate(strat, markets, ctx);
+
       default:
         return [];
     }
@@ -392,6 +409,7 @@ export class Backtester {
     momentum.resetState();
     grid.resetState();
     meanReversion.resetState();
+    marketMaker.resetState();
   }
 
   private async loadCandles(
