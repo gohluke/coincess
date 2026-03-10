@@ -113,14 +113,14 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/trade"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#FF455B] hover:bg-[#E63B50] text-white font-semibold text-sm transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-[#FF455B]/25"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FF455B] hover:bg-[#E63B50] text-white font-semibold text-sm transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-[#FF455B]/25"
             >
               Start Trading
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/coins"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/50 text-white font-semibold text-sm transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/50 text-white font-semibold text-sm transition-all"
             >
               Explore Markets
             </Link>
