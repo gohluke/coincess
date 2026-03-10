@@ -42,6 +42,7 @@ export const BRAND_CONFIG = {
   assets: {
     icon: "/assets/coincess-icon.png",
     logo: "/assets/coincess-logo.png",
+    logoSvg: "/assets/coincess-logo.svg",
     og: "/assets/coincess-og.png",
     favicon: "/favicon.png",
     faviconIco: "/favicon.ico",

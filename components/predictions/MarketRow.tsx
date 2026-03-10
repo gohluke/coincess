@@ -118,9 +118,9 @@ export function MarketRow({ market }: { market: PolymarketMarket }) {
             ) : (
               <button
                 onClick={connect}
-                className="w-full py-2.5 rounded-lg text-sm font-semibold bg-brand text-white hover:bg-brand-hover transition-colors"
+                className="w-full py-2.5 rounded-full text-sm font-semibold bg-brand text-white hover:bg-brand-hover transition-colors"
               >
-                Sign In to Trade
+                Connect to Trade
               </button>
             )}
             <p className="text-[9px] text-[#848e9c] text-center">

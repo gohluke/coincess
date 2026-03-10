@@ -19,7 +19,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             appearance: {
               theme: "dark",
               accentColor: BRAND.hex,
-              logo: BRAND_CONFIG.assets.icon,
+              logo: BRAND_CONFIG.assets.logoSvg,
               showWalletLoginFirst: false,
             },
             loginMethods: ["email", "google", "wallet"],

@@ -390,7 +390,7 @@ export function OrderForm() {
           <button
             onClick={handleSubmit}
             disabled={submitting || !orderSize || parseFloat(orderSize) <= 0 || !!addressMismatch}
-            className={`w-full py-3 rounded-lg font-semibold text-sm text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
+            className={`w-full py-3 rounded-full font-semibold text-sm text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
               orderSide === "buy"
                 ? "bg-[#0ecb81] hover:bg-[#0ecb81]/90"
                 : "bg-[#f6465d] hover:bg-[#f6465d]/90"
@@ -402,9 +402,9 @@ export function OrderForm() {
         ) : (
           <button
             onClick={() => walletConnect()}
-            className="w-full py-3 rounded-lg font-semibold text-sm bg-brand text-white hover:bg-brand/90 transition-colors"
+            className="w-full py-3 rounded-full font-semibold text-sm bg-brand text-white hover:bg-brand/90 transition-colors"
           >
-            Sign In to Trade
+            Connect to Trade
           </button>
         )}
 

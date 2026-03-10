@@ -23,7 +23,7 @@ import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetc
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
-import { BRAND } from "@/lib/brand";
+import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 
 // ── Round-trip trade grouping ──────────────────────────────
@@ -327,24 +327,35 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-[#0b0e11] text-white flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-brand/20 flex items-center justify-center mb-6">
-            <Wallet className="h-8 w-8 text-brand" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Welcome to Coincess</h1>
-          <p className="text-sm text-[#848e9c] mb-8 max-w-sm">
-            Trade perpetuals on Hyperliquid, bet on prediction markets, and automate your strategies — all in one app.
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={BRAND_CONFIG.assets.logoSvg}
+            alt={BRAND_CONFIG.name}
+            className="w-20 h-20 mb-8"
+          />
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight">
+            Welcome to {BRAND_CONFIG.name}
+          </h1>
+          <p className="text-sm text-[#848e9c] mb-10 max-w-md leading-relaxed">
+            {BRAND_CONFIG.description}
           </p>
           <button
             onClick={connect}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand hover:bg-brand-hover text-white font-semibold text-sm transition-colors shadow-lg shadow-brand/25"
+            className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-brand hover:bg-brand-hover text-white font-semibold text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-brand/25"
           >
             <LogIn className="h-4 w-4" />
-            Sign In / Connect Wallet
+            Connect Wallet
           </button>
-          <div className="flex gap-4 mt-8">
-            <Link href="/trade" className="text-xs text-[#848e9c] hover:text-white transition-colors">Trade &rarr;</Link>
-            <Link href="/predictions" className="text-xs text-[#848e9c] hover:text-white transition-colors">Predictions &rarr;</Link>
-            <Link href="/coins" className="text-xs text-[#848e9c] hover:text-white transition-colors">Discover &rarr;</Link>
+          <div className="flex gap-6 mt-10">
+            <Link href="/trade" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
+              Trade <span className="text-brand">&rarr;</span>
+            </Link>
+            <Link href="/predictions" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
+              Predictions <span className="text-brand">&rarr;</span>
+            </Link>
+            <Link href="/coins" className="text-xs text-[#848e9c] hover:text-white transition-colors flex items-center gap-1">
+              Discover <span className="text-brand">&rarr;</span>
+            </Link>
           </div>
         </div>
       </div>

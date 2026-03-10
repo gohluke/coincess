@@ -43,7 +43,7 @@ export function AuthButton() {
 
   if (!loaded) {
     return (
-      <div className="h-9 w-20 rounded-xl bg-[#141620] animate-pulse" />
+      <div className="h-9 w-20 rounded-full bg-[#141620] animate-pulse" />
     );
   }
 
@@ -76,7 +76,7 @@ function AuthButtonInner({
 
   if (!privy || !privy.ready) {
     return (
-      <div className="h-9 w-20 rounded-xl bg-[#141620] animate-pulse" />
+      <div className="h-9 w-20 rounded-full bg-[#141620] animate-pulse" />
     );
   }
 
@@ -86,7 +86,7 @@ function AuthButtonInner({
         onClick={() => privy!.login()}
         className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand hover:bg-brand-hover text-white text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-95"
       >
-        Sign In
+        Connect
       </button>
     );
   }

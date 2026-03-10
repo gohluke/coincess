@@ -71,7 +71,7 @@ export function WalletButton() {
       <div className="flex items-center gap-2 relative" ref={dropdownRef}>
         <button
           onClick={() => hasLinkedWallets ? setShowDropdown(!showDropdown) : undefined}
-          className="flex items-center gap-2 bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-1.5 hover:border-[#3a3e49] transition-colors"
+          className="flex items-center gap-2 bg-[#1a1d26] border border-[#2a2e39] rounded-full px-3 py-1.5 hover:border-[#3a3e49] transition-colors"
         >
           <div className={`w-2 h-2 rounded-full ${isLinkedOnly ? "bg-[#f0b90b]" : "bg-[#0ecb81]"}`} />
           <span className="text-sm text-white font-medium max-w-[120px] truncate">
@@ -152,10 +152,10 @@ export function WalletButton() {
   return (
     <button
       onClick={connect}
-      className="flex items-center gap-2 bg-brand hover:bg-brand/90 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+      className="flex items-center gap-2 bg-brand hover:bg-brand/90 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
     >
       <Wallet className="h-4 w-4" />
-      Sign In
+      Connect
     </button>
   );
 }
