@@ -8,7 +8,6 @@ import {
   Calculator,
   BookOpen,
   ArrowRight,
-  Zap,
   Shield,
   Globe,
   ArrowRightLeft,
@@ -92,11 +91,6 @@ export default function Home() {
       <section className="relative overflow-hidden">
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-12 md:pt-28 md:pb-20 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand-hover text-xs font-medium mb-6">
-            <Zap className="h-3 w-3" />
-            Built on Hyperliquid
-          </div>
-
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-[1.1] tracking-tight mb-6">
             Trade. Predict.
             <br />
@@ -212,7 +206,7 @@ export default function Home() {
       <footer className="border-t border-[#1e2130] py-8 mt-4">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[#4a4e59]">
-            &copy; 2025 Coincess. Built on Hyperliquid.
+            &copy; 2025 Coincess.
           </p>
           <div className="flex items-center gap-4 text-xs text-[#4a4e59]">
             <Link

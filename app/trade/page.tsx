@@ -7,7 +7,6 @@ import { MarketSelector } from "@/components/trade/MarketSelector";
 import { OrderBook } from "@/components/trade/OrderBook";
 import { OrderForm } from "@/components/trade/OrderForm";
 import { PositionsTable } from "@/components/trade/PositionsTable";
-import { WalletButton } from "@/components/trade/WalletButton";
 import { RecentTrades } from "@/components/trade/RecentTrades";
 
 const TradingChart = dynamic(
@@ -42,9 +41,8 @@ export default function TradePage() {
   return (
     <div className="h-screen flex flex-col bg-[#0b0e11] text-white overflow-hidden">
       {/* Market selector bar */}
-      <div className="flex items-center justify-between h-10 px-4 border-b border-[#2a2e39] shrink-0">
+      <div className="flex items-center h-10 px-4 border-b border-[#2a2e39] shrink-0">
         <MarketSelector />
-        <WalletButton />
       </div>
 
       {/* Mobile tabs */}
