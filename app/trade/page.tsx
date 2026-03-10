@@ -8,6 +8,9 @@ import { OrderBook } from "@/components/trade/OrderBook";
 import { OrderForm } from "@/components/trade/OrderForm";
 import { PositionsTable } from "@/components/trade/PositionsTable";
 import { RecentTrades } from "@/components/trade/RecentTrades";
+import { useWallet } from "@/hooks/useWallet";
+import { useSettingsStore } from "@/lib/settings/store";
+import { getConnectedAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
 
 const TradingChart = dynamic(
   () => import("@/components/trade/TradingChart").then((m) => m.TradingChart),
@@ -20,8 +23,27 @@ export default function TradePage() {
   const loadMarkets = useTradingStore((s) => s.loadMarkets);
   const selectedMarket = useTradingStore((s) => s.selectedMarket);
   const address = useTradingStore((s) => s.address);
+  const setAddress = useTradingStore((s) => s.setAddress);
   const loadUserState = useTradingStore((s) => s.loadUserState);
   const [mobileTab, setMobileTab] = useState<MobileTab>("chart");
+
+  const { address: walletAddr, source } = useWallet();
+  const activeLinkedAddr = useSettingsStore((s) => s.getActiveAddress)();
+
+  useEffect(() => {
+    const effective = activeLinkedAddr ?? walletAddr;
+    if (effective && effective !== address) setAddress(effective);
+  }, [walletAddr, activeLinkedAddr, address, setAddress]);
+
+  useEffect(() => {
+    if (source === "privy") return;
+    getConnectedAddress().then((addr) => {
+      if (addr && !walletAddr && !activeLinkedAddr) setAddress(addr);
+    });
+    return onAccountsChanged((accounts) => {
+      if (!activeLinkedAddr) setAddress(accounts[0] ?? null);
+    });
+  }, [setAddress, walletAddr, source, activeLinkedAddr]);
 
   useEffect(() => {
     loadMarkets();
