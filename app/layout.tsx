@@ -2,69 +2,61 @@ import type { Metadata, Viewport } from "next"
 import Script from "next/script"
 import { Plus_Jakarta_Sans } from "next/font/google"
 import { AppShell } from "@/components/AppShell"
+import { BRAND_CONFIG } from "@/lib/brand.config"
 import "./globals.css"
 
-const brand = Plus_Jakarta_Sans({
+const brandFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-brand",
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 })
 
-const siteUrl = "https://coincess.com"
+const B = BRAND_CONFIG
 
 export const metadata: Metadata = {
   title: {
-    default: "Coincess - Trade Perps, Predict & Automate",
-    template: "%s | Coincess",
+    default: `${B.name} - ${B.tagline}`,
+    template: `%s | ${B.name}`,
   },
-  description: "Trade perpetuals on Hyperliquid, bet on prediction markets, and automate your strategies — all in one app.",
-  keywords: [
-    "cryptocurrency",
-    "perpetuals",
-    "hyperliquid",
-    "polymarket",
-    "prediction markets",
-    "crypto trading",
-    "defi",
-    "automation",
-  ],
-  authors: [{ name: "Coincess" }],
-  creator: "Coincess",
-  publisher: "Coincess",
+  description: B.description,
+  keywords: [...B.keywords],
+  authors: [{ name: B.name }],
+  creator: B.name,
+  publisher: B.name,
 
   icons: {
     icon: [
-      { url: "/favicon.png", type: "image/png" },
-      { url: "/assets/coincess-icon.png", type: "image/png", sizes: "192x192" },
+      { url: B.assets.favicon, type: "image/png" },
+      { url: B.assets.icon, type: "image/png", sizes: "192x192" },
     ],
-    shortcut: "/favicon.png",
-    apple: "/assets/coincess-icon.png",
+    shortcut: B.assets.favicon,
+    apple: B.assets.icon,
   },
 
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: siteUrl,
-    siteName: "Coincess",
-    title: "Coincess - Trade Perps, Predict & Automate",
-    description: "Trade perpetuals on Hyperliquid, bet on prediction markets, and automate your strategies — all in one app.",
+    url: B.url,
+    siteName: B.name,
+    title: `${B.name} - ${B.tagline}`,
+    description: B.description,
     images: [
       {
-        url: `${siteUrl}/assets/coincess-logo.png`,
+        url: `${B.url}${B.assets.logo}`,
         width: 1200,
         height: 630,
-        alt: "Coincess",
+        alt: B.name,
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Coincess - Trade Perps, Predict & Automate",
+    title: `${B.name} - ${B.tagline}`,
     description: "Hyperliquid perps + Polymarket predictions + automation in one app.",
-    images: [`${siteUrl}/assets/coincess-logo.png`],
-    creator: "@coincess",
+    images: [`${B.url}${B.assets.logo}`],
+    creator: B.twitter,
   },
 
   robots: {
@@ -79,9 +71,9 @@ export const metadata: Metadata = {
     },
   },
 
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(B.url),
   alternates: { canonical: "/" },
-  category: "Finance",
+  category: B.category,
 }
 
 export const viewport: Viewport = {
@@ -89,7 +81,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#0b0e11",
+  themeColor: B.pwa.backgroundColor,
   colorScheme: "dark",
 }
 
@@ -101,10 +93,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Coincess" />
+        <meta name="apple-mobile-web-app-title" content={B.name} />
         <meta name="mobile-web-app-capable" content="yes" />
         <script
           type="application/ld+json"
@@ -112,15 +104,15 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              name: "Coincess",
-              url: siteUrl,
-              logo: `${siteUrl}/assets/coincess-logo.png`,
+              name: B.name,
+              url: B.url,
+              logo: `${B.url}${B.assets.logo}`,
               description: "Trade perpetuals, predictions, and automate crypto strategies.",
             }),
           }}
         />
       </head>
-        <body className={`${brand.variable} antialiased bg-[#0b0e11]`}>
+        <body className={`${brandFont.variable} antialiased bg-[#0b0e11]`}>
         <Script
           src="https://phi.llc/tracker.js"
           data-id="phi_e43ce3b8844"

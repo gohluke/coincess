@@ -6,7 +6,7 @@ import { X, Loader2, Share2, Download, Copy, Check, Bot } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder } from "@/lib/hyperliquid/signing";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { BRAND } from "@/lib/brand";
+import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 
 type Tab = "positions" | "orders" | "fills";
 
@@ -519,7 +519,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
 
     ctx.fillStyle = BRAND.hex;
     ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
-    ctx.fillText("coincess", 32, 44);
+    ctx.fillText(BRAND_CONFIG.nameLower, 32, 44);
 
     const badgeY = aspectRatio === "16:9" ? 80 : 90;
     ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
@@ -564,7 +564,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
 
     ctx.fillStyle = "#4a4e59";
     ctx.font = "11px system-ui, -apple-system, sans-serif";
-    ctx.fillText("coincess.com", W - 110, H - 20);
+    ctx.fillText(BRAND_CONFIG.url.replace(/^https?:\/\//, ""), W - 110, H - 20);
   }, [W, H, position, isProfit, showPnlAmount, aspectRatio]);
 
   const handleDownload = async () => {

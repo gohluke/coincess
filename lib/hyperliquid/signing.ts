@@ -2,16 +2,13 @@ import { signL1Action, signUserSignedAction } from "@nktkas/hyperliquid/signing"
 import type { AbstractViemJsonRpcAccount } from "@nktkas/hyperliquid/signing";
 import { ApproveBuilderFeeTypes } from "@nktkas/hyperliquid/api/exchange";
 import type { MarketInfo } from "./types";
+import { BRAND_CONFIG } from "@/lib/brand.config";
 
 const EXCHANGE_URL = "https://api.hyperliquid.xyz/exchange";
 
-// Coincess builder address — this receives builder fees
-const BUILDER_ADDRESS = "0x635b3B453De75e873A02B4898f615C5E8909070a" as const;
-// Fee in tenths of a basis point. 10 = 1bp = 0.01%. Max perps: 100 (= 10bp = 0.1%)
-const BUILDER_FEE = 10;
-// Set to true once your builder address has ≥100 USDC on Hyperliquid perps.
-// Trades will work without this — you just won't collect fees yet.
-const BUILDER_FEE_ENABLED = true;
+const BUILDER_ADDRESS = BRAND_CONFIG.builder.address;
+const BUILDER_FEE = BRAND_CONFIG.builder.fee;
+const BUILDER_FEE_ENABLED = BRAND_CONFIG.builder.enabled;
 
 type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;

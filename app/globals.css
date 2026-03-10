@@ -25,7 +25,13 @@
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
 
-    /* Brand palette — change these to rebrand the entire site */
+    /*
+     * REBRAND: update these 4 values to match BRAND_CONFIG.colors in lib/brand.config.ts.
+     *   --brand        → BRAND_CONFIG.colors.rgb
+     *   --brand-hex    → BRAND_CONFIG.colors.hex
+     *   --brand-hover  → BRAND_CONFIG.colors.hoverRgb
+     *   --brand-hover-hex → BRAND_CONFIG.colors.hover
+     */
     --brand: 255 69 91;
     --brand-hex: #FF455B;
     --brand-hover: 230 59 80;
@@ -53,6 +59,7 @@
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
 
+    /* REBRAND: keep in sync with :root brand vars above */
     --brand: 255 69 91;
     --brand-hex: #FF455B;
     --brand-hover: 230 59 80;
