@@ -170,8 +170,8 @@ export class QuantEngine {
       });
 
       const elapsed = Date.now() - start;
-      const logEvery = allSignals.length > 0 ? 1 : 10;
-      if (this.tickCount % logEvery === 0 || allSignals.length > 0) {
+      const shouldLog = this.tickCount <= 3 || this.tickCount % 10 === 0 || allSignals.length > 0;
+      if (shouldLog) {
         console.log(
           `[engine] Tick #${this.tickCount}: $${accountValue.toFixed(2)} | ` +
           `${strategies.length} strats | ${positions.length} pos | ${allSignals.length} signals | ${elapsed}ms`,
