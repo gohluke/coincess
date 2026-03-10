@@ -42,7 +42,10 @@ export const BRAND_CONFIG = {
   assets: {
     icon: "/assets/coincess-icon.png",
     logo: "/assets/coincess-logo.png",
+    og: "/assets/coincess-og.png",
     favicon: "/favicon.png",
+    faviconIco: "/favicon.ico",
+    appleTouchIcon: "/apple-touch-icon.png",
   },
 
   pwa: {

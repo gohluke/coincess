@@ -27,11 +27,12 @@ export const metadata: Metadata = {
 
   icons: {
     icon: [
-      { url: B.assets.favicon, type: "image/png" },
+      { url: B.assets.faviconIco, type: "image/x-icon", sizes: "48x48" },
+      { url: B.assets.favicon, type: "image/png", sizes: "48x48" },
       { url: B.assets.icon, type: "image/png", sizes: "192x192" },
     ],
-    shortcut: B.assets.favicon,
-    apple: B.assets.icon,
+    shortcut: B.assets.faviconIco,
+    apple: B.assets.appleTouchIcon,
   },
 
   openGraph: {
@@ -43,10 +44,10 @@ export const metadata: Metadata = {
     description: B.description,
     images: [
       {
-        url: `${B.url}${B.assets.logo}`,
+        url: `${B.url}${B.assets.og}`,
         width: 1200,
         height: 630,
-        alt: B.name,
+        alt: `${B.name} - ${B.tagline}`,
       },
     ],
   },
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${B.name} - ${B.tagline}`,
     description: "Hyperliquid perps + Polymarket predictions + automation in one app.",
-    images: [`${B.url}${B.assets.logo}`],
+    images: [`${B.url}${B.assets.og}`],
     creator: B.twitter,
   },
 
@@ -106,7 +107,7 @@ export default function RootLayout({
               "@type": "Organization",
               name: B.name,
               url: B.url,
-              logo: `${B.url}${B.assets.logo}`,
+              logo: `${B.url}${B.assets.icon}`,
               description: "Trade perpetuals, predictions, and automate crypto strategies.",
             }),
           }}
