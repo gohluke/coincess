@@ -66,6 +66,16 @@ export async function cancelOrder(assetIndex: number, oid: number): Promise<Orde
   }
 }
 
+function hlRoundPrice(price: number): string {
+  if (price >= 100_000) return (Math.round(price / 10) * 10).toString();
+  if (price >= 10_000) return (Math.round(price)).toString();
+  if (price >= 1_000) return (Math.round(price * 10) / 10).toFixed(1);
+  if (price >= 100) return (Math.round(price * 100) / 100).toFixed(2);
+  if (price >= 10) return (Math.round(price * 1000) / 1000).toFixed(3);
+  if (price >= 1) return (Math.round(price * 10000) / 10000).toFixed(4);
+  return (Math.round(price * 100000) / 100000).toFixed(5);
+}
+
 export async function closePosition(params: {
   coin: string;
   size: number;
@@ -74,12 +84,12 @@ export async function closePosition(params: {
   assetIndex: number;
 }): Promise<OrderResult> {
   const slippage = params.isBuy ? 1.03 : 0.97;
-  const limitPx = (params.markPrice * slippage).toPrecision(5);
+  const limitPx = hlRoundPrice(params.markPrice * slippage);
   return placeOrder({
     coin: params.coin,
     isBuy: params.isBuy,
     size: Math.abs(params.size).toFixed(4),
-    price: parseFloat(limitPx).toString(),
+    price: limitPx,
     reduceOnly: true,
     tif: "Ioc",
     assetIndex: params.assetIndex,

@@ -18,6 +18,25 @@ import type {
 const HL_API = "https://api.hyperliquid.xyz";
 const TICK_INTERVAL_MS = 30_000; // 30 seconds
 
+const assetMeta: Map<number, { szDecimals: number }> = new Map();
+
+function roundPrice(price: number): string {
+  if (price >= 100_000) return (Math.round(price / 10) * 10).toString();
+  if (price >= 10_000) return (Math.round(price)).toString();
+  if (price >= 1_000) return (Math.round(price * 10) / 10).toFixed(1);
+  if (price >= 100) return (Math.round(price * 100) / 100).toFixed(2);
+  if (price >= 10) return (Math.round(price * 1000) / 1000).toFixed(3);
+  if (price >= 1) return (Math.round(price * 10000) / 10000).toFixed(4);
+  return (Math.round(price * 100000) / 100000).toFixed(5);
+}
+
+function roundSize(size: number, assetIndex: number): string {
+  const meta = assetMeta.get(assetIndex);
+  const decimals = meta?.szDecimals ?? 4;
+  const factor = Math.pow(10, decimals);
+  return (Math.floor(size * factor) / factor).toFixed(decimals);
+}
+
 export class QuantEngine {
   private supabase: SupabaseClient;
   private risk: RiskManager;
@@ -239,19 +258,25 @@ export class QuantEngine {
 
     const isBuy = signal.side === "long";
     const slippage = isBuy ? 1.002 : 0.998;
-    const limitPx = (signal.price * slippage).toPrecision(6);
+    const limitPx = roundPrice(signal.price * slippage);
+    const size = roundSize(signal.size, signal.assetIndex);
+
+    if (parseFloat(size) === 0) {
+      console.log(`[engine] SKIP ${signal.coin}: size rounds to 0`);
+      return;
+    }
 
     const result = await placeOrder({
       coin: signal.coin,
       isBuy,
-      size: signal.size.toFixed(4),
-      price: parseFloat(limitPx).toString(),
+      size,
+      price: limitPx,
       tif: "Ioc",
       assetIndex: signal.assetIndex,
     });
 
     console.log(
-      `[engine] ${signal.side.toUpperCase()} ${signal.coin} ${signal.size.toFixed(4)} @ ${signal.price.toFixed(2)}: ${result.success ? "FILLED" : result.error}`,
+      `[engine] ${signal.side.toUpperCase()} ${signal.coin} ${size} @ ${limitPx}: ${result.success ? "FILLED" : result.error}`,
     );
 
     if (result.success) {
@@ -287,15 +312,18 @@ export class QuantEngine {
       Array<{ markPx: string; funding: string; openInterest: string; dayNtlVlm: string }>,
     ];
 
-    return meta.universe.map((asset, i) => ({
-      coin: asset.name,
-      assetIndex: i,
-      markPx: parseFloat(ctxs[i]?.markPx ?? "0"),
-      funding: parseFloat(ctxs[i]?.funding ?? "0"),
-      openInterest: parseFloat(ctxs[i]?.openInterest ?? "0"),
-      volume24h: parseFloat(ctxs[i]?.dayNtlVlm ?? "0"),
-      dex: "",
-    }));
+    return meta.universe.map((asset, i) => {
+      assetMeta.set(i, { szDecimals: asset.szDecimals });
+      return {
+        coin: asset.name,
+        assetIndex: i,
+        markPx: parseFloat(ctxs[i]?.markPx ?? "0"),
+        funding: parseFloat(ctxs[i]?.funding ?? "0"),
+        openInterest: parseFloat(ctxs[i]?.openInterest ?? "0"),
+        volume24h: parseFloat(ctxs[i]?.dayNtlVlm ?? "0"),
+        dex: "",
+      };
+    });
   }
 
   private async fetchCandlesForCoins(
