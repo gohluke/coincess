@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search, Settings, Users, BookOpen, MessageSquare } from "lucide-react";
+import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search, Settings, Users, BookOpen, MessageSquare, Zap } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
 import { DepositButton } from "@/components/DepositModal";
@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { href: "/traders", label: "Traders", icon: Users },
   { href: "/predictions", label: "Predictions", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
+  { href: "/quant", label: "Quant", icon: Zap },
   { href: "/journal", label: "Journal", icon: BookOpen },
   { href: "/chat", label: "AI Coach", icon: MessageSquare },
   { href: "/settings", label: "Settings", icon: Settings },

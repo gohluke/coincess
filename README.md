@@ -93,6 +93,20 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Quick actions** — "Review my positions", "Analyze recent trades", "Am I following my rules?"
 - **Conversation history** — stored in Supabase per wallet
 
+### Quant Trading Suite (`/quant`)
+- **4 automated strategies** running 24/7 on a dedicated server:
+  - **Funding Rate Harvester** — scans all markets for extreme funding rates, opens opposite positions to collect hourly funding (lowest risk, ~1-3% daily target)
+  - **Momentum Scalper** — EMA(9)/EMA(21) crossover with RSI confirmation on BTC, ETH, SOL 5m candles, trailing stop at 0.5%
+  - **Grid Bot** — places buy/sell limit orders at fixed intervals around current price for BTC and ETH, auto-rebalances
+  - **Mean Reversion** — monitors 15m RSI across top 20 coins, enters contrarian positions on RSI extremes (<25 or >75)
+- **Risk management** — max 50% exposure, 10% per position, daily loss limit (-5% pauses), kill switch at -15% drawdown
+- **Kelly-inspired sizing** — position sizes scale down as drawdown increases
+- **Live dashboard** — strategy cards with play/pause/delete, P&L stats, open positions, trade log, risk gauges
+- **Server-side execution** — runs via `scripts/quant-server.ts` on Contabo VPS using pm2, no browser wallet popups
+- **API Wallet** — uses Hyperliquid API wallet key (separate from main wallet) for programmatic order signing
+- **Supabase persistence** — `quant_strategies`, `quant_trades`, `quant_state` tables track all activity
+- **API routes** — `/api/quant/strategies` (CRUD), `/api/quant/trades` (history), `/api/quant/status` (engine health)
+
 ### Dayze Integration (Life OS)
 - **Sync trading activity to Dayze** — trades, positions, and daily PnL appear in your Dayze personal timeline
 - **API key auth** — secure connection via Dayze API keys with `activity` scope
@@ -137,6 +151,7 @@ npm run dev
 | [localhost:3000/automate/create](http://localhost:3000/automate/create) | Create new strategy |
 | [localhost:3000/automate/alerts](http://localhost:3000/automate/alerts) | Price alerts manager |
 | [localhost:3000/automate/copy](http://localhost:3000/automate/copy) | Copy trading dashboard |
+| [localhost:3000/quant](http://localhost:3000/quant) | Quant trading dashboard |
 | [localhost:3000/journal](http://localhost:3000/journal) | Trade journal |
 | [localhost:3000/chat](http://localhost:3000/chat) | AI trading coach |
 | [localhost:3000/traders](http://localhost:3000/traders) | Trader lookup & leaderboard |
@@ -206,11 +221,15 @@ coincess/
 │   │   └── copy/page.tsx              # Copy trading dashboard
 │   ├── journal/page.tsx                # Trade journal
 │   ├── chat/page.tsx                   # AI trading coach
+│   ├── quant/page.tsx                  # Quant trading dashboard
 │   ├── traders/page.tsx                # Trader lookup & leaderboard
 │   ├── scanner/page.tsx                # Contract scanner
 │   ├── api/
 │   │   ├── journal/route.ts            # Journal CRUD API
 │   │   ├── chat/route.ts              # AI chat streaming (Gemini + tools)
+│   │   ├── quant/strategies/route.ts   # Quant strategy CRUD
+│   │   ├── quant/trades/route.ts       # Quant trade history
+│   │   ├── quant/status/route.ts       # Quant engine health
 │   │   ├── dayze/sync/route.ts        # Dayze activity sync proxy
 │   │   ├── polymarket/events/          # Gamma API proxy (CORS)
 │   │   ├── polymarket/tags/            # Tags proxy
@@ -242,6 +261,17 @@ coincess/
 │   │   ├── store.ts                    # Zustand store
 │   │   ├── builder.ts                  # Builder HMAC signing
 │   │   └── types.ts                    # TypeScript interfaces
+│   ├── quant/
+│   │   ├── engine.ts                   # Quant engine: tick loop, strategy orchestration
+│   │   ├── executor.ts                 # Server-side order execution (API wallet)
+│   │   ├── risk.ts                     # Risk manager: limits, drawdown, kill switch
+│   │   ├── indicators.ts              # Technical indicators: EMA, RSI, ATR, Bollinger
+│   │   ├── types.ts                    # Shared quant types
+│   │   └── strategies/
+│   │       ├── funding-rate.ts         # Funding rate harvester
+│   │       ├── momentum.ts            # EMA crossover momentum scalper
+│   │       ├── grid.ts                # Server-side grid bot
+│   │       └── mean-reversion.ts      # RSI mean reversion
 │   ├── automation/
 │   │   ├── engine.ts                   # Strategy execution engine
 │   │   ├── store.ts                    # Zustand store
