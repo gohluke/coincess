@@ -1,4 +1,4 @@
-export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion";
+export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion" | "market_maker";
 export type StrategyStatus = "active" | "paused" | "stopped" | "error";
 export type EngineStatus = "running" | "stopped" | "paused" | "error";
 export type TradeSide = "long" | "short";

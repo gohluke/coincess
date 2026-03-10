@@ -14,6 +14,7 @@
  */
 
 import { QuantEngine } from "../lib/quant/engine";
+import { DataCollector } from "../lib/quant/data/collector";
 
 const REQUIRED_ENV = [
   "HL_API_PRIVATE_KEY",
@@ -43,8 +44,9 @@ async function main(): Promise<void> {
   checkEnv();
 
   console.log("┌─────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server        │");
-  console.log("│     Strategies: FR | MOM | GRID | MR     │");
+  console.log("│     Coincess Quant Trading Server  v2    │");
+  console.log("│  FR | MOM | GRID | MR | MM + Combiner   │");
+  console.log("│  Data Pipeline + Backtester Ready        │");
   console.log("└─────────────────────────────────────────┘");
   console.log();
   console.log(`Account: ${process.env.HL_ACCOUNT_ADDRESS}`);
@@ -52,21 +54,26 @@ async function main(): Promise<void> {
   console.log();
 
   const engine = new QuantEngine();
+  const collector = new DataCollector();
 
   process.on("SIGINT", async () => {
     console.log("\n[server] Shutting down gracefully...");
+    collector.stop();
     await engine.stop();
     process.exit(0);
   });
 
   process.on("SIGTERM", async () => {
     console.log("\n[server] SIGTERM received, stopping...");
+    collector.stop();
     await engine.stop();
     process.exit(0);
   });
 
+  // Start data collection alongside the engine
+  await collector.start();
   await engine.start();
-  console.log("[server] Engine running. Press Ctrl+C to stop.");
+  console.log("[server] Engine + data collector running. Press Ctrl+C to stop.");
 }
 
 main().catch((err) => {

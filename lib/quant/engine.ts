@@ -5,6 +5,14 @@ import * as fundingRate from "./strategies/funding-rate";
 import * as momentum from "./strategies/momentum";
 import * as grid from "./strategies/grid";
 import * as meanReversion from "./strategies/mean-reversion";
+import * as marketMaker from "./strategies/market-maker";
+import {
+  calculateWeights,
+  combineSignals,
+  recordTradeResult,
+  updatePriceHistory,
+  detectRegime,
+} from "./combiner";
 import type {
   QuantStrategy,
   QuantState,
@@ -128,6 +136,12 @@ export class QuantEngine {
         return;
       }
 
+      // Update price history for correlation tracking
+      const markets = await this.fetchMarketSnapshots();
+      for (const m of markets) {
+        updatePriceHistory(m.coin, m.markPx);
+      }
+
       // Collect signals from all active strategies
       const allSignals: Array<{ signal: StrategySignal; strategy: QuantStrategy }> = [];
 
@@ -146,8 +160,25 @@ export class QuantEngine {
         }
       }
 
-      // Execute approved signals
-      for (const { signal, strategy } of allSignals) {
+      // Signal combiner: weigh strategies by rolling performance
+      const weights = calculateWeights(strategies);
+      const combined = combineSignals(allSignals, weights, ctx, state);
+
+      // Log regime detection periodically
+      if (this.tickCount % 60 === 0) {
+        const btcPrices = markets.filter((m) => m.coin === "BTC").map((m) => m.markPx);
+        if (btcPrices.length > 0) {
+          const regime = detectRegime(btcPrices);
+          console.log(`[engine] Market regime: ${regime}`);
+        }
+      }
+
+      // Execute: use combined signals if combiner produced output, else raw signals
+      const signalsToExecute = combined.length > 0
+        ? combined.map((s) => ({ signal: s as StrategySignal, strategy: strategies[0] }))
+        : allSignals;
+
+      for (const { signal, strategy } of signalsToExecute) {
         const check = this.risk.checkPreTrade(signal, ctx, state);
         if (!check.allowed) {
           console.log(`[engine] Risk blocked ${signal.coin} ${signal.side}: ${check.reason}`);
@@ -216,6 +247,10 @@ export class QuantEngine {
           .map((m) => m.coin);
         const candles = await this.fetchCandlesForMeanReversion(topCoins);
         return meanReversion.evaluate(strat, candles, ctx);
+      }
+      case "market_maker": {
+        const markets = await this.fetchMarketSnapshots();
+        return marketMaker.evaluate(strat, markets, ctx);
       }
       default:
         return [];
@@ -312,6 +347,7 @@ export class QuantEngine {
             meta: { close_reason: `Netted by ${signal.side} order` },
           }).eq("id", opp.id);
           console.log(`[engine] AUTO-CLOSE opposite ${opp.side} ${signal.coin}: pnl=${oppPnl.toFixed(4)}`);
+          recordTradeResult(strategy.id, oppPnl, 0);
         }
       }
 
