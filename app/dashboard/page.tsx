@@ -184,18 +184,20 @@ export default function DashboardPage() {
   const [portfolioTab, setPortfolioTab] = useState<"assets" | "history" | "calendar">("assets");
 
   const automationInit = useAutomationStore((s) => s.init);
-  const strategies = useAutomationStore((s) => s.strategies);
+  const browserStrategies = useAutomationStore((s) => s.strategies);
+  const [serverStrategies, setServerStrategies] = useState<{ status: string }[]>([]);
 
   const loadData = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, spotState, openOrders, allMarkets, userFills, userFunding] = await Promise.all([
+      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, quantStatus] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
         fetchSpotClearinghouseState(addr).catch(() => null),
         fetchOpenOrders(addr),
         fetchAllMarkets(),
         fetchUserFills(addr),
         fetchUserFunding(addr),
+        fetch("/api/quant/status").then((r) => r.json()).catch(() => ({ strategies: [] })),
       ]);
       setCh(chState);
       setSpot(spotState);
@@ -203,6 +205,7 @@ export default function DashboardPage() {
       setMarkets(allMarkets);
       setFills(userFills);
       setFunding(userFunding);
+      setServerStrategies(quantStatus.strategies ?? []);
       setLastRefresh(new Date());
     } catch (err) {
       console.error("Failed to load dashboard:", err);
@@ -290,7 +293,9 @@ export default function DashboardPage() {
   const accountValue = spotUsdcBalance > 0
     ? spotUsdcBalance + (perpsAccountValue - totalMarginUsed)
     : perpsAccountValue;
-  const activeStrategies = strategies.filter((s) => s.status === "active").length;
+  const activeStrategies =
+    serverStrategies.filter((s) => s.status === "active").length +
+    browserStrategies.filter((s) => s.status === "active").length;
 
   const assetDistribution = useMemo(() => {
     const items: { label: string; value: number; color: string }[] = [];
