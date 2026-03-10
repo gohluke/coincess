@@ -17,7 +17,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           config={{
             appearance: {
               theme: "dark",
-              accentColor: "#7C3AED",
+              accentColor: "#FF455B",
               logo: "/assets/coincess-icon.png",
               showWalletLoginFirst: false,
             },

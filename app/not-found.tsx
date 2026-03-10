@@ -1,82 +1,83 @@
-import Link from "next/link"
-import { Header } from "@/components/Header"
-import { Footer } from "@/components/Footer"
-import { Button } from "@/components/ui/button"
-import { Home, Coins, Calculator, FileText, MoveLeft, HelpCircle } from "lucide-react"
+import Link from "next/link";
+import {
+  Home,
+  TrendingUp,
+  Search,
+  BarChart3,
+  Bot,
+  Calculator,
+  BookOpen,
+  ArrowRightLeft,
+} from "lucide-react";
+
+const QUICK_LINKS = [
+  { href: "/trade", label: "Trade", icon: TrendingUp },
+  { href: "/coins", label: "Discover", icon: Search },
+  { href: "/predictions", label: "Predictions", icon: BarChart3 },
+  { href: "/automate", label: "Automate", icon: Bot },
+  { href: "/crypto-leverage-calculator", label: "Calculator", icon: Calculator },
+  { href: "/swap-guide", label: "Swap Guide", icon: ArrowRightLeft },
+  { href: "/blog", label: "Blog", icon: BookOpen },
+];
 
 export default function NotFound() {
-    return (
-        <div className="flex min-h-screen flex-col bg-white">
-            <Header />
-
-            <main className="flex-1 flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-2xl w-full text-center">
-                    {/* Error Code & Icon */}
-                    <div className="mb-8 flex justify-center">
-                        <div className="relative">
-                            <div className="absolute -inset-4 bg-[#7C3AED]/10 rounded-full blur-2xl animate-pulse"></div>
-                            <div className="relative bg-white border border-[#7C3AED]/20 rounded-2xl p-6 shadow-sm">
-                                <HelpCircle className="h-12 w-12 text-[#7C3AED]" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <h1 className="text-8xl font-black text-[#7C3AED] mb-4">404</h1>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">Page Not Found</h2>
-
-                    <p className="text-lg text-gray-600 mb-10 max-w-lg mx-auto">
-                        Sorry, we couldn't find the page you're looking for. The link might be broken or the page may have been moved.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-                        <Button asChild size="lg" className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-8 rounded-full transition-all hover:scale-105 active:scale-95">
-                            <Link href="/" className="flex items-center gap-2">
-                                <Home className="h-4 w-4" />
-                                Back to Home
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="lg" className="border-gray-200 hover:border-[#7C3AED] hover:text-[#7C3AED] px-8 rounded-full transition-all">
-                            <Link href="/coins" className="flex items-center gap-2">
-                                <Coins className="h-4 w-4" />
-                                Browse Coins
-                            </Link>
-                        </Button>
-                    </div>
-
-                    {/* Quick Links Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 pt-12 border-t border-gray-100">
-                        <Link href="/swap-guide" className="p-4 rounded-xl hover:bg-gray-50 transition-colors flex flex-col items-center gap-2 group">
-                            <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-[#7C3AED]/10 group-hover:text-[#7C3AED] transition-colors">
-                                <FileText className="h-5 w-5" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">Swap Guide</span>
-                        </Link>
-
-                        <Link href="/crypto-leverage-calculator" className="p-4 rounded-xl hover:bg-gray-50 transition-colors flex flex-col items-center gap-2 group">
-                            <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-[#7C3AED]/10 group-hover:text-[#7C3AED] transition-colors">
-                                <Calculator className="h-5 w-5" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">Calculator</span>
-                        </Link>
-
-                        <Link href="/blog" className="p-4 rounded-xl hover:bg-gray-50 transition-colors flex flex-col items-center gap-2 group">
-                            <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-[#7C3AED]/10 group-hover:text-[#7C3AED] transition-colors">
-                                <FileText className="h-5 w-5" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">Blog</span>
-                        </Link>
-
-                        <Link href="/coins" className="p-4 rounded-xl hover:bg-gray-50 transition-colors flex flex-col items-center gap-2 group">
-                            <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-[#7C3AED]/10 group-hover:text-[#7C3AED] transition-colors">
-                                <MoveLeft className="h-5 w-5" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">All Coins</span>
-                        </Link>
-                    </div>
-                </div>
-            </main>
-
-            <Footer />
+  return (
+    <main className="flex-1 flex items-center justify-center py-16 px-4 sm:px-6 min-h-[calc(100vh-3.5rem)]">
+      <div className="max-w-lg w-full text-center">
+        <div className="mb-6 flex justify-center">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-[#FF455B]/10 rounded-full blur-2xl" />
+            <div className="relative bg-[#141620] border border-[#2a2e3e] rounded-2xl p-5">
+              <span className="text-4xl">🔍</span>
+            </div>
+          </div>
         </div>
-    )
+
+        <h1 className="text-7xl font-black bg-gradient-to-r from-[#FF455B] to-[#FF8A97] bg-clip-text text-transparent mb-3">
+          404
+        </h1>
+        <h2 className="text-xl font-bold text-white mb-4">Page Not Found</h2>
+        <p className="text-sm text-[#848e9c] mb-8 max-w-sm mx-auto leading-relaxed">
+          The link might be broken or the page may have been moved.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF455B] hover:bg-[#E63B50] text-white font-semibold text-sm transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-[#FF455B]/25"
+          >
+            <Home className="h-4 w-4" />
+            Back to Home
+          </Link>
+          <Link
+            href="/trade"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/50 text-white font-semibold text-sm transition-all"
+          >
+            <TrendingUp className="h-4 w-4" />
+            Start Trading
+          </Link>
+        </div>
+
+        <div className="border-t border-[#1e2130] pt-8">
+          <p className="text-[10px] uppercase tracking-widest text-[#4a4e59] mb-4">
+            Quick Links
+          </p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            {QUICK_LINKS.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#FF455B]/40 transition-colors group"
+              >
+                <Icon className="h-4 w-4 text-[#848e9c] group-hover:text-[#FF455B] transition-colors" />
+                <span className="text-[10px] font-medium text-[#848e9c] group-hover:text-white transition-colors">
+                  {label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }

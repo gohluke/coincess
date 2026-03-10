@@ -238,7 +238,7 @@ export function CoinsTable() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
           <div className="text-gray-600">Loading cryptocurrency data...</div>
         </div>
       </div>
@@ -253,7 +253,7 @@ export function CoinsTable() {
           <div className="text-gray-600 max-w-md">{error}</div>
           <button
             onClick={fetchCoins}
-            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="mt-4 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors"
           >
             Try Again
           </button>
@@ -265,7 +265,7 @@ export function CoinsTable() {
   return (
     <div className="w-full">
       {/* Advertise Your Coin CTA */}
-      <div className="mb-8 p-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+      <div className="mb-8 p-4 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-white">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
@@ -273,12 +273,12 @@ export function CoinsTable() {
             </div>
             <div>
               <h3 className="font-bold text-lg">Want to feature your coin here?</h3>
-              <p className="text-purple-100 text-sm">Get your project in front of thousands of crypto enthusiasts</p>
+              <p className="text-rose-100 text-sm">Get your project in front of thousands of crypto enthusiasts</p>
             </div>
           </div>
           <a
             href="mailto:advertise@coincess.com?subject=Coin%20Sponsorship%20Inquiry&body=Hi%2C%0A%0AI%27d%20like%20to%20advertise%20my%20coin%20on%20Coincess.%0A%0ACoin%20Name%3A%0AWebsite%3A%0ABlockchain%3A%0ADescription%3A%0A%0AThank%20you!"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-rose-600 font-semibold rounded-lg hover:bg-rose-50 transition-colors whitespace-nowrap"
           >
             <Megaphone className="h-4 w-4" />
             Advertise Your Coin
@@ -376,7 +376,7 @@ export function CoinsTable() {
                     </div>
                   )}
                   <div>
-                    <div className="font-semibold text-gray-900 group-hover:text-[#7C3AED] transition-colors">{SPONSORED_COIN.name}</div>
+                    <div className="font-semibold text-gray-900 group-hover:text-[#FF455B] transition-colors">{SPONSORED_COIN.name}</div>
                     <div className="text-sm text-gray-500 uppercase">{SPONSORED_COIN.symbol}</div>
                   </div>
                 </a>
@@ -478,7 +478,7 @@ export function CoinsTable() {
                     href={`https://trocador.app/?ticker_to=${coin.symbol.toLowerCase()}&ref=2dzDcvfQJY`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#7C3AED] text-white text-sm font-medium rounded-lg hover:bg-[#6D28D9] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FF455B] text-white text-sm font-medium rounded-lg hover:bg-[#E63B50] transition-colors"
                   >
                     <ShoppingCart className="h-3.5 w-3.5" />
                     Buy

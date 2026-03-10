@@ -97,9 +97,9 @@ export default function WhyPrivacyMatters() {
         <li>True ownership of your money</li>
       </ul>
 
-      <div className="not-prose my-8 bg-[#7C3AED]/5 border border-[#7C3AED]/20 rounded-xl p-6">
+      <div className="not-prose my-8 bg-[#FF455B]/5 border border-[#FF455B]/20 rounded-xl p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Shield className="h-5 w-5 text-[#7C3AED]" />
+          <Shield className="h-5 w-5 text-[#FF455B]" />
           The Privacy Analogy
         </h3>
         <p className="text-gray-700">
@@ -123,22 +123,22 @@ export default function WhyPrivacyMatters() {
 
       <div className="not-prose my-8 grid md:grid-cols-3 gap-4">
         <div className="border border-gray-200 rounded-xl p-5 text-center">
-          <div className="w-12 h-12 bg-[#7C3AED]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <EyeOff className="h-6 w-6 text-[#7C3AED]" />
+          <div className="w-12 h-12 bg-[#FF455B]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <EyeOff className="h-6 w-6 text-[#FF455B]" />
           </div>
           <h4 className="font-semibold text-gray-900 mb-2">Ring Signatures</h4>
           <p className="text-sm text-gray-600">Hides the sender by mixing your transaction with others. Impossible to determine who actually sent the funds.</p>
         </div>
         <div className="border border-gray-200 rounded-xl p-5 text-center">
-          <div className="w-12 h-12 bg-[#7C3AED]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Lock className="h-6 w-6 text-[#7C3AED]" />
+          <div className="w-12 h-12 bg-[#FF455B]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Lock className="h-6 w-6 text-[#FF455B]" />
           </div>
           <h4 className="font-semibold text-gray-900 mb-2">Stealth Addresses</h4>
           <p className="text-sm text-gray-600">Hides the receiver. One-time addresses are created for each transaction, unlinkable to your main address.</p>
         </div>
         <div className="border border-gray-200 rounded-xl p-5 text-center">
-          <div className="w-12 h-12 bg-[#7C3AED]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Search className="h-6 w-6 text-[#7C3AED]" />
+          <div className="w-12 h-12 bg-[#FF455B]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Search className="h-6 w-6 text-[#FF455B]" />
           </div>
           <h4 className="font-semibold text-gray-900 mb-2">RingCT</h4>
           <p className="text-sm text-gray-600">Hides the amount. The transaction amount is cryptographically concealed while still being mathematically verifiable.</p>
@@ -307,13 +307,13 @@ export default function WhyPrivacyMatters() {
       <div className="not-prose mt-12">
         <Link
           href="/blog/how-to-swap-bitcoin-for-monero"
-          className="flex items-center justify-between p-6 bg-[#7C3AED]/5 rounded-xl border border-[#7C3AED]/20 hover:border-[#7C3AED]/50 transition-colors group"
+          className="flex items-center justify-between p-6 bg-[#FF455B]/5 rounded-xl border border-[#FF455B]/20 hover:border-[#FF455B]/50 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#7C3AED]">Ready to Try Monero?</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">Ready to Try Monero?</h4>
             <p className="text-gray-600 text-sm">Learn how to swap Bitcoin for Monero in under 30 minutes</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#7C3AED]" />
+          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
         </Link>
       </div>
     </BlogPostLayout>

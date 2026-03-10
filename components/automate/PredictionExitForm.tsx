@@ -62,33 +62,33 @@ export function PredictionExitForm() {
       </p>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Event Title</label>
-        <input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Event ID</label>
-        <input value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market ID</label>
-        <input value={marketId} onChange={(e) => setMarketId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={marketId} onChange={(e) => setMarketId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Token ID</label>
-        <input value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market End Date</label>
-        <input value={endDate} onChange={(e) => setEndDate(e.target.value)} type="datetime-local" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={endDate} onChange={(e) => setEndDate(e.target.value)} type="datetime-local" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Exit Before Close</label>
-        <select value={exitBefore} onChange={(e) => setExitBefore(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]">
+        <select value={exitBefore} onChange={(e) => setExitBefore(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]">
           {EXIT_PRESETS.map((p) => (
             <option key={p.ms} value={p.ms}>{p.label}</option>
           ))}
         </select>
       </div>
-      <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-semibold transition-colors">
+      <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#FF455B] hover:bg-[#E63B50] text-white text-sm font-semibold transition-colors">
         Start Auto Exit
       </button>
     </div>

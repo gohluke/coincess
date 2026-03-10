@@ -109,7 +109,7 @@ export default function ChatPage() {
           <Bot className="h-12 w-12 text-[#2a2e3e] mx-auto" />
           <h2 className="text-lg font-semibold">AI Trading Coach</h2>
           <p className="text-sm text-[#848e9c]">Connect a wallet to get personalized trading advice</p>
-          <button onClick={connect} className="px-5 py-2.5 bg-[#7C3AED] text-white rounded-lg text-sm font-medium hover:bg-[#6D28D9] transition-colors flex items-center gap-2 mx-auto">
+          <button onClick={connect} className="px-5 py-2.5 bg-[#FF455B] text-white rounded-lg text-sm font-medium hover:bg-[#E63B50] transition-colors flex items-center gap-2 mx-auto">
             <LogIn className="h-4 w-4" /> Connect Wallet
           </button>
         </div>
@@ -130,7 +130,7 @@ export default function ChatPage() {
           </button>
           <div>
             <h1 className="text-sm font-bold flex items-center gap-2">
-              <Bot className="h-4 w-4 text-[#7C3AED]" />
+              <Bot className="h-4 w-4 text-[#FF455B]" />
               AI Trading Coach
             </h1>
             <p className="text-[10px] text-[#848e9c]">Powered by Gemini with live Hyperliquid data</p>
@@ -164,7 +164,7 @@ export default function ChatPage() {
                 key={c.id}
                 className={`w-full px-3 py-2 text-xs rounded-lg text-left truncate transition-colors ${
                   `conv-${chatKey}` === c.id
-                    ? "bg-[#7C3AED]/10 text-[#7C3AED]"
+                    ? "bg-[#FF455B]/10 text-[#FF455B]"
                     : "text-[#848e9c] hover:bg-[#141620] hover:text-white"
                 }`}
               >
@@ -192,9 +192,9 @@ export default function ChatPage() {
                         key={action.label}
                         onClick={() => handleSend(action.prompt)}
                         disabled={isLoading}
-                        className="flex items-center gap-2.5 px-4 py-3 bg-[#141620] border border-[#2a2e3e] rounded-xl text-left hover:border-[#7C3AED]/30 hover:bg-[#1a1d2e] transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2.5 px-4 py-3 bg-[#141620] border border-[#2a2e3e] rounded-xl text-left hover:border-[#FF455B]/30 hover:bg-[#1a1d2e] transition-colors disabled:opacity-50"
                       >
-                        <Icon className="h-4 w-4 text-[#7C3AED] shrink-0" />
+                        <Icon className="h-4 w-4 text-[#FF455B] shrink-0" />
                         <span className="text-xs text-[#c0c4cc]">{action.label}</span>
                       </button>
                     );
@@ -209,13 +209,13 @@ export default function ChatPage() {
                 return (
                   <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
                     {msg.role === "assistant" && (
-                      <div className="w-7 h-7 rounded-lg bg-[#7C3AED]/15 flex items-center justify-center shrink-0 mt-0.5">
-                        <Bot className="h-4 w-4 text-[#7C3AED]" />
+                      <div className="w-7 h-7 rounded-lg bg-[#FF455B]/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <Bot className="h-4 w-4 text-[#FF455B]" />
                       </div>
                     )}
                     <div className={`max-w-[80%] ${
                       msg.role === "user"
-                        ? "bg-[#7C3AED] text-white rounded-2xl rounded-br-md px-4 py-2.5"
+                        ? "bg-[#FF455B] text-white rounded-2xl rounded-br-md px-4 py-2.5"
                         : "bg-[#141620] border border-[#2a2e3e] rounded-2xl rounded-bl-md px-4 py-2.5"
                     }`}>
                       {text && (
@@ -231,7 +231,7 @@ export default function ChatPage() {
                         <div className="mt-2 space-y-1">
                           {toolParts.map((tp) => (
                             <div key={tp.toolInvocation.toolCallId} className="flex items-center gap-1.5 text-[10px] text-[#848e9c] bg-[#0b0e11] rounded px-2 py-1">
-                              <Sparkles className="h-3 w-3 text-[#7C3AED]" />
+                              <Sparkles className="h-3 w-3 text-[#FF455B]" />
                               <span>
                                 {tp.toolInvocation.toolName === "getPositions" && "Fetching positions..."}
                                 {tp.toolInvocation.toolName === "getRecentFills" && "Fetching trade history..."}
@@ -260,12 +260,12 @@ export default function ChatPage() {
 
             {isLoading && messages.length > 0 && messages[messages.length - 1]?.role === "user" && (
               <div className="flex gap-3">
-                <div className="w-7 h-7 rounded-lg bg-[#7C3AED]/15 flex items-center justify-center shrink-0">
-                  <Bot className="h-4 w-4 text-[#7C3AED]" />
+                <div className="w-7 h-7 rounded-lg bg-[#FF455B]/15 flex items-center justify-center shrink-0">
+                  <Bot className="h-4 w-4 text-[#FF455B]" />
                 </div>
                 <div className="bg-[#141620] border border-[#2a2e3e] rounded-2xl rounded-bl-md px-4 py-3">
                   <div className="flex items-center gap-2 text-xs text-[#848e9c]">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#7C3AED]" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#FF455B]" />
                     Thinking...
                   </div>
                 </div>
@@ -282,12 +282,12 @@ export default function ChatPage() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about your trades, positions, or market..."
                 disabled={isLoading}
-                className="flex-1 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED] transition-colors disabled:opacity-50"
+                className="flex-1 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B] transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="px-4 py-2.5 bg-[#7C3AED] text-white rounded-xl text-sm font-medium hover:bg-[#6D28D9] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-4 py-2.5 bg-[#FF455B] text-white rounded-xl text-sm font-medium hover:bg-[#E63B50] transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>

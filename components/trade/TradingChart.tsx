@@ -59,8 +59,8 @@ export function TradingChart() {
         horzLines: { color: "#1a1d26" },
       },
       crosshair: {
-        vertLine: { color: "#7C3AED", width: 1, style: 3 },
-        horzLine: { color: "#7C3AED", width: 1, style: 3 },
+        vertLine: { color: "#FF455B", width: 1, style: 3 },
+        horzLine: { color: "#FF455B", width: 1, style: 3 },
       },
       rightPriceScale: {
         borderColor: "#2a2e39",
@@ -177,7 +177,7 @@ export function TradingChart() {
             onClick={() => setInterval(iv.value)}
             className={`px-2.5 py-1 text-xs rounded transition-colors ${
               selectedInterval === iv.value
-                ? "bg-[#7C3AED] text-white"
+                ? "bg-[#FF455B] text-white"
                 : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
             }`}
           >

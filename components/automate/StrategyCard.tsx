@@ -21,7 +21,7 @@ const TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: s
   dca: { label: "DCA", icon: <RefreshCw className="h-4 w-4" />, color: "text-blue-400" },
   grid: { label: "Grid", icon: <Grid3X3 className="h-4 w-4" />, color: "text-emerald-400" },
   trailing_stop: { label: "Trail Stop", icon: <ShieldAlert className="h-4 w-4" />, color: "text-amber-400" },
-  conditional: { label: "Conditional", icon: <Target className="h-4 w-4" />, color: "text-purple-400" },
+  conditional: { label: "Conditional", icon: <Target className="h-4 w-4" />, color: "text-rose-400" },
   prediction_auto_bet: { label: "Auto Bet", icon: <Bot className="h-4 w-4" />, color: "text-pink-400" },
   prediction_exit: { label: "Auto Exit", icon: <Clock className="h-4 w-4" />, color: "text-orange-400" },
   copy_trade: { label: "Copy Trade", icon: <Copy className="h-4 w-4" />, color: "text-cyan-400" },

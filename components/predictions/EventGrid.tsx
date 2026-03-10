@@ -34,7 +34,7 @@ export function EventGrid() {
   if (loading && events.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-[#7C3AED]" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#FF455B]" />
       </div>
     );
   }
@@ -57,7 +57,7 @@ export function EventGrid() {
       <div ref={sentinelRef} className="h-4" />
       {loading && events.length > 0 && (
         <div className="flex justify-center py-4">
-          <Loader2 className="h-5 w-5 animate-spin text-[#7C3AED]" />
+          <Loader2 className="h-5 w-5 animate-spin text-[#FF455B]" />
         </div>
       )}
     </>

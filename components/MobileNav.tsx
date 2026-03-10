@@ -2,18 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, BarChart3, Bot, LayoutDashboard, Users, BookOpen, MessageSquare } from "lucide-react";
+import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
   { href: "/trade", label: "Trade", icon: TrendingUp },
-  { href: "/traders", label: "Traders", icon: Users },
-  { href: "/journal", label: "Journal", icon: BookOpen },
+  { href: "/coins", label: "Discover", icon: Search },
+  { href: "/predictions", label: "Predictions", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
-  { href: "/chat", label: "AI Coach", icon: MessageSquare },
 ];
 
-const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calculator"];
+const MARKETING_ROUTES = ["/blog", "/swap-guide", "/crypto-leverage-calculator"];
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -33,7 +32,7 @@ export function MobileNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors ${
-                active ? "text-[#7C3AED]" : "text-[#848e9c]"
+                active ? "text-[#FF455B]" : "text-[#848e9c]"
               }`}
             >
               <Icon className="h-5 w-5" />

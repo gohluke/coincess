@@ -34,10 +34,10 @@ export default function CreateStrategyPage() {
                 <button
                   key={opt.id}
                   onClick={() => setSelected(opt.id)}
-                  className="text-left bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 hover:border-[#7C3AED]/50 hover:bg-[#1a1d2e] transition-all"
+                  className="text-left bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 hover:border-[#FF455B]/50 hover:bg-[#1a1d2e] transition-all"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-[#7C3AED]">{opt.icon}</span>
+                    <span className="text-[#FF455B]">{opt.icon}</span>
                     <div>
                       <h3 className="text-sm font-semibold">{opt.label}</h3>
                       <span className="text-[10px] text-[#848e9c] uppercase">{opt.platform}</span>

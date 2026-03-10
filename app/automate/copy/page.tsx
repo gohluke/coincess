@@ -63,7 +63,7 @@ export default function CopyTradingPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold">Copy Trading</h2>
-          <Link href="/automate/create" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-medium transition-colors">
+          <Link href="/automate/create" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF455B] hover:bg-[#E63B50] text-white text-xs font-medium transition-colors">
             <Plus className="h-3.5 w-3.5" />
             New Copy Bot
           </Link>
@@ -87,7 +87,7 @@ export default function CopyTradingPage() {
           <div className="text-center py-12 border border-dashed border-[#2a2e3e] rounded-xl">
             <Copy className="h-10 w-10 mx-auto mb-3 text-[#2a2e3e]" />
             <p className="text-sm text-[#848e9c] mb-3">No wallets being tracked</p>
-            <Link href="/automate/create" className="text-sm text-[#7C3AED] hover:underline">Set up a copy trading bot</Link>
+            <Link href="/automate/create" className="text-sm text-[#FF455B] hover:underline">Set up a copy trading bot</Link>
           </div>
         ) : (
           <div className="space-y-4">

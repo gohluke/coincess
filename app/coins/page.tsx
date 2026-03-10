@@ -11,7 +11,7 @@ import { TokenSearch } from "@/components/coins/TokenSearch";
 const TABS = [
   { id: "trending", label: "Trending", icon: Flame, color: "text-orange-400" },
   { id: "new", label: "New Pairs", icon: Sparkles, color: "text-blue-400" },
-  { id: "top", label: "Top 100", icon: Coins, color: "text-[#7C3AED]" },
+  { id: "top", label: "Top 100", icon: Coins, color: "text-[#FF455B]" },
   { id: "security", label: "Security", icon: Shield, color: "text-emerald-400" },
 ] as const;
 

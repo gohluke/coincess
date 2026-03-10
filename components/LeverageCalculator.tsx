@@ -138,7 +138,7 @@ function CalculatorInput({
           className={`
             w-full h-12 rounded-lg border bg-white text-gray-900
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]
+            focus:outline-none focus:ring-2 focus:ring-[#FF455B]/20 focus:border-[#FF455B]
             ${prefix ? "pl-8" : "pl-4"}
             ${suffix ? "pr-16" : "pr-4"}
             ${readOnly ? "bg-gray-50 text-gray-600 cursor-not-allowed" : ""}
@@ -318,7 +318,7 @@ export function LeverageCalculator() {
       {/* Calculator Card */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] px-6 py-5">
+        <div className="bg-gradient-to-r from-[#FF455B] to-[#E63B50] px-6 py-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
               <Calculator className="h-6 w-6 text-white" />
@@ -489,7 +489,7 @@ export function LeverageCalculator() {
             href="https://dydx.exchange/r/SABZRJKF"
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full text-center py-3 px-6 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium rounded-lg transition-colors"
+            className="block w-full text-center py-3 px-6 bg-[#FF455B] hover:bg-[#E63B50] text-white font-medium rounded-lg transition-colors"
           >
             Trade @ dYdX — Get 5% Off Fees
           </a>

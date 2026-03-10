@@ -2,19 +2,19 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 import {
   TrendingUp, BarChart3, Bot, LayoutDashboard, Search,
-  Settings, Users, BookOpen, MessageSquare, ChevronDown,
+  Settings, Users, BookOpen, MessageSquare, Wrench, LayoutGrid,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
 import { DepositButton } from "@/components/DepositModal";
 
-const PRIMARY_LINKS = [
+const NAV_ICONS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
   { href: "/trade", label: "Trade", icon: TrendingUp },
-  { href: "/coins", label: "Discover", icon: Search },
   { href: "/predictions", label: "Predictions", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
 ];
@@ -23,107 +23,145 @@ const MORE_LINKS = [
   { href: "/traders", label: "Traders", icon: Users },
   { href: "/journal", label: "Journal", icon: BookOpen },
   { href: "/chat", label: "AI Coach", icon: MessageSquare },
+  { href: "/tools", label: "Tools", icon: Wrench },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-const MARKETING_ROUTES = ["/", "/blog", "/swap-guide", "/crypto-leverage-calculator"];
+const MARKETING_ROUTES = ["/blog", "/swap-guide", "/crypto-leverage-calculator"];
+
+function NavIcon({ href, label, icon: Icon, active }: {
+  href: string; label: string; icon: LucideIcon; active: boolean;
+}) {
+  return (
+    <Link href={href} className="group relative flex items-center justify-center">
+      <div
+        className={`flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
+          active
+            ? "bg-[#FF455B]/12 border-[#FF455B]/25 text-[#FF455B]"
+            : "bg-[#1a1d26] border-[#2a2e3e] text-[#848e9c] hover:bg-[#252830] hover:text-white"
+        }`}
+      >
+        <Icon className="h-[18px] w-[18px]" />
+      </div>
+      <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#1e2130] border border-[#2a2e3e] text-[11px] font-medium text-white whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 shadow-lg shadow-black/40 z-50">
+        {label}
+      </span>
+    </Link>
+  );
+}
 
 export function Navbar() {
   const pathname = usePathname();
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [gridOpen, setGridOpen] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setMoreOpen(false);
+      if (gridRef.current && !gridRef.current.contains(e.target as Node)) {
+        setGridOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  useEffect(() => { setMoreOpen(false); }, [pathname]);
+  useEffect(() => { setGridOpen(false); }, [pathname]);
 
   const isMarketing = MARKETING_ROUTES.some(
     (r) => pathname === r || (r === "/blog" && pathname.startsWith("/blog/"))
   );
   if (isMarketing) return null;
 
-  const isMoreActive = MORE_LINKS.some(
-    ({ href }) => pathname === href || pathname.startsWith(href + "/")
-  );
-
   return (
     <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-        {/* Left: Logo + nav */}
-        <div className="flex items-center gap-6 min-w-0">
-          <Link href="/dashboard" className="shrink-0">
-            <Logo />
-          </Link>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center">
+        {/* Logo */}
+        <Link href="/dashboard" className="shrink-0">
+          <Logo />
+        </Link>
 
-          {/* Desktop nav links */}
-          <nav className="hidden md:flex items-center gap-1">
-            {PRIMARY_LINKS.map(({ href, label, icon: Icon }) => {
+        {/* Spacer pushes everything to the right */}
+        <div className="flex-1" />
+
+        {/* Right-aligned: Search + Nav icons + Utility icons + Avatar */}
+        <div className="flex items-center gap-1.5">
+          {/* Search pill */}
+          <div className="hidden md:flex items-center gap-2 bg-[#1a1d26] rounded-full px-3.5 py-2 w-44 lg:w-52 border border-transparent focus-within:border-[#3a3e4e] transition-colors mr-1">
+            <Search className="h-4 w-4 text-[#555a66] shrink-0" />
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder="Search"
+              className="bg-transparent text-[13px] text-white placeholder-[#555a66] outline-none w-full"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && searchRef.current?.value.trim()) {
+                  router.push(`/coins?q=${encodeURIComponent(searchRef.current.value.trim())}`);
+                  searchRef.current.value = "";
+                  searchRef.current.blur();
+                }
+              }}
+            />
+          </div>
+
+          {/* Nav icons (desktop) */}
+          <nav className="hidden md:flex items-center gap-1.5">
+            {NAV_ICONS.map(({ href, label, icon }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    active
-                      ? "bg-[#7C3AED]/15 text-[#7C3AED]"
-                      : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </Link>
-              );
+              return <NavIcon key={href} href={href} label={label} icon={icon} active={active} />;
             })}
+          </nav>
 
-            {/* More dropdown */}
-            <div ref={moreRef} className="relative">
+          {/* Separator */}
+          <div className="hidden md:block w-px h-5 bg-[#2a2e3e] mx-0.5" />
+
+          {/* Deposit */}
+          <DepositButton variant="icon" />
+
+          {/* Grid / More dropdown */}
+          <div ref={gridRef} className="relative hidden md:block">
+            <div className="group relative flex items-center justify-center">
               <button
-                onClick={() => setMoreOpen(!moreOpen)}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  isMoreActive
-                    ? "bg-[#7C3AED]/15 text-[#7C3AED]"
-                    : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
+                onClick={() => setGridOpen(!gridOpen)}
+                className={`flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
+                  gridOpen
+                    ? "bg-[#252830] border-[#3a3e4e] text-white"
+                    : "bg-[#1a1d26] border-[#2a2e3e] text-[#848e9c] hover:bg-[#252830] hover:text-white"
                 }`}
               >
-                More
-                <ChevronDown className={`h-3 w-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+                <LayoutGrid className="h-[18px] w-[18px]" />
               </button>
-              {moreOpen && (
-                <div className="absolute top-full left-0 mt-1 w-44 bg-[#141620] border border-[#2a2e3e] rounded-xl shadow-xl shadow-black/40 py-1 z-50">
-                  {MORE_LINKS.map(({ href, label, icon: Icon }) => {
-                    const active = pathname === href || pathname.startsWith(href + "/");
-                    return (
-                      <Link
-                        key={href}
-                        href={href}
-                        className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium transition-colors ${
-                          active
-                            ? "text-[#7C3AED] bg-[#7C3AED]/10"
-                            : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
-                        }`}
-                      >
-                        <Icon className="h-3.5 w-3.5" />
-                        {label}
-                      </Link>
-                    );
-                  })}
-                </div>
+              {!gridOpen && (
+                <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#1e2130] border border-[#2a2e3e] text-[11px] font-medium text-white whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 shadow-lg shadow-black/40 z-50">
+                  More
+                </span>
               )}
             </div>
-          </nav>
-        </div>
+            {gridOpen && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-[#141620] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/50 py-1.5 z-50">
+                {MORE_LINKS.map(({ href, label, icon: Icon }) => {
+                  const active = pathname === href || pathname.startsWith(href + "/");
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors ${
+                        active
+                          ? "text-[#FF455B] bg-[#FF455B]/8"
+                          : "text-[#848e9c] hover:text-white hover:bg-[#1a1d26]"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-        {/* Right: Deposit + Auth */}
-        <div className="flex items-center gap-2 shrink-0">
-          <DepositButton />
+          {/* Avatar / Auth */}
           <AuthButton />
         </div>
       </div>

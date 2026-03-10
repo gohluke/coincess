@@ -22,7 +22,7 @@ export function BlogPostLayout({ post, children }: BlogPostLayoutProps) {
     Tutorial: "bg-blue-100 text-blue-800",
     Security: "bg-red-100 text-red-800",
     Guide: "bg-green-100 text-green-800",
-    Privacy: "bg-purple-100 text-purple-800",
+    Privacy: "bg-rose-100 text-rose-800",
     Beginner: "bg-orange-100 text-orange-800",
   }
 
@@ -31,11 +31,11 @@ export function BlogPostLayout({ post, children }: BlogPostLayoutProps) {
       <Header />
       <main className="flex-1">
         {/* Hero */}
-        <div className="bg-gradient-to-br from-[#7C3AED]/5 to-[#7C3AED]/10 py-12 md:py-20">
+        <div className="bg-gradient-to-br from-[#FF455B]/5 to-[#FF455B]/10 py-12 md:py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-[#7C3AED] hover:text-[#6D28D9] mb-6 transition-colors"
+              className="inline-flex items-center gap-2 text-[#FF455B] hover:text-[#E63B50] mb-6 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Blog
@@ -75,7 +75,7 @@ export function BlogPostLayout({ post, children }: BlogPostLayoutProps) {
         {/* Content */}
         <article className="py-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-            <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-[#7C3AED] prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700">
+            <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-[#FF455B] prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700">
               {children}
             </div>
 
@@ -95,14 +95,14 @@ export function BlogPostLayout({ post, children }: BlogPostLayoutProps) {
             </div>
 
             {/* CTA */}
-            <div className="mt-12 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] rounded-2xl p-8 text-white text-center">
+            <div className="mt-12 bg-gradient-to-r from-[#FF455B] to-[#E63B50] rounded-2xl p-8 text-white text-center">
               <h3 className="text-2xl font-bold mb-3">Ready to Start Swapping?</h3>
               <p className="text-white/80 mb-6 max-w-lg mx-auto">
                 Use our swap guide to find the best rates and exchange your crypto instantly—no account needed.
               </p>
               <Link
                 href="/swap-guide"
-                className="inline-block px-8 py-3 bg-white text-[#7C3AED] font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+                className="inline-block px-8 py-3 bg-white text-[#FF455B] font-semibold rounded-lg hover:bg-gray-100 transition-colors"
               >
                 View Swap Guide
               </Link>

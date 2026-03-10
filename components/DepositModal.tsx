@@ -190,7 +190,7 @@ async function fetchAllChainBalances(wallet: string): Promise<TokenBalance[]> {
 
 // ─── Exported button ────────────────────────────────────────
 
-export function DepositButton() {
+export function DepositButton({ variant = "default" }: { variant?: "default" | "icon" }) {
   const { address } = useEffectiveAddress();
   const [open, setOpen] = useState(false);
 
@@ -198,12 +198,22 @@ export function DepositButton() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-colors"
-      >
-        Deposit
-      </button>
+      {variant === "icon" ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full bg-[#1a1d26] hover:bg-[#252830] border border-[#2a2e3e] transition-colors"
+          title="Deposit"
+        >
+          <ArrowDownToLine className="h-4 w-4 text-[#848e9c]" />
+        </button>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-colors"
+        >
+          Deposit
+        </button>
+      )}
       {open && createPortal(
         <DepositModal address={address} onClose={() => setOpen(false)} />,
         document.body
@@ -411,11 +421,11 @@ function MethodsStep({
         rel="noopener noreferrer"
         className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
       >
-        <div className="w-9 h-9 rounded-full bg-[#7C3AED]/15 flex items-center justify-center shrink-0">
-          <CreditCard className="h-4 w-4 text-[#7C3AED]" />
+        <div className="w-9 h-9 rounded-full bg-[#FF455B]/15 flex items-center justify-center shrink-0">
+          <CreditCard className="h-4 w-4 text-[#FF455B]" />
         </div>
         <div className="flex-1 text-left">
-          <p className="text-xs font-semibold text-white group-hover:text-[#7C3AED] transition-colors">Deposit with Card</p>
+          <p className="text-xs font-semibold text-white group-hover:text-[#FF455B] transition-colors">Deposit with Card</p>
           <p className="text-[11px] text-[#848e9c]">$20,000 &middot; 5 min</p>
         </div>
         <div className="flex items-center gap-1.5">
@@ -479,7 +489,7 @@ function TokensStep({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <Loader2 className="h-6 w-6 text-[#7C3AED] animate-spin" />
+        <Loader2 className="h-6 w-6 text-[#FF455B] animate-spin" />
         <p className="text-xs text-[#848e9c]">Loading wallet balances...</p>
       </div>
     );
@@ -583,7 +593,7 @@ function AmountStep({
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         placeholder="0.00"
-        className="w-full text-center bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 text-sm text-white font-medium focus:border-[#7C3AED] focus:outline-none transition-colors mb-4"
+        className="w-full text-center bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 text-sm text-white font-medium focus:border-[#FF455B] focus:outline-none transition-colors mb-4"
         step="any"
         min="0"
         max={token.balance}

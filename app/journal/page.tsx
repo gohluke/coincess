@@ -196,7 +196,7 @@ export default function JournalPage() {
           <BookOpen className="h-12 w-12 text-[#2a2e3e] mx-auto" />
           <h2 className="text-lg font-semibold">Trade Journal</h2>
           <p className="text-sm text-[#848e9c]">Connect a wallet to start journaling</p>
-          <button onClick={connect} className="px-5 py-2.5 bg-[#7C3AED] text-white rounded-lg text-sm font-medium hover:bg-[#6D28D9] transition-colors flex items-center gap-2 mx-auto">
+          <button onClick={connect} className="px-5 py-2.5 bg-[#FF455B] text-white rounded-lg text-sm font-medium hover:bg-[#E63B50] transition-colors flex items-center gap-2 mx-auto">
             <LogIn className="h-4 w-4" /> Connect Wallet
           </button>
         </div>
@@ -211,7 +211,7 @@ export default function JournalPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-[#7C3AED]" />
+              <BookOpen className="h-5 w-5 text-[#FF455B]" />
               Trade Journal
             </h1>
             <p className="text-xs text-[#848e9c] mt-1">
@@ -228,7 +228,7 @@ export default function JournalPage() {
             </button>
             <button
               onClick={() => openEditor()}
-              className="px-4 py-2 bg-[#7C3AED] text-white rounded-lg text-sm font-medium hover:bg-[#6D28D9] transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#FF455B] text-white rounded-lg text-sm font-medium hover:bg-[#E63B50] transition-colors flex items-center gap-1.5"
             >
               <Plus className="h-4 w-4" /> New Entry
             </button>
@@ -244,7 +244,7 @@ export default function JournalPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search entries..."
-              className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED] transition-colors"
+              className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B] transition-colors"
             />
           </div>
           {allTags.length > 0 && (
@@ -252,7 +252,7 @@ export default function JournalPage() {
               <button
                 onClick={() => setFilterTag("")}
                 className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${
-                  !filterTag ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "bg-[#1a1d2e] text-[#848e9c] hover:text-white"
+                  !filterTag ? "bg-[#FF455B]/20 text-[#FF455B]" : "bg-[#1a1d2e] text-[#848e9c] hover:text-white"
                 }`}
               >
                 All
@@ -262,7 +262,7 @@ export default function JournalPage() {
                   key={t}
                   onClick={() => setFilterTag(filterTag === t ? "" : t)}
                   className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${
-                    filterTag === t ? "bg-[#7C3AED]/20 text-[#7C3AED]" : "bg-[#1a1d2e] text-[#848e9c] hover:text-white"
+                    filterTag === t ? "bg-[#FF455B]/20 text-[#FF455B]" : "bg-[#1a1d2e] text-[#848e9c] hover:text-white"
                   }`}
                 >
                   {t}
@@ -274,7 +274,7 @@ export default function JournalPage() {
 
         {/* Editor Modal */}
         {editing && (
-          <div className="bg-[#141620] border border-[#7C3AED]/30 rounded-xl p-4 sm:p-5 space-y-4">
+          <div className="bg-[#141620] border border-[#FF455B]/30 rounded-xl p-4 sm:p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">{editId ? "Edit Entry" : "New Journal Entry"}</h2>
               <button onClick={resetForm} className="text-[#848e9c] hover:text-white transition-colors">
@@ -287,7 +287,7 @@ export default function JournalPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title (e.g. BRENTOIL blowup analysis)"
-              className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED]"
+              className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B]"
             />
 
             <textarea
@@ -295,7 +295,7 @@ export default function JournalPage() {
               onChange={(e) => setContent(e.target.value)}
               placeholder="What happened? What did you learn? Write in markdown..."
               rows={10}
-              className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED] font-mono text-xs leading-relaxed resize-y"
+              className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B] font-mono text-xs leading-relaxed resize-y"
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -306,7 +306,7 @@ export default function JournalPage() {
                   value={coin}
                   onChange={(e) => setCoin(e.target.value.toUpperCase())}
                   placeholder="e.g. BRENTOIL"
-                  className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B]"
                 />
               </div>
               <div>
@@ -317,7 +317,7 @@ export default function JournalPage() {
                   onChange={(e) => setPnlAmount(e.target.value)}
                   placeholder="e.g. -70.53"
                   step="0.01"
-                  className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B]"
                 />
               </div>
               <div>
@@ -346,7 +346,7 @@ export default function JournalPage() {
               <label className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-1 block">Tags</label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {tags.map((t) => (
-                  <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#7C3AED]/15 text-[#7C3AED] rounded text-[10px] font-medium">
+                  <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FF455B]/15 text-[#FF455B] rounded text-[10px] font-medium">
                     {t}
                     <button onClick={() => setTags(tags.filter((x) => x !== t))} className="hover:text-white">
                       <X className="h-2.5 w-2.5" />
@@ -361,7 +361,7 @@ export default function JournalPage() {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(tagInput); } }}
                   placeholder="Add tag..."
-                  className="flex-1 bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#848e9c] focus:outline-none focus:border-[#7C3AED]"
+                  className="flex-1 bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#848e9c] focus:outline-none focus:border-[#FF455B]"
                 />
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
@@ -384,7 +384,7 @@ export default function JournalPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !title.trim()}
-                className="px-4 py-2 bg-[#7C3AED] text-white rounded-lg text-xs font-medium hover:bg-[#6D28D9] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-4 py-2 bg-[#FF455B] text-white rounded-lg text-xs font-medium hover:bg-[#E63B50] transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 <Save className="h-3.5 w-3.5" />
                 {saving ? "Saving..." : editId ? "Update" : "Save Entry"}
@@ -407,7 +407,7 @@ export default function JournalPage() {
             {entries.length === 0 && (
               <button
                 onClick={() => openEditor()}
-                className="mt-3 px-4 py-2 bg-[#7C3AED]/10 text-[#7C3AED] rounded-lg text-xs font-medium hover:bg-[#7C3AED]/20 transition-colors"
+                className="mt-3 px-4 py-2 bg-[#FF455B]/10 text-[#FF455B] rounded-lg text-xs font-medium hover:bg-[#FF455B]/20 transition-colors"
               >
                 Write your first entry
               </button>
@@ -481,7 +481,7 @@ export default function JournalPage() {
                       {entry.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {entry.tags.map((t) => (
-                            <span key={t} className="px-2 py-0.5 bg-[#7C3AED]/10 text-[#7C3AED] rounded text-[10px] font-medium">
+                            <span key={t} className="px-2 py-0.5 bg-[#FF455B]/10 text-[#FF455B] rounded text-[10px] font-medium">
                               #{t}
                             </span>
                           ))}

@@ -14,7 +14,7 @@ interface NewsItem {
 
 const categoryColors: Record<string, string> = {
   "Market Analysis": "bg-blue-100 text-blue-800",
-  "Technology": "bg-purple-100 text-purple-800",
+  "Technology": "bg-rose-100 text-rose-800",
   "Trading": "bg-green-100 text-green-800",
   "Regulation": "bg-yellow-100 text-yellow-800",
   "NFTs": "bg-pink-100 text-pink-800",
@@ -134,7 +134,7 @@ export function BlogPosts() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
           <div className="text-gray-600">Loading latest crypto news...</div>
         </div>
       </div>
@@ -151,7 +151,7 @@ export function BlogPosts() {
             placeholder="Search articles..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
           />
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
@@ -160,7 +160,7 @@ export function BlogPosts() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedCategory === category
-                    ? "bg-purple-600 text-white"
+                    ? "bg-rose-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -236,7 +236,7 @@ export function BlogPosts() {
                   href={item.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4 flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium text-sm transition-colors"
+                  className="mt-4 flex items-center gap-2 text-rose-500 hover:text-rose-600 font-medium text-sm transition-colors"
                 >
                   Read Full Article
                   <ExternalLink className="w-4 h-4" />
@@ -252,7 +252,7 @@ export function BlogPosts() {
           <p className="text-gray-600 text-lg">No articles found matching your criteria.</p>
           <button
             onClick={fetchNews}
-            className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors"
           >
             Refresh News
           </button>
@@ -260,10 +260,10 @@ export function BlogPosts() {
       )}
 
       {/* Newsletter Signup */}
-      <div className="mt-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg p-8 text-white text-center">
+      <div className="mt-16 bg-gradient-to-br from-rose-500 to-blue-600 rounded-lg p-8 text-white text-center">
         <TrendingUp className="w-12 h-12 mx-auto mb-4" />
         <h3 className="text-2xl font-bold mb-2">Stay Updated with Crypto News</h3>
-        <p className="text-purple-100 mb-6 max-w-2xl mx-auto">
+        <p className="text-rose-100 mb-6 max-w-2xl mx-auto">
           Get the latest cryptocurrency news, market analysis, and trading insights delivered to your inbox.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
@@ -272,7 +272,7 @@ export function BlogPosts() {
             placeholder="Enter your email"
             className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
           />
-          <button className="px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+          <button className="px-6 py-3 bg-white text-rose-500 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
             Subscribe
           </button>
         </div>

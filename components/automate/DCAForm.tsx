@@ -50,7 +50,7 @@ export function DCAForm() {
     <div className="space-y-4 max-w-md">
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market</label>
-        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" placeholder="BTC" />
+        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" placeholder="BTC" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Side</label>
@@ -64,11 +64,11 @@ export function DCAForm() {
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Amount (USD per order)</label>
-        <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" placeholder="10" />
+        <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" placeholder="10" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Interval</label>
-        <select value={interval} onChange={(e) => setInterval(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]">
+        <select value={interval} onChange={(e) => setInterval(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]">
           {INTERVAL_PRESETS.map((p) => (
             <option key={p.ms} value={p.ms}>{p.label}</option>
           ))}
@@ -76,13 +76,13 @@ export function DCAForm() {
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Max Orders (optional)</label>
-        <input value={totalOrders} onChange={(e) => setTotalOrders(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" placeholder="Unlimited" />
+        <input value={totalOrders} onChange={(e) => setTotalOrders(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" placeholder="Unlimited" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Price Limit (optional)</label>
-        <input value={priceLimit} onChange={(e) => setPriceLimit(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" placeholder={`Don't ${side} ${side === "buy" ? "above" : "below"} this price`} />
+        <input value={priceLimit} onChange={(e) => setPriceLimit(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" placeholder={`Don't ${side} ${side === "buy" ? "above" : "below"} this price`} />
       </div>
-      <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-semibold transition-colors">
+      <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#FF455B] hover:bg-[#E63B50] text-white text-sm font-semibold transition-colors">
         Start DCA Bot
       </button>
     </div>

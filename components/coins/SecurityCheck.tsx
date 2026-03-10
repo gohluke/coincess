@@ -33,7 +33,7 @@ export function SecurityCheck() {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
-        <Shield className="h-5 w-5 text-[#7C3AED]" />
+        <Shield className="h-5 w-5 text-[#FF455B]" />
         <h2 className="text-sm font-semibold">Token Security Check</h2>
         <span className="text-[10px] text-[#848e9c]">powered by GoPlus</span>
       </div>
@@ -60,12 +60,12 @@ export function SecurityCheck() {
               onChange={(e) => setAddress(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCheck()}
               placeholder="0x... or token address"
-              className="flex-1 bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-[#7C3AED]"
+              className="flex-1 bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-[#FF455B]"
             />
             <button
               onClick={handleCheck}
               disabled={loading || !address.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-40 rounded-lg text-xs font-semibold text-white transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#FF455B] hover:bg-[#E63B50] disabled:opacity-40 rounded-lg text-xs font-semibold text-white transition-colors"
             >
               {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
               Check

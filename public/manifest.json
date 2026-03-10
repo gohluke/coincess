@@ -5,7 +5,7 @@
   "start_url": "/trade",
   "display": "standalone",
   "background_color": "#0b0e11",
-  "theme_color": "#7C3AED",
+  "theme_color": "#FF455B",
   "orientation": "portrait-primary",
   "icons": [
     {

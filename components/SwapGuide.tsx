@@ -179,7 +179,7 @@ function PrivacyStars({ rating }: { rating: number }) {
         <div
           key={star}
           className={`h-2 w-2 rounded-full ${
-            star <= rating ? "bg-[#7C3AED]" : "bg-gray-200"
+            star <= rating ? "bg-[#FF455B]" : "bg-gray-200"
           }`}
         />
       ))}
@@ -189,13 +189,13 @@ function PrivacyStars({ rating }: { rating: number }) {
 
 function MethodCard({ method, isExpanded, onToggle }: { method: SwapMethod; isExpanded: boolean; onToggle: () => void }) {
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white hover:border-[#7C3AED]/30 transition-all">
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white hover:border-[#FF455B]/30 transition-all">
       {/* Card Header */}
       <button
         onClick={onToggle}
         className="w-full p-6 text-left flex items-start gap-4 hover:bg-gray-50 transition-colors"
       >
-        <div className="p-3 rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+        <div className="p-3 rounded-xl bg-[#FF455B]/10 text-[#FF455B]">
           {method.icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -208,7 +208,7 @@ function MethodCard({ method, isExpanded, onToggle }: { method: SwapMethod; isEx
               <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">No KYC</span>
             )}
           </div>
-          <p className="text-sm text-[#7C3AED] font-medium mb-3">{method.subtitle}</p>
+          <p className="text-sm text-[#FF455B] font-medium mb-3">{method.subtitle}</p>
           
           {/* Quick Stats */}
           <div className="flex flex-wrap gap-4 text-sm">
@@ -273,13 +273,13 @@ function MethodCard({ method, isExpanded, onToggle }: { method: SwapMethod; isEx
                   href={service.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-[#7C3AED]/50 hover:bg-[#7C3AED]/5 transition-colors group"
+                  className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-[#FF455B]/50 hover:bg-[#FF455B]/5 transition-colors group"
                 >
                   <div>
-                    <span className="font-medium text-gray-900 group-hover:text-[#7C3AED]">{service.name}</span>
+                    <span className="font-medium text-gray-900 group-hover:text-[#FF455B]">{service.name}</span>
                     <p className="text-sm text-gray-500">{service.description}</p>
                   </div>
-                  <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#7C3AED]" />
+                  <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#FF455B]" />
                 </a>
               ))}
             </div>
@@ -291,7 +291,7 @@ function MethodCard({ method, isExpanded, onToggle }: { method: SwapMethod; isEx
             <ol className="space-y-2">
               {method.steps.map((step, i) => (
                 <li key={i} className="flex gap-3 text-sm">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center text-xs font-medium">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF455B]/10 text-[#FF455B] flex items-center justify-center text-xs font-medium">
                     {i + 1}
                   </span>
                   <span className="text-gray-600 pt-0.5">{step}</span>
@@ -312,7 +312,7 @@ export function SwapGuide() {
     <div className="py-12 md:py-20">
       {/* Hero Section */}
       <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3AED]/10 rounded-full text-[#7C3AED] text-sm font-medium mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF455B]/10 rounded-full text-[#FF455B] text-sm font-medium mb-6">
           <Shield className="h-4 w-4" />
           Privacy Guide
         </div>
@@ -393,7 +393,7 @@ export function SwapGuide() {
         <div className="flex flex-wrap justify-center gap-3">
           <Button
             asChild
-            className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white"
+            className="bg-[#FF455B] hover:bg-[#E63B50] text-white"
           >
             <a href="https://cakewallet.com" target="_blank" rel="noopener noreferrer">
               Get Cake Wallet

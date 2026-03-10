@@ -47,7 +47,7 @@ export function TrailingStopForm() {
     <div className="space-y-4 max-w-md">
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market</label>
-        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Position Side</label>
@@ -61,17 +61,17 @@ export function TrailingStopForm() {
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Trail Distance (%)</label>
-        <input value={trail} onChange={(e) => setTrail(e.target.value)} type="number" step="0.1" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={trail} onChange={(e) => setTrail(e.target.value)} type="number" step="0.1" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Activation Price (optional)</label>
-        <input value={activation} onChange={(e) => setActivation(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" placeholder="Start trailing after reaching this price" />
+        <input value={activation} onChange={(e) => setActivation(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" placeholder="Start trailing after reaching this price" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Position Size</label>
-        <input value={size} onChange={(e) => setSize(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+        <input value={size} onChange={(e) => setSize(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
       </div>
-      <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-semibold transition-colors">
+      <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#FF455B] hover:bg-[#E63B50] text-white text-sm font-semibold transition-colors">
         Start Trailing Stop
       </button>
     </div>

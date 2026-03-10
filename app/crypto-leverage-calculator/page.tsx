@@ -18,7 +18,7 @@ export default function CryptoLeverageCalculatorPage() {
         <div className="py-12 md:py-20">
           {/* Hero Section */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3AED]/10 rounded-full text-[#7C3AED] text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF455B]/10 rounded-full text-[#FF455B] text-sm font-medium mb-6">
               <Calculator className="h-4 w-4" />
               Trading Tools
             </div>
@@ -33,22 +33,22 @@ export default function CryptoLeverageCalculatorPage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <Zap className="h-6 w-6 text-[#7C3AED] mx-auto mb-2" />
+              <Zap className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
               <p className="text-sm font-medium text-gray-900">Real-Time</p>
               <p className="text-xs text-gray-500">Instant calculations</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <TrendingUp className="h-6 w-6 text-[#7C3AED] mx-auto mb-2" />
+              <TrendingUp className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
               <p className="text-sm font-medium text-gray-900">Long & Short</p>
               <p className="text-xs text-gray-500">Both directions</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <Shield className="h-6 w-6 text-[#7C3AED] mx-auto mb-2" />
+              <Shield className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
               <p className="text-sm font-medium text-gray-900">Risk Analysis</p>
               <p className="text-xs text-gray-500">Liquidation prices</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <BarChart3 className="h-6 w-6 text-[#7C3AED] mx-auto mb-2" />
+              <BarChart3 className="h-6 w-6 text-[#FF455B] mx-auto mb-2" />
               <p className="text-sm font-medium text-gray-900">ROE Tracking</p>
               <p className="text-xs text-gray-500">Return on equity</p>
             </div>
@@ -63,7 +63,7 @@ export default function CryptoLeverageCalculatorPage() {
           <div className="grid lg:grid-cols-2 gap-8 mb-12">
             <div className="border border-gray-200 rounded-xl p-6 bg-white">
               <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                <div className="p-3 rounded-xl bg-[#FF455B]/10 text-[#FF455B]">
                   <TrendingUp className="h-6 w-6" />
                 </div>
                 <div>
@@ -93,7 +93,7 @@ export default function CryptoLeverageCalculatorPage() {
 
             <div className="border border-gray-200 rounded-xl p-6 bg-white">
               <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                <div className="p-3 rounded-xl bg-[#FF455B]/10 text-[#FF455B]">
                   <Target className="h-6 w-6" />
                 </div>
                 <div>
@@ -106,15 +106,15 @@ export default function CryptoLeverageCalculatorPage() {
               </div>
               <div className="space-y-2 mt-4">
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#7C3AED] flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-5 w-5 text-[#FF455B] flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-gray-600">Calculate PNL for any exit price</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#7C3AED] flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-5 w-5 text-[#FF455B] flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-gray-600">Find liquidation price instantly</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#7C3AED] flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-5 w-5 text-[#FF455B] flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-gray-600">Reverse calculate from ROE targets</span>
                 </div>
               </div>
@@ -138,7 +138,7 @@ export default function CryptoLeverageCalculatorPage() {
           </div>
 
           {/* Best Practices */}
-          <div className="bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-br from-[#FF455B] to-[#E63B50] rounded-2xl p-8 text-white">
             <h2 className="text-2xl font-bold mb-6 text-center">Trading Best Practices</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-white/10 rounded-xl p-4">

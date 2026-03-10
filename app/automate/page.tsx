@@ -105,7 +105,7 @@ export default function AutomatePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-sm font-semibold flex items-center gap-2">
-              <Bot className="h-4 w-4 text-[#7C3AED]" />
+              <Bot className="h-4 w-4 text-[#FF455B]" />
               Automation
             </h1>
             <div className="flex items-center bg-[#141620] rounded-lg p-0.5">
@@ -113,7 +113,7 @@ export default function AutomatePage() {
                 onClick={() => setTab("server")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   tab === "server"
-                    ? "bg-[#7C3AED]/20 text-[#7C3AED]"
+                    ? "bg-[#FF455B]/20 text-[#FF455B]"
                     : "text-[#848e9c] hover:text-white"
                 }`}
               >
@@ -124,7 +124,7 @@ export default function AutomatePage() {
                 onClick={() => setTab("browser")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                   tab === "browser"
-                    ? "bg-[#7C3AED]/20 text-[#7C3AED]"
+                    ? "bg-[#FF455B]/20 text-[#FF455B]"
                     : "text-[#848e9c] hover:text-white"
                 }`}
               >
@@ -256,7 +256,7 @@ function ServerStrategies({ address }: { address: string | null }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Zap className="h-5 w-5 text-[#7C3AED]" />
+          <Zap className="h-5 w-5 text-[#FF455B]" />
           <span className="text-sm font-semibold text-white">Quant Engine</span>
           <span
             className="px-2 py-0.5 rounded text-[10px] font-medium"
@@ -335,7 +335,7 @@ function ServerStrategies({ address }: { address: string | null }) {
           <h2 className="text-sm font-semibold text-white">Server Strategies</h2>
           <button
             onClick={() => setAddingStrategy(!addingStrategy)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-[#7C3AED]/15 text-[#7C3AED] hover:bg-[#7C3AED]/25 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-[#FF455B]/15 text-[#FF455B] hover:bg-[#FF455B]/25 transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
             Add Strategy
@@ -348,7 +348,7 @@ function ServerStrategies({ address }: { address: string | null }) {
               <button
                 key={type}
                 onClick={() => addStrategy(type)}
-                className="p-3 rounded-xl border border-[#2a2e39] bg-[#12141a] hover:border-[#7C3AED]/40 transition-colors text-left"
+                className="p-3 rounded-xl border border-[#2a2e39] bg-[#12141a] hover:border-[#FF455B]/40 transition-colors text-left"
               >
                 <span className="text-lg">{emoji}</span>
                 <p className="text-xs text-white mt-1">{name}</p>
@@ -481,7 +481,7 @@ function ServerStrategies({ address }: { address: string | null }) {
                       }`}>
                         {trade.side.toUpperCase()}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#7C3AED]/15 text-[#7C3AED] font-medium flex items-center gap-0.5">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#FF455B]/15 text-[#FF455B] font-medium flex items-center gap-0.5">
                         <Bot className="h-2.5 w-2.5" /> {meta.emoji} {meta.name}
                       </span>
                       <span className="text-sm font-semibold">{trade.coin}</span>
@@ -584,7 +584,7 @@ function ServerStrategies({ address }: { address: string | null }) {
                   <span className="text-right text-white">${entryPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
                   <span className="text-right text-white">
                     {trade.exit_px ? `$${Number(trade.exit_px).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : isOpen && markPx > 0 ? (
-                      <span className="text-[#7C3AED]">${markPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                      <span className="text-[#FF455B]">${markPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
                     ) : "—"}
                   </span>
                   <span className={`text-right font-medium ${(pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
@@ -638,7 +638,7 @@ function BrowserBots() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Monitor className="h-5 w-5 text-[#7C3AED]" />
+          <Monitor className="h-5 w-5 text-[#FF455B]" />
           <span className="text-sm font-semibold text-white">Browser Engine</span>
           <button
             onClick={toggleEngine}
@@ -654,7 +654,7 @@ function BrowserBots() {
         </div>
         <Link
           href="/automate/create"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#7C3AED]/15 text-[#7C3AED] hover:bg-[#7C3AED]/25 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FF455B]/15 text-[#FF455B] hover:bg-[#FF455B]/25 transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
           New Strategy
@@ -671,7 +671,7 @@ function BrowserBots() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <MiniStat icon={<Bot className="h-4 w-4 text-[#7C3AED]" />} label="Strategies" value={strategies.length.toString()} />
+        <MiniStat icon={<Bot className="h-4 w-4 text-[#FF455B]" />} label="Strategies" value={strategies.length.toString()} />
         <MiniStat icon={<Zap className="h-4 w-4 text-emerald-400" />} label="Active" value={activeCount.toString()} />
         <MiniStat icon={<BarChart3 className="h-4 w-4 text-blue-400" />} label="Total Trades" value={totalTrades.toString()} />
         <MiniStat icon={<Activity className="h-4 w-4 text-amber-400" />} label="Engine" value={engineRunning ? "Running" : "Stopped"} />
@@ -687,7 +687,7 @@ function BrowserBots() {
             <div className="text-center py-12 border border-dashed border-[#2a2e3e] rounded-xl">
               <Bot className="h-10 w-10 mx-auto mb-3 text-[#2a2e3e]" />
               <p className="text-sm text-[#848e9c] mb-3">No browser strategies yet</p>
-              <Link href="/automate/create" className="text-sm text-[#7C3AED] hover:underline">Create your first strategy</Link>
+              <Link href="/automate/create" className="text-sm text-[#FF455B] hover:underline">Create your first strategy</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -103,7 +103,7 @@ export function NewPairs() {
             onClick={() => setChainFilter(c)}
             className={`text-[10px] px-2.5 py-1 rounded-full font-medium whitespace-nowrap transition-colors ${
               chainFilter === c
-                ? "bg-[#7C3AED] text-white"
+                ? "bg-[#FF455B] text-white"
                 : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
             }`}
           >

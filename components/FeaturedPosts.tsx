@@ -6,7 +6,7 @@ const categoryColors: Record<string, string> = {
   Tutorial: "bg-blue-100 text-blue-800",
   Security: "bg-red-100 text-red-800",
   Guide: "bg-green-100 text-green-800",
-  Privacy: "bg-purple-100 text-purple-800",
+  Privacy: "bg-rose-100 text-rose-800",
   Beginner: "bg-orange-100 text-orange-800",
 }
 
@@ -14,13 +14,13 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className={`group block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-[#7C3AED]/50 hover:shadow-lg transition-all ${
+      className={`group block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-[#FF455B]/50 hover:shadow-lg transition-all ${
         featured ? "md:col-span-2 md:grid md:grid-cols-2" : ""
       }`}
     >
       {/* Placeholder image area */}
-      <div className={`bg-gradient-to-br from-[#7C3AED]/10 to-[#7C3AED]/5 ${featured ? "h-full min-h-[200px]" : "h-40"} flex items-center justify-center`}>
-        <div className="text-[#7C3AED]/30 text-6xl font-bold">
+      <div className={`bg-gradient-to-br from-[#FF455B]/10 to-[#FF455B]/5 ${featured ? "h-full min-h-[200px]" : "h-40"} flex items-center justify-center`}>
+        <div className="text-[#FF455B]/30 text-6xl font-bold">
           {post.category.charAt(0)}
         </div>
       </div>
@@ -40,7 +40,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           </span>
         </div>
 
-        <h3 className={`font-bold text-gray-900 group-hover:text-[#7C3AED] transition-colors mb-2 ${featured ? "text-xl md:text-2xl" : "text-lg"}`}>
+        <h3 className={`font-bold text-gray-900 group-hover:text-[#FF455B] transition-colors mb-2 ${featured ? "text-xl md:text-2xl" : "text-lg"}`}>
           {post.title}
         </h3>
 
@@ -48,7 +48,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           {post.description}
         </p>
 
-        <span className="inline-flex items-center gap-2 text-[#7C3AED] font-medium text-sm group-hover:gap-3 transition-all">
+        <span className="inline-flex items-center gap-2 text-[#FF455B] font-medium text-sm group-hover:gap-3 transition-all">
           Read Article
           <ArrowRight className="h-4 w-4" />
         </span>
@@ -64,7 +64,7 @@ export function FeaturedPosts() {
   return (
     <div className="mb-16">
       <div className="flex items-center gap-2 mb-6">
-        <Sparkles className="h-5 w-5 text-[#7C3AED]" />
+        <Sparkles className="h-5 w-5 text-[#FF455B]" />
         <h2 className="text-2xl font-bold text-gray-900">Featured Guides</h2>
       </div>
 

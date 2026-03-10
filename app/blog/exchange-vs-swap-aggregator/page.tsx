@@ -132,30 +132,30 @@ export default function ExchangeVsSwapAggregator() {
         Think of it like Google Flights for crypto: you search once, and it checks dozens of services for the best rate.
       </p>
 
-      <div className="not-prose my-8 bg-[#7C3AED]/5 border border-[#7C3AED]/20 rounded-xl p-6">
+      <div className="not-prose my-8 bg-[#FF455B]/5 border border-[#FF455B]/20 rounded-xl p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Zap className="h-5 w-5 text-[#7C3AED]" />
+          <Zap className="h-5 w-5 text-[#FF455B]" />
           How Aggregators Work
         </h3>
         <ol className="space-y-3">
           <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-sm font-bold">1</span>
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF455B] text-white flex items-center justify-center text-sm font-bold">1</span>
             <span className="text-gray-700">You enter: "I want to swap 0.1 BTC for XMR"</span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-sm font-bold">2</span>
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF455B] text-white flex items-center justify-center text-sm font-bold">2</span>
             <span className="text-gray-700">Aggregator checks 10+ services (ChangeNow, StealthEX, etc.)</span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-sm font-bold">3</span>
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF455B] text-white flex items-center justify-center text-sm font-bold">3</span>
             <span className="text-gray-700">Shows you a list sorted by best rate and privacy rating</span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-sm font-bold">4</span>
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF455B] text-white flex items-center justify-center text-sm font-bold">4</span>
             <span className="text-gray-700">You pick one, paste your wallet address, send your BTC</span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-sm font-bold">5</span>
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF455B] text-white flex items-center justify-center text-sm font-bold">5</span>
             <span className="text-gray-700">XMR arrives in your wallet in 10-30 minutes</span>
           </li>
         </ol>
@@ -228,7 +228,7 @@ export default function ExchangeVsSwapAggregator() {
             </ul>
           </div>
 
-          <div className="border border-[#7C3AED] rounded-xl p-6 bg-[#7C3AED]/5">
+          <div className="border border-[#FF455B] rounded-xl p-6 bg-[#FF455B]/5">
             <h4 className="font-bold text-gray-900 mb-4">Via Trocador (Aggregator)</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between">
@@ -291,26 +291,26 @@ export default function ExchangeVsSwapAggregator() {
           href="https://trocador.app/?ref=2dzDcvfQJY"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#7C3AED]/50 hover:bg-[#7C3AED]/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#FF455B]/50 hover:bg-[#FF455B]/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#7C3AED]">Trocador</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">Trocador</h4>
             <p className="text-gray-600 text-sm">Privacy-focused. Shows privacy ratings for each exchange. Our top pick.</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#7C3AED]" />
+          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
         </a>
 
         <a
           href="https://orangefren.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#7C3AED]/50 hover:bg-[#7C3AED]/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#FF455B]/50 hover:bg-[#FF455B]/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#7C3AED]">OrangeFren</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">OrangeFren</h4>
             <p className="text-gray-600 text-sm">Clean interface. Good alternative to Trocador.</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#7C3AED]" />
+          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
         </a>
       </div>
 
@@ -339,13 +339,13 @@ export default function ExchangeVsSwapAggregator() {
       <div className="not-prose mt-12">
         <Link
           href="/swap-guide"
-          className="flex items-center justify-between p-6 bg-[#7C3AED]/5 rounded-xl border border-[#7C3AED]/20 hover:border-[#7C3AED]/50 transition-colors group"
+          className="flex items-center justify-between p-6 bg-[#FF455B]/5 rounded-xl border border-[#FF455B]/20 hover:border-[#FF455B]/50 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-[#7C3AED]">Compare Swap Methods</h4>
+            <h4 className="font-bold text-gray-900 group-hover:text-[#FF455B]">Compare Swap Methods</h4>
             <p className="text-gray-600 text-sm">See our complete guide to all swap options with privacy ratings</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#7C3AED]" />
+          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#FF455B]" />
         </Link>
       </div>
     </BlogPostLayout>

@@ -95,20 +95,20 @@ function FundingOptions({
         href={buildOnRampUrl(address)}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-3 w-full p-3 rounded-lg bg-gradient-to-r from-[#7C3AED]/15 to-[#7C3AED]/5 border border-[#7C3AED]/20 hover:border-[#7C3AED]/40 transition-colors group"
+        className="flex items-center gap-3 w-full p-3 rounded-lg bg-gradient-to-r from-[#FF455B]/15 to-[#FF455B]/5 border border-[#FF455B]/20 hover:border-[#FF455B]/40 transition-colors group"
       >
-        <div className="w-8 h-8 rounded-lg bg-[#7C3AED]/20 flex items-center justify-center shrink-0">
-          <CreditCard className="h-4 w-4 text-[#7C3AED]" />
+        <div className="w-8 h-8 rounded-lg bg-[#FF455B]/20 flex items-center justify-center shrink-0">
+          <CreditCard className="h-4 w-4 text-[#FF455B]" />
         </div>
         <div className="flex-1 text-left">
-          <p className="text-xs font-semibold text-white group-hover:text-[#7C3AED] transition-colors">
+          <p className="text-xs font-semibold text-white group-hover:text-[#FF455B] transition-colors">
             Buy with Card or Apple Pay
           </p>
           <p className="text-[10px] text-[#848e9c]">
             Purchase USDC instantly with debit/credit card
           </p>
         </div>
-        <div className="flex items-center gap-1 text-[#848e9c] group-hover:text-[#7C3AED] transition-colors">
+        <div className="flex items-center gap-1 text-[#848e9c] group-hover:text-[#FF455B] transition-colors">
           <Smartphone className="h-3.5 w-3.5" />
           <ExternalLink className="h-3 w-3" />
         </div>

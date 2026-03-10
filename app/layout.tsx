@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from "next"
 import Script from "next/script"
+import { Plus_Jakarta_Sans } from "next/font/google"
 import { AppShell } from "@/components/AppShell"
 import "./globals.css"
+
+const brand = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-brand",
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+})
 
 const siteUrl = "https://coincess.com"
 
@@ -112,7 +120,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased bg-[#0b0e11]">
+        <body className={`${brand.variable} antialiased bg-[#0b0e11]`}>
         <Script
           src="https://phi.llc/tracker.js"
           data-id="phi_e43ce3b8844"

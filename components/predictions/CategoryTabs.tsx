@@ -40,7 +40,7 @@ export function CategoryTabs() {
           onClick={() => setCategory(label)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 ${
             selected === label
-              ? "bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/25"
+              ? "bg-[#FF455B] text-white shadow-lg shadow-[#FF455B]/25"
               : "bg-[#1a1d2e] text-[#848e9c] hover:bg-[#252840] hover:text-white"
           }`}
         >

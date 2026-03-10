@@ -45,7 +45,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - Active automation strategies preview
 
 ### Multi-Chain Deposit Modal
-- Deposit button in navbar with multi-step flow (Based.app-style)
+- Circular deposit icon in navbar with multi-step flow (Based.app-style)
 - Scans 6 blockchains (Ethereum, Arbitrum, Polygon, BNB Chain, Base, Optimism)
 - Shows aggregated wallet value and per-token balances across chains
 - Token selection with chain badges and USD values
@@ -56,8 +56,15 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - Standalone display mode (no browser chrome)
 - Dark splash screen matching app theme
 
+### Coinbase-Style Navigation
+- **Desktop** — all-icon circular navbar: Logo + Search pill + circular nav icons (Portfolio, Trade, Predictions, Automate) with hover tooltips, separator, then utility icons (Deposit, More grid, Avatar)
+- **More dropdown** — grid icon opens Traders, Journal, AI Coach, Tools, Settings
+- **Search** — unified rounded pill replaces the old Discover link, searches markets on Enter
+- **Brand font** — Plus Jakarta Sans (geometric, Circular Std-like) via `next/font/google`
+- **Text wordmark** — logo icon + "coincess" rendered in the brand font
+
 ### Mobile-First UX
-- Bottom navigation bar (Portfolio, Trade, Predict, Automate)
+- Bottom navigation bar (Portfolio, Trade, Discover, Predictions, Automate)
 - Swipeable tab layout on trading terminal (Chart / Book / Order / Positions)
 - Mobile card layout for positions and orders (replaces table on small screens)
 - Bottom-sheet share modal with safe-area padding

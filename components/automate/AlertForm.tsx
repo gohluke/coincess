@@ -45,7 +45,7 @@ export function AlertForm({ onDone }: { onDone?: () => void }) {
     <div className="space-y-3">
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Alert Name (optional)</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" placeholder="My price alert" />
+        <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" placeholder="My price alert" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Condition</label>
@@ -61,16 +61,16 @@ export function AlertForm({ onDone }: { onDone?: () => void }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Market</label>
-          <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+          <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
         </div>
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Price ($)</label>
-          <input value={value} onChange={(e) => setValue(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]" />
+          <input value={value} onChange={(e) => setValue(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]" />
         </div>
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Notification</label>
-        <select value={notify} onChange={(e) => setNotify(e.target.value as typeof notify)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#7C3AED]">
+        <select value={notify} onChange={(e) => setNotify(e.target.value as typeof notify)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF455B]">
           <option value="both">Browser + Sound</option>
           <option value="browser">Browser Notification</option>
           <option value="sound">Sound Only</option>
@@ -80,7 +80,7 @@ export function AlertForm({ onDone }: { onDone?: () => void }) {
         <input type="checkbox" checked={oneShot} onChange={(e) => setOneShot(e.target.checked)} className="rounded border-[#2a2e3e]" />
         One-time alert (disable after triggering)
       </label>
-      <button onClick={handleSubmit} className="w-full py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-semibold transition-colors">
+      <button onClick={handleSubmit} className="w-full py-2.5 rounded-xl bg-[#FF455B] hover:bg-[#E63B50] text-white text-sm font-semibold transition-colors">
         Create Alert
       </button>
     </div>

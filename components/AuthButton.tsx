@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { LogIn, LogOut, User, ChevronDown, Wallet, Copy, Check, ExternalLink } from "lucide-react";
+import { LogOut, User, Wallet, Copy, Check, ExternalLink } from "lucide-react";
 
 interface PrivyHook {
   ready: boolean;
@@ -84,9 +84,8 @@ function AuthButtonInner({
     return (
       <button
         onClick={() => privy!.login()}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold transition-all shadow-lg shadow-[#7C3AED]/20 hover:shadow-[#7C3AED]/30 active:scale-95"
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#FF455B] hover:bg-[#E63B50] text-white text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-95"
       >
-        <LogIn className="h-3.5 w-3.5" />
         Sign In
       </button>
     );
@@ -103,13 +102,10 @@ function AuthButtonInner({
     <div className="relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] text-white text-xs font-medium transition-colors"
+        className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-[#FF455B] to-[#FF5C6E] hover:opacity-90 transition-opacity"
+        title={displayName}
       >
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#a855f7] flex items-center justify-center text-[10px] font-bold text-white">
-          {avatarLetter}
-        </div>
-        <span className="hidden sm:block max-w-[120px] truncate">{displayName}</span>
-        <ChevronDown className={`h-3 w-3 text-[#848e9c] transition-transform ${showMenu ? "rotate-180" : ""}`} />
+        <span className="text-xs font-bold text-white leading-none">{avatarLetter}</span>
       </button>
 
       {showMenu && (
@@ -119,7 +115,7 @@ function AuthButtonInner({
             {/* User info */}
             <div className="px-4 py-3 border-b border-[#2a2e3e]">
               <div className="flex items-center gap-2.5 mb-1">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#a855f7] flex items-center justify-center text-xs font-bold text-white">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF455B] to-[#FF5C6E] flex items-center justify-center text-xs font-bold text-white">
                   {avatarLetter}
                 </div>
                 <div className="min-w-0">
