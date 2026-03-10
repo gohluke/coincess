@@ -280,6 +280,33 @@ export class QuantEngine {
     );
 
     if (result.success) {
+      // HL nets positions: close any opposite-side open trade on the same coin
+      const oppositeSide = signal.side === "long" ? "short" : "long";
+      const { data: oppTrades } = await this.supabase
+        .from("quant_trades")
+        .select("id, entry_px, size, side")
+        .eq("coin", signal.coin)
+        .eq("side", oppositeSide)
+        .eq("status", "open");
+
+      if (oppTrades && oppTrades.length > 0) {
+        for (const opp of oppTrades) {
+          const oppEntry = Number(opp.entry_px);
+          const fillPx = parseFloat(result.avgPx ?? limitPx);
+          const oppPnl = opp.side === "long"
+            ? (fillPx - oppEntry) * Number(opp.size)
+            : (oppEntry - fillPx) * Number(opp.size);
+          await this.supabase.from("quant_trades").update({
+            status: "closed",
+            exit_px: fillPx,
+            pnl: oppPnl,
+            closed_at: new Date().toISOString(),
+            meta: { close_reason: `Netted by ${signal.side} order` },
+          }).eq("id", opp.id);
+          console.log(`[engine] AUTO-CLOSE opposite ${opp.side} ${signal.coin}: pnl=${oppPnl.toFixed(4)}`);
+        }
+      }
+
       await this.logTrade({
         strategy_id: strategy.id,
         strategy_type: strategy.type,
