@@ -20,6 +20,12 @@ const TICK_INTERVAL_MS = 30_000; // 30 seconds
 
 const assetMeta: Map<number, { szDecimals: number }> = new Map();
 
+const HIP3_STOCKS = new Set([
+  "TSLA", "NVDA", "GOOGL", "AAPL", "HOOD", "MSTR", "SPY", "AMZN",
+  "META", "QQQ", "MSFT", "ORCL", "AVGO", "GLD", "MU", "SLV",
+  "SPACEX", "OPENAI", "INTC", "NFLX",
+]);
+
 function roundPrice(price: number): string {
   if (price >= 100_000) return (Math.round(price / 10) * 10).toString();
   if (price >= 10_000) return (Math.round(price)).toString();
@@ -189,7 +195,9 @@ export class QuantEngine {
     switch (strat.type) {
       case "funding_rate": {
         const markets = await this.fetchMarketSnapshots();
-        return fundingRate.evaluate(strat, markets, ctx);
+        // Funding rates only apply to perps, not HIP-3 spot
+        const perpsOnly = markets.filter((m) => m.dex === "perp");
+        return fundingRate.evaluate(strat, perpsOnly, ctx);
       }
       case "momentum": {
         const coins = (strat.config.coins as string[]) ?? ["BTC", "ETH", "SOL"];
@@ -329,6 +337,14 @@ export class QuantEngine {
   }
 
   private async fetchMarketSnapshots(): Promise<MarketSnapshot[]> {
+    const [perps, hip3] = await Promise.all([
+      this.fetchPerpsSnapshots(),
+      this.fetchHip3Snapshots(),
+    ]);
+    return [...perps, ...hip3];
+  }
+
+  private async fetchPerpsSnapshots(): Promise<MarketSnapshot[]> {
     const res = await fetch(`${HL_API}/info`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -348,9 +364,82 @@ export class QuantEngine {
         funding: parseFloat(ctxs[i]?.funding ?? "0"),
         openInterest: parseFloat(ctxs[i]?.openInterest ?? "0"),
         volume24h: parseFloat(ctxs[i]?.dayNtlVlm ?? "0"),
-        dex: "",
+        dex: "perp" as const,
+        szDecimals: asset.szDecimals,
       };
     });
+  }
+
+  private async fetchHip3Snapshots(): Promise<MarketSnapshot[]> {
+    try {
+      const [spotMetaRes, allMidsRes] = await Promise.all([
+        fetch(`${HL_API}/info`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "spotMetaAndAssetCtxs" }),
+        }),
+        fetch(`${HL_API}/info`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "allMids" }),
+        }),
+      ]);
+
+      const [spotMeta, spotCtxs] = (await spotMetaRes.json()) as [
+        {
+          tokens: Array<{ index: number; name: string; szDecimals: number }>;
+          universe: Array<{ name: string; index: number; tokens: number[] }>;
+        },
+        Array<{ markPx?: string; dayNtlVlm?: string }>,
+      ];
+      const allMids = (await allMidsRes.json()) as Record<string, string>;
+
+      const idxToName: Record<number, string> = {};
+      const idxToDecimals: Record<number, number> = {};
+      for (const t of spotMeta.tokens) {
+        idxToName[t.index] = t.name;
+        idxToDecimals[t.index] = t.szDecimals;
+      }
+
+      const snapshots: MarketSnapshot[] = [];
+      for (let i = 0; i < spotMeta.universe.length; i++) {
+        const pair = spotMeta.universe[i];
+        if (!pair.tokens || pair.tokens.length < 2) continue;
+        const baseName = idxToName[pair.tokens[0]];
+        if (!baseName || !HIP3_STOCKS.has(baseName)) continue;
+
+        const pairName = pair.name; // e.g. @264
+        const spotIndex = pair.index;
+        const orderAssetId = 10000 + spotIndex;
+        const midPx = parseFloat(allMids[pairName] ?? "0");
+        const ctx = spotCtxs[i];
+        const vol = parseFloat(ctx?.dayNtlVlm ?? "0");
+        const szDec = idxToDecimals[pair.tokens[0]] ?? 4;
+
+        if (midPx <= 0) continue;
+
+        assetMeta.set(orderAssetId, { szDecimals: szDec });
+        snapshots.push({
+          coin: baseName,
+          assetIndex: orderAssetId,
+          markPx: midPx,
+          funding: 0,
+          openInterest: 0,
+          volume24h: vol,
+          dex: "spot",
+          candleCoin: pairName,
+          szDecimals: szDec,
+        });
+      }
+
+      if (snapshots.length > 0) {
+        console.log(`[engine] HIP-3 stocks loaded: ${snapshots.map((s) => s.coin).join(", ")}`);
+      }
+      return snapshots;
+    } catch (err) {
+      console.error("[engine] HIP-3 fetch failed, continuing with perps only:", (err as Error).message);
+      return [];
+    }
   }
 
   private async fetchCandlesForCoins(
@@ -362,14 +451,20 @@ export class QuantEngine {
     const intervalMs = interval === "5m" ? 5 * 60 * 1000 : 15 * 60 * 1000;
     const startTime = now - intervalMs * count;
 
+    const markets = await this.fetchMarketSnapshots();
+    const marketMap = new Map(markets.map((m) => [m.coin, m]));
+
     const results = await Promise.all(
       coins.map(async (coin) => {
+        const market = marketMap.get(coin);
+        // HIP-3 spot uses @N pair name for candles
+        const candleCoin = market?.candleCoin ?? coin;
         const res = await fetch(`${HL_API}/info`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "candleSnapshot",
-            req: { coin, interval, startTime, endTime: now },
+            req: { coin: candleCoin, interval, startTime, endTime: now },
           }),
         });
         const candles = (await res.json()) as Array<{
@@ -381,18 +476,11 @@ export class QuantEngine {
         return {
           coin,
           closes: candles.map((c) => parseFloat(c.c)),
-          assetIndex: 0,
+          assetIndex: market?.assetIndex ?? 0,
           currentPrice: candles.length > 0 ? parseFloat(candles[candles.length - 1].c) : 0,
         };
       }),
     );
-
-    // Resolve asset indices from market data
-    const markets = await this.fetchMarketSnapshots();
-    for (const r of results) {
-      const m = markets.find((mk) => mk.coin === r.coin);
-      if (m) r.assetIndex = m.assetIndex;
-    }
 
     return results;
   }

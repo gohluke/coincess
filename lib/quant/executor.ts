@@ -83,6 +83,7 @@ export async function closePosition(params: {
   markPrice: number;
   assetIndex: number;
 }): Promise<OrderResult> {
+  const isSpot = params.assetIndex >= 10000;
   const slippage = params.isBuy ? 1.03 : 0.97;
   const limitPx = hlRoundPrice(params.markPrice * slippage);
   return placeOrder({
@@ -90,7 +91,7 @@ export async function closePosition(params: {
     isBuy: params.isBuy,
     size: Math.abs(params.size).toFixed(4),
     price: limitPx,
-    reduceOnly: true,
+    reduceOnly: isSpot ? false : true, // spot has no reduceOnly concept
     tif: "Ioc",
     assetIndex: params.assetIndex,
   });
@@ -98,7 +99,7 @@ export async function closePosition(params: {
 
 export async function fetchAccountValue(): Promise<number> {
   const { accountAddress } = getCredentials();
-  const [perpsRes, spotRes] = await Promise.all([
+  const [perpsRes, spotRes, allMidsRes] = await Promise.all([
     fetch(`${HL_API}/info`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -109,19 +110,35 @@ export async function fetchAccountValue(): Promise<number> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "spotClearinghouseState", user: accountAddress }),
     }),
+    fetch(`${HL_API}/info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "allMids" }),
+    }),
   ]);
 
   const perpsData = (await perpsRes.json()) as { marginSummary: { accountValue: string } };
   const spotData = (await spotRes.json()) as {
     balances: Array<{ coin: string; total: string }>;
   };
+  const allMids = (await allMidsRes.json()) as Record<string, string>;
 
   const perpsValue = parseFloat(perpsData.marginSummary.accountValue);
-  const spotUsdc = spotData.balances
-    ?.filter((b) => ["USDC", "USDE", "USDT0"].includes(b.coin))
-    .reduce((sum, b) => sum + parseFloat(b.total), 0) ?? 0;
+  const stableCoins = new Set(["USDC", "USDE", "USDT0"]);
+  let spotValue = 0;
+  for (const b of spotData.balances ?? []) {
+    const bal = parseFloat(b.total);
+    if (bal === 0) continue;
+    if (stableCoins.has(b.coin)) {
+      spotValue += bal;
+    } else {
+      // Value non-stable tokens (HIP-3 stocks, etc.) using allMids
+      const mid = parseFloat(allMids[b.coin] ?? "0");
+      if (mid > 0) spotValue += bal * mid;
+    }
+  }
 
-  return perpsValue + spotUsdc;
+  return perpsValue + spotValue;
 }
 
 export async function fetchPositions() {

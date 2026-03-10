@@ -234,16 +234,84 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   return data.leaderboardRows;
 }
 
+const HIP3_STOCK_NAMES = new Set([
+  "TSLA", "NVDA", "GOOGL", "AAPL", "HOOD", "MSTR", "SPY", "AMZN",
+  "META", "QQQ", "MSFT", "ORCL", "AVGO", "GLD", "MU", "SLV",
+  "SPACEX", "OPENAI", "INTC", "NFLX",
+]);
+
+const HIP3_STOCK_DISPLAY: Record<string, string> = {
+  TSLA: "Tesla", NVDA: "NVIDIA", GOOGL: "Alphabet", AAPL: "Apple",
+  HOOD: "Robinhood", MSTR: "MicroStrategy", SPY: "S&P 500 ETF",
+  AMZN: "Amazon", META: "Meta Platforms", QQQ: "Nasdaq 100 ETF",
+  MSFT: "Microsoft", ORCL: "Oracle", AVGO: "Broadcom", GLD: "Gold ETF",
+  MU: "Micron", SLV: "Silver ETF", SPACEX: "SpaceX", OPENAI: "OpenAI",
+  INTC: "Intel", NFLX: "Netflix",
+};
+
+async function fetchHip3SpotStocks(allMids: AllMids): Promise<MarketInfo[]> {
+  try {
+    const [spotMeta, spotCtxs] = await post<[
+      { tokens: Array<{ index: number; name: string; szDecimals: number }>;
+        universe: Array<{ name: string; index: number; tokens: number[] }> },
+      Array<{ markPx?: string; dayNtlVlm?: string; prevDayPx?: string }>,
+    ]>("/info", { type: "spotMetaAndAssetCtxs" });
+
+    const idxToName: Record<number, string> = {};
+    const idxToDecimals: Record<number, number> = {};
+    for (const t of spotMeta.tokens) {
+      idxToName[t.index] = t.name;
+      idxToDecimals[t.index] = t.szDecimals;
+    }
+
+    const markets: MarketInfo[] = [];
+    for (let i = 0; i < spotMeta.universe.length; i++) {
+      const pair = spotMeta.universe[i];
+      if (!pair.tokens || pair.tokens.length < 2) continue;
+      const baseName = idxToName[pair.tokens[0]];
+      if (!baseName || !HIP3_STOCK_NAMES.has(baseName)) continue;
+
+      const pairName = pair.name;
+      const midPx = allMids[pairName] ?? "0";
+      if (parseFloat(midPx) <= 0) continue;
+
+      const ctx = spotCtxs[i];
+      markets.push({
+        name: baseName,
+        displayName: HIP3_STOCK_DISPLAY[baseName] ?? baseName,
+        assetIndex: 10000 + pair.index,
+        szDecimals: idxToDecimals[pair.tokens[0]] ?? 4,
+        maxLeverage: 1,
+        markPx: midPx,
+        midPx,
+        oraclePx: midPx,
+        funding: "0",
+        openInterest: "0",
+        prevDayPx: ctx?.prevDayPx ?? midPx,
+        dayNtlVlm: ctx?.dayNtlVlm ?? "0",
+        premium: "0",
+        dex: "hip3",
+      });
+    }
+    return markets;
+  } catch (err) {
+    console.error("[api] HIP-3 spot stock fetch failed:", err);
+    return [];
+  }
+}
+
 export async function fetchAllMarkets(): Promise<MarketInfo[]> {
   await loadPerpDexOffsets();
 
-  const [mainData, xyzData] = await Promise.all([
+  const [mainData, xyzData, allMids] = await Promise.all([
     fetchMetaAndAssetCtxs(),
     fetchMetaAndAssetCtxs("xyz"),
+    fetchAllMids(),
   ]);
 
   const mainMarkets = buildMarketList(mainData, "");
   const xyzMarkets = buildMarketList(xyzData, "xyz");
+  const hip3Markets = await fetchHip3SpotStocks(allMids);
 
-  return [...mainMarkets, ...xyzMarkets];
+  return [...mainMarkets, ...xyzMarkets, ...hip3Markets];
 }

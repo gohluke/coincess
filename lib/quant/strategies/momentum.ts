@@ -14,7 +14,7 @@ export interface MomentumConfig {
 }
 
 const DEFAULT_CONFIG: MomentumConfig = {
-  coins: ["BTC", "ETH", "SOL"],
+  coins: ["BTC", "ETH", "SOL", "SPY", "QQQ", "HOOD"],
   fastPeriod: 9,
   slowPeriod: 21,
   rsiPeriod: 14,

@@ -8,7 +8,7 @@ export interface GridConfig {
 }
 
 const DEFAULT_CONFIG: GridConfig = {
-  coins: ["BTC", "ETH"],
+  coins: ["BTC", "ETH", "TSLA", "AAPL", "MSFT"],
   gridLevels: 5,
   gridSpacing: 0.005,
   sizePerLevelUsd: 15,

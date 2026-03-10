@@ -108,5 +108,8 @@ export interface MarketSnapshot {
   funding: number;
   openInterest: number;
   volume24h: number;
-  dex: string;
+  dex: "perp" | "spot";
+  /** For candle API: @N pair name for HIP-3 spot, same as coin for perps */
+  candleCoin?: string;
+  szDecimals?: number;
 }
