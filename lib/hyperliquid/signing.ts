@@ -263,40 +263,51 @@ function getNativeWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcA
 
 /**
  * One-time agent approval: generates a local keypair, has the user sign
- * an ApproveAgent EIP-712 message (single wallet popup via window.ethereum),
- * registers with Hyperliquid, and stores the agent key in localStorage.
- * After this, all orders are signed locally with the agent key — no popups.
+ * an ApproveAgent EIP-712 message, registers with Hyperliquid, and stores
+ * the agent key in localStorage. Tries window.ethereum (MetaMask) first
+ * for a direct popup, then falls back to Privy's wrapped provider.
  */
 export async function signAndApproveAgent(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Ensure MetaMask is on Arbitrum One before prompting the signature
-    const eth = getNativeEthereum();
-    if (eth) {
+    // Try to switch to Arbitrum One (best-effort, don't block on failure)
+    const nativeEth = getNativeEthereum();
+    if (nativeEth) {
       try {
-        await eth.request({
+        await nativeEth.request({
           method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0xa4b1" }], // Arbitrum One
+          params: [{ chainId: "0xa4b1" }],
         });
       } catch (switchErr) {
-        // 4902 = chain not added yet; try adding it
         if ((switchErr as { code?: number }).code === 4902) {
-          await eth.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0xa4b1",
-              chainName: "Arbitrum One",
-              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-              rpcUrls: ["https://arb1.arbitrum.io/rpc"],
-              blockExplorerUrls: ["https://arbiscan.io"],
-            }],
-          });
+          try {
+            await nativeEth.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: "0xa4b1",
+                chainName: "Arbitrum One",
+                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                rpcUrls: ["https://arb1.arbitrum.io/rpc"],
+                blockExplorerUrls: ["https://arbiscan.io"],
+              }],
+            });
+          } catch { /* ignore */ }
         }
       }
     }
 
-    const userWallet = getNativeWalletAdapter(expectedAddress);
+    // Try native wallet first (MetaMask popup), fall back to Privy provider
+    let userWallet: AbstractViemJsonRpcAccount;
+    try {
+      const native = getNativeWalletAdapter(expectedAddress);
+      const addrs = await native.getAddresses();
+      if (addrs.length === 0) throw new Error("No accounts");
+      userWallet = native;
+    } catch {
+      userWallet = getWalletAdapter(expectedAddress);
+    }
+
     const userAddr = await getAddress(expectedAddress);
 
     const agentPrivateKey = generatePrivateKey();

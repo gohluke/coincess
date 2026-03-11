@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useTradingStore, subscribeToMarket } from "@/lib/hyperliquid/store";
@@ -33,6 +33,8 @@ export default function TradePageDynamic() {
   const loadUserState = useTradingStore((s) => s.loadUserState);
   const markets = useTradingStore((s) => s.markets);
   const [mobileTab, setMobileTab] = useState<MobileTab>("chart");
+  const marketsReady = markets.length > 0;
+  const initialSynced = useRef(false);
 
   const { address: walletAddr, source } = useWallet();
   const activeLinkedAddr = useSettingsStore((s) => s.getActiveAddress)();
@@ -58,28 +60,43 @@ export default function TradePageDynamic() {
     loadMarkets();
   }, [loadMarkets]);
 
-  // Sync URL coin param to store on mount and when param changes
+  // Initial sync: resolve URL coin param to a market name once markets load
   useEffect(() => {
-    if (!coinParam) return;
-    if (markets.length === 0) return;
-
+    if (initialSynced.current || !marketsReady) return;
+    initialSynced.current = true;
     const match = markets.find(
       (m) => m.name.toUpperCase() === coinParam || m.displayName.toUpperCase() === coinParam,
     );
     const target = match?.name ?? coinParam;
-    if (target !== selectedMarket) {
-      selectMarket(target);
-    }
-  }, [coinParam, markets, selectedMarket, selectMarket]);
+    if (target !== selectedMarket) selectMarket(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketsReady]);
 
-  // Sync store market changes back to URL
+  // When the URL param changes (user types new URL or browser nav), sync to store
+  // Intentionally excludes `markets` and `selectedMarket` to avoid feedback loops
+  useEffect(() => {
+    if (!marketsReady) return;
+    const ms = useTradingStore.getState().markets;
+    const sel = useTradingStore.getState().selectedMarket;
+    const match = ms.find(
+      (m) => m.name.toUpperCase() === coinParam || m.displayName.toUpperCase() === coinParam,
+    );
+    const target = match?.name ?? coinParam;
+    if (target !== sel) selectMarket(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coinParam]);
+
+  // When the store's selected market changes (user picks from dropdown), sync to URL
+  // Intentionally excludes `coinParam` to avoid feedback loops
   useEffect(() => {
     if (!selectedMarket) return;
     const urlCoin = selectedMarket.replace(/^.*:/, "").toUpperCase();
-    if (urlCoin !== coinParam) {
+    const current = params.coin?.toUpperCase() ?? "BTC";
+    if (urlCoin !== current) {
       router.replace(`/trade/${urlCoin}`, { scroll: false });
     }
-  }, [selectedMarket, coinParam, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMarket]);
 
   useEffect(() => {
     const unsub = subscribeToMarket(selectedMarket);

@@ -109,12 +109,14 @@ export const useTradingStore = create<TradingState>((set, get) => ({
 
   updateMids: (mids) => {
     set((s) => {
+      let changed = false;
       const updated = s.markets.map((m) => {
         const mid = mids[m.name];
-        if (!mid) return m;
+        if (!mid || mid === m.markPx) return m;
+        changed = true;
         return { ...m, markPx: mid, midPx: mid };
       });
-      return { markets: updated };
+      return changed ? { markets: updated } : {};
     });
   },
 
