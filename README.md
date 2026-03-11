@@ -10,10 +10,11 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); order form reads spot clearinghouse balance for accurate "Available" display
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
-- **Position management** — open positions, unrealized PnL, ROE, close positions (mobile card layout + desktop table)
-- **Order management** — view and cancel open orders
+- **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position, and set TP/SL inline (Hyperliquid-style actions)
+- **Order management** — compact single-row open orders table with inline edit for size/price, placed date, duration with seconds, and cancel all
+- **Tabbed Order Book / Recent Trades** — order book and recent trades displayed as tabs side-by-side, only one visible at a time
 - **Full-width positions panel** — positions/orders span the entire screen width below the chart (Based.app-style layout)
-- **Share PNL** — generate and share position cards as PNG images with leverage, ROE, entry/current price, and rocket illustration; supports Download, Copy to clipboard, and native Share (mobile)
+- **Share PNL** — generate and share position cards as PNG images with leverage, ROE, entry/current price, and rocket illustration; portrait (9:16) and square (1:1) aspect ratios; supports Download, Copy to clipboard, and native Share (mobile)
 
 ### Prediction Markets
 - **Browse trending events** — politics, sports, crypto, pop culture, business, science, technology
@@ -110,7 +111,8 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Conversation history** — stored in Supabase per wallet
 
 ### Traders & Leaderboard (`/traders`)
-- **Coincess Leaderboard** — tracks all users who trade through Coincess, ranked by volume, P&L, or trade count
+- **Coincess Leaderboard** — tracks all users who trade through Coincess, ranked by Coincess-only volume, P&L, or trade count
+- **Coincess-only volume tracking** — every trade records notional (size * price) in Supabase `coincess_volume` column, so the leaderboard shows only volume from Coincess, not all Hyperliquid activity
 - **Hyperliquid Leaderboard** — browse the top global Hyperliquid traders by performance
 - **Trader profiles** — click any trader to view their open positions, account value, and trade history
 - **Star/Favorite traders** — bookmark traders to track them across sessions (persisted in Supabase)
@@ -118,24 +120,34 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Position timing** — shows when each position was opened and how long it's been held
 - **Empty state** — motivating "Leaderboard Awaits" design with unclaimed award slots when no traders yet
 - **Bot volume attribution** — quant engine orders count as Coincess volume via the builder field + server-side Supabase tracking
-- **Builder fee whitelisting** — platform owner's wallet is exempt from builder fees for testing (`brand.config.ts` whitelist)
+- **Builder fee whitelisting** — platform owner's wallet and all managed bot accounts are exempt from builder fees (`brand.config.ts` whitelist)
 - **CNC token (planned)** — future native token with tiered fee discounts based on staked CNC balance
 
 ### Quant Trading Suite (`/quant`)
-- **4 automated strategies** running 24/7 on a dedicated server:
+- **5 automated strategies** running 24/7 on a dedicated server:
   - **Funding Rate Harvester** — scans all markets for extreme funding rates, opens opposite positions to collect hourly funding (lowest risk, ~1-3% daily target)
   - **Momentum Scalper** — EMA(9)/EMA(21) crossover with RSI confirmation on BTC, ETH, SOL 5m candles, trailing stop at 0.5%
   - **Grid Bot** — places buy/sell limit orders at fixed intervals around current price for BTC and ETH, auto-rebalances
   - **Mean Reversion** — monitors 15m RSI across top 20 coins, enters contrarian positions on RSI extremes (<25 or >75)
+  - **Market Maker** — provides two-sided liquidity with dynamic spread adjustment
 - **Risk management** — max 50% exposure, 10% per position, daily loss limit (-5% pauses), kill switch at -15% drawdown
 - **Kelly-inspired sizing** — position sizes scale down as drawdown increases
 - **Live dashboard** — strategy cards with play/pause/delete, P&L stats, open positions, trade log, risk gauges
 - **Server-side execution** — runs via `scripts/quant-server.ts` on Contabo VPS using pm2, no browser wallet popups
 - **API Wallet** — uses Hyperliquid API wallet key (separate from main wallet) for programmatic order signing
-- **Coincess volume attribution** — bot orders include the Coincess builder field, so all automated trades count toward platform volume and appear on the Coincess leaderboard
-- **Server-side Supabase tracking** — after each successful order, the executor calls `upsert_coincess_trader` to increment the trader's order count (non-blocking, won't fail trades if Supabase is down)
+- **Coincess volume attribution** — bot orders include the Coincess builder field and record notional volume, so all automated trades count toward platform volume and appear on the Coincess leaderboard
+- **Server-side Supabase tracking** — after each successful order, the executor calls `upsert_coincess_trader` with trade notional to increment both order count and Coincess-specific volume (non-blocking, won't fail trades if Supabase is down)
 - **Supabase persistence** — `quant_strategies`, `quant_trades`, `quant_state` tables track all activity
 - **API routes** — `/api/quant/strategies` (CRUD), `/api/quant/trades` (history), `/api/quant/status` (engine health)
+
+### Multi-Account Fleet Management
+- **100-account generation** — `scripts/generate-accounts.ts` creates wallets, stores private keys securely in Supabase `coincess_accounts` table (service-role access only)
+- **Automated agent approval** — `scripts/approve-agents.ts` signs EIP-712 agent approvals server-side for all accounts (no MetaMask needed since we own the keys)
+- **Bulk fee whitelisting** — `scripts/whitelist-accounts.ts` reads all managed account addresses from Supabase and updates `brand.config.ts` feeWhitelist
+- **Fleet runner** — `scripts/fleet-runner.ts` runs QuantEngine instances across all funded accounts, with per-account strategy assignment and periodic stats updates
+- **Strategy distribution** — accounts are auto-assigned strategies round-robin (funding_rate, momentum, grid, mean_reversion, market_maker) or manually via CLI args
+- **Fleet status dashboard** — `--status` flag shows all accounts grouped by strategy with funding, agent, position, and PnL info
+- **Performance tracking** — per-account PnL, volume, and trade count stored in Supabase for comparing which strategies perform best
 
 ### Dayze Integration (Life OS)
 - **Sync trading activity to Dayze** — trades, positions, and daily PnL appear in your Dayze personal timeline
@@ -236,6 +248,36 @@ npm run dev
 - [ ] **Custom domain** — point your domain to the deployment, update `siteUrl` in `app/layout.tsx`
 - [ ] **Analytics** — the PHI tracker is already included; add Google Analytics or Plausible if desired
 - [ ] **Apple App Store / Google Play** — use PWABuilder or Capacitor to wrap the PWA into native apps
+
+### Fleet Management (100 Bot Accounts)
+
+```bash
+# 1. Run migration in Supabase SQL Editor (adds coincess_volume + coincess_accounts table)
+#    Copy scripts/migrate-add-volume.sql into your Supabase Dashboard SQL Editor
+
+# 2. Generate 100 wallets
+npx tsx scripts/generate-accounts.ts 100
+
+# 3. Whitelist all bot accounts for zero builder fees
+npx tsx scripts/whitelist-accounts.ts
+
+# 4. Fund accounts with USDC on Hyperliquid (deposit to each address)
+
+# 5. Approve agent wallets for all funded accounts
+npx tsx scripts/approve-agents.ts
+
+# 6. Start the fleet
+npx tsx scripts/fleet-runner.ts
+
+# Check fleet status
+npx tsx scripts/fleet-runner.ts --status
+
+# Run only momentum bots
+npx tsx scripts/fleet-runner.ts --strategy momentum
+
+# Run first 10 accounts only
+npx tsx scripts/fleet-runner.ts --limit 10
+```
 
 ### Optional / Future
 
@@ -351,6 +393,13 @@ coincess/
 │   │   └── schema.sql                  # Database schema (journal + chat tables)
 │   └── alerts/
 │       └── engine.ts                   # Alert evaluation + notifications
+├── scripts/
+│   ├── generate-accounts.ts            # Generate N trading wallets → Supabase
+│   ├── approve-agents.ts              # Approve Hyperliquid agents for all accounts
+│   ├── fleet-runner.ts                # Run quant strategies across all accounts
+│   ├── whitelist-accounts.ts          # Update brand.config.ts feeWhitelist
+│   ├── create-traders-table.sql       # Full schema (fresh install)
+│   └── migrate-add-volume.sql         # Migration: add coincess_volume + accounts table
 ├── public/
 │   ├── manifest.json                   # PWA manifest
 │   ├── sw.js                           # Service worker

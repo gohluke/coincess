@@ -553,15 +553,16 @@ export async function signAndPlaceOrder(
 
       return { success: false, error: errMsg };
     }
+    const notional = Math.abs(parseFloat(params.size)) * parseFloat(params.price);
     if (typeof status === "object" && "filled" in status) {
-      trackTrader(userAddr);
+      trackTrader(userAddr, notional);
       return { success: true, oid: (status as { filled: { oid: number } }).filled.oid };
     }
     if (typeof status === "object" && "resting" in status) {
-      trackTrader(userAddr);
+      trackTrader(userAddr, notional);
       return { success: true, oid: (status as { resting: { oid: number } }).resting.oid };
     }
-    trackTrader(userAddr);
+    trackTrader(userAddr, notional);
     return { success: true };
   } catch (err) {
     pushSigningDebug("placeOrder.exception", getErrorDetails(err));

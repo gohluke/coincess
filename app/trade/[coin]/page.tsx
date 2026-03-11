@@ -19,6 +19,7 @@ const TradingChart = dynamic(
 );
 
 type MobileTab = "chart" | "book" | "order" | "positions";
+type BookTab = "book" | "trades";
 
 export default function TradePageDynamic() {
   const params = useParams<{ coin: string }>();
@@ -33,6 +34,7 @@ export default function TradePageDynamic() {
   const loadUserState = useTradingStore((s) => s.loadUserState);
   const markets = useTradingStore((s) => s.markets);
   const [mobileTab, setMobileTab] = useState<MobileTab>("chart");
+  const [bookTab, setBookTab] = useState<BookTab>("book");
   const marketsReady = markets.length > 0;
   const initialSynced = useRef(false);
 
@@ -142,11 +144,21 @@ export default function TradePageDynamic() {
             <TradingChart />
           </div>
           <div className="w-[240px] shrink-0 flex flex-col border-r border-[#2a2e39]">
-            <div className="flex-1 min-h-0">
-              <OrderBook />
+            <div className="flex border-b border-[#2a2e39]">
+              {(["book", "trades"] as BookTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setBookTab(tab)}
+                  className={`flex-1 py-1.5 text-[11px] font-medium transition-colors ${
+                    bookTab === tab ? "text-white border-b-2 border-brand" : "text-[#848e9c] hover:text-white"
+                  }`}
+                >
+                  {tab === "book" ? "Order Book" : "Recent Trades"}
+                </button>
+              ))}
             </div>
-            <div className="h-[250px] shrink-0 border-t border-[#2a2e39]">
-              <RecentTrades />
+            <div className="flex-1 min-h-0">
+              {bookTab === "book" ? <OrderBook hideHeader /> : <RecentTrades hideHeader />}
             </div>
           </div>
           <div className="w-[280px] shrink-0 overflow-y-auto">

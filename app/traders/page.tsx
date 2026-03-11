@@ -43,7 +43,7 @@ import type {
 } from "@/lib/hyperliquid/types";
 import type { LeaderboardEntry, CoincessTraderStats } from "@/lib/hyperliquid/api";
 import type { SpotClearinghouseState } from "@/lib/hyperliquid/types";
-import { getTrackedAddresses, starTrader, unstarTrader, getStarredTraders } from "@/lib/coincess/tracker";
+import { getTrackedAddresses, starTrader, unstarTrader, getStarredTraders, fetchTrackedTradersFromSupabase } from "@/lib/coincess/tracker";
 import { useWallet } from "@/hooks/useWallet";
 
 function stripPrefix(coin: string): string {
@@ -179,16 +179,30 @@ export default function TradersPage() {
 
   useEffect(() => {
     fetchLeaderboard()
-      .then((lb) => {
+      .then(async (lb) => {
         setLeaderboard(lb);
-        // Load Coincess trader stats once we have the leaderboard for display names
-        const addresses = getTrackedAddresses();
-        if (addresses.length > 0) {
-          fetchCoincessTraderStats(addresses, lb)
-            .then(setCoincessStats)
-            .catch(console.error)
-            .finally(() => setCoincessLoading(false));
-        } else {
+        try {
+          const tracked = await fetchTrackedTradersFromSupabase();
+          const addresses = tracked.map((t) => t.address);
+          if (addresses.length === 0) {
+            const local = getTrackedAddresses();
+            if (local.length > 0) {
+              const stats = await fetchCoincessTraderStats(local, lb);
+              setCoincessStats(stats);
+            }
+          } else {
+            const volumeMap = new Map(
+              tracked.map((t) => [
+                t.address,
+                { coincessVolume: t.coincessVolume, coincessTradeCount: t.orderCount },
+              ]),
+            );
+            const stats = await fetchCoincessTraderStats(addresses, lb, volumeMap);
+            setCoincessStats(stats);
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
           setCoincessLoading(false);
         }
       })
@@ -203,8 +217,8 @@ export default function TradersPage() {
   const sortedCoincess = useMemo(() => {
     return [...coincessStats].sort((a, b) => {
       if (coincessSort === "pnl") return b.pnlAll - a.pnlAll;
-      if (coincessSort === "trades") return b.tradeCount - a.tradeCount;
-      return b.volumeAll - a.volumeAll;
+      if (coincessSort === "trades") return b.coincessTradeCount - a.coincessTradeCount;
+      return b.coincessVolume - a.coincessVolume;
     });
   }, [coincessStats, coincessSort]);
 
@@ -620,13 +634,13 @@ export default function TradersPage() {
                               <span className="text-[9px] text-[#848e9c] font-mono">{shortAddr(trader.address)}</span>
                             </button>
                             <button onClick={() => selectTrader(trader.address)} className="col-span-3 sm:col-span-2 text-right text-white font-medium">
-                              {formatUsd(trader.volumeAll)}
+                              {formatUsd(trader.coincessVolume || trader.volumeAll)}
                             </button>
                             <button onClick={() => selectTrader(trader.address)} className={`col-span-3 sm:col-span-2 text-right font-bold ${trader.pnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                               {trader.pnlAll >= 0 ? "+" : ""}{formatUsd(trader.pnlAll)}
                             </button>
                             <button onClick={() => selectTrader(trader.address)} className="hidden sm:block col-span-1 text-right text-[#848e9c]">
-                              {trader.tradeCount.toLocaleString()}
+                              {(trader.coincessTradeCount || trader.tradeCount).toLocaleString()}
                             </button>
                             <button onClick={() => selectTrader(trader.address)} className="hidden sm:block col-span-1 text-right text-white text-[10px]">
                               {trader.topCoin ?? "–"}
@@ -1087,77 +1101,78 @@ export default function TradersPage() {
 
                 {historyTab === "positions" && (
                   positions.length > 0 ? (
-                    <div className="space-y-2">
-                      {positions.map((ap) => {
-                        const pos = ap.position;
-                        const size = parseFloat(pos.szi);
-                        const isLong = size > 0;
-                        const pnl = parseFloat(pos.unrealizedPnl);
-                        const roe = parseFloat(pos.returnOnEquity) * 100;
-                        const entry = parseFloat(pos.entryPx ?? "0");
-                        const bare = stripPrefix(pos.coin);
-                        const market = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === pos.coin);
-                        const markPx = market ? parseFloat(market.markPx) : 0;
-                        const liqPx = pos.liquidationPx ? parseFloat(pos.liquidationPx) : null;
-                        const margin = parseFloat(pos.marginUsed);
-                        const notional = Math.abs(size) * markPx;
-                        const displayCoin = market?.displayName ?? bare;
-                        const leverageType = pos.leverage.type === "cross" ? "Cross" : "Isolated";
-                        const fundingRate = market ? parseFloat(market.funding) : 0;
-                        const entryTime = positionEntryTimes.get(bare.toUpperCase());
-                        const durationStr = entryTime ? formatDuration(Date.now() - entryTime) : null;
+                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-x-auto">
+                      <table className="w-full text-[11px]">
+                        <thead>
+                          <tr className="text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50">
+                            <th className="text-left px-3 py-2 font-medium">Market</th>
+                            <th className="text-right px-2 py-2 font-medium">Size</th>
+                            <th className="text-right px-2 py-2 font-medium">Entry</th>
+                            <th className="text-right px-2 py-2 font-medium">Mark</th>
+                            <th className="text-right px-2 py-2 font-medium">PnL</th>
+                            <th className="text-right px-2 py-2 font-medium">Notional</th>
+                            <th className="text-right px-2 py-2 font-medium hidden sm:table-cell">Margin</th>
+                            <th className="text-right px-2 py-2 font-medium hidden sm:table-cell">Duration</th>
+                            <th className="text-center px-2 py-2 font-medium w-8"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {positions.map((ap) => {
+                            const pos = ap.position;
+                            const size = parseFloat(pos.szi);
+                            const isLong = size > 0;
+                            const pnl = parseFloat(pos.unrealizedPnl);
+                            const roe = parseFloat(pos.returnOnEquity) * 100;
+                            const entry = parseFloat(pos.entryPx ?? "0");
+                            const bare = stripPrefix(pos.coin);
+                            const market = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === pos.coin);
+                            const markPx = market ? parseFloat(market.markPx) : 0;
+                            const notional = Math.abs(size) * markPx;
+                            const margin = parseFloat(pos.marginUsed);
+                            const displayCoin = market?.displayName ?? bare;
+                            const leverageType = pos.leverage.type === "cross" ? "Cross" : "Iso";
+                            const entryTime = positionEntryTimes.get(bare.toUpperCase());
+                            const durationStr = entryTime ? formatDuration(Date.now() - entryTime) : "–";
 
-                        return (
-                          <div key={pos.coin} className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
-                            <div className="flex items-center justify-between px-4 pt-3 pb-2">
-                              <Link href={`/trade/${market?.name ?? pos.coin}`} className="flex items-center gap-2.5">
-                                <div>
-                                  <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-                                      {isLong ? "LONG" : "SHORT"}
+                            return (
+                              <tr key={pos.coin} className="border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors">
+                                <td className="px-3 py-2">
+                                  <Link href={`/trade/${market?.name ?? pos.coin}`} className="flex items-center gap-1.5">
+                                    <span className={`text-[9px] px-1 py-0.5 rounded font-bold leading-none ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                                      {isLong ? "L" : "S"}
                                     </span>
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#c0c4cc] font-medium">
-                                      {pos.leverage.value}x {leverageType}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm font-semibold">{displayCoin} <span className="text-[10px] text-[#848e9c] font-normal">{bare}-USDC</span></p>
-                                </div>
-                              </Link>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                  <div className="flex items-center gap-2 justify-end">
-                                    <span className={`text-sm font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                      {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                                    </span>
-                                    <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                      ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-[#848e9c]">{Math.abs(size).toFixed(size < 1 ? 5 : 2)} @ ${markPx.toLocaleString()}</p>
-                                </div>
-                                <Link
-                                  href={`/trade/${market?.name ?? pos.coin}?side=${isLong ? "buy" : "sell"}&size=${Math.abs(size)}&price=${entry}`}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium text-brand border border-brand/30 rounded-lg hover:bg-brand/10 transition-colors whitespace-nowrap"
-                                  title="Copy this trade"
-                                >
-                                  <ArrowRightLeft className="h-3 w-3" />
-                                  Copy Trade
-                                </Link>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-3 sm:grid-cols-8 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
-                              <StatCell label="Entry Price" value={`$${entry.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
-                              <StatCell label="Liq. Price" value={liqPx ? `$${liqPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"} color="text-amber-400" />
-                              <StatCell label="Margin" value={formatUsd(margin)} />
-                              <StatCell label="Notional" value={formatUsd(notional)} />
-                              <StatCell label="Mark Price" value={`$${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
-                              <StatCell label="Funding" value={`${(fundingRate * 100).toFixed(4)}%/h`} color={fundingRate >= 0 ? "text-emerald-400" : "text-red-400"} />
-                              <StatCell label="Opened" value={entryTime ? formatDateTime(entryTime) : "–"} />
-                              <StatCell label="Duration" value={durationStr ?? "–"} color="text-[#f0b90b]" />
-                            </div>
-                          </div>
-                        );
-                      })}
+                                    <span className="text-white font-medium">{displayCoin}</span>
+                                    <span className="text-[9px] text-[#848e9c]">{pos.leverage.value}x {leverageType}</span>
+                                  </Link>
+                                </td>
+                                <td className="text-right px-2 py-2 text-white">{Math.abs(size).toFixed(size < 1 ? 5 : 2)}</td>
+                                <td className="text-right px-2 py-2 text-white">${entry.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
+                                <td className="text-right px-2 py-2 text-[#848e9c]">${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
+                                <td className="text-right px-2 py-2">
+                                  <span className={`font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                    {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                                  </span>
+                                  <span className={`ml-1 text-[9px] ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                    ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
+                                  </span>
+                                </td>
+                                <td className="text-right px-2 py-2 text-[#848e9c]">{formatUsd(notional)}</td>
+                                <td className="text-right px-2 py-2 text-[#848e9c] hidden sm:table-cell">{formatUsd(margin)}</td>
+                                <td className="text-right px-2 py-2 text-[#f0b90b] hidden sm:table-cell">{durationStr}</td>
+                                <td className="text-center px-2 py-2">
+                                  <Link
+                                    href={`/trade/${market?.name ?? pos.coin}?side=${isLong ? "buy" : "sell"}&size=${Math.abs(size)}&price=${entry}`}
+                                    className="inline-flex items-center justify-center w-6 h-6 text-brand hover:bg-brand/10 rounded transition-colors"
+                                    title="Copy this trade"
+                                  >
+                                    <ArrowRightLeft className="h-3 w-3" />
+                                  </Link>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   ) : (
                     <div className="text-center py-12 text-[#848e9c] text-sm">No open positions</div>
@@ -1236,15 +1251,6 @@ export default function TradersPage() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function StatCell({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <div className="bg-[#141620] px-3 py-2">
-      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">{label}</p>
-      <p className={`text-[11px] font-semibold ${color ?? "text-white"}`}>{value}</p>
     </div>
   );
 }

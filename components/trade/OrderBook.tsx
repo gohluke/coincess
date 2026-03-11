@@ -21,7 +21,7 @@ function formatSize(sz: string): string {
   return n.toPrecision(4);
 }
 
-export function OrderBook() {
+export function OrderBook({ hideHeader }: { hideHeader?: boolean } = {}) {
   const orderbook = useTradingStore((s) => s.orderbook);
   const selectedMarket = useTradingStore((s) => s.selectedMarket);
   const setOrderbook = useTradingStore((s) => s.setOrderbook);
@@ -75,9 +75,11 @@ export function OrderBook() {
 
   return (
     <div className="flex flex-col h-full text-xs">
-      <div className="px-3 py-2 border-b border-[#2a2e39]">
-        <span className="text-[#848e9c] font-medium">Order Book</span>
-      </div>
+      {!hideHeader && (
+        <div className="px-3 py-2 border-b border-[#2a2e39]">
+          <span className="text-[#848e9c] font-medium">Order Book</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 px-3 py-1.5 text-[#848e9c] text-[10px] uppercase tracking-wider border-b border-[#2a2e39]">
         <span>Price</span>

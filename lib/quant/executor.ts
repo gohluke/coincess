@@ -35,7 +35,7 @@ function getBuilderOpt(accountAddr: string) {
   return { b: BUILDER_ADDRESS, f: BUILDER_FEE };
 }
 
-async function trackBotTrade(accountAddr: string) {
+async function trackBotTrade(accountAddr: string, volume = 0) {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -49,7 +49,7 @@ async function trackBotTrade(accountAddr: string) {
         apikey: key,
         Authorization: `Bearer ${key}`,
       },
-      body: JSON.stringify({ p_address: addr, p_now: now }),
+      body: JSON.stringify({ p_address: addr, p_now: now, p_volume: volume }),
     });
   } catch {
     // non-critical; don't block trading
@@ -81,15 +81,16 @@ export async function placeOrder(req: OrderRequest): Promise<OrderResult> {
     const s = status?.data?.statuses?.[0];
     if (!s) return { success: false, error: "No status in response" };
 
+    const notional = parseFloat(req.size) * parseFloat(req.price);
     const filled = s.filled as { avgPx: string; oid: number } | undefined;
     if (filled) {
-      trackBotTrade(accountAddress);
+      trackBotTrade(accountAddress, notional);
       return { success: true, avgPx: filled.avgPx, oid: filled.oid };
     }
 
     const resting = s.resting as { oid: number } | undefined;
     if (resting) {
-      trackBotTrade(accountAddress);
+      trackBotTrade(accountAddress, notional);
       return { success: true, avgPx: req.price, oid: resting.oid };
     }
 

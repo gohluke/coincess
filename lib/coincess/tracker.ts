@@ -8,6 +8,7 @@ export interface TrackedTrader {
   firstSeen: number;
   lastSeen: number;
   orderCount: number;
+  coincessVolume: number;
   displayName?: string | null;
 }
 
@@ -61,9 +62,9 @@ function saveStarredLocal(userAddress: string, addresses: string[]) {
 /**
  * Record that an address traded through Coincess.
  * Called after a successful order placement.
- * Persists to localStorage and fire-and-forget to Supabase.
+ * @param volume - notional value of the trade in USD (size * price)
  */
-export function trackTrader(address: string) {
+export function trackTrader(address: string, volume = 0) {
   const map = getTrackedMap();
   const key = address.toLowerCase();
   const existing = map.get(key);
@@ -72,20 +73,19 @@ export function trackTrader(address: string) {
   if (existing) {
     existing.lastSeen = now;
     existing.orderCount += 1;
+    existing.coincessVolume += volume;
   } else {
     map.set(key, {
       address: key,
       firstSeen: now,
       lastSeen: now,
       orderCount: 1,
+      coincessVolume: volume,
     });
   }
   saveTrackedMap(map);
 
-  // Fire-and-forget Supabase sync
-  trackTraderSupabase(address).catch(() => {
-    // Supabase unavailable; localStorage already has the data
-  });
+  trackTraderSupabase(address, volume).catch(() => {});
 }
 
 export function getTrackedTraders(): TrackedTrader[] {
@@ -98,7 +98,7 @@ export function getTrackedAddresses(): string[] {
 
 // --- Supabase functions ---
 
-export async function trackTraderSupabase(address: string): Promise<void> {
+export async function trackTraderSupabase(address: string, volume = 0): Promise<void> {
   try {
     const sb = getSupabaseClient();
     const key = address.toLowerCase();
@@ -107,13 +107,13 @@ export async function trackTraderSupabase(address: string): Promise<void> {
     const { error } = await sb.rpc("upsert_coincess_trader", {
       p_address: key,
       p_now: now,
+      p_volume: volume,
     });
 
-    // Fallback to raw upsert if RPC doesn't exist
     if (error) {
       const { data: existing } = await sb
         .from("coincess_traders")
-        .select("order_count")
+        .select("order_count, coincess_volume")
         .eq("address", key)
         .single();
 
@@ -123,6 +123,7 @@ export async function trackTraderSupabase(address: string): Promise<void> {
           first_seen: now,
           last_seen: now,
           order_count: existing ? (existing.order_count ?? 0) + 1 : 1,
+          coincess_volume: (existing?.coincess_volume ?? 0) + volume,
         },
         { onConflict: "address" }
       );
@@ -146,6 +147,7 @@ export async function fetchTrackedTradersFromSupabase(): Promise<TrackedTrader[]
       firstSeen: row.first_seen as number,
       lastSeen: row.last_seen as number,
       orderCount: row.order_count as number,
+      coincessVolume: Number(row.coincess_volume ?? 0),
       displayName: row.display_name as string | null | undefined,
     }));
   } catch {

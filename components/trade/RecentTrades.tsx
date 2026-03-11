@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { getWs } from "@/lib/hyperliquid/websocket";
 
-export function RecentTrades() {
+export function RecentTrades({ hideHeader }: { hideHeader?: boolean } = {}) {
   const { recentTrades, selectedMarket, addTrades } = useTradingStore();
 
   useEffect(() => {
@@ -17,9 +17,11 @@ export function RecentTrades() {
 
   return (
     <div className="flex flex-col h-full text-xs">
-      <div className="px-3 py-2 border-b border-[#2a2e39]">
-        <span className="text-[#848e9c] font-medium">Recent Trades</span>
-      </div>
+      {!hideHeader && (
+        <div className="px-3 py-2 border-b border-[#2a2e39]">
+          <span className="text-[#848e9c] font-medium">Recent Trades</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 px-3 py-1.5 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e39]">
         <span>Price</span>

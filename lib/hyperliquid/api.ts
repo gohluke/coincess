@@ -306,18 +306,26 @@ export interface CoincessTraderStats {
   volume24h: number;
   volume7d: number;
   volumeAll: number;
+  coincessVolume: number;
   pnl24h: number;
   pnl7d: number;
   pnlAll: number;
   tradeCount: number;
+  coincessTradeCount: number;
   accountValue: number;
   topCoin: string | null;
   firstTrade: number | null;
 }
 
+/**
+ * @param trackedVolumes - optional map of address -> { coincessVolume, coincessTradeCount }
+ * from the Supabase coincess_traders table. When provided, the leaderboard
+ * shows Coincess-only volume instead of all-Hyperliquid volume.
+ */
 export async function fetchCoincessTraderStats(
   addresses: string[],
   leaderboard?: LeaderboardEntry[],
+  trackedVolumes?: Map<string, { coincessVolume: number; coincessTradeCount: number }>,
 ): Promise<CoincessTraderStats[]> {
   if (addresses.length === 0) return [];
 
@@ -361,16 +369,20 @@ export async function fetchCoincessTraderStats(
 
       const av = ch ? parseFloat(ch.marginSummary.accountValue) : 0;
 
+      const tracked = trackedVolumes?.get(addr.toLowerCase());
+
       return {
         address: addr,
         displayName: lbEntry?.displayName ?? null,
         volume24h: vol24h,
         volume7d: vol7d,
         volumeAll: volAll,
+        coincessVolume: tracked?.coincessVolume ?? 0,
         pnl24h: pnl24h,
         pnl7d: pnl7d,
         pnlAll: pnlAll,
         tradeCount: fills.length,
+        coincessTradeCount: tracked?.coincessTradeCount ?? 0,
         accountValue: av,
         topCoin,
         firstTrade,

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil } from "lucide-react";
+import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil, ArrowLeftRight } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder, STALE_AGENT_ERROR } from "@/lib/hyperliquid/signing";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -30,6 +30,13 @@ export function PositionsTable() {
   const [editingOrder, setEditingOrder] = useState<{ oid: number; field: "price" | "size" } | null>(null);
   const [editValue, setEditValue] = useState("");
   const [modifyingOid, setModifyingOid] = useState<number | null>(null);
+
+  const [actionForm, setActionForm] = useState<{ coin: string; type: "limit" | "tpsl" } | null>(null);
+  const [limitPrice, setLimitPrice] = useState("");
+  const [tpPrice, setTpPrice] = useState("");
+  const [slPrice, setSlPrice] = useState("");
+  const [reversingCoin, setReversingCoin] = useState<string | null>(null);
+  const [submittingTpsl, setSubmittingTpsl] = useState(false);
 
   useEffect(() => {
     fetch("/api/quant/trades?status=open&limit=50")
@@ -71,6 +78,98 @@ export function PositionsTable() {
     } finally {
       setClosingCoin(null);
     }
+  };
+
+  const handleLimitClose = async (coin: string, szi: string, price: string) => {
+    const parsed = parseFloat(price);
+    if (isNaN(parsed) || parsed <= 0) { toast.error("Invalid price"); return; }
+    const size = Math.abs(parseFloat(szi));
+    const isLong = parseFloat(szi) > 0;
+    setClosingCoin(coin);
+    toast.loading(`Placing limit close for ${coin}...`, { id: `limit-${coin}` });
+    try {
+      await signAndPlaceOrder({
+        coin, isBuy: !isLong, price: parsed.toString(), size: size.toString(),
+        orderType: "limit", reduceOnly: true, markets, expectedAddress: address ?? undefined,
+      });
+      toast.success(`${coin} Limit Close Placed`, { id: `limit-${coin}` });
+      setActionForm(null);
+      loadUserState();
+    } catch (err) {
+      toast.error("Limit close failed", { id: `limit-${coin}`, description: (err as Error).message });
+    } finally { setClosingCoin(null); }
+  };
+
+  const handleReverse = async (coin: string, szi: string) => {
+    const size = Math.abs(parseFloat(szi));
+    const isLong = parseFloat(szi) > 0;
+    setReversingCoin(coin);
+    toast.loading(`Reversing ${coin}...`, { id: `reverse-${coin}` });
+    try {
+      const market = markets.find((m) => m.name === coin);
+      const markPx = parseFloat(market?.markPx ?? "0");
+      const price = getMarketOrderPrice(!isLong, markPx);
+      await signAndPlaceOrder({
+        coin, isBuy: !isLong, price, size: (size * 2).toString(),
+        orderType: "market", reduceOnly: false, markets, expectedAddress: address ?? undefined,
+      });
+      toast.success(`${coin} Position Reversed`, { id: `reverse-${coin}` });
+      loadUserState();
+    } catch (err) {
+      toast.error("Reverse failed", { id: `reverse-${coin}`, description: (err as Error).message });
+    } finally { setReversingCoin(null); }
+  };
+
+  const handleSetTpsl = async (coin: string, szi: string) => {
+    const size = Math.abs(parseFloat(szi));
+    const isLong = parseFloat(szi) > 0;
+    setSubmittingTpsl(true);
+    const tasks: Promise<void>[] = [];
+    const parsedTp = parseFloat(tpPrice);
+    const parsedSl = parseFloat(slPrice);
+
+    if (!isNaN(parsedTp) && parsedTp > 0) {
+      toast.loading(`Setting TP for ${coin}...`, { id: `tp-${coin}` });
+      tasks.push(
+        signAndPlaceOrder({
+          coin, isBuy: !isLong, price: parsedTp.toString(), size: size.toString(),
+          orderType: "limit", reduceOnly: true, markets, expectedAddress: address ?? undefined,
+          tpsl: { triggerPx: parsedTp.toString(), type: "tp" },
+        }).then(() => { toast.success(`${coin} TP set at $${parsedTp.toLocaleString()}`, { id: `tp-${coin}` }); })
+          .catch((e) => { toast.error("TP failed", { id: `tp-${coin}`, description: (e as Error).message }); })
+      );
+    }
+
+    if (!isNaN(parsedSl) && parsedSl > 0) {
+      toast.loading(`Setting SL for ${coin}...`, { id: `sl-${coin}` });
+      tasks.push(
+        signAndPlaceOrder({
+          coin, isBuy: !isLong, price: parsedSl.toString(), size: size.toString(),
+          orderType: "limit", reduceOnly: true, markets, expectedAddress: address ?? undefined,
+          tpsl: { triggerPx: parsedSl.toString(), type: "sl" },
+        }).then(() => { toast.success(`${coin} SL set at $${parsedSl.toLocaleString()}`, { id: `sl-${coin}` }); })
+          .catch((e) => { toast.error("SL failed", { id: `sl-${coin}`, description: (e as Error).message }); })
+      );
+    }
+
+    if (tasks.length === 0) { toast.error("Enter at least a TP or SL price"); setSubmittingTpsl(false); return; }
+    await Promise.allSettled(tasks);
+    setSubmittingTpsl(false);
+    setActionForm(null);
+    setTpPrice("");
+    setSlPrice("");
+    loadUserState();
+  };
+
+  const openActionForm = (coin: string, type: "limit" | "tpsl", markPx?: string) => {
+    if (actionForm?.coin === coin && actionForm.type === type) {
+      setActionForm(null);
+      return;
+    }
+    setActionForm({ coin, type });
+    if (type === "limit" && markPx) setLimitPrice(markPx);
+    setTpPrice("");
+    setSlPrice("");
   };
 
   const handleCancelOrder = async (coin: string, oid: number) => {
@@ -271,15 +370,15 @@ export function PositionsTable() {
                 <thead>
                   <tr className="text-[10px] text-[#848e9c] uppercase tracking-wider">
                     <th className="text-left px-4 py-2 font-medium">Market</th>
-                    <th className="text-right px-3 py-2 font-medium">Size</th>
-                    <th className="text-right px-3 py-2 font-medium">Entry</th>
-                    <th className="text-right px-3 py-2 font-medium">Mark</th>
-                    <th className="text-right px-3 py-2 font-medium">Liq.</th>
-                    <th className="text-right px-3 py-2 font-medium">Margin</th>
-                    <th className="text-right px-3 py-2 font-medium">Fund/8h</th>
-                    <th className="text-right px-3 py-2 font-medium">PnL</th>
-                    <th className="text-right px-3 py-2 font-medium">ROE</th>
-                    <th className="text-right px-4 py-2 font-medium">Action</th>
+                    <th className="text-right px-2 py-2 font-medium">Size</th>
+                    <th className="text-right px-2 py-2 font-medium">Entry</th>
+                    <th className="text-right px-2 py-2 font-medium">Mark</th>
+                    <th className="text-right px-2 py-2 font-medium">Liq.</th>
+                    <th className="text-right px-2 py-2 font-medium">Margin</th>
+                    <th className="text-right px-2 py-2 font-medium">Fund/8h</th>
+                    <th className="text-right px-2 py-2 font-medium">PnL</th>
+                    <th className="text-right px-2 py-2 font-medium">ROE</th>
+                    <th className="text-right px-3 py-2 font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -290,72 +389,173 @@ export function PositionsTable() {
                     const pnl = parseFloat(pos.unrealizedPnl);
                     const roe = parseFloat(pos.returnOnEquity) * 100;
                     const market = markets.find((m) => m.name === pos.coin);
+                    const markPx = market ? parseFloat(market.markPx) : 0;
+                    const markPxStr = markPx > 0 ? markPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
                     const fundingRate = market ? parseFloat(market.funding) : 0;
                     const fundingPct = (fundingRate * 100).toFixed(4);
                     const quantInfo = getQuantInfo(pos.coin);
+                    const isBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
 
                     return (
-                      <tr key={pos.coin} className="hover:bg-[#1a1d26] border-b border-[#1a1d26]">
-                        <td className="px-4 py-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-white font-medium">{pos.coin}</span>
-                            <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
-                              isLong ? "bg-[#0ecb81]/10 text-[#0ecb81]" : "bg-[#f6465d]/10 text-[#f6465d]"
-                            }`}>
-                              {isLong ? "L" : "S"} {pos.leverage.value}x
-                            </span>
-                            {quantInfo && (
-                              <span className="text-[9px] px-1 py-0.5 rounded font-medium bg-brand/15 text-brand flex items-center gap-0.5" title={quantInfo.meta?.reason || quantInfo.strategy_type}>
-                                <Bot className="h-2.5 w-2.5" /> AUTO
+                      <React.Fragment key={pos.coin}>
+                        <tr className="hover:bg-[#1a1d26] border-b border-[#1a1d26]">
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-white font-medium">{pos.coin}</span>
+                              <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
+                                isLong ? "bg-[#0ecb81]/10 text-[#0ecb81]" : "bg-[#f6465d]/10 text-[#f6465d]"
+                              }`}>
+                                {isLong ? "L" : "S"} {pos.leverage.value}x
                               </span>
+                              {quantInfo && (
+                                <span className="text-[9px] px-1 py-0.5 rounded font-medium bg-brand/15 text-brand flex items-center gap-0.5" title={quantInfo.meta?.reason || quantInfo.strategy_type}>
+                                  <Bot className="h-2.5 w-2.5" /> AUTO
+                                </span>
+                              )}
+                            </div>
+                            {quantInfo?.meta?.reason && (
+                              <div className="text-[9px] text-[#848e9c] mt-0.5 truncate max-w-[200px]">{quantInfo.meta.reason}</div>
                             )}
-                          </div>
-                          {quantInfo?.meta?.reason && (
-                            <div className="text-[9px] text-[#848e9c] mt-0.5 truncate max-w-[200px]">{quantInfo.meta.reason}</div>
-                          )}
-                        </td>
-                        <td className={`text-right px-3 py-2 ${isLong ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          {Math.abs(size).toFixed(4)}
-                        </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">
-                          {pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
-                        </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">
-                          {parseFloat(pos.positionValue) > 0
-                            ? (parseFloat(pos.positionValue) / Math.abs(size)).toLocaleString(undefined, { maximumFractionDigits: 2 })
-                            : "—"}
-                        </td>
-                        <td className="text-right px-3 py-2 text-[#f0b90b]">
-                          {pos.liquidationPx ? parseFloat(pos.liquidationPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
-                        </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">${parseFloat(pos.marginUsed).toFixed(2)}</td>
-                        <td className={`text-right px-3 py-2 ${fundingRate >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          {fundingRate >= 0 ? "+" : ""}{fundingPct}%
-                        </td>
-                        <td className={`text-right px-3 py-2 font-medium ${pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
-                        </td>
-                        <td className={`text-right px-3 py-2 font-medium ${roe >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          {roe >= 0 ? "+" : ""}{roe.toFixed(2)}%
-                        </td>
-                        <td className="text-right px-4 py-2">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleClosePosition(pos.coin, pos.szi)}
-                              disabled={closingCoin === pos.coin}
-                              className="px-2 py-1 bg-[#f6465d]/10 text-[#f6465d] rounded hover:bg-[#f6465d]/20 transition-colors disabled:opacity-50 text-[10px] font-medium"
-                            >
-                              {closingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin" /> : "Close"}
-                            </button>
-                            <button
-                              onClick={() => openShareModal(pos)}
-                              className="px-2 py-1 bg-brand/15 text-brand rounded hover:bg-brand/25 transition-colors text-[10px] font-medium flex items-center gap-1"
-                            >
-                              <Share2 className="h-3 w-3" /> Share
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className={`text-right px-2 py-2 ${isLong ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                            {Math.abs(size).toFixed(4)}
+                          </td>
+                          <td className="text-right px-2 py-2 text-[#eaecef]">
+                            {pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
+                          </td>
+                          <td className="text-right px-2 py-2 text-[#eaecef]">{markPxStr}</td>
+                          <td className="text-right px-2 py-2 text-[#f0b90b]">
+                            {pos.liquidationPx ? parseFloat(pos.liquidationPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
+                          </td>
+                          <td className="text-right px-2 py-2 text-[#eaecef]">${parseFloat(pos.marginUsed).toFixed(2)}</td>
+                          <td className={`text-right px-2 py-2 ${fundingRate >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                            {fundingRate >= 0 ? "+" : ""}{fundingPct}%
+                          </td>
+                          <td className={`text-right px-2 py-2 font-medium ${pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                            {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
+                          </td>
+                          <td className={`text-right px-2 py-2 font-medium ${roe >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                            {roe >= 0 ? "+" : ""}{roe.toFixed(2)}%
+                          </td>
+                          <td className="text-right px-3 py-2">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => openActionForm(pos.coin, "limit", markPx > 0 ? markPx.toFixed(2) : "")}
+                                disabled={isBusy}
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors disabled:opacity-50 ${
+                                  actionForm?.coin === pos.coin && actionForm.type === "limit"
+                                    ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white hover:bg-[#2a2e3e]"
+                                }`}
+                              >
+                                Limit
+                              </button>
+                              <button
+                                onClick={() => handleClosePosition(pos.coin, pos.szi)}
+                                disabled={isBusy}
+                                className="px-1.5 py-0.5 text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#2a2e3e] rounded transition-colors disabled:opacity-50"
+                              >
+                                {closingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin" /> : "Market"}
+                              </button>
+                              <button
+                                onClick={() => handleReverse(pos.coin, pos.szi)}
+                                disabled={isBusy}
+                                className="px-1.5 py-0.5 text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#2a2e3e] rounded transition-colors disabled:opacity-50"
+                              >
+                                {reversingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin" /> : "Reverse"}
+                              </button>
+                              <button
+                                onClick={() => openActionForm(pos.coin, "tpsl")}
+                                disabled={isBusy}
+                                className={`p-1 rounded transition-colors disabled:opacity-50 ${
+                                  actionForm?.coin === pos.coin && actionForm.type === "tpsl"
+                                    ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white hover:bg-[#2a2e3e]"
+                                }`}
+                                title="Set TP/SL"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => openShareModal(pos)}
+                                className="p-1 text-[#848e9c] hover:text-brand hover:bg-brand/10 rounded transition-colors"
+                                title="Share PnL"
+                              >
+                                <Share2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        {/* Expandable action form row */}
+                        {actionForm?.coin === pos.coin && (
+                          <tr className="bg-[#0f1118] border-b border-[#1a1d26]">
+                            <td colSpan={10} className="px-4 py-2">
+                              {actionForm.type === "limit" && (
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-[#848e9c] text-[10px]">Close at limit:</span>
+                                  <input
+                                    autoFocus
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={limitPrice}
+                                    onChange={(e) => setLimitPrice(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") handleLimitClose(pos.coin, pos.szi, limitPrice);
+                                      if (e.key === "Escape") setActionForm(null);
+                                    }}
+                                    placeholder="Price"
+                                    className="w-28 bg-[#1a1d26] border border-[#2a2e3e] focus:border-brand rounded px-2 py-1 text-white text-right text-xs focus:outline-none"
+                                  />
+                                  <button
+                                    onClick={() => handleLimitClose(pos.coin, pos.szi, limitPrice)}
+                                    disabled={closingCoin === pos.coin}
+                                    className="px-3 py-1 bg-brand/15 text-brand rounded hover:bg-brand/25 transition-colors text-[10px] font-medium disabled:opacity-50"
+                                  >
+                                    {closingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin" /> : "Place"}
+                                  </button>
+                                  <button onClick={() => setActionForm(null)} className="text-[#848e9c] hover:text-white p-1"><X className="h-3 w-3" /></button>
+                                </div>
+                              )}
+                              {actionForm.type === "tpsl" && (
+                                <div className="flex items-center gap-2 text-xs flex-wrap">
+                                  <span className="text-[#848e9c] text-[10px]">TP/SL:</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[#0ecb81] text-[10px]">TP</span>
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={tpPrice}
+                                      onChange={(e) => setTpPrice(e.target.value)}
+                                      onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(pos.coin, pos.szi); if (e.key === "Escape") setActionForm(null); }}
+                                      placeholder="Take Profit"
+                                      className="w-28 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#0ecb81] rounded px-2 py-1 text-white text-right text-xs focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[#f6465d] text-[10px]">SL</span>
+                                    <input
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={slPrice}
+                                      onChange={(e) => setSlPrice(e.target.value)}
+                                      onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(pos.coin, pos.szi); if (e.key === "Escape") setActionForm(null); }}
+                                      placeholder="Stop Loss"
+                                      className="w-28 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#f6465d] rounded px-2 py-1 text-white text-right text-xs focus:outline-none"
+                                    />
+                                  </div>
+                                  <button
+                                    onClick={() => handleSetTpsl(pos.coin, pos.szi)}
+                                    disabled={submittingTpsl}
+                                    className="px-3 py-1 bg-brand/15 text-brand rounded hover:bg-brand/25 transition-colors text-[10px] font-medium disabled:opacity-50"
+                                  >
+                                    {submittingTpsl ? <Loader2 className="h-3 w-3 animate-spin" /> : "Set"}
+                                  </button>
+                                  <button onClick={() => setActionForm(null)} className="text-[#848e9c] hover:text-white p-1"><X className="h-3 w-3" /></button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
@@ -371,16 +571,15 @@ export function PositionsTable() {
                 const pnl = parseFloat(pos.unrealizedPnl);
                 const roe = parseFloat(pos.returnOnEquity) * 100;
                 const mkt = markets.find((m) => m.name === pos.coin);
-                const markPx = mkt
-                  ? parseFloat(mkt.markPx).toLocaleString(undefined, { maximumFractionDigits: 2 })
-                  : "—";
+                const mMarkPx = mkt ? parseFloat(mkt.markPx) : 0;
+                const markPxDisplay = mMarkPx > 0 ? mMarkPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
                 const mFundRate = mkt ? parseFloat(mkt.funding) : 0;
                 const mFundPct = (mFundRate * 100).toFixed(4);
                 const mQuantInfo = getQuantInfo(pos.coin);
+                const mBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
 
                 return (
                   <div key={pos.coin} className="px-3 py-3 active:bg-[#1a1d26]">
-                    {/* Row 1: coin + badge | PnL + ROE */}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-white font-semibold text-sm">{pos.coin}</span>
@@ -409,7 +608,6 @@ export function PositionsTable() {
                       <div className="text-[9px] text-[#848e9c] mb-1.5 truncate">{mQuantInfo.meta.reason}</div>
                     )}
 
-                    {/* Row 2: detail grid */}
                     <div className="grid grid-cols-4 gap-x-2 gap-y-1.5 text-[10px] mb-2.5">
                       <div>
                         <div className="text-[#848e9c]">Size</div>
@@ -421,7 +619,7 @@ export function PositionsTable() {
                       </div>
                       <div>
                         <div className="text-[#848e9c]">Mark</div>
-                        <div className="text-[#eaecef]">{markPx}</div>
+                        <div className="text-[#eaecef]">{markPxDisplay}</div>
                       </div>
                       <div>
                         <div className="text-[#848e9c]">Fund/8h</div>
@@ -429,22 +627,103 @@ export function PositionsTable() {
                       </div>
                     </div>
 
-                    {/* Row 3: actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 mb-2">
                       <button
-                        onClick={() => handleClosePosition(pos.coin, pos.szi)}
-                        disabled={closingCoin === pos.coin}
-                        className="flex-1 py-1.5 bg-[#f6465d]/10 text-[#f6465d] rounded-lg hover:bg-[#f6465d]/20 transition-colors disabled:opacity-50 text-[11px] font-semibold"
+                        onClick={() => openActionForm(pos.coin, "limit", mMarkPx > 0 ? mMarkPx.toFixed(2) : "")}
+                        disabled={mBusy}
+                        className="flex-1 py-1.5 bg-[#2a2e3e] text-white rounded-lg text-[11px] font-medium disabled:opacity-50 active:bg-[#3a3e4e]"
                       >
-                        {closingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : "Close Position"}
+                        Limit
                       </button>
                       <button
-                        onClick={() => openShareModal(pos)}
-                        className="px-3 py-1.5 bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors"
+                        onClick={() => handleClosePosition(pos.coin, pos.szi)}
+                        disabled={mBusy}
+                        className="flex-1 py-1.5 bg-[#f6465d]/10 text-[#f6465d] rounded-lg text-[11px] font-semibold disabled:opacity-50 active:bg-[#f6465d]/20"
                       >
+                        {closingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : "Market"}
+                      </button>
+                      <button
+                        onClick={() => handleReverse(pos.coin, pos.szi)}
+                        disabled={mBusy}
+                        className="flex-1 py-1.5 bg-[#2a2e3e] text-white rounded-lg text-[11px] font-medium disabled:opacity-50 active:bg-[#3a3e4e]"
+                      >
+                        {reversingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : "Reverse"}
+                      </button>
+                      <button
+                        onClick={() => openActionForm(pos.coin, "tpsl")}
+                        className={`px-2.5 py-1.5 rounded-lg transition-colors ${
+                          actionForm?.coin === pos.coin && actionForm.type === "tpsl" ? "bg-brand/20 text-brand" : "bg-[#2a2e3e] text-[#848e9c]"
+                        }`}
+                        title="TP/SL"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => openShareModal(pos)} className="px-2.5 py-1.5 bg-brand/10 text-brand rounded-lg">
                         <Share2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
+
+                    {/* Expandable mobile action form */}
+                    {actionForm?.coin === pos.coin && (
+                      <div className="bg-[#0f1118] rounded-lg p-3 mb-1">
+                        {actionForm.type === "limit" && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#848e9c] text-[10px] shrink-0">Limit close:</span>
+                            <input
+                              autoFocus
+                              type="text"
+                              inputMode="decimal"
+                              value={limitPrice}
+                              onChange={(e) => setLimitPrice(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === "Enter") handleLimitClose(pos.coin, pos.szi, limitPrice); }}
+                              placeholder="Price"
+                              className="flex-1 bg-[#1a1d26] border border-[#2a2e3e] focus:border-brand rounded px-2 py-1.5 text-white text-right text-xs focus:outline-none"
+                            />
+                            <button
+                              onClick={() => handleLimitClose(pos.coin, pos.szi, limitPrice)}
+                              disabled={closingCoin === pos.coin}
+                              className="px-3 py-1.5 bg-brand text-white rounded text-xs font-medium disabled:opacity-50"
+                            >
+                              Place
+                            </button>
+                          </div>
+                        )}
+                        {actionForm.type === "tpsl" && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#0ecb81] text-[10px] w-6 shrink-0">TP</span>
+                              <input
+                                autoFocus
+                                type="text"
+                                inputMode="decimal"
+                                value={tpPrice}
+                                onChange={(e) => setTpPrice(e.target.value)}
+                                placeholder="Take Profit price"
+                                className="flex-1 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#0ecb81] rounded px-2 py-1.5 text-white text-right text-xs focus:outline-none"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#f6465d] text-[10px] w-6 shrink-0">SL</span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={slPrice}
+                                onChange={(e) => setSlPrice(e.target.value)}
+                                placeholder="Stop Loss price"
+                                className="flex-1 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#f6465d] rounded px-2 py-1.5 text-white text-right text-xs focus:outline-none"
+                              />
+                            </div>
+                            <button
+                              onClick={() => handleSetTpsl(pos.coin, pos.szi)}
+                              disabled={submittingTpsl}
+                              className="w-full py-1.5 bg-brand text-white rounded text-xs font-medium disabled:opacity-50"
+                            >
+                              {submittingTpsl ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : "Set TP/SL"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -624,13 +903,13 @@ interface ShareablePosition {
 
 function SharePnlModal({ position, onClose }: { position: ShareablePosition; onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [aspectRatio, setAspectRatio] = useState<"16:9" | "1:1">("16:9");
+  const [aspectRatio, setAspectRatio] = useState<"9:16" | "1:1">("9:16");
   const [showPnlAmount, setShowPnlAmount] = useState(true);
   const [copied, setCopied] = useState(false);
   const isProfit = position.roe >= 0;
 
-  const W = aspectRatio === "16:9" ? 800 : 600;
-  const H = aspectRatio === "16:9" ? 450 : 600;
+  const W = aspectRatio === "9:16" ? 450 : 600;
+  const H = aspectRatio === "9:16" ? 800 : 600;
 
   const drawCard = useCallback((canvas: HTMLCanvasElement) => {
     const ctx = canvas.getContext("2d");
@@ -655,11 +934,11 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
     drawRocket(ctx, W, H, isProfit);
 
     ctx.fillStyle = BRAND.hex;
-    ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
-    ctx.fillText(BRAND_CONFIG.nameLower, 32, 44);
+    ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
+    ctx.fillText(BRAND_CONFIG.nameLower, 32, 48);
 
-    const badgeY = aspectRatio === "16:9" ? 80 : 90;
-    ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+    const badgeY = aspectRatio === "9:16" ? 100 : 90;
+    ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
     ctx.fillStyle = isProfit ? "#0ecb81" : "#f6465d";
     ctx.fillText(position.leverage, 32, badgeY);
     const levW = ctx.measureText(position.leverage).width;
@@ -669,35 +948,35 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
     const sideW = ctx.measureText(position.side).width;
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
+    ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
     ctx.fillText(position.coin.replace("-USD", ""), 32 + levW + 12 + sideW + 12, badgeY);
 
-    const roeY = aspectRatio === "16:9" ? 150 : 170;
+    const roeY = aspectRatio === "9:16" ? 220 : 170;
     ctx.fillStyle = isProfit ? "#0ecb81" : "#f6465d";
-    ctx.font = "bold 56px system-ui, -apple-system, sans-serif";
+    ctx.font = `bold ${aspectRatio === "9:16" ? 64 : 56}px system-ui, -apple-system, sans-serif`;
     const roeText = `${position.roe >= 0 ? "+" : ""}${position.roe.toFixed(2)}%`;
     ctx.fillText(roeText, 32, roeY);
 
     if (showPnlAmount) {
       ctx.fillStyle = "#848e9c";
-      ctx.font = "16px system-ui, -apple-system, sans-serif";
+      ctx.font = "18px system-ui, -apple-system, sans-serif";
       ctx.fillText(
         `PnL: ${position.pnl >= 0 ? "+" : ""}$${position.pnl.toFixed(2)}`,
         32,
-        roeY + 30,
+        roeY + 36,
       );
     }
 
-    const detailY = aspectRatio === "16:9" ? H - 60 : H - 80;
+    const detailY = aspectRatio === "9:16" ? H - 100 : H - 80;
     ctx.fillStyle = "#848e9c";
-    ctx.font = "13px system-ui, -apple-system, sans-serif";
+    ctx.font = "14px system-ui, -apple-system, sans-serif";
     ctx.fillText("Entry Price", 32, detailY);
-    ctx.fillText("Current Price", 180, detailY);
+    ctx.fillText("Current Price", 32, detailY + 60);
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
-    ctx.fillText(position.entryPx, 32, detailY + 24);
-    ctx.fillText(position.markPx, 180, detailY + 24);
+    ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
+    ctx.fillText(position.entryPx, 32, detailY + 26);
+    ctx.fillText(position.markPx, 32, detailY + 86);
 
     ctx.fillStyle = "#4a4e59";
     ctx.font = "11px system-ui, -apple-system, sans-serif";
@@ -765,7 +1044,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
           <div className="px-4 sm:px-5 py-4 space-y-4">
             {/* Aspect ratio toggle */}
             <div className="flex rounded-lg overflow-hidden border border-[#2a2e3e]">
-              {(["16:9", "1:1"] as const).map((r) => (
+              {(["9:16", "1:1"] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => setAspectRatio(r)}
@@ -773,7 +1052,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
                     aspectRatio === r ? "bg-brand text-white" : "text-[#848e9c] hover:text-white"
                   }`}
                 >
-                  {r === "16:9" ? "Rectangle (16:9)" : "Square (1:1)"}
+                  {r === "9:16" ? "Portrait (9:16)" : "Square (1:1)"}
                 </button>
               ))}
             </div>
@@ -822,10 +1101,10 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
 /* ---------- Preview Component (CSS/HTML for instant rendering) ---------- */
 
 function ShareCardPreview({ position, aspectRatio, showPnlAmount }: {
-  position: ShareablePosition; aspectRatio: "16:9" | "1:1"; showPnlAmount: boolean;
+  position: ShareablePosition; aspectRatio: "9:16" | "1:1"; showPnlAmount: boolean;
 }) {
   const isProfit = position.roe >= 0;
-  const pctAspect = aspectRatio === "16:9" ? "56.25%" : "100%";
+  const pctAspect = aspectRatio === "9:16" ? "177.78%" : "100%";
 
   const stars = useMemo(() =>
     Array.from({ length: 30 }, (_, i) => ({
@@ -852,8 +1131,10 @@ function ShareCardPreview({ position, aspectRatio, showPnlAmount }: {
         </div>
 
         {/* Rocket illustration */}
-        <div className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-30">
-          <svg className="w-[80px] sm:w-[140px] h-auto" viewBox="0 0 140 200" fill="none">
+        <div className={`absolute pointer-events-none opacity-30 ${
+          aspectRatio === "9:16" ? "right-4 sm:right-6 top-[35%] -translate-y-1/2" : "right-4 sm:right-8 top-1/2 -translate-y-1/2"
+        }`}>
+          <svg className={aspectRatio === "9:16" ? "w-[100px] sm:w-[160px] h-auto" : "w-[80px] sm:w-[140px] h-auto"} viewBox="0 0 140 200" fill="none">
             <ellipse cx="70" cy="180" rx="40" ry="12" fill={isProfit ? "#0ecb81" : "#f6465d"} opacity="0.3" />
             <path d="M70 20 L90 80 L85 140 L70 150 L55 140 L50 80 Z" fill="#e8e8e8" stroke="#ccc" strokeWidth="1" />
             <circle cx="70" cy="80" r="12" fill="#1a1028" stroke={BRAND.hex} strokeWidth="2" />
@@ -890,14 +1171,14 @@ function ShareCardPreview({ position, aspectRatio, showPnlAmount }: {
         </div>
 
         {/* Entry / Current */}
-        <div className="relative z-10 flex gap-8 sm:gap-16 mt-auto">
+        <div className={`relative z-10 mt-auto ${aspectRatio === "9:16" ? "space-y-3" : "flex gap-8 sm:gap-16"}`}>
           <div>
             <div className="text-[#848e9c] text-[10px] sm:text-xs mb-0.5 sm:mb-1">Entry Price</div>
-            <div className="text-white font-bold text-sm sm:text-lg">{position.entryPx}</div>
+            <div className="text-white font-bold text-base sm:text-xl">{position.entryPx}</div>
           </div>
           <div>
             <div className="text-[#848e9c] text-[10px] sm:text-xs mb-0.5 sm:mb-1">Current Price</div>
-            <div className="text-white font-bold text-sm sm:text-lg">{position.markPx}</div>
+            <div className="text-white font-bold text-base sm:text-xl">{position.markPx}</div>
           </div>
         </div>
 
@@ -923,8 +1204,8 @@ function drawStars(ctx: CanvasRenderingContext2D, w: number, h: number) {
 function drawRocket(ctx: CanvasRenderingContext2D, w: number, h: number, isProfit: boolean) {
   ctx.save();
   ctx.globalAlpha = 0.25;
-  const cx = w - 100;
-  const cy = h / 2;
+  const cx = w - 80;
+  const cy = h * 0.35;
   ctx.translate(cx, cy);
 
   ctx.fillStyle = "#e8e8e8";
