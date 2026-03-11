@@ -165,24 +165,20 @@ export function OrderForm() {
         loadUserState();
       } else {
         const raw = result.error || "Order failed";
-        if (raw.includes("does not exist")) {
-          setFeedback({ type: "error", msg: "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading." });
-        } else if (raw.includes("agent") || raw.includes("not authorized")) {
+        if (raw.includes("does not exist") || raw.includes("agent") || raw.includes("not authorized")) {
           if (address) clearStoredAgent(address);
           setAgentApproved(false);
-          setFeedback({ type: "error", msg: "Agent expired. Please enable trading again." });
+          setFeedback({ type: "error", msg: "Trading session expired. Please enable trading again." });
         } else {
           setFeedback({ type: "error", msg: raw });
         }
       }
     } catch (err) {
       const raw = (err as Error).message;
-      if (raw.includes("does not exist")) {
-        setFeedback({ type: "error", msg: "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading." });
-      } else if (raw.includes("agent") || raw.includes("not authorized")) {
+      if (raw.includes("does not exist") || raw.includes("agent") || raw.includes("not authorized")) {
         if (address) clearStoredAgent(address);
         setAgentApproved(false);
-        setFeedback({ type: "error", msg: "Agent expired. Please enable trading again." });
+        setFeedback({ type: "error", msg: "Trading session expired. Please enable trading again." });
       } else {
         setFeedback({ type: "error", msg: raw });
       }
@@ -434,7 +430,11 @@ export function OrderForm() {
                     setAgentApproved(true);
                     setFeedback({ type: "success", msg: "Trading enabled! You can now place orders." });
                   } else {
-                    setFeedback({ type: "error", msg: result.error || "Failed to enable trading" });
+                    const raw = result.error || "Failed to enable trading";
+                    const msg = raw.includes("does not exist")
+                      ? "No Hyperliquid account found. Deposit USDC to Hyperliquid first, then enable trading."
+                      : raw;
+                    setFeedback({ type: "error", msg });
                   }
                 } catch (err) {
                   setFeedback({ type: "error", msg: (err as Error).message });

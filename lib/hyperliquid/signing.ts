@@ -230,7 +230,7 @@ export async function signAndApproveAgent(
     const nonce = Date.now();
     const action = {
       type: "approveAgent" as const,
-      signatureChainId: "0xa4b1" as `0x${string}`,
+      signatureChainId: "0x66eee" as `0x${string}`,
       hyperliquidChain: "Mainnet" as const,
       agentAddress: agentAcc.address.toLowerCase() as `0x${string}`,
       agentName: BRAND_CONFIG.name,
@@ -386,13 +386,12 @@ export async function signAndApproveBuilderFee(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const wallet = getWalletAdapter(expectedAddress);
-    const chainId = await wallet.getChainId();
 
     const nonce = Date.now();
     const action = {
       type: "approveBuilderFee" as const,
       hyperliquidChain: "Mainnet" as const,
-      signatureChainId: `0x${chainId.toString(16)}` as `0x${string}`,
+      signatureChainId: "0x66eee" as `0x${string}`,
       maxFeeRate,
       builder: builderAddress,
       nonce,
@@ -439,13 +438,12 @@ export async function signAndEnableDexAbstraction(
   try {
     const wallet = getWalletAdapter(expectedAddress);
     const address = await getAddress(expectedAddress);
-    const chainId = await wallet.getChainId();
 
     const nonce = Date.now();
     const action = {
       type: "userSetAbstraction" as const,
       hyperliquidChain: "Mainnet" as const,
-      signatureChainId: `0x${chainId.toString(16)}` as `0x${string}`,
+      signatureChainId: "0x66eee" as `0x${string}`,
       user: address as `0x${string}`,
       abstraction: "unifiedAccount",
       nonce,
