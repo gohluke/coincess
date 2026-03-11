@@ -33,10 +33,15 @@ export const BRAND_CONFIG = {
     hoverRgb: "230, 59, 80",
   },
 
+  token: "CNC",
+
   builder: {
     address: "0x635b3B453De75e873A02B4898f615C5E8909070a" as const,
     fee: 10,
     enabled: true,
+    feeWhitelist: [
+      "0x635b3B453De75e873A02B4898f615C5E8909070a",
+    ] as readonly string[],
   },
 
   assets: {

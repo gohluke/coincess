@@ -7,11 +7,39 @@ import { createWalletClient, custom } from "viem";
 import { arbitrum } from "viem/chains";
 import type { MarketInfo } from "./types";
 import { BRAND_CONFIG } from "@/lib/brand.config";
-import { getAgentAccount, storeAgent, clearStoredAgent } from "./agent";
+import { getAgentAccount, storeAgent, clearStoredAgent, getStoredAgent } from "./agent";
+import { trackTrader } from "@/lib/coincess/tracker";
 
 export { getStoredAgent, clearStoredAgent } from "./agent";
 
+export const STALE_AGENT_ERROR = "Trading session expired. Please enable trading again.";
+
 const EXCHANGE_URL = "https://api.hyperliquid.xyz/exchange";
+
+/**
+ * Detect "User or API Wallet 0x... does not exist" errors where the address
+ * belongs to the agent (not the user). This means the agent key stored locally
+ * is no longer registered on Hyperliquid. Clear it so the user can re-approve.
+ */
+function handleStaleAgent(error: string, userAddr: string): boolean {
+  const match = error.match(/0x[a-fA-F0-9]{40}/);
+  if (!match) return false;
+  const errorAddr = match[0].toLowerCase();
+  if (errorAddr === userAddr.toLowerCase()) return false;
+
+  const stored = getStoredAgent(userAddr);
+  if (stored && stored.address.toLowerCase() === errorAddr) {
+    clearStoredAgent(userAddr);
+    return true;
+  }
+  // Even if the address doesn't match our stored agent exactly, if the error
+  // says "does not exist" and the address isn't the user's, it's likely stale.
+  if (error.includes("does not exist") && stored) {
+    clearStoredAgent(userAddr);
+    return true;
+  }
+  return false;
+}
 
 const BUILDER_ADDRESS = BRAND_CONFIG.builder.address;
 const BUILDER_FEE = BRAND_CONFIG.builder.fee;
@@ -475,6 +503,7 @@ export async function signAndApproveAgent(
 
 export async function signAndPlaceOrder(
   params: PlaceOrderParams & { expectedAddress?: string },
+  _isRetry = false,
 ): Promise<{ success: boolean; error?: string; oid?: number }> {
   try {
     const userAddr = await resolveAddress(params.expectedAddress);
@@ -492,14 +521,13 @@ export async function signAndPlaceOrder(
 
     const orderWire = buildOrderWire(params);
 
-    // TODO: re-enable builder exemption once CESS token staking tiers are implemented
-    // const isBuilder = userAddr === BUILDER_ADDRESS.toLowerCase();
-    const builderOpt = BUILDER_FEE_ENABLED
+    const isWhitelisted = BRAND_CONFIG.builder.feeWhitelist.some(
+      (a) => a.toLowerCase() === userAddr,
+    );
+    const builderOpt = BUILDER_FEE_ENABLED && !isWhitelisted
       ? { b: BUILDER_ADDRESS, f: BUILDER_FEE }
       : undefined;
 
-    // Use the SDK's high-level order function which handles action hashing,
-    // signing, nonce management, and serialization correctly.
     const transport = new HttpTransport();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = await sdkOrder({ transport, wallet } as any, {
@@ -512,19 +540,51 @@ export async function signAndPlaceOrder(
 
     const status = data.response.data.statuses[0];
     if (typeof status === "object" && "error" in status) {
-      return { success: false, error: (status as { error: string }).error };
+      const errMsg = (status as { error: string }).error;
+
+      // Auto-approve builder fee and retry once if not yet approved
+      if (!_isRetry && errMsg.toLowerCase().includes("builder fee") && errMsg.toLowerCase().includes("not been approved")) {
+        pushSigningDebug("placeOrder.autoApproveBuilderFee", { errMsg });
+        const approval = await signAndApproveBuilderFee(BUILDER_ADDRESS, "0.01%", params.expectedAddress);
+        if (approval.success) {
+          return signAndPlaceOrder(params, true);
+        }
+      }
+
+      return { success: false, error: errMsg };
     }
     if (typeof status === "object" && "filled" in status) {
+      trackTrader(userAddr);
       return { success: true, oid: (status as { filled: { oid: number } }).filled.oid };
     }
     if (typeof status === "object" && "resting" in status) {
+      trackTrader(userAddr);
       return { success: true, oid: (status as { resting: { oid: number } }).resting.oid };
     }
+    trackTrader(userAddr);
     return { success: true };
   } catch (err) {
     pushSigningDebug("placeOrder.exception", getErrorDetails(err));
     const msg = (err as Error).message || String(err);
     pushSigningDebug("placeOrder.errorMsg", msg);
+
+    // Auto-approve builder fee on exception path too
+    if (!_isRetry && msg.toLowerCase().includes("builder fee") && msg.toLowerCase().includes("not been approved")) {
+      const userAddr = await resolveAddress(params.expectedAddress).catch(() => "");
+      if (userAddr) {
+        const approval = await signAndApproveBuilderFee(BUILDER_ADDRESS, "0.01%", params.expectedAddress);
+        if (approval.success) {
+          return signAndPlaceOrder(params, true);
+        }
+      }
+    }
+
+    if (msg.includes("does not exist")) {
+      const userAddr = await resolveAddress(params.expectedAddress).catch(() => "");
+      if (userAddr && handleStaleAgent(msg, userAddr)) {
+        return { success: false, error: STALE_AGENT_ERROR };
+      }
+    }
     return { success: false, error: msg };
   }
 }
@@ -589,7 +649,14 @@ export async function signAndModifyOrder(params: {
     return { success: true };
   } catch (err) {
     pushSigningDebug("modifyOrder.exception", getErrorDetails(err));
-    return { success: false, error: (err as Error).message || String(err) };
+    const msg = (err as Error).message || String(err);
+    if (msg.includes("does not exist")) {
+      const userAddr = await resolveAddress(params.expectedAddress).catch(() => "");
+      if (userAddr && handleStaleAgent(msg, userAddr)) {
+        return { success: false, error: STALE_AGENT_ERROR };
+      }
+    }
+    return { success: false, error: msg };
   }
 }
 
@@ -620,9 +687,20 @@ export async function signAndCancelOrder(
 
     const data = await res.json();
     if (data.status === "ok") return { success: true };
-    return { success: false, error: data.response?.data?.statuses?.[0]?.error ?? "Cancel failed" };
+    const cancelErr = data.response?.data?.statuses?.[0]?.error ?? "Cancel failed";
+    if (cancelErr.includes("does not exist") && handleStaleAgent(cancelErr, userAddr)) {
+      return { success: false, error: STALE_AGENT_ERROR };
+    }
+    return { success: false, error: cancelErr };
   } catch (err) {
-    return { success: false, error: (err as Error).message };
+    const msg = (err as Error).message || String(err);
+    if (msg.includes("does not exist")) {
+      const addr = await resolveAddress(expectedAddress).catch(() => "");
+      if (addr && handleStaleAgent(msg, addr)) {
+        return { success: false, error: STALE_AGENT_ERROR };
+      }
+    }
+    return { success: false, error: msg };
   }
 }
 

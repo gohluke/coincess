@@ -86,7 +86,8 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Native MetaMask on Arbitrum for approvals** — all one-time user-signed actions (Enable Trading, builder fee, unified account) use `window.ethereum` directly, bypassing Privy's wrapped provider, and switch MetaMask to Arbitrum One before signing — matching based.one's UX
 - **Address-validated signing** — every trade, cancel, and leverage update resolves the signing address consistently to prevent "User does not exist" errors
 - **Wallet mismatch detection** — order form and positions table detect address mismatches between the displayed (linked) wallet and the actual signing wallet, showing a clear warning and disabling trades until resolved
-- Builder fee exemption for the platform owner's address
+- **Builder fee whitelist** — addresses in `brand.config.ts` `feeWhitelist` are exempt from builder fees (used for testing and platform-owned bots)
+- **Auto builder fee approval** — if a user's builder fee hasn't been approved, the system auto-detects this, triggers approval, and retries the order transparently
 - Builder fees on each Hyperliquid trade (USDC credited to builder address)
 - Polymarket builder attribution via HMAC-signed headers
 
@@ -108,6 +109,18 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Quick actions** — "Review my positions", "Analyze recent trades", "Am I following my rules?"
 - **Conversation history** — stored in Supabase per wallet
 
+### Traders & Leaderboard (`/traders`)
+- **Coincess Leaderboard** — tracks all users who trade through Coincess, ranked by volume, P&L, or trade count
+- **Hyperliquid Leaderboard** — browse the top global Hyperliquid traders by performance
+- **Trader profiles** — click any trader to view their open positions, account value, and trade history
+- **Star/Favorite traders** — bookmark traders to track them across sessions (persisted in Supabase)
+- **Copy Trade** — one-click copy from any trader's open position, pre-fills your order form with side, size, and entry price
+- **Position timing** — shows when each position was opened and how long it's been held
+- **Empty state** — motivating "Leaderboard Awaits" design with unclaimed award slots when no traders yet
+- **Bot volume attribution** — quant engine orders count as Coincess volume via the builder field + server-side Supabase tracking
+- **Builder fee whitelisting** — platform owner's wallet is exempt from builder fees for testing (`brand.config.ts` whitelist)
+- **CNC token (planned)** — future native token with tiered fee discounts based on staked CNC balance
+
 ### Quant Trading Suite (`/quant`)
 - **4 automated strategies** running 24/7 on a dedicated server:
   - **Funding Rate Harvester** — scans all markets for extreme funding rates, opens opposite positions to collect hourly funding (lowest risk, ~1-3% daily target)
@@ -119,6 +132,8 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Live dashboard** — strategy cards with play/pause/delete, P&L stats, open positions, trade log, risk gauges
 - **Server-side execution** — runs via `scripts/quant-server.ts` on Contabo VPS using pm2, no browser wallet popups
 - **API Wallet** — uses Hyperliquid API wallet key (separate from main wallet) for programmatic order signing
+- **Coincess volume attribution** — bot orders include the Coincess builder field, so all automated trades count toward platform volume and appear on the Coincess leaderboard
+- **Server-side Supabase tracking** — after each successful order, the executor calls `upsert_coincess_trader` to increment the trader's order count (non-blocking, won't fail trades if Supabase is down)
 - **Supabase persistence** — `quant_strategies`, `quant_trades`, `quant_state` tables track all activity
 - **API routes** — `/api/quant/strategies` (CRUD), `/api/quant/trades` (history), `/api/quant/status` (engine health)
 
@@ -180,7 +195,7 @@ npm run dev
 | [localhost:3000/quant](http://localhost:3000/quant) | Quant trading dashboard |
 | [localhost:3000/journal](http://localhost:3000/journal) | Trade journal |
 | [localhost:3000/chat](http://localhost:3000/chat) | AI trading coach |
-| [localhost:3000/traders](http://localhost:3000/traders) | Trader lookup & leaderboard |
+| [localhost:3000/traders](http://localhost:3000/traders) | Coincess leaderboard, Hyperliquid leaderboard, trader profiles, copy trade |
 | [localhost:3000/scanner](http://localhost:3000/scanner) | Contract scanner |
 | [localhost:3000/settings](http://localhost:3000/settings) | Wallets, API keys, Dayze integration |
 
@@ -224,17 +239,17 @@ npm run dev
 
 ### Optional / Future
 
-- [ ] **CESS token tiered builder fees** — Coincess's own token. Users who stake CESS get reduced trading fees:
+- [ ] **CNC token tiered builder fees** — Coincess's native token. Users who stake CNC get reduced trading fees:
 
-  | Tier | CESS Staked | Builder Fee |
+  | Tier | CNC Staked | Builder Fee |
   |------|------------|-------------|
   | Free | 0 | 1bp (0.01%) |
-  | Bronze | 1,000 CESS | 0.8bp |
-  | Silver | 10,000 CESS | 0.5bp |
-  | Gold | 100,000 CESS | 0.2bp |
-  | Diamond | 1,000,000 CESS | 0bp (fee-free) |
+  | Bronze | 1,000 CNC | 0.8bp |
+  | Silver | 10,000 CNC | 0.5bp |
+  | Gold | 100,000 CNC | 0.2bp |
+  | Diamond | 1,000,000 CNC | 0bp (fee-free) |
 
-  Implementation: read user's staked CESS balance from on-chain contract, pass dynamic `f` value to the builder field per order. Requires deploying CESS ERC-20 + staking contract on Arbitrum.
+  Implementation: read user's staked CNC balance from on-chain contract (Solana SPL), pass dynamic `f` value to the builder field per order.
 
 - [ ] **UI sounds** — audio feedback for order placed, order filled, order cancelled, position closed, errors (like Binance/HL trading terminal sounds). Toggle in Settings
 - [ ] **Visa debit card** — partner with a whitelabel card provider (e.g., Reap, Immersve) for crypto spend

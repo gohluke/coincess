@@ -300,6 +300,89 @@ async function fetchHip3SpotStocks(allMids: AllMids): Promise<MarketInfo[]> {
   }
 }
 
+export interface CoincessTraderStats {
+  address: string;
+  displayName: string | null;
+  volume24h: number;
+  volume7d: number;
+  volumeAll: number;
+  pnl24h: number;
+  pnl7d: number;
+  pnlAll: number;
+  tradeCount: number;
+  accountValue: number;
+  topCoin: string | null;
+  firstTrade: number | null;
+}
+
+export async function fetchCoincessTraderStats(
+  addresses: string[],
+  leaderboard?: LeaderboardEntry[],
+): Promise<CoincessTraderStats[]> {
+  if (addresses.length === 0) return [];
+
+  const now = Date.now();
+  const DAY = 24 * 60 * 60 * 1000;
+
+  const results = await Promise.allSettled(
+    addresses.map(async (addr): Promise<CoincessTraderStats> => {
+      const [fills, ch] = await Promise.all([
+        fetchUserFills(addr).catch(() => [] as Fill[]),
+        fetchCombinedClearinghouseState(addr).catch(() => null),
+      ]);
+
+      let vol24h = 0, vol7d = 0, volAll = 0;
+      let pnl24h = 0, pnl7d = 0, pnlAll = 0;
+      let firstTrade: number | null = null;
+      const coinVolume: Record<string, number> = {};
+
+      for (const f of fills) {
+        const ntl = parseFloat(f.px) * parseFloat(f.sz);
+        const pnl = parseFloat(f.closedPnl);
+        const age = now - f.time;
+
+        volAll += ntl;
+        pnlAll += pnl;
+        if (age <= DAY) { vol24h += ntl; pnl24h += pnl; }
+        if (age <= 7 * DAY) { vol7d += ntl; pnl7d += pnl; }
+
+        const coin = f.coin.includes(":") ? f.coin.split(":")[1] : f.coin;
+        coinVolume[coin] = (coinVolume[coin] ?? 0) + ntl;
+
+        if (!firstTrade || f.time < firstTrade) firstTrade = f.time;
+      }
+
+      const topCoin = Object.entries(coinVolume)
+        .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+      const lbEntry = leaderboard?.find(
+        (e) => e.ethAddress.toLowerCase() === addr.toLowerCase(),
+      );
+
+      const av = ch ? parseFloat(ch.marginSummary.accountValue) : 0;
+
+      return {
+        address: addr,
+        displayName: lbEntry?.displayName ?? null,
+        volume24h: vol24h,
+        volume7d: vol7d,
+        volumeAll: volAll,
+        pnl24h: pnl24h,
+        pnl7d: pnl7d,
+        pnlAll: pnlAll,
+        tradeCount: fills.length,
+        accountValue: av,
+        topCoin,
+        firstTrade,
+      };
+    }),
+  );
+
+  return results
+    .filter((r): r is PromiseFulfilledResult<CoincessTraderStats> => r.status === "fulfilled")
+    .map((r) => r.value);
+}
+
 export async function fetchAllMarkets(): Promise<MarketInfo[]> {
   await loadPerpDexOffsets();
 

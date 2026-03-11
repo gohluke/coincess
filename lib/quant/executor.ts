@@ -1,6 +1,10 @@
 import type { OrderRequest, OrderResult } from "./types";
+import { BRAND_CONFIG } from "@/lib/brand.config";
 
 const HL_API = "https://api.hyperliquid.xyz";
+
+const BUILDER_ADDRESS = BRAND_CONFIG.builder.address;
+const BUILDER_FEE = BRAND_CONFIG.builder.fee;
 
 function getCredentials() {
   const privateKey = process.env.HL_API_PRIVATE_KEY;
@@ -20,7 +24,40 @@ async function createExchangeClient() {
   return new ExchangeClient({ wallet, transport });
 }
 
+function isWhitelisted(addr: string): boolean {
+  return BRAND_CONFIG.builder.feeWhitelist.some(
+    (a) => a.toLowerCase() === addr.toLowerCase(),
+  );
+}
+
+function getBuilderOpt(accountAddr: string) {
+  if (isWhitelisted(accountAddr)) return undefined;
+  return { b: BUILDER_ADDRESS, f: BUILDER_FEE };
+}
+
+async function trackBotTrade(accountAddr: string) {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return;
+    const addr = accountAddr.toLowerCase();
+    const now = Date.now();
+    await fetch(`${url}/rest/v1/rpc/upsert_coincess_trader`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({ p_address: addr, p_now: now }),
+    });
+  } catch {
+    // non-critical; don't block trading
+  }
+}
+
 export async function placeOrder(req: OrderRequest): Promise<OrderResult> {
+  const { accountAddress } = getCredentials();
   try {
     const exchange = await createExchangeClient();
     const result = await exchange.order({
@@ -35,6 +72,7 @@ export async function placeOrder(req: OrderRequest): Promise<OrderResult> {
         },
       ],
       grouping: "na",
+      builder: getBuilderOpt(accountAddress),
     });
 
     const status = (result as Record<string, unknown>)?.response as
@@ -44,10 +82,16 @@ export async function placeOrder(req: OrderRequest): Promise<OrderResult> {
     if (!s) return { success: false, error: "No status in response" };
 
     const filled = s.filled as { avgPx: string; oid: number } | undefined;
-    if (filled) return { success: true, avgPx: filled.avgPx, oid: filled.oid };
+    if (filled) {
+      trackBotTrade(accountAddress);
+      return { success: true, avgPx: filled.avgPx, oid: filled.oid };
+    }
 
     const resting = s.resting as { oid: number } | undefined;
-    if (resting) return { success: true, avgPx: req.price, oid: resting.oid };
+    if (resting) {
+      trackBotTrade(accountAddress);
+      return { success: true, avgPx: req.price, oid: resting.oid };
+    }
 
     if (s.error) return { success: false, error: String(s.error) };
     return { success: false, error: "Unknown order response" };

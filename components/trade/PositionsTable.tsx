@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder } from "@/lib/hyperliquid/signing";
+import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder, STALE_AGENT_ERROR } from "@/lib/hyperliquid/signing";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { toast } from "sonner";
@@ -460,241 +460,173 @@ export function PositionsTable() {
             No open orders
           </div>
         ) : (
-          <>
-            {/* Desktop table — Hyperliquid-style */}
-            <div className="hidden md:block overflow-x-auto flex-1">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-[10px] text-[#848e9c] uppercase tracking-wider">
-                    <th className="text-left px-4 py-2 font-medium">Time</th>
-                    <th className="text-left px-3 py-2 font-medium">Type</th>
-                    <th className="text-left px-3 py-2 font-medium">Coin</th>
-                    <th className="text-left px-3 py-2 font-medium">Direction</th>
-                    <th className="text-right px-3 py-2 font-medium">Size</th>
-                    <th className="text-right px-3 py-2 font-medium">Original Size</th>
-                    <th className="text-right px-3 py-2 font-medium">Order Value</th>
-                    <th className="text-right px-3 py-2 font-medium">Price</th>
-                    <th className="text-center px-3 py-2 font-medium">Reduce Only</th>
-                    <th className="text-left px-3 py-2 font-medium">Trigger Conditions</th>
-                    <th className="text-center px-3 py-2 font-medium">TP/SL</th>
-                    <th className="text-right px-4 py-2 font-medium">
-                      <button
-                        onClick={handleCancelAll}
-                        disabled={cancellingAll}
-                        className="text-[#f6465d] hover:text-[#f6465d]/80 transition-colors disabled:opacity-50 text-[10px] font-medium"
-                      >
-                        {cancellingAll ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Cancel All"}
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {openOrders.map((o) => {
-                    const isBuy = o.side === "B";
-                    const orderValue = parseFloat(o.origSz) * parseFloat(o.limitPx);
-                    const orderDate = new Date(o.timestamp);
-                    const timeStr = `${orderDate.getMonth() + 1}/${orderDate.getDate()}/${orderDate.getFullYear()} - ${orderDate.toLocaleTimeString("en-US", { hour12: false })}`;
+          <div className="flex-1 overflow-y-auto">
+            {/* Cancel All header */}
+            {openOrders.length > 1 && (
+              <div className="px-3 sm:px-4 py-2 flex justify-end border-b border-[#2a2e39]">
+                <button
+                  onClick={handleCancelAll}
+                  disabled={cancellingAll}
+                  className="text-[#f6465d] text-[11px] font-medium hover:text-[#f6465d]/80 transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {cancellingAll && <Loader2 className="h-3 w-3 animate-spin" />}
+                  Cancel All
+                </button>
+              </div>
+            )}
 
-                    return (
-                      <tr key={o.oid} className="hover:bg-[#1a1d26] border-b border-[#1a1d26]">
-                        <td className="px-4 py-2 text-[#848e9c] whitespace-nowrap">{timeStr}</td>
-                        <td className="px-3 py-2 text-[#eaecef]">{o.isTrigger ? "Trigger" : "Limit"}</td>
-                        <td className="px-3 py-2 text-white font-medium">{o.coin}</td>
-                        <td className={`px-3 py-2 font-medium ${isBuy ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          {isBuy ? "Long" : "Short"}
-                        </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">
-                          {editingOrder?.oid === o.oid && editingOrder.field === "size" ? (
-                            <input
-                              autoFocus
-                              type="text"
-                              inputMode="decimal"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleModifyOrder(o, "size", editValue);
-                                if (e.key === "Escape") setEditingOrder(null);
-                              }}
-                              onBlur={() => handleModifyOrder(o, "size", editValue)}
-                              className="w-20 bg-[#1a1d26] border border-brand rounded px-1.5 py-0.5 text-xs text-white text-right focus:outline-none"
-                            />
-                          ) : (
-                            <span
-                              className="inline-flex items-center gap-1 cursor-pointer group"
-                              onClick={() => startEditing(o.oid, "size", o.sz)}
-                            >
-                              {modifyingOid === o.oid ? <Loader2 className="h-3 w-3 animate-spin" /> : o.sz}
-                              <Pencil className="h-2.5 w-2.5 text-[#848e9c] opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </span>
-                          )}
-                        </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">{o.origSz}</td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">
-                          {orderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC
-                        </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">
-                          {editingOrder?.oid === o.oid && editingOrder.field === "price" ? (
-                            <input
-                              autoFocus
-                              type="text"
-                              inputMode="decimal"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleModifyOrder(o, "price", editValue);
-                                if (e.key === "Escape") setEditingOrder(null);
-                              }}
-                              onBlur={() => handleModifyOrder(o, "price", editValue)}
-                              className="w-24 bg-[#1a1d26] border border-brand rounded px-1.5 py-0.5 text-xs text-white text-right focus:outline-none"
-                            />
-                          ) : (
-                            <span
-                              className="inline-flex items-center gap-1 cursor-pointer group"
-                              onClick={() => startEditing(o.oid, "price", o.limitPx)}
-                            >
-                              {parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                              <Pencil className="h-2.5 w-2.5 text-[#848e9c] opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </span>
-                          )}
-                        </td>
-                        <td className="text-center px-3 py-2 text-[#848e9c]">{o.reduceOnly ? "Yes" : "No"}</td>
-                        <td className="px-3 py-2 text-[#848e9c]">
-                          {o.isTrigger && o.triggerPx !== "0" ? `${o.triggerCondition} ${parseFloat(o.triggerPx).toLocaleString()}` : "N/A"}
-                        </td>
-                        <td className="text-center px-3 py-2 text-[#848e9c]">
-                          {o.isPositionTpsl ? (o.triggerCondition?.includes("gt") ? "TP" : "SL") : "--"}
-                        </td>
-                        <td className="text-right px-4 py-2">
-                          <button
-                            onClick={() => handleCancelOrder(o.coin, o.oid)}
-                            disabled={cancellingOid === o.oid}
-                            className="text-[#f6465d] hover:text-[#f6465d]/80 text-[10px] font-medium transition-colors disabled:opacity-50"
-                          >
-                            {cancellingOid === o.oid ? <Loader2 className="h-3 w-3 animate-spin" /> : "Cancel"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile card layout for orders — Hyperliquid-style */}
-            <div className="md:hidden flex-1 overflow-y-auto divide-y divide-[#2a2e39]">
-              {/* Cancel All header */}
-              {openOrders.length > 1 && (
-                <div className="px-3 py-2 flex justify-end">
-                  <button
-                    onClick={handleCancelAll}
-                    disabled={cancellingAll}
-                    className="text-[#f6465d] text-[11px] font-medium hover:text-[#f6465d]/80 transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {cancellingAll && <Loader2 className="h-3 w-3 animate-spin" />}
-                    Cancel All
-                  </button>
-                </div>
-              )}
+            {/* Card-based order display (like Positions) */}
+            <div className="space-y-2 p-2 sm:p-3">
               {openOrders.map((o) => {
                 const isBuy = o.side === "B";
                 const orderValue = parseFloat(o.origSz) * parseFloat(o.limitPx);
                 const orderDate = new Date(o.timestamp);
-                const timeStr = `${orderDate.getMonth() + 1}/${orderDate.getDate()} ${orderDate.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" })}`;
+                const durationMs = Date.now() - o.timestamp;
+                const durationStr = durationMs < 60_000 ? `${Math.floor(durationMs / 1000)}s`
+                  : durationMs < 3_600_000 ? `${Math.floor(durationMs / 60_000)}m`
+                  : durationMs < 86_400_000 ? `${Math.floor(durationMs / 3_600_000)}h ${Math.floor((durationMs % 3_600_000) / 60_000)}m`
+                  : `${Math.floor(durationMs / 86_400_000)}d ${Math.floor((durationMs % 86_400_000) / 3_600_000)}h`;
+                const market = markets.find((m) => m.name === o.coin);
+                const markPx = market ? parseFloat(market.markPx) : 0;
+                const distPct = markPx > 0 ? ((parseFloat(o.limitPx) - markPx) / markPx * 100) : 0;
 
                 return (
-                  <div key={o.oid} className="px-3 py-3">
-                    <div className="flex items-center justify-between mb-1.5">
+                  <div key={o.oid} className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                    {/* Header row */}
+                    <div className="flex items-center justify-between px-3 sm:px-4 pt-3 pb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-semibold text-sm">{o.coin}</span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                          isBuy ? "bg-[#0ecb81]/15 text-[#0ecb81]" : "bg-[#f6465d]/15 text-[#f6465d]"
-                        }`}>
-                          {isBuy ? "Long" : "Short"}
-                        </span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#848e9c]">
-                          {o.isTrigger ? "Trigger" : "Limit"}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleCancelOrder(o.coin, o.oid)}
-                        disabled={cancellingOid === o.oid}
-                        className="text-[#f6465d] text-[10px] font-medium hover:text-[#f6465d]/80 transition-colors disabled:opacity-50"
-                      >
-                        {cancellingOid === o.oid ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Cancel"}
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-4 gap-x-2 gap-y-1.5 text-[10px]">
-                      <div>
-                        <div className="text-[#848e9c]">Price</div>
-                        {editingOrder?.oid === o.oid && editingOrder.field === "price" ? (
-                          <input
-                            autoFocus
-                            type="text"
-                            inputMode="decimal"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleModifyOrder(o, "price", editValue);
-                              if (e.key === "Escape") setEditingOrder(null);
-                            }}
-                            onBlur={() => handleModifyOrder(o, "price", editValue)}
-                            className="w-full bg-[#1a1d26] border border-brand rounded px-1 py-0.5 text-[10px] text-white focus:outline-none"
-                          />
-                        ) : (
-                          <div
-                            className="text-[#eaecef] flex items-center gap-0.5 cursor-pointer"
-                            onClick={() => startEditing(o.oid, "price", o.limitPx)}
-                          >
-                            {parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                            <Pencil className="h-2 w-2 text-[#848e9c]" />
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                              isBuy ? "bg-[#0ecb81]/20 text-[#0ecb81]" : "bg-[#f6465d]/20 text-[#f6465d]"
+                            }`}>
+                              {isBuy ? "BUY" : "SELL"}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#c0c4cc] font-medium">
+                              {o.isTrigger ? "Trigger" : "Limit"}
+                            </span>
+                            {o.reduceOnly && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f0b90b]/10 text-[#f0b90b] font-medium">
+                                Reduce Only
+                              </span>
+                            )}
+                            {o.isPositionTpsl && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand/15 text-brand font-medium">
+                                {o.triggerCondition?.includes("gt") ? "TP" : "SL"}
+                              </span>
+                            )}
                           </div>
-                        )}
+                          <p className="text-sm font-semibold text-white">{o.coin} <span className="text-[10px] text-[#848e9c] font-normal">{o.coin}-USDC</span></p>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-[#848e9c]">Size</div>
-                        {editingOrder?.oid === o.oid && editingOrder.field === "size" ? (
-                          <input
-                            autoFocus
-                            type="text"
-                            inputMode="decimal"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleModifyOrder(o, "size", editValue);
-                              if (e.key === "Escape") setEditingOrder(null);
-                            }}
-                            onBlur={() => handleModifyOrder(o, "size", editValue)}
-                            className="w-full bg-[#1a1d26] border border-brand rounded px-1 py-0.5 text-[10px] text-white focus:outline-none"
-                          />
-                        ) : (
-                          <div
-                            className="text-[#eaecef] flex items-center gap-0.5 cursor-pointer"
-                            onClick={() => startEditing(o.oid, "size", o.sz)}
-                          >
-                            {o.sz}
-                            <Pencil className="h-2 w-2 text-[#848e9c]" />
+                      <div className="text-right flex items-center gap-3">
+                        <div>
+                          <div className="flex items-center gap-1 justify-end">
+                            {/* Editable size */}
+                            {editingOrder?.oid === o.oid && editingOrder.field === "size" ? (
+                              <input
+                                autoFocus
+                                type="text"
+                                inputMode="decimal"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleModifyOrder(o, "size", editValue);
+                                  if (e.key === "Escape") setEditingOrder(null);
+                                }}
+                                onBlur={() => handleModifyOrder(o, "size", editValue)}
+                                className="w-20 bg-[#1a1d26] border border-brand rounded px-1.5 py-0.5 text-xs text-white text-right focus:outline-none"
+                              />
+                            ) : (
+                              <span
+                                className="text-sm text-white font-medium inline-flex items-center gap-1 cursor-pointer group"
+                                onClick={() => startEditing(o.oid, "size", o.sz)}
+                              >
+                                {modifyingOid === o.oid ? <Loader2 className="h-3 w-3 animate-spin" /> : o.sz}
+                                <Pencil className="h-2.5 w-2.5 text-[#848e9c] opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </span>
+                            )}
+                            <span className="text-[10px] text-[#848e9c]">@</span>
+                            {/* Editable price */}
+                            {editingOrder?.oid === o.oid && editingOrder.field === "price" ? (
+                              <input
+                                autoFocus
+                                type="text"
+                                inputMode="decimal"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleModifyOrder(o, "price", editValue);
+                                  if (e.key === "Escape") setEditingOrder(null);
+                                }}
+                                onBlur={() => handleModifyOrder(o, "price", editValue)}
+                                className="w-24 bg-[#1a1d26] border border-brand rounded px-1.5 py-0.5 text-xs text-white text-right focus:outline-none"
+                              />
+                            ) : (
+                              <span
+                                className="text-sm text-white font-medium inline-flex items-center gap-1 cursor-pointer group"
+                                onClick={() => startEditing(o.oid, "price", o.limitPx)}
+                              >
+                                ${parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                <Pencil className="h-2.5 w-2.5 text-[#848e9c] opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="text-[#848e9c]">Orig. Size</div>
-                        <div className="text-[#eaecef]">{o.origSz}</div>
-                      </div>
-                      <div>
-                        <div className="text-[#848e9c]">Value</div>
-                        <div className="text-[#eaecef]">{orderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                          <p className="text-[10px] text-[#848e9c]">
+                            {distPct !== 0 && (
+                              <span className={distPct > 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}>
+                                {distPct > 0 ? "+" : ""}{distPct.toFixed(2)}% from mark
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleCancelOrder(o.coin, o.oid)}
+                          disabled={cancellingOid === o.oid}
+                          className="text-[#f6465d] hover:text-[#f6465d]/80 text-[10px] font-medium transition-colors disabled:opacity-50 px-2 py-1 rounded border border-[#f6465d]/20 hover:border-[#f6465d]/40"
+                        >
+                          {cancellingOid === o.oid ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 mt-1.5 text-[10px] text-[#848e9c]">
-                      <span>{timeStr}</span>
-                      {o.reduceOnly && <span className="text-[#f0b90b]">Reduce Only</span>}
-                      {o.isPositionTpsl && <span className="text-brand">{o.triggerCondition?.includes("gt") ? "TP" : "SL"}</span>}
+
+                    {/* Detail row — matches Positions layout */}
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
+                      <div className="bg-[#141620] px-3 py-2">
+                        <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Order Price</p>
+                        <p className="text-[11px] font-semibold text-white">${parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 4 })}</p>
+                      </div>
+                      <div className="bg-[#141620] px-3 py-2">
+                        <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Mark Price</p>
+                        <p className="text-[11px] font-semibold text-white">${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}</p>
+                      </div>
+                      <div className="bg-[#141620] px-3 py-2">
+                        <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Order Value</p>
+                        <p className="text-[11px] font-semibold text-white">${orderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                      </div>
+                      <div className="bg-[#141620] px-3 py-2">
+                        <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Orig. Size</p>
+                        <p className="text-[11px] font-semibold text-white">{o.origSz}</p>
+                      </div>
+                      <div className="bg-[#141620] px-3 py-2">
+                        <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Placed</p>
+                        <p className="text-[11px] font-semibold text-white">
+                          {orderDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                        <p className="text-[9px] text-[#5a6070]">
+                          {orderDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        </p>
+                      </div>
+                      <div className="bg-[#141620] px-3 py-2">
+                        <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Duration</p>
+                        <p className="text-[11px] font-semibold text-[#f0b90b]">{durationStr}</p>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </>
+          </div>
         )
       )}
 

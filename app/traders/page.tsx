@@ -19,6 +19,9 @@ import {
   TrendingUp,
   TrendingDown,
   Loader2,
+  Flame,
+  Zap,
+  ArrowRightLeft,
 } from "lucide-react";
 import {
   fetchCombinedClearinghouseState,
@@ -28,6 +31,7 @@ import {
   fetchUserFunding,
   fetchLeaderboard,
   fetchSpotClearinghouseState,
+  fetchCoincessTraderStats,
 } from "@/lib/hyperliquid/api";
 import type {
   ClearinghouseState,
@@ -37,8 +41,10 @@ import type {
   Fill,
   FundingPayment,
 } from "@/lib/hyperliquid/types";
-import type { LeaderboardEntry } from "@/lib/hyperliquid/api";
+import type { LeaderboardEntry, CoincessTraderStats } from "@/lib/hyperliquid/api";
 import type { SpotClearinghouseState } from "@/lib/hyperliquid/types";
+import { getTrackedAddresses, starTrader, unstarTrader, getStarredTraders } from "@/lib/coincess/tracker";
+import { useWallet } from "@/hooks/useWallet";
 
 function stripPrefix(coin: string): string {
   const idx = coin.indexOf(":");
@@ -104,6 +110,7 @@ export default function TradersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const addrParam = searchParams.get("address") ?? "";
+  const { address: myAddress } = useWallet();
 
   const [searchInput, setSearchInput] = useState(addrParam);
   const [activeAddress, setActiveAddress] = useState(addrParam);
@@ -122,7 +129,11 @@ export default function TradersPage() {
   const [sortKey, setSortKey] = useState<SortKey>("pnl");
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("allTime");
   const [lbSearch, setLbSearch] = useState("");
-  const [mainTab, setMainTab] = useState<"leaderboard" | "scanner">("leaderboard");
+  const [mainTab, setMainTab] = useState<"coincess" | "leaderboard" | "scanner">("coincess");
+
+  const [coincessStats, setCoincessStats] = useState<CoincessTraderStats[]>([]);
+  const [coincessLoading, setCoincessLoading] = useState(true);
+  const [coincessSort, setCoincessSort] = useState<"volume" | "pnl" | "trades">("volume");
 
   const [scanCoin, setScanCoin] = useState("");
   const [scanResults, setScanResults] = useState<ScanResult[]>([]);
@@ -130,13 +141,72 @@ export default function TradersPage() {
   const [scanProgress, setScanProgress] = useState({ done: 0, total: 0 });
   const [allMarkets, setAllMarkets] = useState<MarketInfo[]>([]);
 
+  const [starred, setStarred] = useState<Set<string>>(new Set());
+
+  // Load starred traders when wallet connects
+  useEffect(() => {
+    if (!myAddress) return;
+    getStarredTraders(myAddress).then((addrs) => setStarred(new Set(addrs)));
+  }, [myAddress]);
+
+  const toggleStar = useCallback(async (traderAddr: string) => {
+    if (!myAddress) return;
+    const key = traderAddr.toLowerCase();
+    setStarred((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+        unstarTrader(myAddress, traderAddr);
+      } else {
+        next.add(key);
+        starTrader(myAddress, traderAddr);
+      }
+      return next;
+    });
+  }, [myAddress]);
+
+  // Entry times for positions on trader profile (derived from fills)
+  const positionEntryTimes = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!fills.length) return map;
+    const sorted = [...fills].sort((a, b) => a.time - b.time);
+    for (const f of sorted) {
+      const coin = stripPrefix(f.coin).toUpperCase();
+      if (!map.has(coin)) map.set(coin, f.time);
+    }
+    return map;
+  }, [fills]);
+
   useEffect(() => {
     fetchLeaderboard()
-      .then(setLeaderboard)
-      .catch(console.error)
+      .then((lb) => {
+        setLeaderboard(lb);
+        // Load Coincess trader stats once we have the leaderboard for display names
+        const addresses = getTrackedAddresses();
+        if (addresses.length > 0) {
+          fetchCoincessTraderStats(addresses, lb)
+            .then(setCoincessStats)
+            .catch(console.error)
+            .finally(() => setCoincessLoading(false));
+        } else {
+          setCoincessLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setCoincessLoading(false);
+      })
       .finally(() => setLbLoading(false));
     fetchAllMarkets().then(setAllMarkets).catch(console.error);
   }, []);
+
+  const sortedCoincess = useMemo(() => {
+    return [...coincessStats].sort((a, b) => {
+      if (coincessSort === "pnl") return b.pnlAll - a.pnlAll;
+      if (coincessSort === "trades") return b.tradeCount - a.tradeCount;
+      return b.volumeAll - a.volumeAll;
+    });
+  }, [coincessStats, coincessSort]);
 
   const sortedLb = useMemo(() => {
     let filtered = leaderboard;
@@ -412,12 +482,20 @@ export default function TradersPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-1 bg-[#141620] border border-[#2a2e3e] rounded-lg p-0.5 w-fit">
               <button
+                onClick={() => setMainTab("coincess")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  mainTab === "coincess" ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
+                }`}
+              >
+                <Flame className="h-3.5 w-3.5" /> Coincess
+              </button>
+              <button
                 onClick={() => setMainTab("leaderboard")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   mainTab === "leaderboard" ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
                 }`}
               >
-                <Trophy className="h-3.5 w-3.5" /> Leaderboard
+                <Trophy className="h-3.5 w-3.5" /> Hyperliquid
               </button>
               <button
                 onClick={() => setMainTab("scanner")}
@@ -425,9 +503,145 @@ export default function TradersPage() {
                   mainTab === "scanner" ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
                 }`}
               >
-                <Crosshair className="h-3.5 w-3.5" /> Contract Scanner
+                <Crosshair className="h-3.5 w-3.5" /> Scanner
               </button>
             </div>
+
+            {/* ── Coincess Traders ── */}
+            {mainTab === "coincess" && (
+              <>
+                {coincessLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <RefreshCw className="h-5 w-5 animate-spin text-[#848e9c]" />
+                  </div>
+                ) : sortedCoincess.length === 0 ? (
+                  /* ── Empty state ── */
+                  <div className="relative overflow-hidden rounded-2xl border border-[#2a2e3e] bg-gradient-to-br from-[#141620] via-[#141620] to-[#1a1020]">
+                    <div className="absolute inset-0 opacity-[0.03]" style={{
+                      backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+                      backgroundSize: "24px 24px",
+                    }} />
+                    <div className="relative flex flex-col items-center justify-center py-20 px-6 text-center">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 blur-2xl bg-brand/20 rounded-full scale-150" />
+                        <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-brand/20 to-brand/5 border border-brand/20 flex items-center justify-center">
+                          <Trophy className="h-9 w-9 text-brand" />
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-bold text-white mb-2">
+                        The Leaderboard Awaits
+                      </h3>
+                      <p className="text-sm text-[#848e9c] max-w-md mb-8 leading-relaxed">
+                        Be among the first traders on Coincess. Top volume and PnL traders
+                        earn rewards, recognition, and future CNC token airdrops.
+                      </p>
+                      <div className="grid grid-cols-3 gap-4 w-full max-w-sm mb-8">
+                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4 border border-[#2a2e3e]/50">
+                          <div className="text-2xl mb-1">🥇</div>
+                          <p className="text-[10px] text-[#848e9c] uppercase tracking-wider">Top Volume</p>
+                          <p className="text-xs text-white font-semibold mt-1">Unclaimed</p>
+                        </div>
+                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4 border border-[#2a2e3e]/50">
+                          <div className="text-2xl mb-1">📈</div>
+                          <p className="text-[10px] text-[#848e9c] uppercase tracking-wider">Top PnL</p>
+                          <p className="text-xs text-white font-semibold mt-1">Unclaimed</p>
+                        </div>
+                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4 border border-[#2a2e3e]/50">
+                          <div className="text-2xl mb-1">⚡</div>
+                          <p className="text-[10px] text-[#848e9c] uppercase tracking-wider">Most Active</p>
+                          <p className="text-xs text-white font-semibold mt-1">Unclaimed</p>
+                        </div>
+                      </div>
+                      <Link
+                        href="/trade/BTC"
+                        className="px-6 py-2.5 bg-brand text-white rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors"
+                      >
+                        Start Trading
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Coincess leaderboard with data ── */
+                  <>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
+                        <Flame className="h-3.5 w-3.5 text-brand" />
+                        Coincess Traders
+                        <span className="text-[10px] text-[#848e9c] font-normal ml-1">
+                          {sortedCoincess.length} trader{sortedCoincess.length !== 1 ? "s" : ""}
+                        </span>
+                      </h2>
+                      <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
+                        {([["volume", "Volume"], ["pnl", "P&L"], ["trades", "Trades"]] as [typeof coincessSort, string][]).map(([k, label]) => (
+                          <button
+                            key={k}
+                            onClick={() => setCoincessSort(k)}
+                            className={`px-3 py-1.5 text-[10px] font-medium transition-colors ${
+                              coincessSort === k ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                      <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+                        <span className="col-span-1">#</span>
+                        <span className="col-span-3">Trader</span>
+                        <span className="col-span-2 text-right">Volume</span>
+                        <span className="col-span-2 text-right">P&L</span>
+                        <span className="col-span-1 text-right">Trades</span>
+                        <span className="col-span-1 text-right">Top Coin</span>
+                        <span className="col-span-2 text-right">Account Value</span>
+                      </div>
+                      {sortedCoincess.map((trader, i) => {
+                        const isTop3 = i < 3;
+                        const isStarred = starred.has(trader.address.toLowerCase());
+                        return (
+                          <div
+                            key={trader.address}
+                            className="w-full grid grid-cols-12 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors text-left gap-y-1"
+                          >
+                            <span className={`col-span-1 font-bold flex items-center gap-1 ${isTop3 ? "text-amber-400" : "text-[#848e9c]"}`}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); toggleStar(trader.address); }}
+                                className="shrink-0"
+                              >
+                                <Star className={`h-3 w-3 transition-colors ${isStarred ? "fill-amber-400 text-amber-400" : "text-[#2a2e3e] hover:text-[#848e9c]"}`} />
+                              </button>
+                              {i + 1}
+                            </span>
+                            <button onClick={() => selectTrader(trader.address)} className="col-span-5 sm:col-span-3 text-left">
+                              <span className="text-white font-medium text-xs truncate block">
+                                {trader.displayName || shortAddr(trader.address)}
+                              </span>
+                              <span className="text-[9px] text-[#848e9c] font-mono">{shortAddr(trader.address)}</span>
+                            </button>
+                            <button onClick={() => selectTrader(trader.address)} className="col-span-3 sm:col-span-2 text-right text-white font-medium">
+                              {formatUsd(trader.volumeAll)}
+                            </button>
+                            <button onClick={() => selectTrader(trader.address)} className={`col-span-3 sm:col-span-2 text-right font-bold ${trader.pnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                              {trader.pnlAll >= 0 ? "+" : ""}{formatUsd(trader.pnlAll)}
+                            </button>
+                            <button onClick={() => selectTrader(trader.address)} className="hidden sm:block col-span-1 text-right text-[#848e9c]">
+                              {trader.tradeCount.toLocaleString()}
+                            </button>
+                            <button onClick={() => selectTrader(trader.address)} className="hidden sm:block col-span-1 text-right text-white text-[10px]">
+                              {trader.topCoin ?? "–"}
+                            </button>
+                            <button onClick={() => selectTrader(trader.address)} className="hidden sm:block col-span-2 text-right text-white">
+                              {formatUsd(trader.accountValue)}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
             {/* ── Contract Scanner ── */}
             {mainTab === "scanner" && (
@@ -647,34 +861,40 @@ export default function TradersPage() {
                       const av = parseFloat(entry.accountValue);
                       const name = entry.displayName || shortAddr(entry.ethAddress);
                       const isTop3 = i < 3;
+                      const isStarred = starred.has(entry.ethAddress.toLowerCase());
 
                       return (
-                        <button
+                        <div
                           key={entry.ethAddress}
-                          onClick={() => selectTrader(entry.ethAddress)}
                           className="w-full grid grid-cols-12 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors text-left gap-y-1"
                         >
-                          <span className={`col-span-1 font-bold ${isTop3 ? "text-amber-400" : "text-[#848e9c]"}`}>
+                          <span className={`col-span-1 font-bold flex items-center gap-1 ${isTop3 ? "text-amber-400" : "text-[#848e9c]"}`}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleStar(entry.ethAddress); }}
+                              className="shrink-0"
+                            >
+                              <Star className={`h-3 w-3 transition-colors ${isStarred ? "fill-amber-400 text-amber-400" : "text-[#2a2e3e] hover:text-[#848e9c]"}`} />
+                            </button>
                             {i + 1}
                           </span>
-                          <div className="col-span-5 sm:col-span-3">
+                          <button onClick={() => selectTrader(entry.ethAddress)} className="col-span-5 sm:col-span-3 text-left">
                             <span className="text-white font-medium text-xs truncate block">{name}</span>
                             <span className="text-[9px] text-[#848e9c] font-mono sm:hidden">{shortAddr(entry.ethAddress)}</span>
                             {entry.displayName && (
                               <span className="text-[9px] text-[#848e9c] font-mono hidden sm:block">{shortAddr(entry.ethAddress)}</span>
                             )}
-                          </div>
-                          <span className="col-span-2 text-right text-white hidden sm:block">{formatUsd(av)}</span>
-                          <span className={`col-span-3 sm:col-span-2 text-right font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          </button>
+                          <button onClick={() => selectTrader(entry.ethAddress)} className="col-span-2 text-right text-white hidden sm:block">{formatUsd(av)}</button>
+                          <button onClick={() => selectTrader(entry.ethAddress)} className={`col-span-3 sm:col-span-2 text-right font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                          </span>
-                          <span className={`col-span-3 sm:col-span-2 text-right font-medium ${roi >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          </button>
+                          <button onClick={() => selectTrader(entry.ethAddress)} className={`col-span-3 sm:col-span-2 text-right font-medium ${roi >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {roi >= 0 ? "+" : ""}{roi.toFixed(1)}%
-                          </span>
-                          <span className={`col-span-2 text-right hidden sm:block ${dayPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          </button>
+                          <button onClick={() => selectTrader(entry.ethAddress)} className={`col-span-2 text-right hidden sm:block ${dayPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                             {dayPnl >= 0 ? "+" : ""}{formatUsd(dayPnl)}
-                          </span>
-                        </button>
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -713,6 +933,17 @@ export default function TradersPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => toggleStar(activeAddress)}
+                    className="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1"
+                    style={{
+                      borderColor: starred.has(activeAddress.toLowerCase()) ? "rgb(251 191 36 / 0.3)" : "#2a2e3e",
+                      color: starred.has(activeAddress.toLowerCase()) ? "rgb(251 191 36)" : "#848e9c",
+                    }}
+                  >
+                    <Star className={`h-3 w-3 ${starred.has(activeAddress.toLowerCase()) ? "fill-amber-400" : ""}`} />
+                    {starred.has(activeAddress.toLowerCase()) ? "Starred" : "Star"}
+                  </button>
                   <button onClick={goBack} className="px-3 py-1.5 text-xs text-[#848e9c] border border-[#2a2e3e] rounded-lg hover:text-white hover:border-[#3a3e4e] transition-colors">
                     Back
                   </button>
@@ -873,11 +1104,13 @@ export default function TradersPage() {
                         const displayCoin = market?.displayName ?? bare;
                         const leverageType = pos.leverage.type === "cross" ? "Cross" : "Isolated";
                         const fundingRate = market ? parseFloat(market.funding) : 0;
+                        const entryTime = positionEntryTimes.get(bare.toUpperCase());
+                        const durationStr = entryTime ? formatDuration(Date.now() - entryTime) : null;
 
                         return (
-                          <Link key={pos.coin} href={`/trade/${market?.name ?? pos.coin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
+                          <div key={pos.coin} className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
                             <div className="flex items-center justify-between px-4 pt-3 pb-2">
-                              <div className="flex items-center gap-2.5">
+                              <Link href={`/trade/${market?.name ?? pos.coin}`} className="flex items-center gap-2.5">
                                 <div>
                                   <div className="flex items-center gap-1.5 mb-0.5">
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
@@ -889,28 +1122,40 @@ export default function TradersPage() {
                                   </div>
                                   <p className="text-sm font-semibold">{displayCoin} <span className="text-[10px] text-[#848e9c] font-normal">{bare}-USDC</span></p>
                                 </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="flex items-center gap-2 justify-end">
-                                  <span className={`text-sm font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                    {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                                  </span>
-                                  <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                    ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
-                                  </span>
+                              </Link>
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <div className="flex items-center gap-2 justify-end">
+                                    <span className={`text-sm font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                      {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                                    </span>
+                                    <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                      ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-[#848e9c]">{Math.abs(size).toFixed(size < 1 ? 5 : 2)} @ ${markPx.toLocaleString()}</p>
                                 </div>
-                                <p className="text-[10px] text-[#848e9c]">{Math.abs(size).toFixed(size < 1 ? 5 : 2)} @ ${markPx.toLocaleString()}</p>
+                                <Link
+                                  href={`/trade/${market?.name ?? pos.coin}?side=${isLong ? "buy" : "sell"}&size=${Math.abs(size)}&price=${entry}`}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium text-brand border border-brand/30 rounded-lg hover:bg-brand/10 transition-colors whitespace-nowrap"
+                                  title="Copy this trade"
+                                >
+                                  <ArrowRightLeft className="h-3 w-3" />
+                                  Copy Trade
+                                </Link>
                               </div>
                             </div>
-                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
+                            <div className="grid grid-cols-3 sm:grid-cols-8 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
                               <StatCell label="Entry Price" value={`$${entry.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
                               <StatCell label="Liq. Price" value={liqPx ? `$${liqPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"} color="text-amber-400" />
                               <StatCell label="Margin" value={formatUsd(margin)} />
                               <StatCell label="Notional" value={formatUsd(notional)} />
                               <StatCell label="Mark Price" value={`$${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
                               <StatCell label="Funding" value={`${(fundingRate * 100).toFixed(4)}%/h`} color={fundingRate >= 0 ? "text-emerald-400" : "text-red-400"} />
+                              <StatCell label="Opened" value={entryTime ? formatDateTime(entryTime) : "–"} />
+                              <StatCell label="Duration" value={durationStr ?? "–"} color="text-[#f0b90b]" />
                             </div>
-                          </Link>
+                          </div>
                         );
                       })}
                     </div>

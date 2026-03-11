@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Loader2, AlertTriangle } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction, signAndApproveAgent, signAndApproveBuilderFee, getSigningAddress, getStoredAgent, clearStoredAgent } from "@/lib/hyperliquid/signing";
+import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction, signAndApproveAgent, signAndApproveBuilderFee, getSigningAddress, getStoredAgent, clearStoredAgent, STALE_AGENT_ERROR } from "@/lib/hyperliquid/signing";
 import { useWallet } from "@/hooks/useWallet";
 import { FundingBanner } from "@/components/FundingBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -22,6 +23,8 @@ export function OrderForm() {
   } = useTradingStore();
 
   const { connect: walletConnect } = useWallet();
+  const searchParams = useSearchParams();
+  const copyTradeApplied = useRef(false);
 
   const [showTpsl, setShowTpsl] = useState(false);
   const [tpPrice, setTpPrice] = useState("");
@@ -32,6 +35,26 @@ export function OrderForm() {
   const [signingAddrLoaded, setSigningAddrLoaded] = useState(false);
   const [agentApproved, setAgentApproved] = useState(false);
   const [enablingTrading, setEnablingTrading] = useState(false);
+
+  // Pre-fill from copy trade query params (?side=buy&size=1.5&price=64300)
+  useEffect(() => {
+    if (copyTradeApplied.current) return;
+    const sideParam = searchParams.get("side");
+    const sizeParam = searchParams.get("size");
+    const priceParam = searchParams.get("price");
+    if (!sideParam && !sizeParam && !priceParam) return;
+    copyTradeApplied.current = true;
+
+    if (sideParam === "buy" || sideParam === "sell") {
+      setOrderSide(sideParam === "buy" ? "buy" : "sell");
+    }
+    if (sizeParam) setOrderSize(sizeParam);
+    if (priceParam) {
+      setOrderPrice(priceParam);
+      setOrderType("limit");
+    }
+    toast.info("Trade copied! Review and submit when ready.");
+  }, [searchParams, setOrderSide, setOrderSize, setOrderPrice, setOrderType]);
 
   useEffect(() => {
     if (address) {
@@ -177,12 +200,22 @@ export function OrderForm() {
         loadUserState();
       } else {
         const raw = result.error || "Order failed";
-        toast.error("Order Failed", { id: "order-submit", description: raw });
+        if (raw === STALE_AGENT_ERROR) {
+          setAgentApproved(false);
+          toast.error("Session Expired", { id: "order-submit", description: "Please enable trading again." });
+        } else {
+          toast.error("Order Failed", { id: "order-submit", description: raw });
+        }
         setFeedback({ type: "error", msg: raw });
       }
     } catch (err) {
       const raw = (err as Error).message;
-      toast.error("Order Failed", { id: "order-submit", description: raw });
+      if (raw === STALE_AGENT_ERROR) {
+        setAgentApproved(false);
+        toast.error("Session Expired", { id: "order-submit", description: "Please enable trading again." });
+      } else {
+        toast.error("Order Failed", { id: "order-submit", description: raw });
+      }
       setFeedback({ type: "error", msg: raw });
     } finally {
       setSubmitting(false);
