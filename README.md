@@ -171,12 +171,22 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Math reference section** — explains every formula used in the calculator
 
 ### Referral System
-- **Referral code: `COINCESS`** — [app.hyperliquid.xyz/join/COINCESS](https://app.hyperliquid.xyz/join/COINCESS)
+- **Referral code: `COINCESS`** — [coincess.com/join](https://coincess.com/join) (branded ghost link that redirects to Hyperliquid)
+- **Ghost link (`/join`)** — `coincess.com/join` redirects to `app.hyperliquid.xyz/join/COINCESS`, with custom OG/Twitter meta tags for social sharing ("Join Coincess — Get 4% Fee Discount")
 - **Auto-referral on Enable Trading** — after a user approves their agent, Coincess automatically sends a `setReferrer` call to Hyperliquid with code `COINCESS` (best-effort, non-blocking)
-- **Referral link in Deposit flow** — all external Hyperliquid links in the Deposit modal route through the referral URL
+- **Referral link in Deposit flow** — all external Hyperliquid links in the Deposit modal route through `/join`
 - **Referral invite banner** — "New to Hyperliquid? Join via Coincess" banner in the Deposit modal with 4% fee discount messaging
 - **Revenue**: Coincess earns 10% of referred users' trading fees; referred users get a 4% fee discount
 - **Privacy**: The referral code does not expose the creator's EVM address — Hyperliquid only shows the code name
+
+### Admin Dashboard (`/admin`)
+- **Wallet-gated access** — only addresses in `brand.config.ts` `admin.addresses` can view
+- **Overview metrics** — total traders, total orders, total volume, estimated revenue (1bp), builder wallet balance
+- **Activity metrics** — active traders (24h / 7d), new traders (24h / 7d)
+- **Bot fleet stats** — total bots, active bots, fleet volume, fleet PnL, fleet trade count
+- **Top traders table** — top 20 traders by Coincess volume with address, volume, order count, last active time
+- **Referral card** — one-click copy of the `coincess.com/join` referral link
+- **Not indexed** — `/admin` is excluded from robots.txt and sitemap
 
 ### Content & SEO
 - Landing page with crypto education content
@@ -223,6 +233,8 @@ npm run dev
 | [localhost:3000/chat](http://localhost:3000/chat) | AI trading coach |
 | [localhost:3000/traders](http://localhost:3000/traders) | Coincess leaderboard, Hyperliquid leaderboard, trader profiles, copy trade |
 | [localhost:3000/scanner](http://localhost:3000/scanner) | Contract scanner |
+| [localhost:3000/admin](http://localhost:3000/admin) | Admin dashboard (wallet-gated) |
+| [localhost:3000/join](http://localhost:3000/join) | Referral redirect → Hyperliquid |
 | [localhost:3000/settings](http://localhost:3000/settings) | Wallets, API keys, Dayze integration |
 
 ## Setup Checklist
@@ -496,12 +508,14 @@ The referral code `COINCESS` is configured in `lib/brand.config.ts`:
 referral: {
   code: "COINCESS",
   link: "https://app.hyperliquid.xyz/join/COINCESS",
+  ghostLink: "/join",
 }
 ```
 
 **How it works:**
+- **Share `coincess.com/join`** — branded ghost link with OG meta tags, redirects to Hyperliquid referral
 - When a new user clicks "Enable Trading", after agent approval succeeds, Coincess auto-sends `setReferrer` with code `COINCESS` to Hyperliquid
-- All external Hyperliquid links in the Deposit modal use the referral URL
+- All external Hyperliquid links in the Deposit modal use `/join`
 - You earn **10% of referred users' fees**, and they get a **4% discount**
 - The referral code creator's wallet address is **not exposed** — only the code name is visible
 

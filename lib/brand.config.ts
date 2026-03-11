@@ -48,6 +48,13 @@ export const BRAND_CONFIG = {
   referral: {
     code: "COINCESS",
     link: "https://app.hyperliquid.xyz/join/COINCESS",
+    ghostLink: "/join",
+  },
+
+  admin: {
+    addresses: [
+      "0x635b3b453de75e873a02b4898f615c5e8909070a",
+    ] as readonly string[],
   },
 
   builder: {

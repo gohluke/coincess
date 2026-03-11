@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/settings"],
+        disallow: ["/api/", "/settings", "/admin"],
       },
     ],
     sitemap: "https://coincess.com/sitemap.xml",

@@ -437,9 +437,7 @@ function MethodsStep({
 
       {/* Bridge from Arbitrum */}
       <a
-        href={BRAND_CONFIG.referral.link}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={BRAND_CONFIG.referral.ghostLink}
         className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
       >
         <div className="w-9 h-9 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
@@ -454,9 +452,7 @@ function MethodsStep({
 
       {/* Connect exchange */}
       <a
-        href={BRAND_CONFIG.referral.link}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={BRAND_CONFIG.referral.ghostLink}
         className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
       >
         <div className="w-9 h-9 rounded-full bg-[#848e9c]/10 flex items-center justify-center shrink-0">
@@ -475,9 +471,7 @@ function MethodsStep({
 
       {/* Referral invite banner */}
       <a
-        href={BRAND_CONFIG.referral.link}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={BRAND_CONFIG.referral.ghostLink}
         className="flex items-center gap-3 w-full p-3 rounded-xl bg-brand/5 border border-brand/20 hover:border-brand/40 transition-colors mt-2"
       >
         <span className="text-lg">🎁</span>
