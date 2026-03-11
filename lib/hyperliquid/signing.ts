@@ -18,16 +18,91 @@ const BUILDER_FEE_ENABLED = BRAND_CONFIG.builder.enabled;
 
 type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  isMetaMask?: boolean;
+  providers?: EthProvider[];
 };
 
 let _privyProvider: EthProvider | null = null;
+
+type SigningDebugEntry = {
+  at: string;
+  event: string;
+  data?: unknown;
+};
+
+function isSigningDebugEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return process.env.NODE_ENV !== "production" || window.localStorage.getItem("coincess:signing-debug") === "1";
+  } catch {
+    return process.env.NODE_ENV !== "production";
+  }
+}
+
+function pushSigningDebug(event: string, data?: unknown) {
+  if (!isSigningDebugEnabled() || typeof window === "undefined") return;
+  const entry: SigningDebugEntry = {
+    at: new Date().toISOString(),
+    event,
+    data,
+  };
+  try {
+    const globalWindow = window as typeof window & {
+      __coincessSigningDebug?: SigningDebugEntry[];
+      __coincessLastSigningPayload?: unknown;
+    };
+    const next = [...(globalWindow.__coincessSigningDebug ?? []), entry].slice(-30);
+    globalWindow.__coincessSigningDebug = next;
+    if (event.includes("payload")) {
+      globalWindow.__coincessLastSigningPayload = data;
+    }
+  } catch {
+    // Ignore storage/debug sink issues.
+  }
+  console.debug("[coincess signing]", entry);
+}
+
+function getErrorDetails(err: unknown) {
+  const candidate = err as {
+    code?: number | string;
+    message?: string;
+    shortMessage?: string;
+    details?: string;
+    data?: unknown;
+    cause?: unknown;
+  };
+
+  return {
+    code: candidate?.code,
+    message: candidate?.message ?? String(err),
+    shortMessage: candidate?.shortMessage,
+    details: candidate?.details,
+    data: candidate?.data,
+    cause: candidate?.cause,
+  };
+}
 
 export function setPrivyProvider(provider: EthProvider | null) {
   _privyProvider = provider;
 }
 
 function getNativeEthereum(): EthProvider | null {
-  return (window as unknown as { ethereum?: EthProvider }).ethereum ?? null;
+  const eth = (window as unknown as { ethereum?: EthProvider }).ethereum ?? null;
+  if (!eth) return null;
+  if (eth.providers?.length) {
+    const selected = eth.providers.find((provider) => provider.isMetaMask) ?? eth.providers[0] ?? eth;
+    pushSigningDebug("provider.selected", {
+      hasMultipleProviders: true,
+      selectedIsMetaMask: !!selected.isMetaMask,
+      providerCount: eth.providers.length,
+    });
+    return selected;
+  }
+  pushSigningDebug("provider.selected", {
+    hasMultipleProviders: false,
+    selectedIsMetaMask: !!eth.isMetaMask,
+  });
+  return eth;
 }
 
 function getProvider(): EthProvider {
@@ -57,7 +132,62 @@ function createHyperliquidWallet(preferredAddress?: string): AbstractViemJsonRpc
 function createNativeWallet(preferredAddress?: string): AbstractViemJsonRpcAccount {
   const eth = getNativeEthereum();
   if (!eth) throw new Error("No browser wallet detected. Please install MetaMask.");
-  return makeWalletAdapter(eth, preferredAddress);
+  return {
+    async getAddresses() {
+      const addr = await resolveAddressVia(eth, preferredAddress);
+      return [addr] as `0x${string}`[];
+    },
+
+    async getChainId() {
+      const chainId = (await eth.request({ method: "eth_chainId" })) as string;
+      return Number(chainId);
+    },
+
+    async signTypedData(params) {
+      const addr = await resolveAddressVia(eth, preferredAddress);
+
+      // The SDK includes EIP712Domain in params.types, but MetaMask's
+      // eth_signTypedData_v4 auto-derives it from the domain object.
+      // Passing both causes MetaMask to error or hang. Strip it.
+      const { EIP712Domain: _, ...typesWithoutDomain } = params.types as Record<string, unknown>;
+
+      const payload = JSON.stringify({
+        domain: params.domain,
+        types: typesWithoutDomain,
+        primaryType: params.primaryType,
+        message: params.message,
+      });
+      pushSigningDebug("native.signTypedData.payload", {
+        address: addr,
+        domain: params.domain,
+        primaryType: params.primaryType,
+        typesStripped: Object.keys(typesWithoutDomain),
+        message: params.message,
+      });
+
+      let result: unknown;
+      try {
+        result = await eth.request({
+          method: "eth_signTypedData_v4",
+          params: [addr, payload],
+        });
+      } catch (err) {
+        pushSigningDebug("native.signTypedData.error", {
+          address: addr,
+          chainId: await eth.request({ method: "eth_chainId" }).catch(() => "unknown"),
+          error: getErrorDetails(err),
+        });
+        throw err;
+      }
+
+      pushSigningDebug("native.signTypedData.success", {
+        address: addr,
+        signaturePreview: typeof result === "string" ? `${result.slice(0, 10)}...${result.slice(-8)}` : result,
+      });
+
+      return result as `0x${string}`;
+    },
+  };
 }
 
 function makeWalletAdapter(provider: EthProvider, preferredAddress?: string): AbstractViemJsonRpcAccount {
@@ -74,10 +204,14 @@ function makeWalletAdapter(provider: EthProvider, preferredAddress?: string): Ab
 
     async signTypedData(params) {
       const addr = await resolveAddressVia(provider, preferredAddress);
+      const domainChainId = params.domain?.chainId;
+      const signingChain = domainChainId != null
+        ? { ...arbitrum, id: Number(domainChainId) }
+        : arbitrum;
 
       const client = createWalletClient({
         account: addr as `0x${string}`,
-        chain: arbitrum,
+        chain: signingChain,
         transport: custom(provider),
       });
 
@@ -102,10 +236,12 @@ async function resolveAddressVia(provider: EthProvider, preferredAddress?: strin
 }
 
 /**
- * Switch MetaMask to Arbitrum One. If the chain isn't added yet, add it.
- * Best-effort -- doesn't throw on failure so the signing flow can continue.
+ * Switch MetaMask to Arbitrum One and verify the active chain afterwards.
+ * User-signed Hyperliquid approvals still sign with domain chainId 0x66eee,
+ * but the wallet UX should be connected to Arbitrum like based.one.
  */
 async function switchToArbitrum(provider: EthProvider): Promise<void> {
+  pushSigningDebug("chain.switch.start");
   try {
     await provider.request({
       method: "wallet_switchEthereumChain",
@@ -124,8 +260,22 @@ async function switchToArbitrum(provider: EthProvider): Promise<void> {
             blockExplorerUrls: ["https://arbiscan.io"],
           }],
         });
-      } catch { /* user declined adding the chain */ }
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0xa4b1" }],
+        });
+      } catch {
+        throw new Error("Please switch MetaMask to Arbitrum One to enable trading.");
+      }
+    } else {
+      throw new Error("Please switch MetaMask to Arbitrum One to enable trading.");
     }
+  }
+
+  const chainId = (await provider.request({ method: "eth_chainId" })) as string;
+  pushSigningDebug("chain.switch.done", { chainId });
+  if (chainId !== "0xa4b1") {
+    throw new Error("Please switch MetaMask to Arbitrum One to enable trading.");
   }
 }
 
@@ -229,16 +379,19 @@ export async function signAndApproveAgent(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const nativeEth = getNativeEthereum();
+    if (!nativeEth) {
+      return {
+        success: false,
+        error: "Enable Trading requires MetaMask or another injected wallet connected on Arbitrum One.",
+      };
+    }
+    await switchToArbitrum(nativeEth);
+
     // Use native MetaMask directly, not Privy's wrapper, so the signing
     // popup goes straight to MetaMask on Arbitrum (matching based.one UX).
-    const nativeEth = getNativeEthereum();
-    if (nativeEth) {
-      await switchToArbitrum(nativeEth);
-    }
-
-    const nativeProvider = nativeEth ?? getProvider();
-    const wallet = makeWalletAdapter(nativeProvider, expectedAddress);
-    const userAddr = await resolveAddressVia(nativeProvider, expectedAddress);
+    const wallet = createNativeWallet(expectedAddress);
+    const userAddr = await resolveAddressVia(nativeEth, expectedAddress);
 
     const agentPrivateKey = generatePrivateKey();
     const agentAcc = privateKeyToAccount(agentPrivateKey);
@@ -252,6 +405,11 @@ export async function signAndApproveAgent(
       agentName: BRAND_CONFIG.name,
       nonce,
     };
+    pushSigningDebug("approveAgent.start", {
+      userAddr,
+      action,
+      activeWalletChainId: await nativeEth.request({ method: "eth_chainId" }).catch(() => "unknown"),
+    });
 
     const signature = await signUserSignedAction({
       wallet,
@@ -266,6 +424,7 @@ export async function signAndApproveAgent(
     });
 
     const data = await res.json();
+    pushSigningDebug("approveAgent.response", data);
 
     if (data.status === "ok") {
       storeAgent(userAddr, {
@@ -281,6 +440,7 @@ export async function signAndApproveAgent(
       : JSON.stringify(data);
     return { success: false, error: `Hyperliquid rejected: ${apiError}` };
   } catch (err) {
+    pushSigningDebug("approveAgent.error", getErrorDetails(err));
     const msg = (err as Error).message || String(err);
     if (msg.includes("User rejected") || msg.includes("user rejected") || msg.includes("denied")) {
       return { success: false, error: "Signature rejected. Please approve the signing request in your wallet." };
@@ -413,7 +573,7 @@ export async function signAndApproveBuilderFee(
   try {
     const nativeEth = getNativeEthereum();
     if (nativeEth) await switchToArbitrum(nativeEth);
-    const wallet = nativeEth ? makeWalletAdapter(nativeEth, expectedAddress) : createHyperliquidWallet(expectedAddress);
+    const wallet = nativeEth ? createNativeWallet(expectedAddress) : createHyperliquidWallet(expectedAddress);
 
     const nonce = Date.now();
     const action = {
@@ -460,7 +620,7 @@ export async function signAndEnableDexAbstraction(
   try {
     const nativeEth = getNativeEthereum();
     if (nativeEth) await switchToArbitrum(nativeEth);
-    const wallet = nativeEth ? makeWalletAdapter(nativeEth, expectedAddress) : createHyperliquidWallet(expectedAddress);
+    const wallet = nativeEth ? createNativeWallet(expectedAddress) : createHyperliquidWallet(expectedAddress);
     const address = await resolveAddress(expectedAddress);
 
     const nonce = Date.now();
