@@ -234,9 +234,19 @@ export default function PortfolioChart({ fills, ledger, currentAccountValue }: P
       const px = e.clientX - rect.left;
       const pad = { left: 52, right: 12 };
       const cw = rect.width - pad.left - pad.right;
-      const rel = (px - pad.left) / cw;
-      const idx = Math.max(0, Math.min(series.length - 1, Math.round(rel * (series.length - 1))));
-      setHoverIdx(idx);
+      const rel = Math.max(0, Math.min(1, (px - pad.left) / cw));
+
+      const t0 = series[0].time;
+      const t1 = series[series.length - 1].time;
+      const hoverTime = t0 + rel * (t1 - t0);
+
+      let closest = 0;
+      let minDist = Math.abs(series[0].time - hoverTime);
+      for (let i = 1; i < series.length; i++) {
+        const dist = Math.abs(series[i].time - hoverTime);
+        if (dist < minDist) { minDist = dist; closest = i; }
+      }
+      setHoverIdx(closest);
     },
     [series]
   );
@@ -250,7 +260,7 @@ export default function PortfolioChart({ fills, ledger, currentAccountValue }: P
       : mode === "accountValue" ? currentAccountValue : 0;
 
   const displayDate = hoverIdx !== null && hoverIdx < series.length
-    ? new Date(series[hoverIdx].time).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    ? new Date(series[hoverIdx].time).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
     : "Current";
 
   return (

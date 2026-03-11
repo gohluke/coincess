@@ -312,19 +312,21 @@ export default function DashboardPage() {
 
   const assetDistribution = useMemo(() => {
     const items: { label: string; value: number; color: string }[] = [];
-    const freeUsdc = spotUsdcBalance > 0 ? spotUsdcBalance - spotUsdcHold : availableBalance;
-    if (freeUsdc > 0.01) items.push({ label: "USDC", value: freeUsdc, color: "#2775CA" });
+    let positionsTotal = 0;
     for (const ap of positions) {
       const pos = ap.position;
       const bare = stripPrefix(pos.coin);
-      const margin = parseFloat(pos.marginUsed);
-      if (margin > 0.01) items.push({ label: bare, value: margin, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
+      const posValue = parseFloat(pos.marginUsed) + parseFloat(pos.unrealizedPnl);
+      if (posValue > 0.01) {
+        items.push({ label: bare, value: posValue, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
+        positionsTotal += posValue;
+      }
     }
+    const usdcSlice = accountValue - positionsTotal;
+    if (usdcSlice > 0.01) items.unshift({ label: "USDC", value: usdcSlice, color: "#2775CA" });
     if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: BRAND.hex });
     return items;
-  }, [spotUsdcBalance, spotUsdcHold, availableBalance, positions, accountValue]);
-
-  const assetTotal = assetDistribution.reduce((s, a) => s + a.value, 0);
+  }, [positions, accountValue]);
 
   if (walletLoading) {
     return (
@@ -404,10 +406,10 @@ export default function DashboardPage() {
         {/* ─── Assets Tab ─── */}
         {portfolioTab === "assets" && (
           <>
-            {/* Hero: Total Balance */}
+            {/* Hero: Total Equity */}
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-[#848e9c] mb-1">Total Balance</p>
+                <p className="text-sm text-[#848e9c] mb-1">Total Equity</p>
                 {firstLoad ? (
                   <Skeleton className="h-12 w-48 mt-1" />
                 ) : (
@@ -484,7 +486,7 @@ export default function DashboardPage() {
             ) : (
               <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-6">
                 <div className="flex items-center justify-center">
-                  <DonutChart items={assetDistribution} total={assetTotal > 0 ? assetTotal : accountValue} />
+                  <DonutChart items={assetDistribution} total={accountValue} />
                 </div>
 
                 {/* Asset Distribution list */}
@@ -498,7 +500,7 @@ export default function DashboardPage() {
                           <span className="text-sm text-white">{a.label}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm text-brand">{assetTotal > 0 ? ((a.value / assetTotal) * 100).toFixed(1) : "0.0"}%</span>
+                          <span className="text-sm text-brand">{accountValue > 0 ? ((a.value / accountValue) * 100).toFixed(1) : "0.0"}%</span>
                           <span className="text-sm font-semibold">{formatUsd(a.value)}</span>
                         </div>
                       </div>
@@ -738,18 +740,19 @@ function DonutChart({ items, total }: { items: { label: string; value: number; c
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#2a2e3e" strokeWidth={stroke} />
-        <text x={cx} y={cy - 8} textAnchor="middle" fill="#848e9c" fontSize="12">Total</text>
+        <text x={cx} y={cy - 8} textAnchor="middle" fill="#848e9c" fontSize="12">Equity</text>
         <text x={cx} y={cy + 14} textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">$0.00</text>
       </svg>
     );
   }
 
+  const gap = 1.5;
   let cumAngle = -90;
   const arcs = items.map((item) => {
     const pct = item.value / total;
-    const angle = pct * 360;
-    const startAngle = cumAngle;
-    cumAngle += angle;
+    const angle = Math.max(pct * 360 - gap, 0.5);
+    const startAngle = cumAngle + gap / 2;
+    cumAngle += pct * 360;
     return { ...item, startAngle, angle };
   });
 
@@ -761,8 +764,8 @@ function DonutChart({ items, total }: { items: { label: string; value: number; c
         const largeArc = arc.angle > 180 ? 1 : 0;
         const startX = cx + radius * Math.cos(toRad(arc.startAngle));
         const startY = cy + radius * Math.sin(toRad(arc.startAngle));
-        const endX = cx + radius * Math.cos(toRad(arc.startAngle + arc.angle - 0.5));
-        const endY = cy + radius * Math.sin(toRad(arc.startAngle + arc.angle - 0.5));
+        const endX = cx + radius * Math.cos(toRad(arc.startAngle + arc.angle));
+        const endY = cy + radius * Math.sin(toRad(arc.startAngle + arc.angle));
 
         return (
           <path
@@ -771,11 +774,11 @@ function DonutChart({ items, total }: { items: { label: string; value: number; c
             fill="none"
             stroke={arc.color}
             strokeWidth={stroke}
-            strokeLinecap="round"
+            strokeLinecap="butt"
           />
         );
       })}
-      <text x={cx} y={cy - 8} textAnchor="middle" fill="#848e9c" fontSize="12">Total</text>
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="#848e9c" fontSize="12">Equity</text>
       <text x={cx} y={cy + 16} textAnchor="middle" fill="white" fontSize="22" fontWeight="bold">
         {formatUsd(total)}
       </text>
