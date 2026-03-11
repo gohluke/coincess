@@ -25,6 +25,7 @@ import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
+import PortfolioChart from "@/components/dashboard/PortfolioChart";
 
 // ── Round-trip trade grouping ──────────────────────────────
 
@@ -278,7 +279,6 @@ export default function DashboardPage() {
 
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
   const perpsAccountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
-  const totalMarginUsed = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
   const availableBalance = parseFloat(ch?.withdrawable ?? "0");
   const spotUsdcBalance = useMemo(() => {
     if (!spot?.balances) return 0;
@@ -290,18 +290,25 @@ export default function DashboardPage() {
     }, 0);
   }, [spot]);
 
-  // Spot USDC includes the portion backing perps cross-margin.
-  // total = spot + perps uPnL (avoid double-counting the margin drawn from spot)
-  const accountValue = spotUsdcBalance > 0
-    ? spotUsdcBalance + (perpsAccountValue - totalMarginUsed)
-    : perpsAccountValue;
+  const spotUsdcHold = useMemo(() => {
+    if (!spot?.balances) return 0;
+    return spot.balances.reduce((sum, b) => {
+      if (b.coin === "USDC" || b.coin === "USDT0" || b.coin === "USDE") {
+        return sum + parseFloat(b.hold);
+      }
+      return sum;
+    }, 0);
+  }, [spot]);
+
+  // In unified mode, spot USDC `total` already includes perps backing — don't add them.
+  const accountValue = spotUsdcBalance > 0 ? spotUsdcBalance : perpsAccountValue;
   const activeStrategies =
     serverStrategies.filter((s) => s.status === "active").length +
     browserStrategies.filter((s) => s.status === "active").length;
 
   const assetDistribution = useMemo(() => {
     const items: { label: string; value: number; color: string }[] = [];
-    const freeUsdc = spotUsdcBalance > 0 ? spotUsdcBalance - totalMarginUsed : availableBalance;
+    const freeUsdc = spotUsdcBalance > 0 ? spotUsdcBalance - spotUsdcHold : availableBalance;
     if (freeUsdc > 0.01) items.push({ label: "USDC", value: freeUsdc, color: "#2775CA" });
     for (const ap of positions) {
       const pos = ap.position;
@@ -311,7 +318,7 @@ export default function DashboardPage() {
     }
     if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: BRAND.hex });
     return items;
-  }, [spotUsdcBalance, totalMarginUsed, availableBalance, positions, accountValue]);
+  }, [spotUsdcBalance, spotUsdcHold, availableBalance, positions, accountValue]);
 
   const assetTotal = assetDistribution.reduce((s, a) => s + a.value, 0);
 
@@ -363,7 +370,7 @@ export default function DashboardPage() {
   }
 
   const perpsBalance = perpsAccountValue;
-  const freeSpotBalance = spotUsdcBalance > 0 ? spotUsdcBalance - totalMarginUsed : availableBalance;
+  const freeSpotBalance = spotUsdcBalance > 0 ? spotUsdcBalance - spotUsdcHold : availableBalance;
   const evmBalance = 0;
   const firstLoad = !ch && loading;
 
@@ -459,6 +466,13 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Portfolio chart — Account Value / PNL over time */}
+            {firstLoad ? (
+              <SkeletonChart className="h-[280px]" />
+            ) : fills.length > 0 ? (
+              <PortfolioChart fills={fills} currentAccountValue={accountValue} />
+            ) : null}
 
             {/* Donut chart */}
             {firstLoad ? (
@@ -701,12 +715,7 @@ export default function DashboardPage() {
           <PnlCalendar dailyPnl={dailyPnl} dailyFills={dailyFills} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} />
         )}
 
-        {/* Hyperliquid link */}
-        <div className="text-center py-4">
-          <a href="https://app.hyperliquid.xyz/trade" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#848e9c] hover:text-white transition-colors">
-            Powered by Hyperliquid <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
+        
       </div>
     </div>
   );

@@ -36,9 +36,10 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - All strategies persist in IndexedDB (survives page refresh)
 
 ### Unified Portfolio Dashboard (`/dashboard`)
-- **Combined balance** — aggregates Perps clearinghouse + Spot balance + HIP-3 (xyz) into one Total Balance, matching Hyperliquid's portfolio view
+- **Combined balance** — uses Spot USDC `total` as the single source of truth (unified account mode avoids double-counting perps backing); Available Balance = Spot total - Spot hold
 - **Balance breakdown cards** — Available Balance, USDC (Perps), Spot Balance, EVM Balance
-- **Asset distribution donut** — visual split of Spot USDC vs Perps USDC vs open position margins
+- **Portfolio chart** — Account Value and cumulative PNL over time (canvas-rendered, hover crosshair); toggle between "Account Value" and "PNL" tabs; data derived from fills history
+- **Asset distribution donut** — visual split of Spot USDC vs open position margins
 - Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
 - PnL calendar — daily profit/loss heatmap
 - Trade history with round-trip grouping and per-trade P&L
