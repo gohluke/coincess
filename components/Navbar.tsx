@@ -75,7 +75,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#2a2e39] bg-[#0b0e11]/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center">
+      <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center">
         {/* Logo */}
         <Link href="/dashboard" className="shrink-0">
           <Logo />

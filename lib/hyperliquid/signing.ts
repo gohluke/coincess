@@ -492,8 +492,9 @@ export async function signAndPlaceOrder(
 
     const orderWire = buildOrderWire(params);
 
-    const isBuilder = userAddr === BUILDER_ADDRESS.toLowerCase();
-    const builderOpt = (BUILDER_FEE_ENABLED && !isBuilder)
+    // TODO: re-enable builder exemption once CESS token staking tiers are implemented
+    // const isBuilder = userAddr === BUILDER_ADDRESS.toLowerCase();
+    const builderOpt = BUILDER_FEE_ENABLED
       ? { b: BUILDER_ADDRESS, f: BUILDER_FEE }
       : undefined;
 

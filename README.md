@@ -224,6 +224,19 @@ npm run dev
 
 ### Optional / Future
 
+- [ ] **CESS token tiered builder fees** — Coincess's own token. Users who stake CESS get reduced trading fees:
+
+  | Tier | CESS Staked | Builder Fee |
+  |------|------------|-------------|
+  | Free | 0 | 1bp (0.01%) |
+  | Bronze | 1,000 CESS | 0.8bp |
+  | Silver | 10,000 CESS | 0.5bp |
+  | Gold | 100,000 CESS | 0.2bp |
+  | Diamond | 1,000,000 CESS | 0bp (fee-free) |
+
+  Implementation: read user's staked CESS balance from on-chain contract, pass dynamic `f` value to the builder field per order. Requires deploying CESS ERC-20 + staking contract on Arbitrum.
+
+- [ ] **UI sounds** — audio feedback for order placed, order filled, order cancelled, position closed, errors (like Binance/HL trading terminal sounds). Toggle in Settings
 - [ ] **Visa debit card** — partner with a whitelabel card provider (e.g., Reap, Immersve) for crypto spend
 - [ ] **Server-side automation** — move strategies to Supabase Edge Functions for 24/7 execution without browser open
 - [ ] **Telegram bot** — add a `/trade` and `/alert` bot for notifications and quick orders
