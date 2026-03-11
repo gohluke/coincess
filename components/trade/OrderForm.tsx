@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Loader2, AlertTriangle } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction, getSigningAddress } from "@/lib/hyperliquid/signing";
+import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction, signAndApproveAgent, getSigningAddress, getStoredAgent, clearStoredAgent } from "@/lib/hyperliquid/signing";
 import { useWallet } from "@/hooks/useWallet";
 import { FundingBanner } from "@/components/FundingBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -28,10 +28,13 @@ export function OrderForm() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [signingAddr, setSigningAddr] = useState<string | null>(null);
   const [signingAddrLoaded, setSigningAddrLoaded] = useState(false);
+  const [agentApproved, setAgentApproved] = useState(false);
+  const [enablingTrading, setEnablingTrading] = useState(false);
 
   useEffect(() => {
     if (address) {
       setSigningAddrLoaded(false);
+      setAgentApproved(!!getStoredAgent(address));
       getSigningAddress().then((addr) => {
         setSigningAddr(addr);
         setSigningAddrLoaded(true);
@@ -39,6 +42,7 @@ export function OrderForm() {
     } else {
       setSigningAddr(null);
       setSigningAddrLoaded(false);
+      setAgentApproved(false);
     }
   }, [address]);
 
@@ -161,17 +165,27 @@ export function OrderForm() {
         loadUserState();
       } else {
         const raw = result.error || "Order failed";
-        const msg = raw.includes("does not exist")
-          ? "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading."
-          : raw;
-        setFeedback({ type: "error", msg });
+        if (raw.includes("does not exist")) {
+          setFeedback({ type: "error", msg: "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading." });
+        } else if (raw.includes("agent") || raw.includes("not authorized")) {
+          if (address) clearStoredAgent(address);
+          setAgentApproved(false);
+          setFeedback({ type: "error", msg: "Agent expired. Please enable trading again." });
+        } else {
+          setFeedback({ type: "error", msg: raw });
+        }
       }
     } catch (err) {
       const raw = (err as Error).message;
-      const msg = raw.includes("does not exist")
-        ? "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading."
-        : raw;
-      setFeedback({ type: "error", msg });
+      if (raw.includes("does not exist")) {
+        setFeedback({ type: "error", msg: "No Hyperliquid account found. Deposit USDC to Hyperliquid first to start trading." });
+      } else if (raw.includes("agent") || raw.includes("not authorized")) {
+        if (address) clearStoredAgent(address);
+        setAgentApproved(false);
+        setFeedback({ type: "error", msg: "Agent expired. Please enable trading again." });
+      } else {
+        setFeedback({ type: "error", msg: raw });
+      }
     } finally {
       setSubmitting(false);
       setTimeout(() => setFeedback(null), 5000);
@@ -393,8 +407,8 @@ export function OrderForm() {
           </div>
         )}
 
-        {/* Submit button */}
-        {address ? (
+        {/* Submit / Enable Trading / Connect button */}
+        {address && agentApproved ? (
           <button
             onClick={handleSubmit}
             disabled={submitting || !orderSize || parseFloat(orderSize) <= 0 || !!addressMismatch}
@@ -407,6 +421,37 @@ export function OrderForm() {
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {orderSide === "buy" ? "Long" : "Short"} {displayName}
           </button>
+        ) : address ? (
+          <div className="space-y-2">
+            <button
+              onClick={async () => {
+                if (enablingTrading) return;
+                setEnablingTrading(true);
+                setFeedback(null);
+                try {
+                  const result = await signAndApproveAgent(address ?? undefined);
+                  if (result.success) {
+                    setAgentApproved(true);
+                    setFeedback({ type: "success", msg: "Trading enabled! You can now place orders." });
+                  } else {
+                    setFeedback({ type: "error", msg: result.error || "Failed to enable trading" });
+                  }
+                } catch (err) {
+                  setFeedback({ type: "error", msg: (err as Error).message });
+                } finally {
+                  setEnablingTrading(false);
+                }
+              }}
+              disabled={enablingTrading}
+              className="w-full py-3 rounded-full font-semibold text-sm bg-brand text-white hover:bg-brand/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {enablingTrading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Enable Trading
+            </button>
+            <p className="text-[10px] text-[#848e9c] text-center leading-tight">
+              Sign once to authorize Coincess to trade on your behalf. No further popups per order.
+            </p>
+          </div>
         ) : (
           <button
             onClick={() => walletConnect()}

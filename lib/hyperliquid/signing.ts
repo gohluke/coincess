@@ -1,8 +1,12 @@
 import { signL1Action, signUserSignedAction } from "@nktkas/hyperliquid/signing";
 import type { AbstractViemJsonRpcAccount } from "@nktkas/hyperliquid/signing";
-import { ApproveBuilderFeeTypes } from "@nktkas/hyperliquid/api/exchange";
+import { ApproveBuilderFeeTypes, ApproveAgentTypes } from "@nktkas/hyperliquid/api/exchange";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type { MarketInfo } from "./types";
 import { BRAND_CONFIG } from "@/lib/brand.config";
+import { getAgentAccount, storeAgent, clearStoredAgent } from "./agent";
+
+export { getStoredAgent, clearStoredAgent } from "./agent";
 
 const EXCHANGE_URL = "https://api.hyperliquid.xyz/exchange";
 
@@ -207,12 +211,69 @@ export function getMarketOrderPrice(isBuy: boolean, markPx: number): string {
   return priceToWire(markPx * slippage);
 }
 
+/**
+ * One-time agent approval: generates a local keypair, has the user sign
+ * an ApproveAgent EIP-712 message (single MetaMask popup on Arbitrum),
+ * registers with Hyperliquid, and stores the agent key in localStorage.
+ * After this, all orders are signed locally with the agent key — no popups.
+ */
+export async function signAndApproveAgent(
+  expectedAddress?: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const userWallet = getWalletAdapter(expectedAddress);
+    const userAddr = await getAddress(expectedAddress);
+
+    const agentPrivateKey = generatePrivateKey();
+    const agentAcc = privateKeyToAccount(agentPrivateKey);
+
+    const nonce = Date.now();
+    const action = {
+      type: "approveAgent" as const,
+      signatureChainId: "0xa4b1" as `0x${string}`,
+      hyperliquidChain: "Mainnet" as const,
+      agentAddress: agentAcc.address.toLowerCase() as `0x${string}`,
+      agentName: BRAND_CONFIG.name,
+      nonce,
+    };
+
+    const signature = await signUserSignedAction({
+      wallet: userWallet,
+      action,
+      types: ApproveAgentTypes,
+    });
+
+    const res = await fetch(EXCHANGE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, signature, nonce }),
+    });
+
+    const data = await res.json();
+
+    if (data.status === "ok") {
+      storeAgent(userAddr, {
+        privateKey: agentPrivateKey,
+        address: agentAcc.address,
+        approvedAt: Date.now(),
+      });
+      return { success: true };
+    }
+
+    const apiError = data.response || JSON.stringify(data);
+    return { success: false, error: apiError };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
+
 export async function signAndPlaceOrder(
   params: PlaceOrderParams & { expectedAddress?: string },
 ): Promise<{ success: boolean; error?: string; oid?: number }> {
   try {
-    const wallet = getWalletAdapter(params.expectedAddress);
     const userAddr = await getAddress(params.expectedAddress);
+    const agentAcc = getAgentAccount(userAddr);
+    const wallet = agentAcc ?? getWalletAdapter(params.expectedAddress);
 
     const orderWire = buildOrderWire(params);
     const nonce = Date.now();
@@ -245,7 +306,11 @@ export async function signAndPlaceOrder(
       if (status.resting) return { success: true, oid: status.resting.oid };
     }
 
-    return { success: false, error: data.response?.data?.statuses?.[0]?.error ?? JSON.stringify(data) };
+    const errMsg = data.response?.data?.statuses?.[0]?.error ?? JSON.stringify(data);
+    if (agentAcc && (errMsg.includes("agent") || errMsg.includes("not authorized"))) {
+      clearStoredAgent(userAddr);
+    }
+    return { success: false, error: errMsg };
   } catch (err) {
     return { success: false, error: (err as Error).message };
   }
@@ -257,8 +322,9 @@ export async function signAndCancelOrder(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter(expectedAddress);
-    await getAddress(expectedAddress);
+    const userAddr = await getAddress(expectedAddress);
+    const agentAcc = getAgentAccount(userAddr);
+    const wallet = agentAcc ?? getWalletAdapter(expectedAddress);
 
     const nonce = Date.now();
     const action = { type: "cancel", cancels: [{ a: asset, o: oid }] };
@@ -286,8 +352,9 @@ export async function signAndUpdateLeverage(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter(expectedAddress);
-    await getAddress(expectedAddress);
+    const userAddr = await getAddress(expectedAddress);
+    const agentAcc = getAgentAccount(userAddr);
+    const wallet = agentAcc ?? getWalletAdapter(expectedAddress);
 
     const nonce = Date.now();
     const action = { type: "updateLeverage", asset, isCross, leverage };
