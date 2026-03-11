@@ -2,6 +2,8 @@ import { signL1Action, signUserSignedAction } from "@nktkas/hyperliquid/signing"
 import type { AbstractViemJsonRpcAccount } from "@nktkas/hyperliquid/signing";
 import { ApproveBuilderFeeTypes, ApproveAgentTypes } from "@nktkas/hyperliquid/api/exchange";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { createWalletClient, custom } from "viem";
+import { arbitrum } from "viem/chains";
 import type { MarketInfo } from "./types";
 import { BRAND_CONFIG } from "@/lib/brand.config";
 import { getAgentAccount, storeAgent, clearStoredAgent } from "./agent";
@@ -28,118 +30,78 @@ function getNativeEthereum(): EthProvider | null {
   return (window as unknown as { ethereum?: EthProvider }).ethereum ?? null;
 }
 
-function getEthereum(): EthProvider {
+function getProvider(): EthProvider {
   if (_privyProvider) return _privyProvider;
   const eth = getNativeEthereum();
-  if (!eth) throw new Error("No wallet detected. Please sign in first.");
+  if (!eth) throw new Error("No wallet detected. Please connect your wallet first.");
   return eth;
 }
 
 /**
- * Build a wallet adapter matching AbstractViemJsonRpcAccount interface.
- * When preferredAddress is provided, we ensure that specific account is used
- * for signing — critical when the store shows a linked wallet address that
- * differs from the wallet's default active account.
+ * Build a wallet adapter conforming to @nktkas/hyperliquid's AbstractViemJsonRpcAccount.
+ * Internally delegates signTypedData to viem's WalletClient which correctly
+ * handles EIP-712 encoding, EIP712Domain types, and JSON-RPC payload construction.
+ *
+ * See SDK browser (viem) examples: https://nktkas.gitbook.io/hyperliquid/signing
  */
-function getWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount {
-  const eth = getEthereum();
-
-  async function resolveSigningAddress(provider: EthProvider): Promise<string> {
-    let accounts = (await provider.request({ method: "eth_accounts" })) as string[];
-    if (!accounts.length) {
-      accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
-    }
-    if (!accounts.length) throw new Error("No account connected");
-
-    if (preferredAddress) {
-      const match = accounts.find(
-        (a) => a.toLowerCase() === preferredAddress.toLowerCase(),
-      );
-      if (match) return match;
-      const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
-      throw new Error(
-        `Wallet mismatch: trading as ${short(preferredAddress)} but your wallet is on ${short(accounts[0])}. ` +
-        `Switch to ${short(preferredAddress)} in Zerion/MetaMask, or go to Settings and remove the linked wallet.`,
-      );
-    }
-    return accounts[0];
-  }
-
-  async function signWithProvider(
-    provider: EthProvider,
-    address: string,
-    payload: string,
-  ): Promise<`0x${string}`> {
-    const result = await provider.request({
-      method: "eth_signTypedData_v4",
-      params: [address, payload],
-    });
-    return result as `0x${string}`;
-  }
+function createHyperliquidWallet(preferredAddress?: string): AbstractViemJsonRpcAccount {
+  const provider = getProvider();
 
   return {
     async getAddresses() {
-      const addr = await resolveSigningAddress(eth);
+      const addr = await resolveAddress(preferredAddress);
       return [addr] as `0x${string}`[];
     },
+
     async getChainId() {
-      const chainId = (await eth.request({ method: "eth_chainId" })) as string;
+      const chainId = (await provider.request({ method: "eth_chainId" })) as string;
       return Number(chainId);
     },
+
     async signTypedData(params) {
-      // Strip EIP712Domain — providers auto-derive it from the domain object
-      const { EIP712Domain: _, ...filteredTypes } = params.types as Record<string, unknown>;
-      const payload = JSON.stringify({
-        domain: params.domain,
-        types: filteredTypes,
-        primaryType: params.primaryType,
-        message: params.message,
+      const addr = await resolveAddress(preferredAddress);
+
+      // Create a viem WalletClient with the resolved account so signTypedData
+      // goes through viem's proper EIP-712 encoding pipeline rather than
+      // manual eth_signTypedData_v4 JSON construction.
+      const client = createWalletClient({
+        account: addr as `0x${string}`,
+        chain: arbitrum,
+        transport: custom(provider),
       });
 
-      // Try the primary provider (Privy-wrapped or window.ethereum)
-      try {
-        const address = await resolveSigningAddress(eth);
-        return await signWithProvider(eth, address, payload);
-      } catch (primaryErr) {
-        // If the Privy-wrapped provider fails, fall back to window.ethereum
-        const nativeEth = getNativeEthereum();
-        if (nativeEth && nativeEth !== eth) {
-          try {
-            const address = await resolveSigningAddress(nativeEth);
-            return await signWithProvider(nativeEth, address, payload);
-          } catch {
-            // Native provider also failed; throw the original error
-          }
-        }
-        throw primaryErr;
-      }
+      return client.signTypedData({
+        domain: params.domain as Parameters<typeof client.signTypedData>[0]["domain"],
+        types: params.types as Parameters<typeof client.signTypedData>[0]["types"],
+        primaryType: params.primaryType as string,
+        message: params.message as Record<string, unknown>,
+      });
     },
   };
 }
 
-async function getAddress(preferredAddress?: string): Promise<string> {
-  const eth = getEthereum();
-  let accounts = (await eth.request({ method: "eth_accounts" })) as string[];
+async function resolveAddress(preferredAddress?: string): Promise<string> {
+  if (preferredAddress) return preferredAddress.toLowerCase();
+  const provider = getProvider();
+  let accounts = (await provider.request({ method: "eth_accounts" })) as string[];
   if (!accounts.length) {
-    accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+    accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
   }
   if (!accounts[0]) throw new Error("No account connected");
-  if (preferredAddress) {
-    const match = accounts.find(
-      (a) => a.toLowerCase() === preferredAddress.toLowerCase(),
-    );
-    if (match) return match;
-  }
-  return accounts[0];
+  return accounts[0].toLowerCase();
 }
 
 export async function getSigningAddress(): Promise<string | null> {
   try {
-    return await getAddress();
+    return await resolveAddress();
   } catch {
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Order wire helpers
+// ---------------------------------------------------------------------------
 
 interface OrderWire {
   a: number;
@@ -211,81 +173,25 @@ export function getMarketOrderPrice(isBuy: boolean, markPx: number): string {
   return priceToWire(markPx * slippage);
 }
 
-/**
- * Build a wallet adapter that talks directly to window.ethereum (MetaMask)
- * instead of Privy's wrapped provider. Used for one-time EIP-712 approvals
- * so the signing popup goes to MetaMask, not Privy/Zerion.
- */
-function getNativeWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount {
-  const eth = getNativeEthereum();
-  if (!eth) throw new Error("No wallet detected. Please install MetaMask or another browser wallet.");
-
-  return {
-    async getAddresses() {
-      let accounts = (await eth.request({ method: "eth_accounts" })) as string[];
-      if (!accounts.length) {
-        accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-      }
-      if (preferredAddress) {
-        const match = accounts.find((a) => a.toLowerCase() === preferredAddress.toLowerCase());
-        if (match) return [match] as `0x${string}`[];
-      }
-      return (accounts.length ? [accounts[0]] : []) as `0x${string}`[];
-    },
-    async getChainId() {
-      const chainId = (await eth.request({ method: "eth_chainId" })) as string;
-      return Number(chainId);
-    },
-    async signTypedData(params) {
-      const { EIP712Domain: _, ...filteredTypes } = params.types as Record<string, unknown>;
-      const payload = JSON.stringify({
-        domain: params.domain,
-        types: filteredTypes,
-        primaryType: params.primaryType,
-        message: params.message,
-      });
-      let accounts = (await eth.request({ method: "eth_accounts" })) as string[];
-      if (!accounts.length) {
-        accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-      }
-      const address = preferredAddress
-        ? accounts.find((a) => a.toLowerCase() === preferredAddress.toLowerCase()) ?? accounts[0]
-        : accounts[0];
-      if (!address) throw new Error("No account connected in MetaMask");
-      const result = await eth.request({
-        method: "eth_signTypedData_v4",
-        params: [address, payload],
-      });
-      return result as `0x${string}`;
-    },
-  };
-}
+// ---------------------------------------------------------------------------
+// Agent approval (one-time "Enable Trading")
+// ---------------------------------------------------------------------------
 
 /**
  * One-time agent approval: generates a local keypair, has the user sign
- * an ApproveAgent EIP-712 message, registers with Hyperliquid, and stores
- * the agent key in localStorage. Tries the best available wallet provider.
+ * an ApproveAgent EIP-712 message via a viem WalletClient (SDK-recommended),
+ * registers with Hyperliquid, and stores the agent key in localStorage.
  */
 export async function signAndApproveAgent(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Step 1: Resolve the signing wallet -- use the same adapter that will be
-    // used to sign, so the address stored matches the signer.
-    const userWallet = getWalletAdapter(expectedAddress);
+    const userAddr = await resolveAddress(expectedAddress);
+    const wallet = createHyperliquidWallet(expectedAddress);
 
-    // Resolve the address from the SAME wallet that will sign
-    const addrs = await userWallet.getAddresses();
-    if (!addrs.length) {
-      return { success: false, error: "No wallet connected. Please connect your wallet first." };
-    }
-    const userAddr = addrs[0].toLowerCase();
-
-    // Step 2: Generate a fresh agent keypair
     const agentPrivateKey = generatePrivateKey();
     const agentAcc = privateKeyToAccount(agentPrivateKey);
 
-    // Step 3: Build the ApproveAgent action
     const nonce = Date.now();
     const action = {
       type: "approveAgent" as const,
@@ -296,14 +202,12 @@ export async function signAndApproveAgent(
       nonce,
     };
 
-    // Step 4: Sign with the user's wallet (triggers wallet popup)
     const signature = await signUserSignedAction({
-      wallet: userWallet,
+      wallet,
       action,
       types: ApproveAgentTypes,
     });
 
-    // Step 5: Submit to Hyperliquid
     const res = await fetch(EXCHANGE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -327,7 +231,6 @@ export async function signAndApproveAgent(
     return { success: false, error: `Hyperliquid rejected: ${apiError}` };
   } catch (err) {
     const msg = (err as Error).message || String(err);
-    // Provide actionable messages for known errors
     if (msg.includes("User rejected") || msg.includes("user rejected") || msg.includes("denied")) {
       return { success: false, error: "Signature rejected. Please approve the signing request in your wallet." };
     }
@@ -335,14 +238,17 @@ export async function signAndApproveAgent(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Order placement (uses agent key if available, else wallet popup)
+// ---------------------------------------------------------------------------
+
 export async function signAndPlaceOrder(
   params: PlaceOrderParams & { expectedAddress?: string },
 ): Promise<{ success: boolean; error?: string; oid?: number }> {
   try {
-    // Use expectedAddress directly if provided (matches how agent was stored)
-    const userAddr = params.expectedAddress?.toLowerCase() ?? (await getAddress()).toLowerCase();
+    const userAddr = await resolveAddress(params.expectedAddress);
     const agentAcc = getAgentAccount(userAddr);
-    const wallet = agentAcc ?? getWalletAdapter(params.expectedAddress);
+    const wallet = agentAcc ?? createHyperliquidWallet(params.expectedAddress);
 
     const orderWire = buildOrderWire(params);
     const nonce = Date.now();
@@ -353,7 +259,7 @@ export async function signAndPlaceOrder(
       orders: [orderWire],
       grouping: "na",
     };
-    const isBuilder = userAddr.toLowerCase() === BUILDER_ADDRESS.toLowerCase();
+    const isBuilder = userAddr === BUILDER_ADDRESS.toLowerCase();
     if (BUILDER_FEE_ENABLED && !isBuilder) {
       action.builder = { b: BUILDER_ADDRESS, f: BUILDER_FEE };
     }
@@ -385,15 +291,19 @@ export async function signAndPlaceOrder(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Cancel, leverage, builder fee, dex abstraction
+// ---------------------------------------------------------------------------
+
 export async function signAndCancelOrder(
   asset: number,
   oid: number,
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userAddr = expectedAddress?.toLowerCase() ?? (await getAddress()).toLowerCase();
+    const userAddr = await resolveAddress(expectedAddress);
     const agentAcc = getAgentAccount(userAddr);
-    const wallet = agentAcc ?? getWalletAdapter(expectedAddress);
+    const wallet = agentAcc ?? createHyperliquidWallet(expectedAddress);
 
     const nonce = Date.now();
     const action = { type: "cancel", cancels: [{ a: asset, o: oid }] };
@@ -421,9 +331,9 @@ export async function signAndUpdateLeverage(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userAddr = expectedAddress?.toLowerCase() ?? (await getAddress()).toLowerCase();
+    const userAddr = await resolveAddress(expectedAddress);
     const agentAcc = getAgentAccount(userAddr);
-    const wallet = agentAcc ?? getWalletAdapter(expectedAddress);
+    const wallet = agentAcc ?? createHyperliquidWallet(expectedAddress);
 
     const nonce = Date.now();
     const action = { type: "updateLeverage", asset, isCross, leverage };
@@ -444,17 +354,13 @@ export async function signAndUpdateLeverage(
   }
 }
 
-/**
- * User must approve a builder fee before the builder can charge fees.
- * One-time approval per builder address per user.
- */
 export async function signAndApproveBuilderFee(
   builderAddress: string = BUILDER_ADDRESS,
   maxFeeRate: string = "0.01%",
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter(expectedAddress);
+    const wallet = createHyperliquidWallet(expectedAddress);
 
     const nonce = Date.now();
     const action = {
@@ -486,7 +392,6 @@ export async function signAndApproveBuilderFee(
   }
 }
 
-// EIP-712 types for userSetAbstraction (from @nktkas/hyperliquid SDK)
 const UserSetAbstractionTypes = {
   "HyperliquidTransaction:UserSetAbstraction": [
     { name: "hyperliquidChain", type: "string" },
@@ -496,17 +401,12 @@ const UserSetAbstractionTypes = {
   ],
 };
 
-/**
- * Enable unified account so user can trade HIP-3/XYZ markets (stocks,
- * commodities, forex) using their main USDC balance.
- * Uses userSetAbstraction (EIP-712 user-signed action) for browser wallets.
- */
 export async function signAndEnableDexAbstraction(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = getWalletAdapter(expectedAddress);
-    const address = await getAddress(expectedAddress);
+    const wallet = createHyperliquidWallet(expectedAddress);
+    const address = await resolveAddress(expectedAddress);
 
     const nonce = Date.now();
     const action = {

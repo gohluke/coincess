@@ -69,6 +69,7 @@ export default function TradePageDynamic() {
     );
     const target = match?.name ?? coinParam;
     if (target !== selectedMarket) selectMarket(target);
+    try { localStorage.setItem("coincess:lastTicker", coinParam); } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketsReady]);
 
@@ -87,11 +88,14 @@ export default function TradePageDynamic() {
   }, [coinParam]);
 
   // When the store's selected market changes (user picks from dropdown), sync to URL
-  // Intentionally excludes `coinParam` to avoid feedback loops
+  // and persist the ticker so /trade redirects back here next time
   useEffect(() => {
     if (!selectedMarket) return;
     const urlCoin = selectedMarket.replace(/^.*:/, "").toUpperCase();
     const current = params.coin?.toUpperCase() ?? "BTC";
+
+    try { localStorage.setItem("coincess:lastTicker", urlCoin); } catch {}
+
     if (urlCoin !== current) {
       router.replace(`/trade/${urlCoin}`, { scroll: false });
     }

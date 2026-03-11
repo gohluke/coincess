@@ -81,11 +81,10 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 
 ### Wallet & Signing
 - MetaMask / injected wallet connection
-- **Agent-based trading** — one-time "Enable Trading" approval generates a local agent keypair, registers it with Hyperliquid via EIP-712 `ApproveAgent`, and stores it in `localStorage`. All subsequent orders sign silently with the agent key — no wallet popup per trade
-- **Native MetaMask signing for approvals** — the one-time agent approval uses `window.ethereum` directly (bypasses Privy's wrapped provider) so the EIP-712 popup goes straight to MetaMask, not Zerion/Privy. Automatically switches the wallet to Arbitrum One before signing
+- **viem WalletClient signing** — all EIP-712 signing goes through viem's `createWalletClient` with `custom(provider)` transport, matching the [@nktkas/hyperliquid SDK's recommended browser integration](https://nktkas.gitbook.io/hyperliquid/signing). This ensures correct EIP-712 encoding, proper `EIP712Domain` handling, and reliable JSON-RPC payload construction across all wallet providers
+- **Agent-based trading** — one-time "Enable Trading" approval generates a local agent keypair, registers it with Hyperliquid via EIP-712 `ApproveAgent` (`signatureChainId: 0x66eee`), and stores it in `localStorage`. All subsequent orders sign silently with the agent key via `signL1Action` — no wallet popup per trade
 - **Agent invalidation** — if Hyperliquid rejects an agent (expired, unauthorized), the stored agent is cleared and the user is prompted to re-enable trading
-- EIP-712 signing via Hyperliquid's `signL1Action` (agent key) and `signUserSignedAction` (user wallet for approvals)
-- **Address-validated signing** — every trade, cancel, and leverage update verifies the signing wallet matches the expected trading address before submitting; prevents "User does not exist" errors when a linked wallet differs from the active wallet account
+- **Address-validated signing** — every trade, cancel, and leverage update resolves the signing address consistently to prevent "User does not exist" errors
 - **Wallet mismatch detection** — order form and positions table detect address mismatches between the displayed (linked) wallet and the actual signing wallet, showing a clear warning and disabling trades until resolved
 - Builder fee exemption for the platform owner's address
 - Builder fees on each Hyperliquid trade
@@ -238,7 +237,7 @@ coincess/
 ├── app/
 │   ├── dashboard/page.tsx               # Unified portfolio dashboard
 │   ├── trade/
-│   │   ├── page.tsx                     # Redirects to /trade/BTC
+│   │   ├── page.tsx                     # Redirects to last ticker or /trade/BTC
 │   │   ├── [coin]/page.tsx              # Perpetuals trading terminal
 │   ├── predict/
 │   │   ├── page.tsx                     # Prediction markets browser
