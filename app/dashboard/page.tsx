@@ -27,6 +27,7 @@ import { FundingBanner } from "@/components/FundingBanner";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 import PortfolioChart from "@/components/dashboard/PortfolioChart";
+import { DepositButton } from "@/components/DepositModal";
 
 // ── Round-trip trade grouping ──────────────────────────────
 
@@ -438,6 +439,7 @@ export default function DashboardPage() {
                 <button onClick={() => loadData(address)} className="p-2 text-[#848e9c] hover:text-white transition-colors" disabled={loading}>
                   <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 </button>
+                <DepositButton variant="default" />
                 <span className="text-xs text-[#848e9c] font-mono hidden sm:inline">
                   {address.slice(0, 6)}...{address.slice(-4)}
                 </span>

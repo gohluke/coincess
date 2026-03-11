@@ -201,7 +201,7 @@ export function DepositButton({ variant = "default" }: { variant?: "default" | "
       {variant === "icon" ? (
         <button
           onClick={() => setOpen(true)}
-          className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full bg-[#1a1d26] hover:bg-[#252830] border border-[#2a2e3e] transition-colors"
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-[#1a1d26] hover:bg-[#252830] border border-[#2a2e3e] transition-colors"
           title="Deposit"
         >
           <ArrowDownToLine className="h-4 w-4 text-[#848e9c]" />
@@ -209,7 +209,7 @@ export function DepositButton({ variant = "default" }: { variant?: "default" | "
       ) : (
         <button
           onClick={() => setOpen(true)}
-          className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-colors"
+          className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-bold transition-colors"
         >
           Deposit
         </button>
