@@ -8,6 +8,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { FundingBanner } from "@/components/FundingBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BRAND_CONFIG } from "@/lib/brand";
+import { toast } from "sonner";
 
 const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 50];
 const SIZE_PRESETS = [25, 50, 75, 100];
@@ -122,6 +123,10 @@ export function OrderForm() {
         ? getMarketOrderPrice(orderSide === "buy", parseFloat(midPrice))
         : orderPrice;
 
+      const sideLabel = orderSide === "buy" ? "Long" : "Short";
+      const typeLabel = orderType === "market" ? "Market" : "Limit";
+      toast.loading(`Submitting ${typeLabel} ${sideLabel} ${displayName}...`, { id: "order-submit" });
+
       const result = await signAndPlaceOrder({
         coin: selectedMarket,
         isBuy: orderSide === "buy",
@@ -133,7 +138,11 @@ export function OrderForm() {
       });
 
       if (result.success) {
-        setFeedback({ type: "success", msg: `Order placed (ID: ${result.oid})` });
+        toast.success(`${typeLabel} ${sideLabel} ${displayName} — Order Placed`, {
+          id: "order-submit",
+          description: `${orderSize} ${displayName} @ ${orderType === "market" ? "Market" : "$" + parseFloat(orderPrice || midPrice).toLocaleString()}`,
+        });
+        setFeedback(null);
         setOrderSize("");
 
         if (tpPrice) {
@@ -148,6 +157,7 @@ export function OrderForm() {
             markets,
             expectedAddress: address ?? undefined,
           });
+          toast.success("Take Profit order placed", { description: `TP @ $${parseFloat(tpPrice).toLocaleString()}` });
         }
         if (slPrice) {
           await signAndPlaceOrder({
@@ -161,15 +171,18 @@ export function OrderForm() {
             markets,
             expectedAddress: address ?? undefined,
           });
+          toast.success("Stop Loss order placed", { description: `SL @ $${parseFloat(slPrice).toLocaleString()}` });
         }
 
         loadUserState();
       } else {
         const raw = result.error || "Order failed";
+        toast.error("Order Failed", { id: "order-submit", description: raw });
         setFeedback({ type: "error", msg: raw });
       }
     } catch (err) {
       const raw = (err as Error).message;
+      toast.error("Order Failed", { id: "order-submit", description: raw });
       setFeedback({ type: "error", msg: raw });
     } finally {
       setSubmitting(false);
@@ -418,11 +431,13 @@ export function OrderForm() {
                 setEnablingTrading(true);
                 setFeedback(null);
                 try {
+                  toast.loading("Approving trading agent...", { id: "enable-trading" });
                   const result = await signAndApproveAgent(address ?? undefined);
                   if (result.success) {
                     setAgentApproved(true);
 
                     if (BRAND_CONFIG.builder.enabled) {
+                      toast.loading("Approving builder fee...", { id: "enable-trading" });
                       const builderResult = await signAndApproveBuilderFee(
                         BRAND_CONFIG.builder.address,
                         "0.01%",
@@ -433,16 +448,20 @@ export function OrderForm() {
                       }
                     }
 
-                    setFeedback({ type: "success", msg: "Trading enabled! You can now place orders." });
+                    toast.success("Trading Enabled", { id: "enable-trading", description: "You can now place orders without wallet popups." });
+                    setFeedback(null);
                   } else {
                     const raw = result.error || "Failed to enable trading";
                     const msg = raw.includes("does not exist")
                       ? "No Hyperliquid account found. Deposit USDC to Hyperliquid first, then enable trading."
                       : raw;
+                    toast.error("Enable Trading Failed", { id: "enable-trading", description: msg });
                     setFeedback({ type: "error", msg });
                   }
                 } catch (err) {
-                  setFeedback({ type: "error", msg: (err as Error).message });
+                  const msg = (err as Error).message;
+                  toast.error("Enable Trading Failed", { id: "enable-trading", description: msg });
+                  setFeedback({ type: "error", msg });
                 } finally {
                   setEnablingTrading(false);
                 }
@@ -473,12 +492,16 @@ export function OrderForm() {
               onClick={async () => {
                 setFeedback(null);
                 try {
+                  toast.loading("Enabling unified account...", { id: "unified-account" });
                   const result = await signAndEnableDexAbstraction(address ?? undefined);
                   if (result.success) {
-                    setFeedback({ type: "success", msg: "Unified account enabled! You can now trade stocks & commodities." });
+                    toast.success("Unified Account Enabled", { id: "unified-account", description: "You can now trade stocks & commodities." });
+                    setFeedback(null);
                     loadUserState();
                   } else {
-                    setFeedback({ type: "error", msg: result.error || "Failed to enable unified account" });
+                    const msg = result.error || "Failed to enable unified account";
+                    toast.error("Unified Account Failed", { id: "unified-account", description: msg });
+                    setFeedback({ type: "error", msg });
                   }
                 } catch (err) {
                   setFeedback({ type: "error", msg: (err as Error).message });

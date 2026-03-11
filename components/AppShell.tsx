@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Toaster } from "sonner";
 
 const Navbar = dynamic(() => import("@/components/Navbar").then((m) => m.Navbar), { ssr: false });
 const MobileNav = dynamic(() => import("@/components/MobileNav").then((m) => m.MobileNav), { ssr: false });
@@ -16,6 +17,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <StatusBar />
       <MobileNav />
       <AlertBanner />
+      <Toaster
+        position="bottom-right"
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: "#1a1d2e",
+            border: "1px solid #2a2e39",
+            color: "#eaecef",
+            fontSize: "13px",
+          },
+        }}
+        gap={8}
+      />
     </WalletProvider>
   );
 }

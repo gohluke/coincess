@@ -7,6 +7,7 @@ import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder } from "@/lib/hyperliquid/signing";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
+import { toast } from "sonner";
 
 type Tab = "positions" | "orders" | "fills";
 
@@ -45,9 +46,10 @@ export function PositionsTable() {
 
   const handleClosePosition = async (coin: string, szi: string) => {
     setClosingCoin(coin);
+    const isLong = parseFloat(szi) > 0;
+    toast.loading(`Closing ${coin} ${isLong ? "Long" : "Short"}...`, { id: `close-${coin}` });
     try {
       const size = Math.abs(parseFloat(szi));
-      const isLong = parseFloat(szi) > 0;
       const market = markets.find((m) => m.name === coin);
       const markPx = parseFloat(market?.markPx ?? "0");
       const price = getMarketOrderPrice(!isLong, markPx);
@@ -62,9 +64,10 @@ export function PositionsTable() {
         markets,
         expectedAddress: address ?? undefined,
       });
+      toast.success(`${coin} Position Closed`, { id: `close-${coin}` });
       loadUserState();
     } catch (err) {
-      console.error("Close position failed:", err);
+      toast.error(`Failed to close ${coin}`, { id: `close-${coin}`, description: (err as Error).message });
     } finally {
       setClosingCoin(null);
     }
@@ -72,14 +75,16 @@ export function PositionsTable() {
 
   const handleCancelOrder = async (coin: string, oid: number) => {
     setCancellingOid(oid);
+    toast.loading(`Cancelling ${coin} order...`, { id: `cancel-${oid}` });
     try {
       const market = markets.find((m) => m.name === coin);
       if (market) {
         await signAndCancelOrder(market.assetIndex, oid, address ?? undefined);
+        toast.success(`${coin} Order Cancelled`, { id: `cancel-${oid}` });
         loadUserState();
       }
     } catch (err) {
-      console.error("Cancel order failed:", err);
+      toast.error(`Failed to cancel ${coin} order`, { id: `cancel-${oid}`, description: (err as Error).message });
     } finally {
       setCancellingOid(null);
     }
@@ -103,6 +108,8 @@ export function PositionsTable() {
     if (newPrice === currentPrice && newSize === currentSize) return;
 
     setModifyingOid(order.oid);
+    const fieldLabel = field === "price" ? "Price" : "Size";
+    toast.loading(`Modify request submitted — ${order.coin} ${fieldLabel}`, { id: `modify-${order.oid}` });
     try {
       const isBuy = order.side === "B";
       const result = await signAndModifyOrder({
@@ -119,10 +126,17 @@ export function PositionsTable() {
         markets,
         expectedAddress: address ?? undefined,
       });
-      if (result.success) loadUserState();
-      else console.error("Modify failed:", result.error);
+      if (result.success) {
+        toast.success(`${order.coin} Order Modified`, {
+          id: `modify-${order.oid}`,
+          description: `${fieldLabel} updated to ${field === "price" ? "$" + parseFloat(newValue).toLocaleString() : newValue}`,
+        });
+        loadUserState();
+      } else {
+        toast.error(`Modify Failed`, { id: `modify-${order.oid}`, description: result.error });
+      }
     } catch (err) {
-      console.error("Modify order failed:", err);
+      toast.error(`Modify Failed`, { id: `modify-${order.oid}`, description: (err as Error).message });
     } finally {
       setModifyingOid(null);
     }
@@ -131,6 +145,8 @@ export function PositionsTable() {
   const handleCancelAll = async () => {
     if (cancellingAll || openOrders.length === 0) return;
     setCancellingAll(true);
+    const count = openOrders.length;
+    toast.loading(`Cancelling ${count} order${count > 1 ? "s" : ""}...`, { id: "cancel-all" });
     try {
       for (const o of openOrders) {
         const market = markets.find((m) => m.name === o.coin);
@@ -138,9 +154,10 @@ export function PositionsTable() {
           await signAndCancelOrder(market.assetIndex, o.oid, address ?? undefined);
         }
       }
+      toast.success(`${count} Order${count > 1 ? "s" : ""} Cancelled`, { id: "cancel-all" });
       loadUserState();
     } catch (err) {
-      console.error("Cancel all failed:", err);
+      toast.error("Cancel All Failed", { id: "cancel-all", description: (err as Error).message });
     } finally {
       setCancellingAll(false);
     }
