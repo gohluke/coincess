@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Wallet,
@@ -583,7 +583,7 @@ export default function DashboardPage() {
               ) : (
                 <div className="space-y-2">
                   {positions.map((ap) => (
-                    <PositionRow key={ap.position.coin} ap={ap} markets={markets} funding={funding} fills={fills} />
+                    <PositionRow key={ap.position.coin} ap={ap} markets={markets} fills={fills} />
                   ))}
                 </div>
               )}
@@ -992,7 +992,26 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
   );
 }
 
-function PositionRow({ ap, markets, funding, fills }: { ap: AssetPosition; markets: MarketInfo[]; funding: FundingPayment[]; fills: Fill[] }) {
+function LiveDuration({ since }: { since: number }) {
+  const [, tick] = useState(0);
+  const ref = useRef<ReturnType<typeof setInterval>>(undefined);
+  useEffect(() => {
+    ref.current = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(ref.current);
+  }, []);
+  const elapsed = Date.now() - since;
+  const s = Math.floor(elapsed / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return <>{d}d {h}h {m}m {sec}s</>;
+  if (h > 0) return <>{h}h {m}m {sec}s</>;
+  if (m > 0) return <>{m}m {sec}s</>;
+  return <>{sec}s</>;
+}
+
+function PositionRow({ ap, markets, fills }: { ap: AssetPosition; markets: MarketInfo[]; fills: Fill[] }) {
   const pos = ap.position;
   const size = parseFloat(pos.szi);
   const pnl = parseFloat(pos.unrealizedPnl);
@@ -1001,19 +1020,10 @@ function PositionRow({ ap, markets, funding, fills }: { ap: AssetPosition; marke
   const market = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === pos.coin);
   const markPx = market ? parseFloat(market.markPx) : 0;
   const roe = parseFloat(pos.returnOnEquity) * 100;
-  const liqPx = pos.liquidationPx ? parseFloat(pos.liquidationPx) : null;
-  const liqDistance = liqPx && markPx ? Math.abs((markPx - liqPx) / markPx * 100) : null;
   const notional = Math.abs(size) * markPx;
-  const margin = parseFloat(pos.marginUsed);
   const displayCoin = market?.displayName ?? bare;
   const tradeCoin = market?.name ?? pos.coin;
-  const leverageType = pos.leverage.type === "cross" ? "Cross" : "Isolated";
-  const currentFundingRate = market ? parseFloat(market.funding) : 0;
-
-  const cumFunding = useMemo(() =>
-    funding.filter((fp) => stripPrefix(fp.delta.coin) === bare).reduce((s, fp) => s + parseFloat(fp.delta.usdc), 0),
-    [funding, bare]
-  );
+  const isLong = size > 0;
 
   const entryTime = useMemo(() => {
     const openFills = fills
@@ -1023,67 +1033,51 @@ function PositionRow({ ap, markets, funding, fills }: { ap: AssetPosition; marke
   }, [fills, bare]);
 
   return (
-    <Link href={`/trade/${tradeCoin}`} className="block bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden hover:border-[#3a3e4e] transition-colors">
-      {/* Top: coin name, direction, and PnL */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <div className="flex items-center gap-2.5">
-          <div>
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${size > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-                {size > 0 ? "LONG" : "SHORT"}
-              </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#c0c4cc] font-medium">
-                {pos.leverage.value}x {leverageType}
-              </span>
-            </div>
-            <p className="text-sm font-semibold">{displayCoin} <span className="text-[10px] text-[#848e9c] font-normal">{bare}-USDC</span></p>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="flex items-center gap-2 justify-end">
-            <PnlBadge value={pnl} />
-            <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
-            </span>
-          </div>
-          <p className="text-[10px] text-[#848e9c]">{Math.abs(size).toFixed(size < 1 ? 5 : 2)} @ ${markPx.toLocaleString()}</p>
-        </div>
+    <Link href={`/trade/${tradeCoin}`} className="flex items-center gap-3 px-4 py-2.5 bg-[#141620] border border-[#2a2e3e] rounded-xl hover:border-[#3a3e4e] transition-colors">
+      {/* Direction badge */}
+      <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+        {isLong ? "LONG" : "SHORT"}
+      </span>
+
+      {/* Coin + leverage */}
+      <div className="shrink-0 min-w-[70px]">
+        <span className="text-xs font-semibold text-white">{displayCoin}</span>
+        <span className="text-[9px] text-[#848e9c] ml-1">{pos.leverage.value}x</span>
       </div>
 
-      {/* Coinglass-style detail grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
-        <DetailCell label="Entry Price" value={`$${entry.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
-        <DetailCell
-          label="Liq. Price"
-          value={liqPx != null && liqPx > 0 ? `$${liqPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "–"}
-          valueColor={liqDistance != null && liqDistance < 10 ? "text-red-400" : "text-amber-400"}
-          sub={liqDistance != null ? `${liqDistance.toFixed(1)}% away` : undefined}
-        />
-        <DetailCell label="Margin" value={formatUsd(margin)} />
-        <DetailCell
-          label="Funding Fee"
-          value={`${cumFunding >= 0 ? "+" : ""}${formatUsd(cumFunding)}`}
-          valueColor={cumFunding >= 0 ? "text-emerald-400" : "text-red-400"}
-          sub={`${(currentFundingRate * 100).toFixed(4)}%/h`}
-        />
-        <DetailCell label="Notional" value={formatUsd(notional)} />
-        <DetailCell
-          label="Entry Time"
-          value={entryTime ? new Date(entryTime).toLocaleString([], { hour: "2-digit", minute: "2-digit" }) : "–"}
-          sub={entryTime ? new Date(entryTime).toLocaleDateString([], { month: "2-digit", day: "2-digit" }) : undefined}
-        />
+      {/* Size @ Mark */}
+      <span className="hidden sm:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
+        {Math.abs(size).toFixed(size < 1 ? 5 : 2)} @ ${markPx.toLocaleString()}
+      </span>
+
+      {/* Entry */}
+      <span className="hidden md:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
+        Entry ${entry.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+      </span>
+
+      {/* Notional */}
+      <span className="hidden lg:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
+        {formatUsd(notional)}
+      </span>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Duration timer */}
+      {entryTime && (
+        <span className="text-[10px] text-[#555a66] font-mono tabular-nums shrink-0">
+          <LiveDuration since={entryTime} />
+        </span>
+      )}
+
+      {/* PnL + ROE */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <PnlBadge value={pnl} />
+        <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+          ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
+        </span>
       </div>
     </Link>
-  );
-}
-
-function DetailCell({ label, value, valueColor, sub }: { label: string; value: string; valueColor?: string; sub?: string }) {
-  return (
-    <div className="bg-[#141620] px-3 py-2">
-      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">{label}</p>
-      <p className={`text-[11px] font-semibold ${valueColor ?? "text-white"}`}>{value}</p>
-      {sub && <p className="text-[9px] text-[#848e9c]">{sub}</p>}
-    </div>
   );
 }
 
