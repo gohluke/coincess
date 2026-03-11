@@ -46,10 +46,24 @@ function getProvider(): EthProvider {
  */
 function createHyperliquidWallet(preferredAddress?: string): AbstractViemJsonRpcAccount {
   const provider = getProvider();
+  return makeWalletAdapter(provider, preferredAddress);
+}
 
+/**
+ * Build a wallet adapter that talks to window.ethereum directly (MetaMask),
+ * bypassing any Privy wrapper. Used for one-time EIP-712 approvals so the
+ * signing popup goes straight to MetaMask on Arbitrum -- matching based.one.
+ */
+function createNativeWallet(preferredAddress?: string): AbstractViemJsonRpcAccount {
+  const eth = getNativeEthereum();
+  if (!eth) throw new Error("No browser wallet detected. Please install MetaMask.");
+  return makeWalletAdapter(eth, preferredAddress);
+}
+
+function makeWalletAdapter(provider: EthProvider, preferredAddress?: string): AbstractViemJsonRpcAccount {
   return {
     async getAddresses() {
-      const addr = await resolveAddress(preferredAddress);
+      const addr = await resolveAddressVia(provider, preferredAddress);
       return [addr] as `0x${string}`[];
     },
 
@@ -59,11 +73,8 @@ function createHyperliquidWallet(preferredAddress?: string): AbstractViemJsonRpc
     },
 
     async signTypedData(params) {
-      const addr = await resolveAddress(preferredAddress);
+      const addr = await resolveAddressVia(provider, preferredAddress);
 
-      // Create a viem WalletClient with the resolved account so signTypedData
-      // goes through viem's proper EIP-712 encoding pipeline rather than
-      // manual eth_signTypedData_v4 JSON construction.
       const client = createWalletClient({
         account: addr as `0x${string}`,
         chain: arbitrum,
@@ -80,15 +91,46 @@ function createHyperliquidWallet(preferredAddress?: string): AbstractViemJsonRpc
   };
 }
 
-async function resolveAddress(preferredAddress?: string): Promise<string> {
+async function resolveAddressVia(provider: EthProvider, preferredAddress?: string): Promise<string> {
   if (preferredAddress) return preferredAddress.toLowerCase();
-  const provider = getProvider();
   let accounts = (await provider.request({ method: "eth_accounts" })) as string[];
   if (!accounts.length) {
     accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
   }
   if (!accounts[0]) throw new Error("No account connected");
   return accounts[0].toLowerCase();
+}
+
+/**
+ * Switch MetaMask to Arbitrum One. If the chain isn't added yet, add it.
+ * Best-effort -- doesn't throw on failure so the signing flow can continue.
+ */
+async function switchToArbitrum(provider: EthProvider): Promise<void> {
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0xa4b1" }],
+    });
+  } catch (err) {
+    if ((err as { code?: number }).code === 4902) {
+      try {
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0xa4b1",
+            chainName: "Arbitrum One",
+            nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+            rpcUrls: ["https://arb1.arbitrum.io/rpc"],
+            blockExplorerUrls: ["https://arbiscan.io"],
+          }],
+        });
+      } catch { /* user declined adding the chain */ }
+    }
+  }
+}
+
+async function resolveAddress(preferredAddress?: string): Promise<string> {
+  return resolveAddressVia(getProvider(), preferredAddress);
 }
 
 export async function getSigningAddress(): Promise<string | null> {
@@ -178,16 +220,25 @@ export function getMarketOrderPrice(isBuy: boolean, markPx: number): string {
 // ---------------------------------------------------------------------------
 
 /**
- * One-time agent approval: generates a local keypair, has the user sign
- * an ApproveAgent EIP-712 message via a viem WalletClient (SDK-recommended),
+ * One-time agent approval: generates a local keypair, switches MetaMask to
+ * Arbitrum, has the user sign an ApproveAgent EIP-712 message directly via
+ * window.ethereum (bypasses Privy so the popup goes to MetaMask like based.one),
  * registers with Hyperliquid, and stores the agent key in localStorage.
  */
 export async function signAndApproveAgent(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userAddr = await resolveAddress(expectedAddress);
-    const wallet = createHyperliquidWallet(expectedAddress);
+    // Use native MetaMask directly, not Privy's wrapper, so the signing
+    // popup goes straight to MetaMask on Arbitrum (matching based.one UX).
+    const nativeEth = getNativeEthereum();
+    if (nativeEth) {
+      await switchToArbitrum(nativeEth);
+    }
+
+    const nativeProvider = nativeEth ?? getProvider();
+    const wallet = makeWalletAdapter(nativeProvider, expectedAddress);
+    const userAddr = await resolveAddressVia(nativeProvider, expectedAddress);
 
     const agentPrivateKey = generatePrivateKey();
     const agentAcc = privateKeyToAccount(agentPrivateKey);
@@ -360,7 +411,9 @@ export async function signAndApproveBuilderFee(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = createHyperliquidWallet(expectedAddress);
+    const nativeEth = getNativeEthereum();
+    if (nativeEth) await switchToArbitrum(nativeEth);
+    const wallet = nativeEth ? makeWalletAdapter(nativeEth, expectedAddress) : createHyperliquidWallet(expectedAddress);
 
     const nonce = Date.now();
     const action = {
@@ -405,7 +458,9 @@ export async function signAndEnableDexAbstraction(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const wallet = createHyperliquidWallet(expectedAddress);
+    const nativeEth = getNativeEthereum();
+    if (nativeEth) await switchToArbitrum(nativeEth);
+    const wallet = nativeEth ? makeWalletAdapter(nativeEth, expectedAddress) : createHyperliquidWallet(expectedAddress);
     const address = await resolveAddress(expectedAddress);
 
     const nonce = Date.now();

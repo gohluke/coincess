@@ -195,20 +195,24 @@ export function OrderForm() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* Buy / Sell toggle */}
-        <div className="grid grid-cols-2 gap-1 bg-[#1a1d26] rounded-lg p-0.5">
+        {/* Long / Short toggle */}
+        <div className="grid grid-cols-2">
           <button
             onClick={() => setOrderSide("buy")}
-            className={`py-2 text-sm font-semibold rounded-md transition-colors ${
-              orderSide === "buy" ? "bg-[#0ecb81] text-white" : "text-[#848e9c] hover:text-white"
+            className={`pb-2.5 text-sm font-semibold transition-colors border-b-2 ${
+              orderSide === "buy"
+                ? "text-[#0ecb81] border-[#0ecb81]"
+                : "text-[#848e9c] border-transparent hover:text-white"
             }`}
           >
             Long
           </button>
           <button
             onClick={() => setOrderSide("sell")}
-            className={`py-2 text-sm font-semibold rounded-md transition-colors ${
-              orderSide === "sell" ? "bg-[#f6465d] text-white" : "text-[#848e9c] hover:text-white"
+            className={`pb-2.5 text-sm font-semibold transition-colors border-b-2 ${
+              orderSide === "sell"
+                ? "text-[#f6465d] border-[#f6465d]"
+                : "text-[#848e9c] border-transparent hover:text-white"
             }`}
           >
             Short
