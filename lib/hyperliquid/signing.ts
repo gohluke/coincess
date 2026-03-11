@@ -168,8 +168,10 @@ function createNativeWallet(preferredAddress?: string): AbstractViemJsonRpcAccou
     },
 
     async getChainId() {
-      const chainId = (await eth.request({ method: "eth_chainId" })) as string;
-      return Number(chainId);
+      // Return the Hyperliquid signing chain (0x66eee = 421614) so the SDK's
+      // chain validation passes. The actual MetaMask chain doesn't matter for
+      // EIP-712 message signing — only the domain chainId matters.
+      return 421614;
     },
 
     async signTypedData(params) {
