@@ -74,13 +74,17 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 
 ### Embedded Wallet (Privy)
 - **Email / Google / wallet login** — no MetaMask extension required
+- **Arbitrum One default** — Privy is configured with `defaultChain: arbitrum` and `supportedChains: [arbitrum]`; wallet connects on Arbitrum automatically (matches based.app behavior)
 - Auto-creates a self-custody embedded wallet on Arbitrum
 - **External wallet priority** — when Privy detects an external wallet (Zerion, MetaMask), it uses that for signing instead of the embedded wallet, since external wallets are more likely to hold Hyperliquid deposits
 - Falls back to MetaMask when Privy is not configured
 
 ### Wallet & Signing
 - MetaMask / injected wallet connection
-- EIP-712 signing via Hyperliquid's phantom agent scheme
+- **Agent-based trading** — one-time "Enable Trading" approval generates a local agent keypair, registers it with Hyperliquid via EIP-712 `ApproveAgent`, and stores it in `localStorage`. All subsequent orders sign silently with the agent key — no wallet popup per trade
+- **Native MetaMask signing for approvals** — the one-time agent approval uses `window.ethereum` directly (bypasses Privy's wrapped provider) so the EIP-712 popup goes straight to MetaMask, not Zerion/Privy. Automatically switches the wallet to Arbitrum One before signing
+- **Agent invalidation** — if Hyperliquid rejects an agent (expired, unauthorized), the stored agent is cleared and the user is prompted to re-enable trading
+- EIP-712 signing via Hyperliquid's `signL1Action` (agent key) and `signUserSignedAction` (user wallet for approvals)
 - **Address-validated signing** — every trade, cancel, and leverage update verifies the signing wallet matches the expected trading address before submitting; prevents "User does not exist" errors when a linked wallet differs from the active wallet account
 - **Wallet mismatch detection** — order form and positions table detect address mismatches between the displayed (linked) wallet and the actual signing wallet, showing a clear warning and disabling trades until resolved
 - Builder fee exemption for the platform owner's address
@@ -275,7 +279,8 @@ coincess/
 ├── lib/
 │   ├── hyperliquid/
 │   │   ├── api.ts                      # REST API client
-│   │   ├── signing.ts                  # EIP-712 signing + builder fees
+│   │   ├── agent.ts                    # Agent keypair storage (localStorage)
+│   │   ├── signing.ts                  # EIP-712 signing, agent approval, builder fees
 │   │   ├── wallet.ts                   # Wallet adapter
 │   │   ├── websocket.ts               # WebSocket client
 │   │   ├── store.ts                    # Zustand store

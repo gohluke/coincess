@@ -212,8 +212,58 @@ export function getMarketOrderPrice(isBuy: boolean, markPx: number): string {
 }
 
 /**
+ * Build a wallet adapter that talks directly to window.ethereum (MetaMask)
+ * instead of Privy's wrapped provider. Used for one-time EIP-712 approvals
+ * so the signing popup goes to MetaMask, not Privy/Zerion.
+ */
+function getNativeWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount {
+  const eth = getNativeEthereum();
+  if (!eth) throw new Error("No wallet detected. Please install MetaMask or another browser wallet.");
+
+  return {
+    async getAddresses() {
+      let accounts = (await eth.request({ method: "eth_accounts" })) as string[];
+      if (!accounts.length) {
+        accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+      }
+      if (preferredAddress) {
+        const match = accounts.find((a) => a.toLowerCase() === preferredAddress.toLowerCase());
+        if (match) return [match] as `0x${string}`[];
+      }
+      return (accounts.length ? [accounts[0]] : []) as `0x${string}`[];
+    },
+    async getChainId() {
+      const chainId = (await eth.request({ method: "eth_chainId" })) as string;
+      return Number(chainId);
+    },
+    async signTypedData(params) {
+      const { EIP712Domain: _, ...filteredTypes } = params.types as Record<string, unknown>;
+      const payload = JSON.stringify({
+        domain: params.domain,
+        types: filteredTypes,
+        primaryType: params.primaryType,
+        message: params.message,
+      });
+      let accounts = (await eth.request({ method: "eth_accounts" })) as string[];
+      if (!accounts.length) {
+        accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+      }
+      const address = preferredAddress
+        ? accounts.find((a) => a.toLowerCase() === preferredAddress.toLowerCase()) ?? accounts[0]
+        : accounts[0];
+      if (!address) throw new Error("No account connected in MetaMask");
+      const result = await eth.request({
+        method: "eth_signTypedData_v4",
+        params: [address, payload],
+      });
+      return result as `0x${string}`;
+    },
+  };
+}
+
+/**
  * One-time agent approval: generates a local keypair, has the user sign
- * an ApproveAgent EIP-712 message (single MetaMask popup on Arbitrum),
+ * an ApproveAgent EIP-712 message (single wallet popup via window.ethereum),
  * registers with Hyperliquid, and stores the agent key in localStorage.
  * After this, all orders are signed locally with the agent key — no popups.
  */
@@ -221,7 +271,32 @@ export async function signAndApproveAgent(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userWallet = getWalletAdapter(expectedAddress);
+    // Ensure MetaMask is on Arbitrum One before prompting the signature
+    const eth = getNativeEthereum();
+    if (eth) {
+      try {
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0xa4b1" }], // Arbitrum One
+        });
+      } catch (switchErr) {
+        // 4902 = chain not added yet; try adding it
+        if ((switchErr as { code?: number }).code === 4902) {
+          await eth.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0xa4b1",
+              chainName: "Arbitrum One",
+              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+              rpcUrls: ["https://arb1.arbitrum.io/rpc"],
+              blockExplorerUrls: ["https://arbiscan.io"],
+            }],
+          });
+        }
+      }
+    }
+
+    const userWallet = getNativeWalletAdapter(expectedAddress);
     const userAddr = await getAddress(expectedAddress);
 
     const agentPrivateKey = generatePrivateKey();
