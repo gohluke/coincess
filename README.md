@@ -279,6 +279,50 @@ npx tsx scripts/fleet-runner.ts --strategy momentum
 npx tsx scripts/fleet-runner.ts --limit 10
 ```
 
+### Twitter/X Growth Engine (@coincess)
+
+Automated content posting to grow the @coincess Twitter account.
+
+```bash
+# Add to .env.local:
+# X_API_KEY=your_api_key
+# X_API_SECRET=your_api_secret
+# X_ACCESS_TOKEN=your_access_token
+# X_ACCESS_TOKEN_SECRET=your_access_token_secret
+
+# Preview all content types (no posting)
+npx tsx scripts/twitter-engine.ts --dry-run --preview all
+
+# Post one piece of content immediately
+npx tsx scripts/twitter-engine.ts --post market    # market movers
+npx tsx scripts/twitter-engine.ts --post funding   # funding rate alpha
+npx tsx scripts/twitter-engine.ts --post volume    # volume update
+npx tsx scripts/twitter-engine.ts --post thread    # educational thread
+npx tsx scripts/twitter-engine.ts --post engage    # engagement post
+
+# Run the scheduler (posts 8x/day at optimal times)
+npx tsx scripts/twitter-engine.ts
+
+# Production (24/7 on VPS via pm2)
+pm2 start "npx tsx scripts/twitter-engine.ts" --name coincess-twitter
+```
+
+**Daily schedule (UTC):**
+| Time | Content |
+|------|---------|
+| 07:00 | Market Movers (top gainers/losers) |
+| 09:00 | Engagement (polls, hot takes) |
+| 11:00 | Funding Rate Alpha (farming opportunities) |
+| 13:00 | Engagement |
+| 15:00 | Volume Update (top traded coins) |
+| 17:00 | Educational Thread (4-6 tweet threads) |
+| 19:00 | Engagement |
+| 21:00 | Market Recap |
+
+**Content types:** Market movers with live Hyperliquid data, funding rate alpha, 24h volume stats, educational threads (funding farming, grid trading, position management, common mistakes), engagement posts (polls, opinions, questions).
+
+**Setup:** Create a developer app at [developer.x.com](https://developer.x.com), enable read+write permissions under User Authentication Settings, copy the 4 OAuth 1.0a keys to `.env.local`.
+
 ### Optional / Future
 
 - [ ] **CNC token tiered builder fees** — Coincess's native token. Users who stake CNC get reduced trading fees:
