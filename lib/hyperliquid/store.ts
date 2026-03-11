@@ -47,6 +47,8 @@ interface TradingState {
 
   // Actions
   loadMarkets: () => Promise<void>;
+  refreshMarkets: () => Promise<void>;
+  updateMids: (mids: Record<string, string>) => void;
   selectMarket: (coin: string) => void;
   setInterval: (interval: CandleInterval) => void;
   setAddress: (addr: string | null) => void;
@@ -96,6 +98,26 @@ export const useTradingStore = create<TradingState>((set, get) => ({
     }
   },
 
+  refreshMarkets: async () => {
+    try {
+      const fresh = await fetchAllMarkets();
+      set({ markets: fresh });
+    } catch (err) {
+      console.error("Failed to refresh markets:", err);
+    }
+  },
+
+  updateMids: (mids) => {
+    set((s) => {
+      const updated = s.markets.map((m) => {
+        const mid = mids[m.name];
+        if (!mid) return m;
+        return { ...m, markPx: mid, midPx: mid };
+      });
+      return { markets: updated };
+    });
+  },
+
   selectMarket: (coin) => {
     set({ selectedMarket: coin, orderbook: null, recentTrades: [] });
     fetchL2Book(coin).then((book) => set({ orderbook: book })).catch(console.error);
@@ -136,10 +158,15 @@ export const useTradingStore = create<TradingState>((set, get) => ({
 }));
 
 let wsCleanups: (() => void)[] = [];
+let metaRefreshTimer: ReturnType<typeof setInterval> | null = null;
 
 export function subscribeToMarket(coin: string) {
   wsCleanups.forEach((fn) => fn());
   wsCleanups = [];
+  if (metaRefreshTimer) {
+    clearInterval(metaRefreshTimer);
+    metaRefreshTimer = null;
+  }
 
   const ws = getWs();
   const store = useTradingStore.getState();
@@ -156,8 +183,23 @@ export function subscribeToMarket(coin: string) {
     }),
   );
 
+  wsCleanups.push(
+    ws.subscribeAllMids((mids) => {
+      store.updateMids(mids);
+    }),
+  );
+
+  // Refresh funding, volume, OI every 10s via REST
+  metaRefreshTimer = setInterval(() => {
+    store.refreshMarkets();
+  }, 10_000);
+
   return () => {
     wsCleanups.forEach((fn) => fn());
     wsCleanups = [];
+    if (metaRefreshTimer) {
+      clearInterval(metaRefreshTimer);
+      metaRefreshTimer = null;
+    }
   };
 }

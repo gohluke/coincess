@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { arbitrum } from "viem/chains";
+import { arbitrum, mainnet } from "viem/chains";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
@@ -25,7 +25,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             },
             loginMethods: ["email", "google", "wallet"],
             defaultChain: arbitrum,
-            supportedChains: [arbitrum],
+            supportedChains: [arbitrum, mainnet],
             embeddedWallets: {
               ethereum: {
                 createOnLogin: "users-without-wallets",
