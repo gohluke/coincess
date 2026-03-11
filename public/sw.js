@@ -1,4 +1,4 @@
-const CACHE_NAME = "coincess-v1";
+const CACHE_NAME = "coincess-v2";
 const STATIC_ASSETS = ["/trade/BTC", "/predict", "/automate"];
 
 self.addEventListener("install", (event) => {

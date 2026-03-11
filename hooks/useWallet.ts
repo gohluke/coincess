@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getConnectedAddress, connectWallet } from "@/lib/hyperliquid/wallet";
 import { setPrivyProvider } from "@/lib/hyperliquid/signing";
+import { usePrivyAuth } from "@/components/WalletProvider";
 
 interface WalletState {
   address: string | null;
@@ -11,80 +12,28 @@ interface WalletState {
   connect: () => Promise<void>;
 }
 
-interface PrivyWallet {
-  address: string;
-  chainType: string;
-  getEthereumProvider: () => Promise<{
-    request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-  }>;
-}
-
-let usePrivyHook: (() => {
-  ready: boolean;
-  authenticated: boolean;
-  user: { wallet?: { address: string } } | null;
-  login: () => void;
-}) | null = null;
-
-let useWalletsHook: (() => { wallets: PrivyWallet[] }) | null = null;
-
-let privyLoaded = false;
-
-function loadPrivy() {
-  if (privyLoaded) return;
-  privyLoaded = true;
-  if (!process.env.NEXT_PUBLIC_PRIVY_APP_ID) return;
-  import("@privy-io/react-auth")
-    .then((mod) => {
-      usePrivyHook = mod.usePrivy as unknown as typeof usePrivyHook;
-      if ("useWallets" in mod) {
-        useWalletsHook = mod.useWallets as unknown as typeof useWalletsHook;
-      }
-    })
-    .catch(() => {});
-}
-
 export function useWallet(): WalletState {
   const [address, setAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState<"privy" | "metamask" | null>(null);
 
-  let privyAddr: string | null = null;
-  let privyReady = false;
-  let privyLogin: (() => void) | null = null;
-  let privyWallets: PrivyWallet[] = [];
+  const privy = usePrivyAuth();
 
-  try {
-    loadPrivy();
-    if (usePrivyHook) {
-      const privy = usePrivyHook();
-      privyReady = privy.ready;
-      privyAddr = privy.authenticated ? (privy.user?.wallet?.address ?? null) : null;
-      privyLogin = privy.login;
-    }
-    if (useWalletsHook) {
-      const { wallets } = useWalletsHook();
-      privyWallets = wallets;
-    }
-  } catch {
-    // Privy not in provider tree
-  }
+  const privyAddr = privy.authenticated ? (privy.user?.wallet?.address ?? null) : null;
+  const privyReady = privy.ready;
+  const privyLogin = privy.login;
+  const privyWallets = privy.wallets;
 
   useEffect(() => {
     if (privyAddr) {
-      // Identify wallets by connector type, not by address comparison.
-      // Privy embedded wallets have walletClientType "privy"; external
-      // wallets (MetaMask, Coinbase, etc.) have other values.
-      const typed = privyWallets as (PrivyWallet & { walletClientType?: string })[];
-      const externalWallet = typed.find(
+      const externalWallet = privyWallets.find(
         (w) => w.chainType === "ethereum" && w.walletClientType !== "privy",
       );
-      const embeddedWallet = typed.find(
+      const embeddedWallet = privyWallets.find(
         (w) => w.chainType === "ethereum" && w.walletClientType === "privy",
       );
 
-      // Prefer the external wallet if available (it's the one with HL deposits)
-      const preferredWallet = externalWallet ?? embeddedWallet ?? typed.find(
+      const preferredWallet = externalWallet ?? embeddedWallet ?? privyWallets.find(
         (w) => w.address.toLowerCase() === privyAddr!.toLowerCase(),
       );
       const effectiveAddr = preferredWallet?.address ?? privyAddr;
@@ -112,7 +61,7 @@ export function useWallet(): WalletState {
         }
         setLoading(false);
       });
-    } else if (!usePrivyHook) {
+    } else if (!privy.ready && !PRIVY_APP_ID) {
       getConnectedAddress().then((addr) => {
         if (addr) {
           setAddress(addr);
@@ -137,3 +86,5 @@ export function useWallet(): WalletState {
 
   return { address, loading, source, connect };
 }
+
+const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID;

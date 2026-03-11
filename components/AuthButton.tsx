@@ -1,23 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { LogOut, User, Copy, Check, ExternalLink, Settings } from "lucide-react";
-
-interface PrivyHook {
-  ready: boolean;
-  authenticated: boolean;
-  user: {
-    id: string;
-    email?: { address: string };
-    google?: { email: string; name?: string };
-    wallet?: { address: string; chainType?: string };
-    linkedAccounts?: Array<{ type: string; address?: string; email?: string; name?: string }>;
-  } | null;
-  login: () => void;
-  logout: () => Promise<void>;
-}
-
-let usePrivyHook: (() => PrivyHook) | null = null;
+import { usePrivyAuth } from "@/components/WalletProvider";
 
 function hashCode(str: string): number {
   let hash = 0;
@@ -92,27 +77,6 @@ function Identicon({ seed, size = 32 }: { seed: string; size?: number }) {
 export function AuthButton() {
   const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_PRIVY_APP_ID) {
-      setLoaded(true);
-      return;
-    }
-
-    import("@privy-io/react-auth")
-      .then((mod) => {
-        usePrivyHook = mod.usePrivy as unknown as () => PrivyHook;
-        setLoaded(true);
-      })
-      .catch(() => {
-        setLoaded(true);
-      });
-  }, []);
-
-  if (!loaded) {
-    return <div className="h-9 w-9 rounded-full bg-[#141620] animate-pulse" />;
-  }
 
   return <AuthButtonInner showMenu={showMenu} setShowMenu={setShowMenu} copied={copied} setCopied={setCopied} />;
 }
@@ -128,12 +92,7 @@ function AuthButtonInner({
   copied: boolean;
   setCopied: (v: boolean) => void;
 }) {
-  let privy: PrivyHook | null = null;
-  try {
-    if (usePrivyHook) privy = usePrivyHook();
-  } catch {
-    privy = null;
-  }
+  const privy = usePrivyAuth();
 
   const handleCopy = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
@@ -141,14 +100,14 @@ function AuthButtonInner({
     setTimeout(() => setCopied(false), 2000);
   }, [setCopied]);
 
-  if (!privy || !privy.ready) {
+  if (!privy.ready) {
     return <div className="h-9 w-9 rounded-full bg-[#141620] animate-pulse" />;
   }
 
   if (!privy.authenticated) {
     return (
       <button
-        onClick={() => privy!.login()}
+        onClick={() => privy.login()}
         className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand hover:bg-brand-hover text-white text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-95"
       >
         Connect
@@ -231,7 +190,7 @@ function AuthButtonInner({
               <button
                 onClick={async () => {
                   setShowMenu(false);
-                  await privy!.logout();
+                  await privy.logout();
                 }}
                 className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-[13px] text-red-400 hover:bg-red-500/10 transition-colors"
               >
