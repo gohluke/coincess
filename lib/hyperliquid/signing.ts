@@ -401,10 +401,16 @@ export function getMarketOrderPrice(isBuy: boolean, markPx: number): string {
 // ---------------------------------------------------------------------------
 
 /**
- * One-time agent approval: generates a local keypair, switches MetaMask to
- * Arbitrum, has the user sign an ApproveAgent EIP-712 message directly via
- * window.ethereum (bypasses Privy so the popup goes to MetaMask like based.one),
- * registers with Hyperliquid, and stores the agent key in localStorage.
+ * One-time agent approval: generates a local keypair, has the user sign an
+ * ApproveAgent EIP-712 message directly via window.ethereum (bypasses Privy
+ * so the popup goes to MetaMask), registers with Hyperliquid, and stores
+ * the agent key in localStorage.
+ *
+ * NOTE: We intentionally do NOT switch the wallet to Arbitrum before signing.
+ * The Hyperliquid EIP-712 domain uses chainId 0x66eee (421614) which doesn't
+ * correspond to the wallet's active chain. MetaMask mobile rejects
+ * eth_signTypedData_v4 if the domain chainId mismatches the active chain,
+ * so any chain switch would cause a failure on iPhone.
  */
 export async function signAndApproveAgent(
   expectedAddress?: string,
@@ -414,13 +420,10 @@ export async function signAndApproveAgent(
     if (!nativeEth) {
       return {
         success: false,
-        error: "Enable Trading requires MetaMask or another injected wallet connected on Arbitrum One.",
+        error: "Enable Trading requires MetaMask or another injected wallet.",
       };
     }
-    await switchToArbitrum(nativeEth);
 
-    // Use native MetaMask directly, not Privy's wrapper, so the signing
-    // popup goes straight to MetaMask on Arbitrum (matching based.one UX).
     const wallet = createNativeWallet(expectedAddress);
     const userAddr = await resolveAddressVia(nativeEth, expectedAddress);
 

@@ -209,7 +209,7 @@ export function DepositButton({ variant = "default" }: { variant?: "default" | "
       ) : (
         <button
           onClick={() => setOpen(true)}
-          className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-bold transition-colors"
+          className="px-3 py-1.5 rounded-full bg-brand hover:bg-brand-hover text-white text-xs font-bold transition-colors"
         >
           Deposit
         </button>
