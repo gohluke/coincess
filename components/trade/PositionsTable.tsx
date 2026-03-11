@@ -31,12 +31,29 @@ export function PositionsTable() {
   const [editValue, setEditValue] = useState("");
   const [modifyingOid, setModifyingOid] = useState<number | null>(null);
 
-  const [actionForm, setActionForm] = useState<{ coin: string; type: "limit" | "tpsl" } | null>(null);
+  const [actionForm, setActionForm] = useState<{ coin: string; type: "limit" } | null>(null);
   const [limitPrice, setLimitPrice] = useState("");
   const [tpPrice, setTpPrice] = useState("");
   const [slPrice, setSlPrice] = useState("");
   const [reversingCoin, setReversingCoin] = useState<string | null>(null);
   const [submittingTpsl, setSubmittingTpsl] = useState(false);
+  const [tpslModal, setTpslModal] = useState<{
+    coin: string; szi: string; entryPx: string; markPx: string; posSize: string; leverage: string; isLong: boolean;
+  } | null>(null);
+
+  const filteredOpenOrders = useMemo(
+    () => openOrders.filter((o) => !o.isPositionTpsl),
+    [openOrders]
+  );
+
+  const getTpslForCoin = useCallback(
+    (coin: string) => {
+      const tp = openOrders.find((o) => o.isPositionTpsl && o.coin === coin && o.triggerCondition?.includes("gt"));
+      const sl = openOrders.find((o) => o.isPositionTpsl && o.coin === coin && !o.triggerCondition?.includes("gt"));
+      return { tp, sl };
+    },
+    [openOrders]
+  );
 
   useEffect(() => {
     fetch("/api/quant/trades?status=open&limit=50")
@@ -156,20 +173,38 @@ export function PositionsTable() {
     await Promise.allSettled(tasks);
     setSubmittingTpsl(false);
     setActionForm(null);
+    setTpslModal(null);
     setTpPrice("");
     setSlPrice("");
     loadUserState();
   };
 
-  const openActionForm = (coin: string, type: "limit" | "tpsl", markPx?: string) => {
+  const openActionForm = (coin: string, type: "limit", markPx?: string) => {
     if (actionForm?.coin === coin && actionForm.type === type) {
       setActionForm(null);
       return;
     }
     setActionForm({ coin, type });
-    if (type === "limit" && markPx) setLimitPrice(markPx);
+    if (markPx) setLimitPrice(markPx);
     setTpPrice("");
     setSlPrice("");
+  };
+
+  const openTpslModal = (pos: { coin: string; szi: string; entryPx?: string | null; leverage: { value: number } }) => {
+    const mkt = markets.find((m) => m.name === pos.coin);
+    const mkPx = mkt ? parseFloat(mkt.markPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0";
+    const { tp, sl } = getTpslForCoin(pos.coin);
+    setTpPrice(tp ? parseFloat(tp.triggerPx).toString() : "");
+    setSlPrice(sl ? parseFloat(sl.triggerPx).toString() : "");
+    setTpslModal({
+      coin: pos.coin,
+      szi: pos.szi,
+      entryPx: pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—",
+      markPx: mkPx,
+      posSize: `${Math.abs(parseFloat(pos.szi)).toFixed(4)}`,
+      leverage: `${pos.leverage.value}x`,
+      isLong: parseFloat(pos.szi) > 0,
+    });
   };
 
   const handleCancelOrder = async (coin: string, oid: number) => {
@@ -242,12 +277,12 @@ export function PositionsTable() {
   };
 
   const handleCancelAll = async () => {
-    if (cancellingAll || openOrders.length === 0) return;
+    if (cancellingAll || filteredOpenOrders.length === 0) return;
     setCancellingAll(true);
-    const count = openOrders.length;
+    const count = filteredOpenOrders.length;
     toast.loading(`Cancelling ${count} order${count > 1 ? "s" : ""}...`, { id: "cancel-all" });
     try {
-      for (const o of openOrders) {
+      for (const o of filteredOpenOrders) {
         const market = markets.find((m) => m.name === o.coin);
         if (market) {
           await signAndCancelOrder(market.assetIndex, o.oid, address ?? undefined);
@@ -324,7 +359,7 @@ export function PositionsTable() {
         <div className="flex items-center gap-3 sm:gap-4">
           {([
             ["positions", `Positions (${positions.length})`],
-            ["orders", `Open Orders (${openOrders.length})`],
+            ["orders", `Open Orders (${filteredOpenOrders.length})`],
           ] as [Tab, string][]).map(([t, label]) => (
             <button
               key={t}
@@ -395,6 +430,7 @@ export function PositionsTable() {
                     const fundingPct = (fundingRate * 100).toFixed(4);
                     const quantInfo = getQuantInfo(pos.coin);
                     const isBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
+                    const posTpsl = getTpslForCoin(pos.coin);
 
                     return (
                       <React.Fragment key={pos.coin}>
@@ -415,6 +451,12 @@ export function PositionsTable() {
                             </div>
                             {quantInfo?.meta?.reason && (
                               <div className="text-[9px] text-[#848e9c] mt-0.5 truncate max-w-[200px]">{quantInfo.meta.reason}</div>
+                            )}
+                            {(posTpsl.tp || posTpsl.sl) && (
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                {posTpsl.tp && <span className="text-[8px] text-[#0ecb81]">TP {parseFloat(posTpsl.tp.triggerPx).toLocaleString()}</span>}
+                                {posTpsl.sl && <span className="text-[8px] text-[#f6465d]">SL {parseFloat(posTpsl.sl.triggerPx).toLocaleString()}</span>}
+                              </div>
                             )}
                           </td>
                           <td className={`text-right px-2 py-2 ${isLong ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
@@ -464,10 +506,10 @@ export function PositionsTable() {
                                 {reversingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin" /> : "Reverse"}
                               </button>
                               <button
-                                onClick={() => openActionForm(pos.coin, "tpsl")}
+                                onClick={() => openTpslModal(pos)}
                                 disabled={isBusy}
                                 className={`p-1 rounded transition-colors disabled:opacity-50 ${
-                                  actionForm?.coin === pos.coin && actionForm.type === "tpsl"
+                                  tpslModal?.coin === pos.coin
                                     ? "bg-brand/20 text-brand" : "text-[#848e9c] hover:text-white hover:bg-[#2a2e3e]"
                                 }`}
                                 title="Set TP/SL"
@@ -514,44 +556,6 @@ export function PositionsTable() {
                                   <button onClick={() => setActionForm(null)} className="text-[#848e9c] hover:text-white p-1"><X className="h-3 w-3" /></button>
                                 </div>
                               )}
-                              {actionForm.type === "tpsl" && (
-                                <div className="flex items-center gap-2 text-xs flex-wrap">
-                                  <span className="text-[#848e9c] text-[10px]">TP/SL:</span>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[#0ecb81] text-[10px]">TP</span>
-                                    <input
-                                      autoFocus
-                                      type="text"
-                                      inputMode="decimal"
-                                      value={tpPrice}
-                                      onChange={(e) => setTpPrice(e.target.value)}
-                                      onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(pos.coin, pos.szi); if (e.key === "Escape") setActionForm(null); }}
-                                      placeholder="Take Profit"
-                                      className="w-28 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#0ecb81] rounded px-2 py-1 text-white text-right text-xs focus:outline-none"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[#f6465d] text-[10px]">SL</span>
-                                    <input
-                                      type="text"
-                                      inputMode="decimal"
-                                      value={slPrice}
-                                      onChange={(e) => setSlPrice(e.target.value)}
-                                      onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(pos.coin, pos.szi); if (e.key === "Escape") setActionForm(null); }}
-                                      placeholder="Stop Loss"
-                                      className="w-28 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#f6465d] rounded px-2 py-1 text-white text-right text-xs focus:outline-none"
-                                    />
-                                  </div>
-                                  <button
-                                    onClick={() => handleSetTpsl(pos.coin, pos.szi)}
-                                    disabled={submittingTpsl}
-                                    className="px-3 py-1 bg-brand/15 text-brand rounded hover:bg-brand/25 transition-colors text-[10px] font-medium disabled:opacity-50"
-                                  >
-                                    {submittingTpsl ? <Loader2 className="h-3 w-3 animate-spin" /> : "Set"}
-                                  </button>
-                                  <button onClick={() => setActionForm(null)} className="text-[#848e9c] hover:text-white p-1"><X className="h-3 w-3" /></button>
-                                </div>
-                              )}
                             </td>
                           </tr>
                         )}
@@ -577,6 +581,7 @@ export function PositionsTable() {
                 const mFundPct = (mFundRate * 100).toFixed(4);
                 const mQuantInfo = getQuantInfo(pos.coin);
                 const mBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
+                const mTpsl = getTpslForCoin(pos.coin);
 
                 return (
                   <div key={pos.coin} className="px-3 py-3 active:bg-[#1a1d26]">
@@ -606,6 +611,12 @@ export function PositionsTable() {
 
                     {mQuantInfo?.meta?.reason && (
                       <div className="text-[9px] text-[#848e9c] mb-1.5 truncate">{mQuantInfo.meta.reason}</div>
+                    )}
+                    {(mTpsl.tp || mTpsl.sl) && (
+                      <div className="flex items-center gap-2 mb-1.5">
+                        {mTpsl.tp && <span className="text-[9px] text-[#0ecb81]">TP {parseFloat(mTpsl.tp.triggerPx).toLocaleString()}</span>}
+                        {mTpsl.sl && <span className="text-[9px] text-[#f6465d]">SL {parseFloat(mTpsl.sl.triggerPx).toLocaleString()}</span>}
+                      </div>
                     )}
 
                     <div className="grid grid-cols-4 gap-x-2 gap-y-1.5 text-[10px] mb-2.5">
@@ -650,9 +661,9 @@ export function PositionsTable() {
                         {reversingCoin === pos.coin ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : "Reverse"}
                       </button>
                       <button
-                        onClick={() => openActionForm(pos.coin, "tpsl")}
+                        onClick={() => openTpslModal(pos)}
                         className={`px-2.5 py-1.5 rounded-lg transition-colors ${
-                          actionForm?.coin === pos.coin && actionForm.type === "tpsl" ? "bg-brand/20 text-brand" : "bg-[#2a2e3e] text-[#848e9c]"
+                          tpslModal?.coin === pos.coin ? "bg-brand/20 text-brand" : "bg-[#2a2e3e] text-[#848e9c]"
                         }`}
                         title="TP/SL"
                       >
@@ -688,40 +699,6 @@ export function PositionsTable() {
                             </button>
                           </div>
                         )}
-                        {actionForm.type === "tpsl" && (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[#0ecb81] text-[10px] w-6 shrink-0">TP</span>
-                              <input
-                                autoFocus
-                                type="text"
-                                inputMode="decimal"
-                                value={tpPrice}
-                                onChange={(e) => setTpPrice(e.target.value)}
-                                placeholder="Take Profit price"
-                                className="flex-1 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#0ecb81] rounded px-2 py-1.5 text-white text-right text-xs focus:outline-none"
-                              />
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[#f6465d] text-[10px] w-6 shrink-0">SL</span>
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={slPrice}
-                                onChange={(e) => setSlPrice(e.target.value)}
-                                placeholder="Stop Loss price"
-                                className="flex-1 bg-[#1a1d26] border border-[#2a2e3e] focus:border-[#f6465d] rounded px-2 py-1.5 text-white text-right text-xs focus:outline-none"
-                              />
-                            </div>
-                            <button
-                              onClick={() => handleSetTpsl(pos.coin, pos.szi)}
-                              disabled={submittingTpsl}
-                              className="w-full py-1.5 bg-brand text-white rounded text-xs font-medium disabled:opacity-50"
-                            >
-                              {submittingTpsl ? <Loader2 className="h-3 w-3 animate-spin mx-auto" /> : "Set TP/SL"}
-                            </button>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -732,9 +709,9 @@ export function PositionsTable() {
         )
       )}
 
-      {/* Open Orders tab */}
+      {/* Open Orders tab — TP/SL orders are hidden here; shown on positions */}
       {tab === "orders" && (
-        openOrders.length === 0 ? (
+        filteredOpenOrders.length === 0 ? (
           <div className="flex items-center justify-center flex-1 text-[#4a4e59]">
             No open orders
           </div>
@@ -751,7 +728,7 @@ export function PositionsTable() {
                   <th className="text-right px-2 py-2 font-medium">Placed</th>
                   <th className="text-right px-2 py-2 font-medium">Duration</th>
                   <th className="text-right px-3 py-2 font-medium">
-                    {openOrders.length > 1 && (
+                    {filteredOpenOrders.length > 1 && (
                       <button
                         onClick={handleCancelAll}
                         disabled={cancellingAll}
@@ -765,7 +742,7 @@ export function PositionsTable() {
                 </tr>
               </thead>
               <tbody>
-                {openOrders.map((o) => {
+                {filteredOpenOrders.map((o) => {
                   const isBuy = o.side === "B";
                   const orderValue = parseFloat(o.origSz) * parseFloat(o.limitPx);
                   const orderDate = new Date(o.timestamp);
@@ -885,6 +862,85 @@ export function PositionsTable() {
             </table>
           </div>
         )
+      )}
+
+      {/* TP/SL Modal */}
+      {tpslModal && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setTpslModal(null); }}
+        >
+          <div className="bg-[#141620] border border-[#2a2e3e] rounded-2xl w-full max-w-[400px] mx-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h3 className="text-base font-semibold text-white">TP/SL for Position</h3>
+              <button onClick={() => setTpslModal(null)} className="p-1 text-[#848e9c] hover:text-white rounded-lg hover:bg-[#2a2e3e] transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="px-5 pb-4 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#848e9c]">Coin</span>
+                <span className="text-white font-semibold">{tpslModal.coin}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#848e9c]">Position</span>
+                <span className={`font-semibold ${tpslModal.isLong ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                  {tpslModal.posSize} {tpslModal.coin}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#848e9c]">Entry Price</span>
+                <span className="text-white">{tpslModal.entryPx}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#848e9c]">Mark Price</span>
+                <span className="text-white">{tpslModal.markPx}</span>
+              </div>
+
+              <div className="border-t border-[#2a2e3e] pt-3 space-y-3">
+                <div>
+                  <label className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1 block">Take Profit</label>
+                  <input
+                    autoFocus
+                    type="text"
+                    inputMode="decimal"
+                    value={tpPrice}
+                    onChange={(e) => setTpPrice(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
+                    placeholder="TP Price"
+                    className="w-full bg-[#0b0e11] border border-[#2a2e3e] focus:border-[#0ecb81] rounded-lg px-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1 block">Stop Loss</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={slPrice}
+                    onChange={(e) => setSlPrice(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
+                    placeholder="SL Price"
+                    className="w-full bg-[#0b0e11] border border-[#2a2e3e] focus:border-[#f6465d] rounded-lg px-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleSetTpsl(tpslModal.coin, tpslModal.szi)}
+                disabled={submittingTpsl}
+                className="w-full py-3 bg-brand text-white rounded-xl font-semibold text-sm transition-all hover:brightness-110 disabled:opacity-50"
+              >
+                {submittingTpsl ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Confirm"}
+              </button>
+
+              <p className="text-[10px] text-[#5e6673] leading-relaxed">
+                Take-profit and stop-loss orders apply to the entire position. They automatically cancel after the position closes. A market order is triggered when the stop loss or take profit price is reached.
+              </p>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {sharePosition && createPortal(

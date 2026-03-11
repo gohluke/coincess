@@ -19,7 +19,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
-import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding, fetchSpotClearinghouseState } from "@/lib/hyperliquid/api";
+import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding, fetchSpotClearinghouseState, fetchUserLedger } from "@/lib/hyperliquid/api";
+import type { LedgerUpdate } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
@@ -181,6 +182,7 @@ export default function DashboardPage() {
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [fills, setFills] = useState<Fill[]>([]);
   const [funding, setFunding] = useState<FundingPayment[]>([]);
+  const [ledger, setLedger] = useState<LedgerUpdate[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [historyView, setHistoryView] = useState<"trades" | "fills" | "calendar">("trades");
@@ -193,13 +195,14 @@ export default function DashboardPage() {
   const loadData = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, quantStatus] = await Promise.all([
+      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, userLedger, quantStatus] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
         fetchSpotClearinghouseState(addr).catch(() => null),
         fetchOpenOrders(addr),
         fetchAllMarkets(),
         fetchUserFills(addr),
         fetchUserFunding(addr),
+        fetchUserLedger(addr).catch(() => [] as LedgerUpdate[]),
         fetch("/api/quant/status").then((r) => r.json()).catch(() => ({ strategies: [] })),
       ]);
       setCh(chState);
@@ -208,6 +211,7 @@ export default function DashboardPage() {
       setMarkets(allMarkets);
       setFills(userFills);
       setFunding(userFunding);
+      setLedger(userLedger);
       setServerStrategies(quantStatus.strategies ?? []);
       setLastRefresh(new Date());
     } catch (err) {
@@ -471,7 +475,7 @@ export default function DashboardPage() {
             {firstLoad ? (
               <SkeletonChart className="h-[280px]" />
             ) : fills.length > 0 ? (
-              <PortfolioChart fills={fills} currentAccountValue={accountValue} />
+              <PortfolioChart fills={fills} ledger={ledger} currentAccountValue={accountValue} />
             ) : null}
 
             {/* Donut chart */}

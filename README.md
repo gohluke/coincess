@@ -10,8 +10,9 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); order form reads spot clearinghouse balance for accurate "Available" display
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
-- **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position, and set TP/SL inline (Hyperliquid-style actions)
-- **Order management** — compact single-row open orders table with inline edit for size/price, placed date, duration with seconds, and cancel all
+- **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position; TP/SL prices shown inline on positions
+- **TP/SL modal** — clicking the pencil icon opens a centered modal (Hyperliquid-style) with coin info, position size, entry/mark prices, TP and SL price inputs, and Confirm button; pre-fills existing TP/SL values; TP/SL trigger orders are hidden from open orders and reflected directly on the position row
+- **Order management** — compact single-row open orders table with inline edit for size/price, placed date, duration with seconds, and cancel all (TP/SL orders excluded)
 - **Tabbed Order Book / Recent Trades** — order book and recent trades displayed as tabs side-by-side, only one visible at a time
 - **Full-width positions panel** — positions/orders span the entire screen width below the chart (Based.app-style layout)
 - **Share PNL** — generate and share position cards as PNG images with leverage, ROE, entry/current price, and rocket illustration; portrait (9:16) and square (1:1) aspect ratios; supports Download, Copy to clipboard, and native Share (mobile)
@@ -38,7 +39,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 ### Unified Portfolio Dashboard (`/dashboard`)
 - **Combined balance** — uses Spot USDC `total` as the single source of truth (unified account mode avoids double-counting perps backing); Available Balance = Spot total - Spot hold
 - **Balance breakdown cards** — Available Balance, USDC (Perps), Spot Balance, EVM Balance
-- **Portfolio chart** — Account Value and cumulative PNL over time (canvas-rendered, hover crosshair); toggle between "Account Value" and "PNL" tabs; data derived from fills history
+- **Portfolio chart** — Account Value and cumulative PNL over time (canvas-rendered with ResizeObserver, hover crosshair); toggle between "Account Value" and "PNL" pill tabs; reconstructs history from deposits/withdrawals (ledger API) + fills, not just PnL
 - **Asset distribution donut** — visual split of Spot USDC vs open position margins
 - Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
 - PnL calendar — daily profit/loss heatmap

@@ -116,6 +116,21 @@ export async function fetchUserFills(user: string): Promise<Fill[]> {
   return post<Fill[]>("/info", { type: "userFills", user });
 }
 
+export interface LedgerUpdate {
+  time: number;
+  delta: {
+    type: string;
+    usdc?: string;
+    amount?: string;
+    fee?: string;
+    [key: string]: unknown;
+  };
+}
+
+export async function fetchUserLedger(user: string): Promise<LedgerUpdate[]> {
+  return post<LedgerUpdate[]>("/info", { type: "userNonFundingLedgerUpdates", user });
+}
+
 export async function fetchUserFunding(user: string, startTime = 0, endTime = 9999999999999): Promise<FundingPayment[]> {
   return post<FundingPayment[]>("/info", { type: "userFunding", user, startTime, endTime });
 }
