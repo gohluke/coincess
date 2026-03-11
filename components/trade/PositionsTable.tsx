@@ -2,9 +2,9 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2, Share2, Download, Copy, Check, Bot } from "lucide-react";
+import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder } from "@/lib/hyperliquid/signing";
+import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder } from "@/lib/hyperliquid/signing";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 
@@ -25,6 +25,10 @@ export function PositionsTable() {
   const [cancellingAll, setCancellingAll] = useState(false);
   const [sharePosition, setSharePosition] = useState<ShareablePosition | null>(null);
   const [quantTrades, setQuantTrades] = useState<QuantTradeInfo[]>([]);
+
+  const [editingOrder, setEditingOrder] = useState<{ oid: number; field: "price" | "size" } | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [modifyingOid, setModifyingOid] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/quant/trades?status=open&limit=50")
@@ -78,6 +82,49 @@ export function PositionsTable() {
       console.error("Cancel order failed:", err);
     } finally {
       setCancellingOid(null);
+    }
+  };
+
+  const startEditing = (oid: number, field: "price" | "size", currentValue: string) => {
+    setEditingOrder({ oid, field });
+    setEditValue(currentValue);
+  };
+
+  const handleModifyOrder = async (order: typeof openOrders[0], field: "price" | "size", newValue: string) => {
+    setEditingOrder(null);
+    const parsed = parseFloat(newValue);
+    if (isNaN(parsed) || parsed <= 0) return;
+
+    const currentPrice = order.limitPx;
+    const currentSize = order.sz;
+    const newPrice = field === "price" ? newValue : currentPrice;
+    const newSize = field === "size" ? newValue : currentSize;
+
+    if (newPrice === currentPrice && newSize === currentSize) return;
+
+    setModifyingOid(order.oid);
+    try {
+      const isBuy = order.side === "B";
+      const result = await signAndModifyOrder({
+        oid: order.oid,
+        coin: order.coin,
+        isBuy,
+        newPrice,
+        newSize,
+        reduceOnly: order.reduceOnly,
+        orderType: order.isTrigger ? "trigger" : "limit",
+        tpsl: order.isTrigger && order.triggerPx !== "0"
+          ? { triggerPx: order.triggerPx, type: order.isPositionTpsl ? (order.triggerCondition?.includes("gt") ? "tp" : "sl") : "tp" }
+          : undefined,
+        markets,
+        expectedAddress: address ?? undefined,
+      });
+      if (result.success) loadUserState();
+      else console.error("Modify failed:", result.error);
+    } catch (err) {
+      console.error("Modify order failed:", err);
+    } finally {
+      setModifyingOid(null);
     }
   };
 
@@ -439,13 +486,59 @@ export function PositionsTable() {
                         <td className={`px-3 py-2 font-medium ${isBuy ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
                           {isBuy ? "Long" : "Short"}
                         </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">{o.sz}</td>
+                        <td className="text-right px-3 py-2 text-[#eaecef]">
+                          {editingOrder?.oid === o.oid && editingOrder.field === "size" ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              inputMode="decimal"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleModifyOrder(o, "size", editValue);
+                                if (e.key === "Escape") setEditingOrder(null);
+                              }}
+                              onBlur={() => handleModifyOrder(o, "size", editValue)}
+                              className="w-20 bg-[#1a1d26] border border-brand rounded px-1.5 py-0.5 text-xs text-white text-right focus:outline-none"
+                            />
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1 cursor-pointer group"
+                              onClick={() => startEditing(o.oid, "size", o.sz)}
+                            >
+                              {modifyingOid === o.oid ? <Loader2 className="h-3 w-3 animate-spin" /> : o.sz}
+                              <Pencil className="h-2.5 w-2.5 text-[#848e9c] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </span>
+                          )}
+                        </td>
                         <td className="text-right px-3 py-2 text-[#eaecef]">{o.origSz}</td>
                         <td className="text-right px-3 py-2 text-[#eaecef]">
                           {orderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC
                         </td>
                         <td className="text-right px-3 py-2 text-[#eaecef]">
-                          {parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          {editingOrder?.oid === o.oid && editingOrder.field === "price" ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              inputMode="decimal"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleModifyOrder(o, "price", editValue);
+                                if (e.key === "Escape") setEditingOrder(null);
+                              }}
+                              onBlur={() => handleModifyOrder(o, "price", editValue)}
+                              className="w-24 bg-[#1a1d26] border border-brand rounded px-1.5 py-0.5 text-xs text-white text-right focus:outline-none"
+                            />
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1 cursor-pointer group"
+                              onClick={() => startEditing(o.oid, "price", o.limitPx)}
+                            >
+                              {parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                              <Pencil className="h-2.5 w-2.5 text-[#848e9c] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </span>
+                          )}
                         </td>
                         <td className="text-center px-3 py-2 text-[#848e9c]">{o.reduceOnly ? "Yes" : "No"}</td>
                         <td className="px-3 py-2 text-[#848e9c]">
@@ -516,11 +609,55 @@ export function PositionsTable() {
                     <div className="grid grid-cols-4 gap-x-2 gap-y-1.5 text-[10px]">
                       <div>
                         <div className="text-[#848e9c]">Price</div>
-                        <div className="text-[#eaecef]">{parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                        {editingOrder?.oid === o.oid && editingOrder.field === "price" ? (
+                          <input
+                            autoFocus
+                            type="text"
+                            inputMode="decimal"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleModifyOrder(o, "price", editValue);
+                              if (e.key === "Escape") setEditingOrder(null);
+                            }}
+                            onBlur={() => handleModifyOrder(o, "price", editValue)}
+                            className="w-full bg-[#1a1d26] border border-brand rounded px-1 py-0.5 text-[10px] text-white focus:outline-none"
+                          />
+                        ) : (
+                          <div
+                            className="text-[#eaecef] flex items-center gap-0.5 cursor-pointer"
+                            onClick={() => startEditing(o.oid, "price", o.limitPx)}
+                          >
+                            {parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            <Pencil className="h-2 w-2 text-[#848e9c]" />
+                          </div>
+                        )}
                       </div>
                       <div>
                         <div className="text-[#848e9c]">Size</div>
-                        <div className="text-[#eaecef]">{o.sz}</div>
+                        {editingOrder?.oid === o.oid && editingOrder.field === "size" ? (
+                          <input
+                            autoFocus
+                            type="text"
+                            inputMode="decimal"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleModifyOrder(o, "size", editValue);
+                              if (e.key === "Escape") setEditingOrder(null);
+                            }}
+                            onBlur={() => handleModifyOrder(o, "size", editValue)}
+                            className="w-full bg-[#1a1d26] border border-brand rounded px-1 py-0.5 text-[10px] text-white focus:outline-none"
+                          />
+                        ) : (
+                          <div
+                            className="text-[#eaecef] flex items-center gap-0.5 cursor-pointer"
+                            onClick={() => startEditing(o.oid, "size", o.sz)}
+                          >
+                            {o.sz}
+                            <Pencil className="h-2 w-2 text-[#848e9c]" />
+                          </div>
+                        )}
                       </div>
                       <div>
                         <div className="text-[#848e9c]">Orig. Size</div>

@@ -1,6 +1,6 @@
 import { signL1Action, signUserSignedAction } from "@nktkas/hyperliquid/signing";
 import type { AbstractViemJsonRpcAccount } from "@nktkas/hyperliquid/signing";
-import { ApproveBuilderFeeTypes, ApproveAgentTypes, order as sdkOrder } from "@nktkas/hyperliquid/api/exchange";
+import { ApproveBuilderFeeTypes, ApproveAgentTypes, order as sdkOrder, modify as sdkModify } from "@nktkas/hyperliquid/api/exchange";
 import { HttpTransport } from "@nktkas/hyperliquid";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { createWalletClient, custom } from "viem";
@@ -525,6 +525,70 @@ export async function signAndPlaceOrder(
     const msg = (err as Error).message || String(err);
     pushSigningDebug("placeOrder.errorMsg", msg);
     return { success: false, error: msg };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Order modification (uses SDK's high-level modify function)
+// ---------------------------------------------------------------------------
+
+export async function signAndModifyOrder(params: {
+  oid: number;
+  coin: string;
+  isBuy: boolean;
+  newPrice: string;
+  newSize: string;
+  reduceOnly: boolean;
+  orderType: "limit" | "trigger";
+  tpsl?: { triggerPx: string; type: "tp" | "sl" };
+  markets: MarketInfo[];
+  expectedAddress?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const userAddr = await resolveAddress(params.expectedAddress);
+    const agentAcc = getAgentAccount(userAddr);
+    const wallet = agentAcc ?? createHyperliquidWallet(params.expectedAddress);
+
+    const market = params.markets.find((m) => m.name === params.coin);
+    if (!market) throw new Error(`Market ${params.coin} not found`);
+
+    const price = parseFloat(params.newPrice);
+    const size = parseFloat(params.newSize);
+
+    const priceStr = priceToWire(price);
+    const sizeStr = sizeToWire(size, market.szDecimals);
+
+    let orderType: { limit: { tif: "Gtc" | "Ioc" } } | { trigger: { isMarket: boolean; triggerPx: string; tpsl: "tp" | "sl" } };
+    if (params.tpsl) {
+      orderType = {
+        trigger: {
+          isMarket: true,
+          triggerPx: priceToWire(parseFloat(params.tpsl.triggerPx)),
+          tpsl: params.tpsl.type,
+        },
+      };
+    } else {
+      orderType = { limit: { tif: "Gtc" } };
+    }
+
+    const transport = new HttpTransport();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await sdkModify({ transport, wallet } as any, {
+      oid: params.oid,
+      order: {
+        a: market.assetIndex,
+        b: params.isBuy,
+        p: priceStr,
+        s: sizeStr,
+        r: params.reduceOnly,
+        t: orderType,
+      },
+    });
+
+    return { success: true };
+  } catch (err) {
+    pushSigningDebug("modifyOrder.exception", getErrorDetails(err));
+    return { success: false, error: (err as Error).message || String(err) };
   }
 }
 
