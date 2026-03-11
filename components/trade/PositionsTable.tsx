@@ -22,6 +22,7 @@ export function PositionsTable() {
   const [tab, setTab] = useState<Tab>("positions");
   const [closingCoin, setClosingCoin] = useState<string | null>(null);
   const [cancellingOid, setCancellingOid] = useState<number | null>(null);
+  const [cancellingAll, setCancellingAll] = useState(false);
   const [sharePosition, setSharePosition] = useState<ShareablePosition | null>(null);
   const [quantTrades, setQuantTrades] = useState<QuantTradeInfo[]>([]);
 
@@ -77,6 +78,24 @@ export function PositionsTable() {
       console.error("Cancel order failed:", err);
     } finally {
       setCancellingOid(null);
+    }
+  };
+
+  const handleCancelAll = async () => {
+    if (cancellingAll || openOrders.length === 0) return;
+    setCancellingAll(true);
+    try {
+      for (const o of openOrders) {
+        const market = markets.find((m) => m.name === o.coin);
+        if (market) {
+          await signAndCancelOrder(market.assetIndex, o.oid, address ?? undefined);
+        }
+      }
+      loadUserState();
+    } catch (err) {
+      console.error("Cancel all failed:", err);
+    } finally {
+      setCancellingAll(false);
     }
   };
 
@@ -142,7 +161,7 @@ export function PositionsTable() {
         <div className="flex items-center gap-3 sm:gap-4">
           {([
             ["positions", `Positions (${positions.length})`],
-            ["orders", `Orders (${openOrders.length})`],
+            ["orders", `Open Orders (${openOrders.length})`],
           ] as [Tab, string][]).map(([t, label]) => (
             <button
               key={t}
@@ -370,7 +389,7 @@ export function PositionsTable() {
         )
       )}
 
-      {/* Orders tab */}
+      {/* Open Orders tab */}
       {tab === "orders" && (
         openOrders.length === 0 ? (
           <div className="flex items-center justify-center flex-1 text-[#4a4e59]">
@@ -378,44 +397,70 @@ export function PositionsTable() {
           </div>
         ) : (
           <>
-            {/* Desktop table */}
+            {/* Desktop table — Hyperliquid-style */}
             <div className="hidden md:block overflow-x-auto flex-1">
               <table className="w-full">
                 <thead>
                   <tr className="text-[10px] text-[#848e9c] uppercase tracking-wider">
-                    <th className="text-left px-4 py-2 font-medium">Market</th>
-                    <th className="text-right px-3 py-2 font-medium">Type</th>
-                    <th className="text-right px-3 py-2 font-medium">Side</th>
-                    <th className="text-right px-3 py-2 font-medium">Price</th>
+                    <th className="text-left px-4 py-2 font-medium">Time</th>
+                    <th className="text-left px-3 py-2 font-medium">Type</th>
+                    <th className="text-left px-3 py-2 font-medium">Coin</th>
+                    <th className="text-left px-3 py-2 font-medium">Direction</th>
                     <th className="text-right px-3 py-2 font-medium">Size</th>
-                    <th className="text-right px-3 py-2 font-medium">Filled</th>
-                    <th className="text-right px-4 py-2 font-medium">Cancel</th>
+                    <th className="text-right px-3 py-2 font-medium">Original Size</th>
+                    <th className="text-right px-3 py-2 font-medium">Order Value</th>
+                    <th className="text-right px-3 py-2 font-medium">Price</th>
+                    <th className="text-center px-3 py-2 font-medium">Reduce Only</th>
+                    <th className="text-left px-3 py-2 font-medium">Trigger Conditions</th>
+                    <th className="text-center px-3 py-2 font-medium">TP/SL</th>
+                    <th className="text-right px-4 py-2 font-medium">
+                      <button
+                        onClick={handleCancelAll}
+                        disabled={cancellingAll}
+                        className="text-[#f6465d] hover:text-[#f6465d]/80 transition-colors disabled:opacity-50 text-[10px] font-medium"
+                      >
+                        {cancellingAll ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Cancel All"}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {openOrders.map((o) => {
                     const isBuy = o.side === "B";
+                    const orderValue = parseFloat(o.origSz) * parseFloat(o.limitPx);
+                    const orderDate = new Date(o.timestamp);
+                    const timeStr = `${orderDate.getMonth() + 1}/${orderDate.getDate()}/${orderDate.getFullYear()} - ${orderDate.toLocaleTimeString("en-US", { hour12: false })}`;
+
                     return (
                       <tr key={o.oid} className="hover:bg-[#1a1d26] border-b border-[#1a1d26]">
-                        <td className="px-4 py-2 text-white font-medium">{o.coin}</td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">{o.orderType}</td>
-                        <td className={`text-right px-3 py-2 font-medium ${isBuy ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          {isBuy ? "Buy" : "Sell"}
+                        <td className="px-4 py-2 text-[#848e9c] whitespace-nowrap">{timeStr}</td>
+                        <td className="px-3 py-2 text-[#eaecef]">{o.isTrigger ? "Trigger" : "Limit"}</td>
+                        <td className="px-3 py-2 text-white font-medium">{o.coin}</td>
+                        <td className={`px-3 py-2 font-medium ${isBuy ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                          {isBuy ? "Long" : "Short"}
+                        </td>
+                        <td className="text-right px-3 py-2 text-[#eaecef]">{o.sz}</td>
+                        <td className="text-right px-3 py-2 text-[#eaecef]">{o.origSz}</td>
+                        <td className="text-right px-3 py-2 text-[#eaecef]">
+                          {orderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC
                         </td>
                         <td className="text-right px-3 py-2 text-[#eaecef]">
-                          ${parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          {parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </td>
-                        <td className="text-right px-3 py-2 text-[#eaecef]">{o.origSz}</td>
-                        <td className="text-right px-3 py-2 text-[#848e9c]">
-                          {(parseFloat(o.origSz) - parseFloat(o.sz)).toFixed(4)}
+                        <td className="text-center px-3 py-2 text-[#848e9c]">{o.reduceOnly ? "Yes" : "No"}</td>
+                        <td className="px-3 py-2 text-[#848e9c]">
+                          {o.isTrigger && o.triggerPx !== "0" ? `${o.triggerCondition} ${parseFloat(o.triggerPx).toLocaleString()}` : "N/A"}
+                        </td>
+                        <td className="text-center px-3 py-2 text-[#848e9c]">
+                          {o.isPositionTpsl ? (o.triggerCondition?.includes("gt") ? "TP" : "SL") : "--"}
                         </td>
                         <td className="text-right px-4 py-2">
                           <button
                             onClick={() => handleCancelOrder(o.coin, o.oid)}
                             disabled={cancellingOid === o.oid}
-                            className="p-1 text-[#f6465d] hover:bg-[#f6465d]/10 rounded transition-colors disabled:opacity-50"
+                            className="text-[#f6465d] hover:text-[#f6465d]/80 text-[10px] font-medium transition-colors disabled:opacity-50"
                           >
-                            {cancellingOid === o.oid ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                            {cancellingOid === o.oid ? <Loader2 className="h-3 w-3 animate-spin" /> : "Cancel"}
                           </button>
                         </td>
                       </tr>
@@ -425,10 +470,27 @@ export function PositionsTable() {
               </table>
             </div>
 
-            {/* Mobile card layout for orders */}
+            {/* Mobile card layout for orders — Hyperliquid-style */}
             <div className="md:hidden flex-1 overflow-y-auto divide-y divide-[#2a2e39]">
+              {/* Cancel All header */}
+              {openOrders.length > 1 && (
+                <div className="px-3 py-2 flex justify-end">
+                  <button
+                    onClick={handleCancelAll}
+                    disabled={cancellingAll}
+                    className="text-[#f6465d] text-[11px] font-medium hover:text-[#f6465d]/80 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {cancellingAll && <Loader2 className="h-3 w-3 animate-spin" />}
+                    Cancel All
+                  </button>
+                </div>
+              )}
               {openOrders.map((o) => {
                 const isBuy = o.side === "B";
+                const orderValue = parseFloat(o.origSz) * parseFloat(o.limitPx);
+                const orderDate = new Date(o.timestamp);
+                const timeStr = `${orderDate.getMonth() + 1}/${orderDate.getDate()} ${orderDate.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" })}`;
+
                 return (
                   <div key={o.oid} className="px-3 py-3">
                     <div className="flex items-center justify-between mb-1.5">
@@ -437,31 +499,42 @@ export function PositionsTable() {
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
                           isBuy ? "bg-[#0ecb81]/15 text-[#0ecb81]" : "bg-[#f6465d]/15 text-[#f6465d]"
                         }`}>
-                          {isBuy ? "BUY" : "SELL"}
+                          {isBuy ? "Long" : "Short"}
                         </span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#848e9c]">{o.orderType}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#848e9c]">
+                          {o.isTrigger ? "Trigger" : "Limit"}
+                        </span>
                       </div>
                       <button
                         onClick={() => handleCancelOrder(o.coin, o.oid)}
                         disabled={cancellingOid === o.oid}
-                        className="p-1.5 text-[#f6465d] hover:bg-[#f6465d]/10 rounded-lg transition-colors disabled:opacity-50"
+                        className="text-[#f6465d] text-[10px] font-medium hover:text-[#f6465d]/80 transition-colors disabled:opacity-50"
                       >
-                        {cancellingOid === o.oid ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+                        {cancellingOid === o.oid ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Cancel"}
                       </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-[10px]">
+                    <div className="grid grid-cols-4 gap-x-2 gap-y-1.5 text-[10px]">
                       <div>
                         <div className="text-[#848e9c]">Price</div>
-                        <div className="text-[#eaecef]">${parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                        <div className="text-[#eaecef]">{parseFloat(o.limitPx).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
                       </div>
                       <div>
                         <div className="text-[#848e9c]">Size</div>
+                        <div className="text-[#eaecef]">{o.sz}</div>
+                      </div>
+                      <div>
+                        <div className="text-[#848e9c]">Orig. Size</div>
                         <div className="text-[#eaecef]">{o.origSz}</div>
                       </div>
                       <div>
-                        <div className="text-[#848e9c]">Filled</div>
-                        <div className="text-[#848e9c]">{(parseFloat(o.origSz) - parseFloat(o.sz)).toFixed(4)}</div>
+                        <div className="text-[#848e9c]">Value</div>
+                        <div className="text-[#eaecef]">{orderValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1.5 text-[10px] text-[#848e9c]">
+                      <span>{timeStr}</span>
+                      {o.reduceOnly && <span className="text-[#f0b90b]">Reduce Only</span>}
+                      {o.isPositionTpsl && <span className="text-brand">{o.triggerCondition?.includes("gt") ? "TP" : "SL"}</span>}
                     </div>
                   </div>
                 );

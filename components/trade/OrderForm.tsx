@@ -3,10 +3,11 @@
 import { useMemo, useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Loader2, AlertTriangle } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction, signAndApproveAgent, getSigningAddress, getStoredAgent, clearStoredAgent } from "@/lib/hyperliquid/signing";
+import { signAndPlaceOrder, getMarketOrderPrice, signAndEnableDexAbstraction, signAndApproveAgent, signAndApproveBuilderFee, getSigningAddress, getStoredAgent, clearStoredAgent } from "@/lib/hyperliquid/signing";
 import { useWallet } from "@/hooks/useWallet";
 import { FundingBanner } from "@/components/FundingBanner";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { BRAND_CONFIG } from "@/lib/brand";
 
 const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 50];
 const SIZE_PRESETS = [25, 50, 75, 100];
@@ -420,6 +421,18 @@ export function OrderForm() {
                   const result = await signAndApproveAgent(address ?? undefined);
                   if (result.success) {
                     setAgentApproved(true);
+
+                    if (BRAND_CONFIG.builder.enabled) {
+                      const builderResult = await signAndApproveBuilderFee(
+                        BRAND_CONFIG.builder.address,
+                        "0.01%",
+                        address ?? undefined,
+                      );
+                      if (!builderResult.success) {
+                        console.warn("Builder fee approval failed (non-blocking):", builderResult.error);
+                      }
+                    }
+
                     setFeedback({ type: "success", msg: "Trading enabled! You can now place orders." });
                   } else {
                     const raw = result.error || "Failed to enable trading";
