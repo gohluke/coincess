@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { BRAND_CONFIG } from "@/lib/brand";
 import { toast } from "sonner";
 
-const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 50];
+const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 40, 50];
 const SIZE_PRESETS = [25, 50, 75, 100];
 
 export function OrderForm() {
@@ -225,14 +225,12 @@ export function OrderForm() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 py-0.5 border-b border-[#2a2e39]" />
-
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-3 px-4 space-y-3">
         {/* Long / Short toggle */}
         <div className="grid grid-cols-2">
           <button
             onClick={() => setOrderSide("buy")}
-            className={`pb-2.5 text-sm font-semibold transition-colors border-b-2 ${
+            className={`pb-2.5 text-sm sm:text-sm text-base font-semibold transition-colors border-b-2 ${
               orderSide === "buy"
                 ? "text-[#0ecb81] border-[#0ecb81]"
                 : "text-[#848e9c] border-transparent hover:text-white"
@@ -242,7 +240,7 @@ export function OrderForm() {
           </button>
           <button
             onClick={() => setOrderSide("sell")}
-            className={`pb-2.5 text-sm font-semibold transition-colors border-b-2 ${
+            className={`pb-2.5 text-sm sm:text-sm text-base font-semibold transition-colors border-b-2 ${
               orderSide === "sell"
                 ? "text-[#f6465d] border-[#f6465d]"
                 : "text-[#848e9c] border-transparent hover:text-white"
@@ -280,7 +278,7 @@ export function OrderForm() {
                 value={orderPrice}
                 onChange={(e) => setOrderPrice(e.target.value)}
                 placeholder={parseFloat(midPrice).toFixed(2)}
-                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
+                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-3 sm:py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#848e9c]">USD</span>
             </div>
@@ -299,7 +297,7 @@ export function OrderForm() {
               value={orderSize}
               onChange={(e) => setOrderSize(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
+              className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-3 sm:py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#848e9c]">{displayName}</span>
           </div>
@@ -330,7 +328,7 @@ export function OrderForm() {
             max={market?.maxLeverage ?? 50}
             value={orderLeverage}
             onChange={(e) => setOrderLeverage(parseInt(e.target.value))}
-            className="w-full accent-brand h-1"
+            className="w-full accent-brand h-1 appearance-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:bg-[#2a2e39] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:-mt-1 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-1 [&::-moz-range-track]:bg-[#2a2e39] [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand outline-none"
           />
           <div className="flex flex-wrap gap-1 mt-1.5">
             {LEVERAGE_PRESETS.filter((l) => l <= (market?.maxLeverage ?? 50)).map((l) => (
@@ -394,6 +392,14 @@ export function OrderForm() {
             <span className="text-[#848e9c]">Margin Required</span>
             <span className="text-white">${margin.toFixed(2)}</span>
           </div>
+          {market && (
+            <div className="flex justify-between">
+              <span className="text-[#848e9c]">Funding Rate</span>
+              <span className={parseFloat(market.funding) >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}>
+                {parseFloat(market.funding) >= 0 ? "+" : ""}{(parseFloat(market.funding) * 100).toFixed(4)}%/h
+              </span>
+            </div>
+          )}
           {estLiqPrice && estLiqPrice > 0 && (
             <div className="flex justify-between">
               <span className="text-[#848e9c]">Est. Liq. Price</span>
@@ -415,15 +421,6 @@ export function OrderForm() {
           )}
         </div>
 
-        {/* Feedback */}
-        {feedback && (
-          <div className={`px-3 py-2 rounded-lg text-xs font-medium ${
-            feedback.type === "success" ? "bg-[#0ecb81]/10 text-[#0ecb81]" : "bg-[#f6465d]/10 text-[#f6465d]"
-          }`}>
-            {feedback.msg}
-          </div>
-        )}
-
         {/* Funding prompt when connected but no balance at all */}
         {address && !hasFunds && (
           <FundingBanner address={address} balance={availableBalance} compact />
@@ -440,12 +437,28 @@ export function OrderForm() {
           </div>
         )}
 
+        <p className="text-[10px] text-[#848e9c] text-center">
+          Trades are executed on Hyperliquid DEX
+        </p>
+      </div>
+
+      {/* Sticky submit area on mobile, normal flow on desktop */}
+      <div className="sticky bottom-0 bg-[#0b0e11] border-t border-[#2a2e39] sm:border-t-0 p-3 sm:p-3 px-4 space-y-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {/* Feedback */}
+        {feedback && (
+          <div className={`px-3 py-2 rounded-lg text-xs font-medium ${
+            feedback.type === "success" ? "bg-[#0ecb81]/10 text-[#0ecb81]" : "bg-[#f6465d]/10 text-[#f6465d]"
+          }`}>
+            {feedback.msg}
+          </div>
+        )}
+
         {/* Submit / Enable Trading / Connect button */}
         {address && agentApproved ? (
           <button
             onClick={handleSubmit}
             disabled={submitting || !orderSize || parseFloat(orderSize) <= 0 || !!addressMismatch}
-            className={`w-full py-3 rounded-full font-semibold text-sm text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
+            className={`w-full py-3.5 sm:py-3 rounded-full font-semibold text-sm sm:text-sm text-base text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
               orderSide === "buy"
                 ? "bg-[#0ecb81] hover:bg-[#0ecb81]/90"
                 : "bg-[#f6465d] hover:bg-[#f6465d]/90"
@@ -498,7 +511,7 @@ export function OrderForm() {
                 }
               }}
               disabled={enablingTrading}
-              className="w-full py-3 rounded-full font-semibold text-sm bg-brand text-white hover:bg-brand/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3.5 sm:py-3 rounded-full font-semibold text-sm sm:text-sm text-base bg-brand text-white hover:bg-brand/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {enablingTrading && <Loader2 className="h-4 w-4 animate-spin" />}
               Enable Trading
@@ -510,7 +523,7 @@ export function OrderForm() {
         ) : (
           <button
             onClick={() => walletConnect()}
-            className="w-full py-3 rounded-full font-semibold text-sm bg-brand text-white hover:bg-brand/90 transition-colors"
+            className="w-full py-3.5 sm:py-3 rounded-full font-semibold text-sm sm:text-sm text-base bg-brand text-white hover:bg-brand/90 transition-colors"
           >
             Connect to Trade
           </button>
@@ -548,10 +561,6 @@ export function OrderForm() {
             </p>
           </div>
         )}
-
-        <p className="text-[10px] text-[#848e9c] text-center">
-          Trades are executed on Hyperliquid DEX
-        </p>
       </div>
     </div>
   );

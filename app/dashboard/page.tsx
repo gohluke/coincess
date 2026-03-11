@@ -594,20 +594,41 @@ export default function DashboardPage() {
               <div>
                 <h2 className="text-lg font-semibold mb-3">Open Orders ({orders.length})</h2>
                 <div className="space-y-1">
-                  {orders.slice(0, 10).map((o) => (
-                    <div key={o.oid} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${o.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                  {orders.slice(0, 10).map((o) => {
+                    const limitPx = parseFloat(o.limitPx);
+                    const sz = parseFloat(o.sz);
+                    const notional = sz * limitPx;
+                    const bare = stripPrefix(o.coin);
+                    const mkt = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === o.coin);
+                    const markPx = mkt ? parseFloat(mkt.markPx) : 0;
+                    const distPct = markPx > 0 ? ((limitPx - markPx) / markPx * 100) : 0;
+                    return (
+                      <div key={o.oid} className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
+                        <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${o.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
                           {o.side === "B" ? "BUY" : "SELL"}
                         </span>
-                        <span className="text-xs font-medium">{o.coin}</span>
+                        <span className="text-xs font-semibold shrink-0">{bare}</span>
+                        <span className="hidden sm:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
+                          {sz} @ ${limitPx.toLocaleString()}
+                        </span>
+                        <span className="hidden md:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
+                          {formatUsd(notional)}
+                        </span>
+                        <div className="flex-1" />
+                        {o.timestamp > 0 && (
+                          <span className="text-[10px] text-[#555a66] font-mono tabular-nums shrink-0">
+                            <LiveDuration since={o.timestamp} />
+                          </span>
+                        )}
+                        {markPx > 0 && (
+                          <span className={`text-[10px] font-medium tabular-nums shrink-0 ${Math.abs(distPct) < 2 ? "text-amber-400" : "text-[#848e9c]"}`}>
+                            {distPct >= 0 ? "+" : ""}{distPct.toFixed(2)}%
+                          </span>
+                        )}
+                        <span className="text-[10px] text-[#555a66] shrink-0">{o.orderType}</span>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs">{o.sz} @ ${parseFloat(o.limitPx).toLocaleString()}</p>
-                        <p className="text-[10px] text-[#848e9c]">{o.orderType}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1059,6 +1080,18 @@ function PositionRow({ ap, markets, fills }: { ap: AssetPosition; markets: Marke
       <span className="hidden lg:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
         {formatUsd(notional)}
       </span>
+
+      {/* Margin */}
+      <span className="hidden xl:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
+        Margin {formatUsd(parseFloat(pos.marginUsed))}
+      </span>
+
+      {/* Funding */}
+      {market && (
+        <span className={`hidden xl:block text-[10px] tabular-nums shrink-0 ${parseFloat(market.funding) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+          {(parseFloat(market.funding) * 100).toFixed(4)}%/h
+        </span>
+      )}
 
       {/* Spacer */}
       <div className="flex-1" />

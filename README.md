@@ -170,10 +170,22 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Cost breakdown dashboard** — entry fee, exit fee, total fees, funding cost, gross vs net PNL at a glance
 - **Math reference section** — explains every formula used in the calculator
 
+### Referral System
+- **Referral code: `COINCESS`** — [app.hyperliquid.xyz/join/COINCESS](https://app.hyperliquid.xyz/join/COINCESS)
+- **Auto-referral on Enable Trading** — after a user approves their agent, Coincess automatically sends a `setReferrer` call to Hyperliquid with code `COINCESS` (best-effort, non-blocking)
+- **Referral link in Deposit flow** — all external Hyperliquid links in the Deposit modal route through the referral URL
+- **Referral invite banner** — "New to Hyperliquid? Join via Coincess" banner in the Deposit modal with 4% fee discount messaging
+- **Revenue**: Coincess earns 10% of referred users' trading fees; referred users get a 4% fee discount
+- **Privacy**: The referral code does not expose the creator's EVM address — Hyperliquid only shows the code name
+
 ### Content & SEO
 - Landing page with crypto education content
 - Blog with articles on wallets, privacy, swapping
 - SEO-optimized pages with sitemap and schema.org markup
+- **Structured data** — Organization, WebApplication (FinanceApplication), and WebSite schemas with SearchAction for sitelinks
+- **Expanded sitemap** — includes all app pages (`/trade`, `/predict`, `/dashboard`, `/traders`, `/automate`) plus top 20 coin trade pages (BTC, ETH, SOL, HYPE, TSLA, etc.)
+- **robots.txt** — allows all crawlers, disallows `/api/` and `/settings`
+- **Extended keywords** — 18 keyword phrases covering crypto leverage trading, perpetual futures, DCA, grid trading, copy trading, portfolio tracker
 
 ## Tech Stack
 
@@ -476,7 +488,24 @@ builder: {
 - Each user must first approve the builder's max fee via `approveBuilderFee` (EIP-712 typed data signed once per user)
 - The platform owner's address is automatically exempted from builder fees
 
-### 2. Polymarket Builder Attribution
+### 2. Hyperliquid Referral
+
+The referral code `COINCESS` is configured in `lib/brand.config.ts`:
+
+```ts
+referral: {
+  code: "COINCESS",
+  link: "https://app.hyperliquid.xyz/join/COINCESS",
+}
+```
+
+**How it works:**
+- When a new user clicks "Enable Trading", after agent approval succeeds, Coincess auto-sends `setReferrer` with code `COINCESS` to Hyperliquid
+- All external Hyperliquid links in the Deposit modal use the referral URL
+- You earn **10% of referred users' fees**, and they get a **4% discount**
+- The referral code creator's wallet address is **not exposed** — only the code name is visible
+
+### 3. Polymarket Builder Attribution
 
 Configure in `.env.local`:
 

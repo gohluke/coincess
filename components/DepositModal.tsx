@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { fetchCombinedClearinghouseState } from "@/lib/hyperliquid/api";
+import { BRAND_CONFIG } from "@/lib/brand.config";
 
 const BALANCE_OF_SIG = "0x70a08231";
 
@@ -414,9 +415,9 @@ function MethodsStep({
         </div>
       </button>
 
-      {/* Deposit with card */}
+      {/* Deposit with card (uses referral link) */}
       <a
-        href={`https://app.hyperliquid.xyz/buy?address=${address}`}
+        href={`https://app.hyperliquid.xyz/buy?address=${address}&ref=${BRAND_CONFIG.referral.code}`}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
@@ -436,7 +437,7 @@ function MethodsStep({
 
       {/* Bridge from Arbitrum */}
       <a
-        href="https://app.hyperliquid.xyz/trade"
+        href={BRAND_CONFIG.referral.link}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
@@ -453,7 +454,7 @@ function MethodsStep({
 
       {/* Connect exchange */}
       <a
-        href="https://app.hyperliquid.xyz/trade"
+        href={BRAND_CONFIG.referral.link}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
@@ -470,6 +471,21 @@ function MethodsStep({
             <span key={i} className="w-5 h-5 rounded-full bg-[#2a2e3e] flex items-center justify-center text-[10px]">{e}</span>
           ))}
         </div>
+      </a>
+
+      {/* Referral invite banner */}
+      <a
+        href={BRAND_CONFIG.referral.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 w-full p-3 rounded-xl bg-brand/5 border border-brand/20 hover:border-brand/40 transition-colors mt-2"
+      >
+        <span className="text-lg">🎁</span>
+        <div className="flex-1 text-left">
+          <p className="text-[11px] font-semibold text-brand">New to Hyperliquid? Join via Coincess</p>
+          <p className="text-[10px] text-[#848e9c]">Get 4% fee discount when you sign up with our referral</p>
+        </div>
+        <ExternalLink className="h-3 w-3 text-brand/60 shrink-0" />
       </a>
     </div>
   );

@@ -466,6 +466,23 @@ export async function signAndApproveAgent(
         address: agentAcc.address,
         approvedAt: Date.now(),
       });
+
+      // Auto-set referral code (non-blocking; safe to fail)
+      if (BRAND_CONFIG.referral?.code) {
+        try {
+          await fetch(EXCHANGE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: { type: "setReferrer", code: BRAND_CONFIG.referral.code },
+              nonce: Date.now(),
+            }),
+          });
+        } catch {
+          // Referral is best-effort; don't block trading enablement
+        }
+      }
+
       return { success: true };
     }
 

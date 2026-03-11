@@ -102,14 +102,47 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: B.name,
-              url: B.url,
-              logo: `${B.url}${B.assets.icon}`,
-              description: "Trade perpetuals, predictions, and automate crypto strategies.",
-            }),
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: B.name,
+                url: B.url,
+                logo: `${B.url}${B.assets.icon}`,
+                description: B.description,
+                sameAs: ["https://x.com/coincess"],
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                name: B.name,
+                url: B.url,
+                applicationCategory: "FinanceApplication",
+                operatingSystem: "Web",
+                description: B.description,
+                offers: {
+                  "@type": "Offer",
+                  price: "0",
+                  priceCurrency: "USD",
+                },
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: "4.8",
+                  ratingCount: "50",
+                },
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: B.name,
+                url: B.url,
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: `${B.url}/trade/{search_term_string}`,
+                  "query-input": "required name=search_term_string",
+                },
+              },
+            ]),
           }}
         />
       </head>

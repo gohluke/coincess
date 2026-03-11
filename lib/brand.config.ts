@@ -24,6 +24,16 @@ export const BRAND_CONFIG = {
     "crypto trading",
     "defi",
     "automation",
+    "crypto leverage trading",
+    "perpetual futures",
+    "decentralized exchange",
+    "crypto portfolio tracker",
+    "bitcoin trading",
+    "ethereum trading",
+    "crypto trading bot",
+    "grid trading",
+    "dca crypto",
+    "copy trading crypto",
   ],
 
   colors: {
@@ -34,6 +44,11 @@ export const BRAND_CONFIG = {
   },
 
   token: "CNC",
+
+  referral: {
+    code: "COINCESS",
+    link: "https://app.hyperliquid.xyz/join/COINCESS",
+  },
 
   builder: {
     address: "0x635b3B453De75e873A02B4898f615C5E8909070a" as const,

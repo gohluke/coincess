@@ -227,6 +227,14 @@ export default function Home() {
             >
               Calculator
             </Link>
+            <a
+              href="https://x.com/coincess"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              @coincess
+            </a>
           </div>
         </div>
       </footer>
