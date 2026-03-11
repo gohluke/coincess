@@ -165,23 +165,11 @@ export function OrderForm() {
         loadUserState();
       } else {
         const raw = result.error || "Order failed";
-        if (raw.includes("does not exist") || raw.includes("agent") || raw.includes("not authorized")) {
-          if (address) clearStoredAgent(address);
-          setAgentApproved(false);
-          setFeedback({ type: "error", msg: "Trading session expired. Please enable trading again." });
-        } else {
-          setFeedback({ type: "error", msg: raw });
-        }
+        setFeedback({ type: "error", msg: raw });
       }
     } catch (err) {
       const raw = (err as Error).message;
-      if (raw.includes("does not exist") || raw.includes("agent") || raw.includes("not authorized")) {
-        if (address) clearStoredAgent(address);
-        setAgentApproved(false);
-        setFeedback({ type: "error", msg: "Trading session expired. Please enable trading again." });
-      } else {
-        setFeedback({ type: "error", msg: raw });
-      }
+      setFeedback({ type: "error", msg: raw });
     } finally {
       setSubmitting(false);
       setTimeout(() => setFeedback(null), 5000);

@@ -1,6 +1,7 @@
 import { signL1Action, signUserSignedAction } from "@nktkas/hyperliquid/signing";
 import type { AbstractViemJsonRpcAccount } from "@nktkas/hyperliquid/signing";
-import { ApproveBuilderFeeTypes, ApproveAgentTypes } from "@nktkas/hyperliquid/api/exchange";
+import { ApproveBuilderFeeTypes, ApproveAgentTypes, order as sdkOrder } from "@nktkas/hyperliquid/api/exchange";
+import { HttpTransport } from "@nktkas/hyperliquid";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { createWalletClient, custom } from "viem";
 import { arbitrum } from "viem/chains";
@@ -450,7 +451,26 @@ export async function signAndApproveAgent(
 }
 
 // ---------------------------------------------------------------------------
-// Order placement (uses agent key if available, else wallet popup)
+// Order placement (uses SDK's high-level order function)
+// ---------------------------------------------------------------------------
+//
+// KEY LESSON (2026-03-11): We originally signed orders manually — constructing
+// the action object ourselves, calling signL1Action, and POSTing to the API.
+// This caused a persistent "User or API Wallet 0x... does not exist" error
+// because the **action hash** (connectionId in the phantom Agent EIP-712
+// message) was computed from our local msgpack encoding of the action, which
+// differed from what Hyperliquid's server computed from the same JSON body.
+// The hash mismatch meant the recovered signer from the signature was a random
+// address, not the approved agent.
+//
+// The fix: use the SDK's high-level `order()` function from
+// @nktkas/hyperliquid/api/exchange. It handles action construction, msgpack
+// hashing, EIP-712 signing, nonce management, and HTTP serialization as a
+// single atomic operation — guaranteeing the client-side hash always matches
+// what the server expects.
+//
+// TL;DR: Never manually construct + sign + POST Hyperliquid L1 actions.
+//        Always use the SDK's high-level functions (order, cancel, etc.).
 // ---------------------------------------------------------------------------
 
 export async function signAndPlaceOrder(
@@ -461,44 +481,50 @@ export async function signAndPlaceOrder(
     const agentAcc = getAgentAccount(userAddr);
     const wallet = agentAcc ?? createHyperliquidWallet(params.expectedAddress);
 
-    const orderWire = buildOrderWire(params);
-    const nonce = Date.now();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const action: Record<string, any> = {
-      type: "order",
-      orders: [orderWire],
-      grouping: "na",
-    };
-    const isBuilder = userAddr === BUILDER_ADDRESS.toLowerCase();
-    if (BUILDER_FEE_ENABLED && !isBuilder) {
-      action.builder = { b: BUILDER_ADDRESS, f: BUILDER_FEE };
-    }
-
-    const signature = await signL1Action({ wallet, action, nonce });
-
-    const res = await fetch(EXCHANGE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, signature, nonce }),
+    pushSigningDebug("placeOrder.start", {
+      userAddr,
+      hasAgent: !!agentAcc,
+      agentAddress: agentAcc?.address,
+      coin: params.coin,
+      side: params.isBuy ? "buy" : "sell",
+      size: params.size,
     });
 
-    const data = await res.json();
+    const orderWire = buildOrderWire(params);
 
-    if (data.status === "ok" && data.response?.type === "order") {
-      const status = data.response.data.statuses[0];
-      if (status.error) return { success: false, error: status.error };
-      if (status.filled) return { success: true, oid: status.filled.oid };
-      if (status.resting) return { success: true, oid: status.resting.oid };
-    }
+    const isBuilder = userAddr === BUILDER_ADDRESS.toLowerCase();
+    const builderOpt = (BUILDER_FEE_ENABLED && !isBuilder)
+      ? { b: BUILDER_ADDRESS, f: BUILDER_FEE }
+      : undefined;
 
-    const errMsg = data.response?.data?.statuses?.[0]?.error ?? JSON.stringify(data);
-    if (agentAcc && (errMsg.includes("agent") || errMsg.includes("not authorized"))) {
-      clearStoredAgent(userAddr);
+    // Use the SDK's high-level order function which handles action hashing,
+    // signing, nonce management, and serialization correctly.
+    const transport = new HttpTransport();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = await sdkOrder({ transport, wallet } as any, {
+      orders: [orderWire],
+      grouping: "na",
+      builder: builderOpt,
+    });
+
+    pushSigningDebug("placeOrder.response", data);
+
+    const status = data.response.data.statuses[0];
+    if (typeof status === "object" && "error" in status) {
+      return { success: false, error: (status as { error: string }).error };
     }
-    return { success: false, error: errMsg };
+    if (typeof status === "object" && "filled" in status) {
+      return { success: true, oid: (status as { filled: { oid: number } }).filled.oid };
+    }
+    if (typeof status === "object" && "resting" in status) {
+      return { success: true, oid: (status as { resting: { oid: number } }).resting.oid };
+    }
+    return { success: true };
   } catch (err) {
-    return { success: false, error: (err as Error).message };
+    pushSigningDebug("placeOrder.exception", getErrorDetails(err));
+    const msg = (err as Error).message || String(err);
+    pushSigningDebug("placeOrder.errorMsg", msg);
+    return { success: false, error: msg };
   }
 }
 

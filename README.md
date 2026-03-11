@@ -81,14 +81,13 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 
 ### Wallet & Signing
 - MetaMask / injected wallet connection
-- **viem WalletClient signing** — all EIP-712 signing goes through viem's `createWalletClient` with `custom(provider)` transport, matching the [@nktkas/hyperliquid SDK's recommended browser integration](https://nktkas.gitbook.io/hyperliquid/signing). This ensures correct EIP-712 encoding, proper `EIP712Domain` handling, and reliable JSON-RPC payload construction across all wallet providers
-- **Agent-based trading** — one-time "Enable Trading" approval generates a local agent keypair, registers it with Hyperliquid via EIP-712 `ApproveAgent` (`signatureChainId: 0x66eee`), and stores it in `localStorage`. All subsequent orders sign silently with the agent key via `signL1Action` — no wallet popup per trade
+- **SDK-driven order execution** — all order placement uses the `@nktkas/hyperliquid` SDK's high-level `order()` function, which handles action construction, msgpack hashing, EIP-712 signing, nonce management, and HTTP serialization as a single atomic operation. This guarantees the client-side action hash always matches what Hyperliquid's server computes. (**Key lesson**: manually constructing + signing + POSTing L1 actions causes hash mismatches that produce "User does not exist" errors — always use the SDK's high-level functions.)
+- **Agent-based trading** — one-time "Enable Trading" approval generates a local agent keypair, registers it with Hyperliquid via EIP-712 `ApproveAgent` (`signatureChainId: 0x66eee`), and stores it in `localStorage`. All subsequent orders sign silently with the agent key — no wallet popup per trade
 - **Native MetaMask on Arbitrum for approvals** — all one-time user-signed actions (Enable Trading, builder fee, unified account) use `window.ethereum` directly, bypassing Privy's wrapped provider, and switch MetaMask to Arbitrum One before signing — matching based.one's UX
-- **Agent invalidation** — if Hyperliquid rejects an agent (expired, unauthorized), the stored agent is cleared and the user is prompted to re-enable trading
 - **Address-validated signing** — every trade, cancel, and leverage update resolves the signing address consistently to prevent "User does not exist" errors
 - **Wallet mismatch detection** — order form and positions table detect address mismatches between the displayed (linked) wallet and the actual signing wallet, showing a clear warning and disabling trades until resolved
 - Builder fee exemption for the platform owner's address
-- Builder fees on each Hyperliquid trade
+- Builder fees on each Hyperliquid trade (USDC credited to builder address)
 - Polymarket builder attribution via HMAC-signed headers
 
 ### Trade Journal (`/journal`)
@@ -335,17 +334,24 @@ coincess/
 
 ### 1. Hyperliquid Builder Fees
 
-Configure in `lib/hyperliquid/signing.ts`:
+Configure in `lib/brand.config.ts`:
 
 ```ts
-const BUILDER_ADDRESS = "0xYOUR_ADDRESS";
-const BUILDER_FEE = 10;              // 1bp = 0.01%
-const BUILDER_FEE_ENABLED = true;    // flip to true once funded
+builder: {
+  address: "0xYOUR_ADDRESS",
+  fee: 10,              // in tenths of a basis point (10 = 1bp = 0.01%)
+  enabled: true,        // flip to true once funded
+}
 ```
 
-- Builder address needs **≥100 USDC** in Hyperliquid perps account
-- Fee added to each order: `builder: { b: address, f: fee }`
-- Max fee: 0.1% (100 in tenths of a basis point) on perps
+**How it works:**
+- Each order includes a `builder: { b: address, f: fee }` field
+- The fee is expressed in **tenths of a basis point** — so `10` = 1bp = 0.01% of notional
+- Max allowed: 0.1% (= 100 in tenths of a basis point) on perps
+- **Where the money goes:** Hyperliquid deducts the fee in **USDC** from the trader's margin/account and credits it directly to the builder address's Hyperliquid perps account
+- Builder address must have **≥100 USDC** deposited in its Hyperliquid perps account to be eligible
+- Each user must first approve the builder's max fee via `approveBuilderFee` (EIP-712 typed data signed once per user)
+- The platform owner's address is automatically exempted from builder fees
 
 ### 2. Polymarket Builder Attribution
 
