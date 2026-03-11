@@ -20,9 +20,13 @@ export function setPrivyProvider(provider: EthProvider | null) {
   _privyProvider = provider;
 }
 
+function getNativeEthereum(): EthProvider | null {
+  return (window as unknown as { ethereum?: EthProvider }).ethereum ?? null;
+}
+
 function getEthereum(): EthProvider {
   if (_privyProvider) return _privyProvider;
-  const eth = (window as unknown as { ethereum?: EthProvider }).ethereum;
+  const eth = getNativeEthereum();
   if (!eth) throw new Error("No wallet detected. Please sign in first.");
   return eth;
 }
@@ -36,8 +40,11 @@ function getEthereum(): EthProvider {
 function getWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount {
   const eth = getEthereum();
 
-  async function resolveSigningAddress(): Promise<string> {
-    const accounts = (await eth.request({ method: "eth_accounts" })) as string[];
+  async function resolveSigningAddress(provider: EthProvider): Promise<string> {
+    let accounts = (await provider.request({ method: "eth_accounts" })) as string[];
+    if (!accounts.length) {
+      accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
+    }
     if (!accounts.length) throw new Error("No account connected");
 
     if (preferredAddress) {
@@ -54,9 +61,21 @@ function getWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount
     return accounts[0];
   }
 
+  async function signWithProvider(
+    provider: EthProvider,
+    address: string,
+    payload: string,
+  ): Promise<`0x${string}`> {
+    const result = await provider.request({
+      method: "eth_signTypedData_v4",
+      params: [address, payload],
+    });
+    return result as `0x${string}`;
+  }
+
   return {
     async getAddresses() {
-      const addr = await resolveSigningAddress();
+      const addr = await resolveSigningAddress(eth);
       return [addr] as `0x${string}`[];
     },
     async getChainId() {
@@ -64,30 +83,42 @@ function getWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcAccount
       return Number(chainId);
     },
     async signTypedData(params) {
-      const address = await resolveSigningAddress();
-
-      // Strip EIP712Domain from types — eth_signTypedData_v4 providers
-      // (especially Privy embedded wallets) derive it from the domain object
-      // and reject/conflict when it appears explicitly in types.
+      // Strip EIP712Domain — providers auto-derive it from the domain object
       const { EIP712Domain: _, ...filteredTypes } = params.types as Record<string, unknown>;
-
-      const result = await eth.request({
-        method: "eth_signTypedData_v4",
-        params: [address, JSON.stringify({
-          domain: params.domain,
-          types: filteredTypes,
-          primaryType: params.primaryType,
-          message: params.message,
-        })],
+      const payload = JSON.stringify({
+        domain: params.domain,
+        types: filteredTypes,
+        primaryType: params.primaryType,
+        message: params.message,
       });
-      return result as `0x${string}`;
+
+      // Try the primary provider (Privy-wrapped or window.ethereum)
+      try {
+        const address = await resolveSigningAddress(eth);
+        return await signWithProvider(eth, address, payload);
+      } catch (primaryErr) {
+        // If the Privy-wrapped provider fails, fall back to window.ethereum
+        const nativeEth = getNativeEthereum();
+        if (nativeEth && nativeEth !== eth) {
+          try {
+            const address = await resolveSigningAddress(nativeEth);
+            return await signWithProvider(nativeEth, address, payload);
+          } catch {
+            // Native provider also failed; throw the original error
+          }
+        }
+        throw primaryErr;
+      }
     },
   };
 }
 
 async function getAddress(preferredAddress?: string): Promise<string> {
   const eth = getEthereum();
-  const accounts = (await eth.request({ method: "eth_accounts" })) as string[];
+  let accounts = (await eth.request({ method: "eth_accounts" })) as string[];
+  if (!accounts.length) {
+    accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+  }
   if (!accounts[0]) throw new Error("No account connected");
   if (preferredAddress) {
     const match = accounts.find(

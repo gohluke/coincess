@@ -92,12 +92,7 @@ export function useWallet(): WalletState {
       setSource("privy");
       setLoading(false);
 
-      if (externalWallet) {
-        // External wallets (MetaMask, etc.) inject window.ethereum natively.
-        // Using that directly avoids Privy's provider wrapper which can break
-        // eth_signTypedData_v4 for EIP-712 signing on Hyperliquid.
-        setPrivyProvider(null);
-      } else if (preferredWallet) {
+      if (preferredWallet) {
         preferredWallet.getEthereumProvider().then((provider) => {
           setPrivyProvider(provider);
         }).catch(() => {});
