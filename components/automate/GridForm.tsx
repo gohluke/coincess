@@ -51,31 +51,31 @@ export function GridForm() {
     <div className="space-y-4 max-w-md">
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market</label>
-        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Lower Price ($)</label>
-          <input value={lower} onChange={(e) => setLower(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+          <input value={lower} onChange={(e) => setLower(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
         </div>
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Upper Price ($)</label>
-          <input value={upper} onChange={(e) => setUpper(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+          <input value={upper} onChange={(e) => setUpper(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Grid Count</label>
-          <input value={grids} onChange={(e) => setGrids(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+          <input value={grids} onChange={(e) => setGrids(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
         </div>
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Size per Grid</label>
-          <input value={size} onChange={(e) => setSize(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+          <input value={size} onChange={(e) => setSize(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
         </div>
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Leverage</label>
-        <input value={leverage} onChange={(e) => setLeverage(e.target.value)} type="number" min="1" max="100" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+        <input value={leverage} onChange={(e) => setLeverage(e.target.value)} type="number" min="1" max="100" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
       </div>
       {upper && lower && grids && (
         <div className="bg-[#0b0e17] rounded-lg p-3 text-xs text-[#848e9c]">

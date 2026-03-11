@@ -52,30 +52,30 @@ export function PredictionBetForm() {
 
   return (
     <div className="space-y-4 max-w-md">
-      <p className="text-xs text-[#848e9c] bg-[#141620] rounded-lg p-3 border border-[#2a2e3e]">
+      <p className="text-xs text-[#848e9c] bg-[#141620] rounded-lg p-3">
         Find the event on the <a href="/predict" className="text-brand hover:underline">Predict</a> page, then copy the event ID and token ID from the URL or market data.
       </p>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Event Title</label>
-        <input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Fed decision in March?" />
+        <input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Fed decision in March?" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Event ID</label>
-        <input value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Polymarket event ID" />
+        <input value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Polymarket event ID" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market ID</label>
-        <input value={marketId} onChange={(e) => setMarketId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Condition ID" />
+        <input value={marketId} onChange={(e) => setMarketId(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Condition ID" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Token ID (outcome token)</label>
-        <input value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="CLOB token ID for Yes/No" />
+        <input value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="CLOB token ID for Yes/No" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Outcome</label>
         <div className="grid grid-cols-2 gap-2">
           {(["Yes", "No"] as const).map((o) => (
-            <button key={o} onClick={() => setOutcome(o)} className={`py-2 rounded-lg text-sm font-medium transition-colors ${outcome === o ? (o === "Yes" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30") : "bg-[#0b0e17] text-[#848e9c] border border-[#2a2e3e]"}`}>
+            <button key={o} onClick={() => setOutcome(o)} className={`py-2 rounded-lg text-sm font-medium transition-colors ${outcome === o ? (o === "Yes" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30") : "bg-[#0b0e17] text-[#848e9c]"}`}>
               {o}
             </button>
           ))}
@@ -83,11 +83,11 @@ export function PredictionBetForm() {
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Trigger Price (cents) — buy when below this</label>
-        <input value={triggerPrice} onChange={(e) => setTriggerPrice(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="30" />
+        <input value={triggerPrice} onChange={(e) => setTriggerPrice(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="30" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Bet Size (USD)</label>
-        <input value={betSize} onChange={(e) => setBetSize(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="10" />
+        <input value={betSize} onChange={(e) => setBetSize(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="10" />
       </div>
       <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-semibold transition-colors">
         Start Auto Bet

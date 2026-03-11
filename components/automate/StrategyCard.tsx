@@ -82,7 +82,7 @@ export function StrategyCard({ strategy }: { strategy: Strategy }) {
   const meta = TYPE_META[strategy.type] ?? { label: strategy.type, icon: <Bot className="h-4 w-4" />, color: "text-white" };
 
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 hover:border-[#3a3e4e] transition-colors">
+    <div className="bg-[#141620] rounded-xl p-4 transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className={meta.color}>{meta.icon}</span>

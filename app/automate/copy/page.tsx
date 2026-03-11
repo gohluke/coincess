@@ -92,7 +92,7 @@ export default function CopyTradingPage() {
         ) : (
           <div className="space-y-4">
             {previews.map((wallet) => (
-              <div key={wallet.address} className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4">
+              <div key={wallet.address} className="bg-[#141620] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="text-sm font-semibold">{wallet.label}</h3>

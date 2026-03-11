@@ -111,7 +111,7 @@ export default function ToolsPage() {
             <Link
               key={t.href}
               href={t.href}
-              className="group relative bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-2xl p-5 transition-all hover:shadow-lg hover:shadow-brand/5"
+              className="group relative bg-[#141620] hover:border-brand/40 rounded-2xl p-5 transition-all hover:shadow-lg hover:shadow-brand/5"
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${t.accent} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity`}
@@ -161,7 +161,7 @@ export default function ToolsPage() {
             <Link
               key={g.href}
               href={g.href}
-              className="flex items-center gap-4 bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-xl px-4 py-3.5 transition-colors group"
+              className="flex items-center gap-4 bg-[#141620] hover:border-brand/40 rounded-xl px-4 py-3.5 transition-colors group"
             >
               <g.icon className="h-5 w-5 text-[#848e9c] group-hover:text-brand transition-colors shrink-0" />
               <div className="flex-1 min-w-0">

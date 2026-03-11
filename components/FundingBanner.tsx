@@ -58,7 +58,7 @@ export function FundingBanner({ address, balance, compact = false }: FundingBann
   }
 
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-5">
+    <div className="bg-[#141620] rounded-xl p-5">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
           <Wallet className="h-5 w-5 text-amber-400" />
@@ -138,7 +138,7 @@ function FundingOptions({
       {/* Copy wallet address */}
       <button
         onClick={onCopy}
-        className="flex items-center gap-3 w-full p-3 rounded-lg bg-[#1a1d26] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
+        className="flex items-center gap-3 w-full p-3 rounded-lg bg-[#1a1d26] transition-colors group"
       >
         <div className="w-8 h-8 rounded-lg bg-[#2a2e3e] flex items-center justify-center shrink-0">
           {copied ? (

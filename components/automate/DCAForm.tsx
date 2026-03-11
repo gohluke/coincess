@@ -50,13 +50,13 @@ export function DCAForm() {
     <div className="space-y-4 max-w-md">
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market</label>
-        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="BTC" />
+        <input value={coin} onChange={(e) => setCoin(e.target.value.toUpperCase())} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="BTC" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Side</label>
         <div className="grid grid-cols-2 gap-2">
           {(["buy", "sell"] as const).map((s) => (
-            <button key={s} onClick={() => setSide(s)} className={`py-2 rounded-lg text-sm font-medium transition-colors ${side === s ? (s === "buy" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30") : "bg-[#0b0e17] text-[#848e9c] border border-[#2a2e3e]"}`}>
+            <button key={s} onClick={() => setSide(s)} className={`py-2 rounded-lg text-sm font-medium transition-colors ${side === s ? (s === "buy" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30") : "bg-[#0b0e17] text-[#848e9c]"}`}>
               {s.toUpperCase()}
             </button>
           ))}
@@ -64,11 +64,11 @@ export function DCAForm() {
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Amount (USD per order)</label>
-        <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="10" />
+        <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="10" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Interval</label>
-        <select value={interval} onChange={(e) => setInterval(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
+        <select value={interval} onChange={(e) => setInterval(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
           {INTERVAL_PRESETS.map((p) => (
             <option key={p.ms} value={p.ms}>{p.label}</option>
           ))}
@@ -76,11 +76,11 @@ export function DCAForm() {
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Max Orders (optional)</label>
-        <input value={totalOrders} onChange={(e) => setTotalOrders(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Unlimited" />
+        <input value={totalOrders} onChange={(e) => setTotalOrders(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Unlimited" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Price Limit (optional)</label>
-        <input value={priceLimit} onChange={(e) => setPriceLimit(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder={`Don't ${side} ${side === "buy" ? "above" : "below"} this price`} />
+        <input value={priceLimit} onChange={(e) => setPriceLimit(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder={`Don't ${side} ${side === "buy" ? "above" : "below"} this price`} />
       </div>
       <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-semibold transition-colors">
         Start DCA Bot

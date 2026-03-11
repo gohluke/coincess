@@ -34,7 +34,7 @@ export default function CreateStrategyPage() {
                 <button
                   key={opt.id}
                   onClick={() => setSelected(opt.id)}
-                  className="text-left bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 hover:border-brand/50 hover:bg-[#1a1d2e] transition-all"
+                  className="text-left bg-[#141620] rounded-xl p-4 hover:border-brand/50 hover:bg-[#1a1d2e] transition-all"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-brand">{opt.icon}</span>

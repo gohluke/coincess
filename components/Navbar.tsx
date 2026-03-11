@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
@@ -11,6 +11,7 @@ import {
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
 import { DepositButton } from "@/components/DepositModal";
+import { SearchModal } from "@/components/SearchModal";
 
 const NAV_ICONS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
@@ -42,7 +43,7 @@ function NavIcon({ href, label, icon: Icon, active }: {
       >
         <Icon className="h-[18px] w-[18px]" />
       </div>
-      <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#1e2130] border border-[#2a2e3e] text-[11px] font-medium text-white whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 shadow-lg shadow-black/40 z-50">
+      <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#1e2130] text-[11px] font-medium text-white whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 shadow-lg shadow-black/40 z-50">
         {label}
       </span>
     </Link>
@@ -53,8 +54,10 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [gridOpen, setGridOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
+
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -64,6 +67,18 @@ export function Navbar() {
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Cmd/Ctrl+K to open search
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
   useEffect(() => { setGridOpen(false); }, [pathname]);
@@ -86,23 +101,15 @@ export function Navbar() {
 
         {/* Right-aligned: Search + Nav icons + Utility icons + Avatar */}
         <div className="flex items-center gap-1.5">
-          {/* Search pill */}
-          <div className="hidden md:flex items-center gap-2 bg-[#1a1d26] rounded-full px-3.5 py-2 w-44 lg:w-52 border border-transparent focus-within:border-[#3a3e4e] transition-colors mr-1">
+          {/* Search pill — click to open modal */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="hidden md:flex items-center gap-2 bg-[#1a1d26] rounded-full px-3.5 py-2 w-44 lg:w-52 hover:bg-[#1e2130] transition-colors mr-1 cursor-pointer"
+          >
             <Search className="h-4 w-4 text-[#555a66] shrink-0" />
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search"
-              className="bg-transparent text-[13px] text-white placeholder-[#555a66] outline-none w-full"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && searchRef.current?.value.trim()) {
-                  router.push(`/coins?q=${encodeURIComponent(searchRef.current.value.trim())}`);
-                  searchRef.current.value = "";
-                  searchRef.current.blur();
-                }
-              }}
-            />
-          </div>
+            <span className="text-[13px] text-[#555a66] flex-1 text-left">Search</span>
+            <kbd className="text-[10px] text-[#3a3e4e] font-mono">⌘K</kbd>
+          </button>
 
           {/* Nav icons (desktop) + More */}
           <nav className="hidden md:flex items-center gap-1.5">
@@ -126,13 +133,13 @@ export function Navbar() {
                   <LayoutGrid className="h-[18px] w-[18px]" />
                 </button>
                 {!gridOpen && (
-                  <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#1e2130] border border-[#2a2e3e] text-[11px] font-medium text-white whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 shadow-lg shadow-black/40 z-50">
+                  <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg bg-[#1e2130] text-[11px] font-medium text-white whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none transition-all duration-150 shadow-lg shadow-black/40 z-50">
                     More
                   </span>
                 )}
               </div>
               {gridOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-[#141620] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/50 py-1.5 z-50">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-[#141620] rounded-2xl shadow-2xl shadow-black/50 py-1.5 z-50">
                   {MORE_LINKS.map(({ href, label, icon: Icon }) => {
                     const active = pathname === href || pathname.startsWith(href + "/");
                     return (
@@ -158,6 +165,14 @@ export function Navbar() {
           {/* Separator */}
           <div className="hidden md:block w-px h-5 bg-[#2a2e3e] mx-0.5" />
 
+          {/* Mobile search icon */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-[#1a1d26] text-[#848e9c] hover:text-white transition-colors"
+          >
+            <Search className="h-[18px] w-[18px]" />
+          </button>
+
           {/* Deposit */}
           <DepositButton variant="icon" />
 
@@ -165,6 +180,9 @@ export function Navbar() {
           <AuthButton />
         </div>
       </div>
+
+      {/* Search modal */}
+      <SearchModal open={searchOpen} onClose={closeSearch} />
     </header>
   );
 }

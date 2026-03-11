@@ -478,7 +478,7 @@ export default function TradersPage() {
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Paste wallet address (0x...)"
-              className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors"
+              className="w-full bg-[#141620] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors"
             />
           </div>
           <button
@@ -494,7 +494,7 @@ export default function TradersPage() {
         {/* ── Tab Switch (when no address selected) ── */}
         {!activeAddress && (
           <div className="space-y-3">
-            <div className="flex items-center gap-1 bg-[#141620] border border-[#2a2e3e] rounded-lg p-0.5 w-fit">
+            <div className="flex items-center gap-1 bg-[#141620] rounded-lg p-0.5 w-fit">
               <button
                 onClick={() => setMainTab("coincess")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
@@ -530,7 +530,7 @@ export default function TradersPage() {
                   </div>
                 ) : sortedCoincess.length === 0 ? (
                   /* ── Empty state ── */
-                  <div className="relative overflow-hidden rounded-2xl border border-[#2a2e3e] bg-gradient-to-br from-[#141620] via-[#141620] to-[#1a1020]">
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#141620] via-[#141620] to-[#1a1020]">
                     <div className="absolute inset-0 opacity-[0.03]" style={{
                       backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
                       backgroundSize: "24px 24px",
@@ -550,17 +550,17 @@ export default function TradersPage() {
                         earn rewards, recognition, and future CNC token airdrops.
                       </p>
                       <div className="grid grid-cols-3 gap-4 w-full max-w-sm mb-8">
-                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4 border border-[#2a2e3e]/50">
+                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4/50">
                           <div className="text-2xl mb-1">🥇</div>
                           <p className="text-[10px] text-[#848e9c] uppercase tracking-wider">Top Volume</p>
                           <p className="text-xs text-white font-semibold mt-1">Unclaimed</p>
                         </div>
-                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4 border border-[#2a2e3e]/50">
+                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4/50">
                           <div className="text-2xl mb-1">📈</div>
                           <p className="text-[10px] text-[#848e9c] uppercase tracking-wider">Top PnL</p>
                           <p className="text-xs text-white font-semibold mt-1">Unclaimed</p>
                         </div>
-                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4 border border-[#2a2e3e]/50">
+                        <div className="bg-[#0b0e11]/60 rounded-xl px-3 py-4/50">
                           <div className="text-2xl mb-1">⚡</div>
                           <p className="text-[10px] text-[#848e9c] uppercase tracking-wider">Most Active</p>
                           <p className="text-xs text-white font-semibold mt-1">Unclaimed</p>
@@ -585,7 +585,7 @@ export default function TradersPage() {
                           {sortedCoincess.length} trader{sortedCoincess.length !== 1 ? "s" : ""}
                         </span>
                       </h2>
-                      <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
+                      <div className="flex items-center bg-[#141620] rounded-lg overflow-hidden">
                         {([["volume", "Volume"], ["pnl", "P&L"], ["trades", "Trades"]] as [typeof coincessSort, string][]).map(([k, label]) => (
                           <button
                             key={k}
@@ -600,7 +600,7 @@ export default function TradersPage() {
                       </div>
                     </div>
 
-                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                    <div className="bg-[#141620] rounded-xl overflow-hidden">
                       <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
                         <span className="col-span-1">#</span>
                         <span className="col-span-3">Trader</span>
@@ -672,7 +672,7 @@ export default function TradersPage() {
                       onChange={(e) => setScanCoin(e.target.value.toUpperCase())}
                       onKeyDown={(e) => e.key === "Enter" && scanForContract(scanCoin)}
                       placeholder="Type contract name (e.g. BRENTOIL, BTC, WTI, GOLD...)"
-                      className="w-full bg-[#141620] border border-[#2a2e3e] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors"
+                      className="w-full bg-[#141620] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors"
                       list="coin-suggestions"
                     />
                     <datalist id="coin-suggestions">
@@ -697,7 +697,7 @@ export default function TradersPage() {
                     <button
                       key={c}
                       onClick={() => { setScanCoin(c); scanForContract(c); }}
-                      className="px-2.5 py-1 bg-[#1a1d2e] border border-[#2a2e3e] rounded-md text-[10px] text-[#848e9c] hover:text-white hover:border-brand/50 transition-colors"
+                      className="px-2.5 py-1 bg-[#1a1d2e] rounded-md text-[10px] text-[#848e9c] hover:text-white hover:border-brand/50 transition-colors"
                     >
                       {c}
                     </button>
@@ -726,7 +726,7 @@ export default function TradersPage() {
                     <h3 className="text-xs font-semibold text-white">
                       {scanResults.length} trader{scanResults.length === 1 ? "" : "s"} holding {scanCoin}
                     </h3>
-                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                    <div className="bg-[#141620] rounded-xl overflow-hidden">
                       <div className="hidden lg:grid grid-cols-[2.5fr_0.7fr_1.2fr_1.5fr_0.6fr_1.5fr_0.7fr_1.8fr] px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium gap-2">
                         <span>Trader</span>
                         <span className="text-center">Side</span>
@@ -820,10 +820,10 @@ export default function TradersPage() {
                         value={lbSearch}
                         onChange={(e) => setLbSearch(e.target.value)}
                         placeholder="Filter by name or address..."
-                        className="bg-[#141620] border border-[#2a2e3e] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors w-full sm:w-52"
+                        className="bg-[#141620] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors w-full sm:w-52"
                       />
                     </div>
-                    <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
+                    <div className="flex items-center bg-[#141620] rounded-lg overflow-hidden">
                       {(["day", "week", "month", "allTime"] as TimeWindow[]).map((tw) => (
                         <button
                           key={tw}
@@ -836,7 +836,7 @@ export default function TradersPage() {
                         </button>
                       ))}
                     </div>
-                    <div className="flex items-center bg-[#141620] border border-[#2a2e3e] rounded-lg overflow-hidden">
+                    <div className="flex items-center bg-[#141620] rounded-lg overflow-hidden">
                       {([["pnl", "P&L"], ["roi", "ROI"], ["accountValue", "Value"], ["dayPnl", "24h"]] as [SortKey, string][]).map(([k, label]) => (
                         <button
                           key={k}
@@ -857,7 +857,7 @@ export default function TradersPage() {
                     <RefreshCw className="h-5 w-5 animate-spin text-[#848e9c]" />
                   </div>
                 ) : (
-                  <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                  <div className="bg-[#141620] rounded-xl overflow-hidden">
                     <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
                       <span className="col-span-1">#</span>
                       <span className="col-span-3">Trader</span>
@@ -921,7 +921,7 @@ export default function TradersPage() {
         {/* ── Trader Profile (when address selected) ── */}
         {activeAddress && (
           <div className="space-y-4">
-            <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 sm:p-5">
+            <div className="bg-[#141620] rounded-xl p-4 sm:p-5">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   {lbMatch?.displayName && (
@@ -958,7 +958,7 @@ export default function TradersPage() {
                     <Star className={`h-3 w-3 ${starred.has(activeAddress.toLowerCase()) ? "fill-amber-400" : ""}`} />
                     {starred.has(activeAddress.toLowerCase()) ? "Starred" : "Star"}
                   </button>
-                  <button onClick={goBack} className="px-3 py-1.5 text-xs text-[#848e9c] border border-[#2a2e3e] rounded-lg hover:text-white hover:border-[#3a3e4e] transition-colors">
+                  <button onClick={goBack} className="px-3 py-1.5 text-xs text-[#848e9c] rounded-lg hover:text-white transition-colors">
                     Back
                   </button>
                   <button onClick={() => loadTrader(activeAddress)} disabled={loading} className="px-3 py-1.5 text-xs text-brand border border-brand/30 rounded-lg hover:bg-brand/10 transition-colors disabled:opacity-50 flex items-center gap-1">
@@ -1101,7 +1101,7 @@ export default function TradersPage() {
 
                 {historyTab === "positions" && (
                   positions.length > 0 ? (
-                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-x-auto">
+                    <div className="bg-[#141620] rounded-xl overflow-x-auto">
                       <table className="w-full text-[11px]">
                         <thead>
                           <tr className="text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50">
@@ -1181,7 +1181,7 @@ export default function TradersPage() {
 
                 {historyTab === "fills" && (
                   sortedFills.length > 0 ? (
-                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                    <div className="bg-[#141620] rounded-xl overflow-hidden">
                       <div className="hidden sm:grid grid-cols-7 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
                         <span>Time</span>
                         <span>Pair</span>
@@ -1222,7 +1222,7 @@ export default function TradersPage() {
 
                 {historyTab === "spot" && (
                   spotState && spotState.balances.filter((b) => parseFloat(b.total) > 0).length > 0 ? (
-                    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                    <div className="bg-[#141620] rounded-xl overflow-hidden">
                       <div className="grid grid-cols-3 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
                         <span>Token</span>
                         <span className="text-right">Balance</span>

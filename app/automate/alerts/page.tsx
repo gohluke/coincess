@@ -44,7 +44,7 @@ export default function AlertsPage() {
           </button>
         </div>
         {showForm && (
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 mb-6">
+          <div className="bg-[#141620] rounded-xl p-4 mb-6">
             <AlertForm onDone={() => setShowForm(false)} />
           </div>
         )}
@@ -57,7 +57,7 @@ export default function AlertsPage() {
         ) : (
           <div className="space-y-2 mb-8">
             {alerts.map((alert) => (
-              <div key={alert.id} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
+              <div key={alert.id} className="flex items-center justify-between bg-[#141620] rounded-xl px-4 py-3">
                 <div>
                   <p className="text-sm font-medium">{alert.name}</p>
                   <p className="text-xs text-[#848e9c]">{formatCondition(alert)}</p>

@@ -6,6 +6,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 
 ### Perpetual Futures Trading
 - **279 perpetual markets** — crypto (BTC, ETH, SOL, memecoins, AI tokens) + HIP-3 markets (stocks, commodities, forex, indices)
+- **Coin logos everywhere** — multi-tier logo resolver (local SVG/PNG for commodities, Clearbit CDN for stocks, CoinCap CDN for crypto, emoji fallback for forex/indices, letter avatar as last resort); shown in market selector header, dropdown rows, and search modal
 - **Real-time order book** and recent trades via WebSocket
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); order form reads spot clearinghouse balance for accurate "Available" display
@@ -63,7 +64,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 ### Coinbase-Style Navigation
 - **Desktop** — all-icon circular navbar: Logo + Search pill + circular nav icons (Portfolio, Trade, Predict, Automate) with hover tooltips, separator, then utility icons (Deposit, More grid, Avatar)
 - **More dropdown** — grid icon opens Traders, Journal, AI Coach, Tools
-- **Search** — unified rounded pill replaces the old Discover link, searches markets on Enter
+- **Search modal (Cmd+K)** — Crypto.com-style modal with category tabs (All, Favorites, Hot, Crypto, Stocks, Commodities, Forex, Indices), real-time WebSocket prices with flash animation, loading skeleton, live market data refresh
 - **Brand font** — Plus Jakarta Sans (geometric, Circular Std-like) via `next/font/google`
 - **Text wordmark** — logo icon + "coincess" rendered in the brand font
 
@@ -86,6 +87,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - MetaMask / injected wallet connection
 - **SDK-driven order execution** — all order placement uses the `@nktkas/hyperliquid` SDK's high-level `order()` function, which handles action construction, msgpack hashing, EIP-712 signing, nonce management, and HTTP serialization as a single atomic operation. This guarantees the client-side action hash always matches what Hyperliquid's server computes. (**Key lesson**: manually constructing + signing + POSTing L1 actions causes hash mismatches that produce "User does not exist" errors — always use the SDK's high-level functions.)
 - **Agent-based trading** — one-time "Enable Trading" approval generates a local agent keypair, registers it with Hyperliquid via EIP-712 `ApproveAgent` (`signatureChainId: 0x66eee`), and stores it in `localStorage`. All subsequent orders sign silently with the agent key — no wallet popup per trade
+- **Passive wallet detection** — `getConnectedAddress()` and `getSigningAddress()` use `eth_accounts` (read-only, no popup) for background checks; `eth_requestAccounts` is reserved for user-initiated connect actions. This prevents MetaMask popups when navigating between trade pairs.
 - **Native MetaMask on Arbitrum for approvals** — all one-time user-signed actions (Enable Trading, builder fee, unified account) use `window.ethereum` directly, bypassing Privy's wrapped provider, and switch MetaMask to Arbitrum One before signing — matching based.one's UX
 - **Address-validated signing** — every trade, cancel, and leverage update resolves the signing address consistently to prevent "User does not exist" errors
 - **Wallet mismatch detection** — order form and positions table detect address mismatches between the displayed (linked) wallet and the actual signing wallet, showing a clear warning and disabling trades until resolved
@@ -424,6 +426,7 @@ coincess/
 │   │   ├── websocket.ts               # WebSocket client
 │   │   ├── store.ts                    # Zustand store
 │   │   └── types.ts                    # TypeScript interfaces
+│   ├── coinLogos.ts                     # Multi-tier logo resolver (local, Clearbit, CoinCap, emoji)
 │   ├── polymarket/
 │   │   ├── api.ts                      # Gamma API + CLOB client
 │   │   ├── trading.ts                  # Order placement via CLOB

@@ -21,6 +21,17 @@ const TradingChart = dynamic(
 type MobileTab = "chart" | "book" | "order" | "positions";
 type BookTab = "book" | "trades";
 
+function findMarketByCoin(markets: { name: string; displayName: string }[], coinParam: string) {
+  return markets.find((m) => {
+    const upper = m.name.toUpperCase();
+    if (upper === coinParam) return true;
+    if (m.displayName.toUpperCase() === coinParam) return true;
+    // HIP-3 names like "@140:CL" — match the part after ":"
+    const stripped = upper.includes(":") ? upper.split(":")[1] : upper;
+    return stripped === coinParam;
+  });
+}
+
 export default function TradePageDynamic() {
   const params = useParams<{ coin: string }>();
   const router = useRouter();
@@ -66,9 +77,7 @@ export default function TradePageDynamic() {
   useEffect(() => {
     if (initialSynced.current || !marketsReady) return;
     initialSynced.current = true;
-    const match = markets.find(
-      (m) => m.name.toUpperCase() === coinParam || m.displayName.toUpperCase() === coinParam,
-    );
+    const match = findMarketByCoin(markets, coinParam);
     const target = match?.name ?? coinParam;
     if (target !== selectedMarket) selectMarket(target);
     try { localStorage.setItem("coincess:lastTicker", coinParam); } catch {}
@@ -81,9 +90,7 @@ export default function TradePageDynamic() {
     if (!marketsReady) return;
     const ms = useTradingStore.getState().markets;
     const sel = useTradingStore.getState().selectedMarket;
-    const match = ms.find(
-      (m) => m.name.toUpperCase() === coinParam || m.displayName.toUpperCase() === coinParam,
-    );
+    const match = findMarketByCoin(ms, coinParam);
     const target = match?.name ?? coinParam;
     if (target !== sel) selectMarket(target);
     // eslint-disable-next-line react-hooks/exhaustive-deps

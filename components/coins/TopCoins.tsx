@@ -150,11 +150,11 @@ export function TopCoins() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name or symbol..."
-          className="w-full sm:max-w-xs bg-[#141620] border border-[#2a2e3e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand"
+          className="w-full sm:max-w-xs bg-[#141620] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand"
         />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#2a2e3e]">
+      <div className="overflow-x-auto rounded-xl">
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-[#141620] border-b border-[#2a2e3e] text-[#848e9c]">

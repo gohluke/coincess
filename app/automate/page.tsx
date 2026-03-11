@@ -367,7 +367,7 @@ function ServerStrategies({ address }: { address: string | null }) {
               <button
                 key={type}
                 onClick={() => addStrategy(type)}
-                className="p-3 rounded-xl border border-[#2a2e39] bg-[#12141a] hover:border-brand/40 transition-colors text-left"
+                className="p-3 rounded-xl bg-[#12141a] hover:border-brand/40 transition-colors text-left"
               >
                 <span className="text-lg">{emoji}</span>
                 <p className="text-xs text-white mt-1">{name}</p>
@@ -379,7 +379,7 @@ function ServerStrategies({ address }: { address: string | null }) {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a] space-y-3">
+              <div key={i} className="p-4 rounded-xl bg-[#12141a] space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-7 w-7 rounded" />
@@ -411,7 +411,7 @@ function ServerStrategies({ address }: { address: string | null }) {
               return (
                 <div
                   key={strat.id}
-                  className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a] space-y-3"
+                  className="p-4 rounded-xl bg-[#12141a] space-y-3"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -492,7 +492,7 @@ function ServerStrategies({ address }: { address: string | null }) {
               const reason = (trade.meta as { reason?: string } | null)?.reason;
 
               return (
-                <div key={trade.id} className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+                <div key={trade.id} className="bg-[#141620] rounded-xl overflow-hidden">
                   <div className="flex items-center justify-between px-4 pt-3 pb-2">
                     <div className="flex items-center gap-2.5">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
@@ -554,7 +554,7 @@ function ServerStrategies({ address }: { address: string | null }) {
         {trades.length === 0 ? (
           <p className="text-[#848e9c] text-xs py-4 text-center">No trades yet.</p>
         ) : (
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+          <div className="bg-[#141620] rounded-xl overflow-hidden">
             {/* Header */}
             <div className="grid grid-cols-8 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
               <span>Date</span>
@@ -664,7 +664,7 @@ function BrowserBots() {
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium transition-all ${
               engineRunning
                 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                : "bg-[#1a1d2e] text-[#848e9c] border border-[#2a2e3e] hover:text-white"
+                : "bg-[#1a1d2e] text-[#848e9c] hover:text-white"
             }`}
           >
             {engineRunning ? <Zap className="h-3 w-3" /> : <ZapOff className="h-3 w-3" />}
@@ -718,7 +718,7 @@ function BrowserBots() {
         {/* Activity */}
         <div>
           <h2 className="text-sm font-semibold mb-3">Activity</h2>
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-3">
+          <div className="bg-[#141620] rounded-xl p-3">
             <ActivityLog />
           </div>
         </div>
@@ -863,7 +863,7 @@ function QuantLab() {
       </div>
 
       {/* Run Backtest Panel */}
-      <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a] space-y-4">
+      <div className="p-4 rounded-xl bg-[#12141a] space-y-4">
         <h3 className="text-sm font-semibold text-white flex items-center gap-2">
           <Play className="h-4 w-4 text-brand" />
           Run Backtest
@@ -874,7 +874,7 @@ function QuantLab() {
             <select
               value={btStrategy}
               onChange={(e) => setBtStrategy(e.target.value)}
-              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
+              className="bg-[#0b0e11] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
             >
               <option value="momentum">Momentum Scalper</option>
               <option value="grid">Grid Bot</option>
@@ -889,7 +889,7 @@ function QuantLab() {
             <select
               value={btDays}
               onChange={(e) => setBtDays(Number(e.target.value))}
-              className="bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
+              className="bg-[#0b0e11] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
             >
               <option value={3}>3 days</option>
               <option value={7}>7 days</option>
@@ -922,7 +922,7 @@ function QuantLab() {
           </h3>
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2">
             {dataStatus.slice(0, 24).map((d) => (
-              <div key={d.coin} className="bg-[#141620] border border-[#2a2e3e] rounded-lg px-2.5 py-2 text-center">
+              <div key={d.coin} className="bg-[#141620] rounded-lg px-2.5 py-2 text-center">
                 <p className="text-[10px] font-medium text-white">{d.coin}</p>
                 <p className="text-[9px] text-[#4a4e59]">{d.total_candles.toLocaleString()}</p>
               </div>
@@ -941,7 +941,7 @@ function QuantLab() {
         {loading ? (
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="p-4 rounded-xl border border-[#2a2e39] bg-[#12141a]">
+              <div key={i} className="p-4 rounded-xl bg-[#12141a]">
                 <Skeleton className="h-4 w-48 mb-2" />
                 <Skeleton className="h-3 w-32" />
               </div>
@@ -966,7 +966,7 @@ function QuantLab() {
                     className={`w-full text-left p-4 rounded-xl border transition-all ${
                       isSelected
                         ? "border-brand/40 bg-brand/5"
-                        : "border-[#2a2e39] bg-[#12141a] hover:border-[#3a3e49]"
+                        : "border-[#2a2e39] bg-[#12141a]"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -1137,7 +1137,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="p-3 rounded-xl border border-[#2a2e39] bg-[#12141a]">
+    <div className="p-3 rounded-xl bg-[#12141a]">
       <div className="flex items-center gap-2 mb-1">
         <span style={{ color }}><Icon className="h-3.5 w-3.5" /></span>
         <span className="text-[10px] text-[#848e9c] uppercase tracking-wider">{label}</span>
@@ -1149,7 +1149,7 @@ function StatCard({
 
 function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
+    <div className="bg-[#141620] rounded-xl px-4 py-3">
       <div className="flex items-center gap-2 mb-1">{icon}<span className="text-[10px] text-[#848e9c] uppercase tracking-wide">{label}</span></div>
       <p className="text-lg font-bold">{value}</p>
     </div>

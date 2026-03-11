@@ -56,7 +56,7 @@ function WalletCard({
       className={`relative p-4 rounded-xl border transition-all ${
         isActive
           ? "border-brand bg-brand/5"
-          : "border-[#2a2e39] bg-[#141620] hover:border-[#3a3e49]"
+          : "border-[#2a2e39] bg-[#141620]"
       }`}
     >
       {isActive && (
@@ -84,7 +84,7 @@ function WalletCard({
                 onKeyDown={(e) => e.key === "Enter" && saveLabel()}
                 onBlur={saveLabel}
                 autoFocus
-                className="bg-[#0b0e11] border border-[#2a2e39] rounded px-2 py-0.5 text-sm text-white outline-none focus:border-brand w-full"
+                className="bg-[#0b0e11] rounded px-2 py-0.5 text-sm text-white outline-none focus:border-brand w-full"
               />
             </div>
           ) : (
@@ -167,7 +167,7 @@ function AddWalletForm({ onAdd }: { onAdd: (label: string, address: string) => v
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="e.g. Main Trading, Funding Farm"
-          className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
+          className="mt-1 w-full bg-[#0b0e11] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
         />
       </div>
 
@@ -179,7 +179,7 @@ function AddWalletForm({ onAdd }: { onAdd: (label: string, address: string) => v
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="0x..."
-          className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
+          className="mt-1 w-full bg-[#0b0e11] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
         />
       </div>
 
@@ -243,7 +243,7 @@ function ApiWalletSection() {
         </div>
       </div>
 
-      <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620] space-y-3">
+      <div className="p-4 rounded-xl bg-[#141620] space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-white">
           <Key className="h-4 w-4 text-brand" />
           API Wallet Configuration
@@ -257,7 +257,7 @@ function ApiWalletSection() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Coincess API"
-            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
+            className="mt-1 w-full bg-[#0b0e11] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
           />
         </div>
 
@@ -269,7 +269,7 @@ function ApiWalletSection() {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="0x..."
-            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
+            className="mt-1 w-full bg-[#0b0e11] rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
           />
         </div>
 
@@ -283,7 +283,7 @@ function ApiWalletSection() {
               value={privateKey}
               onChange={(e) => setPrivateKey(e.target.value)}
               placeholder="0x..."
-              className="w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
+              className="w-full bg-[#0b0e11] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
             />
             <button
               type="button"
@@ -383,7 +383,7 @@ function DayzeSection() {
 
   return (
     <div className="space-y-4">
-      <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620] space-y-3">
+      <div className="p-4 rounded-xl bg-[#141620] space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-white">
           <Link2 className="h-4 w-4 text-brand" />
           Dayze Connection
@@ -404,7 +404,7 @@ function DayzeSection() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="dayze_k_..."
-              className="w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
+              className="w-full bg-[#0b0e11] rounded-lg px-3 py-2 pr-10 text-sm text-white font-mono outline-none focus:border-brand placeholder:text-[#5a6270]"
             />
             <button
               type="button"
@@ -424,7 +424,7 @@ function DayzeSection() {
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="https://ohmydayze.com"
-            className="mt-1 w-full bg-[#0b0e11] border border-[#2a2e39] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
+            className="mt-1 w-full bg-[#0b0e11] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand placeholder:text-[#5a6270]"
           />
         </div>
 
@@ -446,7 +446,7 @@ function DayzeSection() {
           <button
             onClick={handleTest}
             disabled={!apiKey.trim() || testing}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2a2e39] hover:bg-[#1a1d26] disabled:opacity-40 text-white text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-[#1a1d26] disabled:opacity-40 text-white text-sm font-medium transition-colors"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${testing ? "animate-spin" : ""}`} />
             Test
@@ -478,7 +478,7 @@ function DayzeSection() {
         </div>
       )}
 
-      <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620]">
+      <div className="p-4 rounded-xl bg-[#141620]">
         <h3 className="text-xs font-bold text-white mb-2">How to get a Dayze API key</h3>
         <ol className="text-[11px] text-[#848e9c] space-y-1.5 list-decimal list-inside">
           <li>Log in to your Dayze account</li>
@@ -570,7 +570,7 @@ export default function SettingsPage() {
 
           <ApiWalletSection />
 
-          <div className="p-4 rounded-xl border border-[#2a2e39] bg-[#141620]">
+          <div className="p-4 rounded-xl bg-[#141620]">
             <h3 className="text-xs font-bold text-white mb-2">How to create an API wallet</h3>
             <ol className="text-[11px] text-[#848e9c] space-y-1.5 list-decimal list-inside">
               <li>

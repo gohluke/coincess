@@ -55,7 +55,7 @@ export default function EventDetailPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {/* Closed/Resolved banner */}
         {(isClosed || isEnded) && (
-          <div className="mb-6 px-4 py-3 rounded-lg bg-[#1a1d2e] border border-[#2a2e3e] flex items-center gap-2">
+          <div className="mb-6 px-4 py-3 rounded-lg bg-[#1a1d2e] flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#848e9c]/20 text-[#848e9c] text-xs font-semibold uppercase">
               <Clock className="h-3 w-3" />
               {isClosed ? "Resolved" : "Ended"}

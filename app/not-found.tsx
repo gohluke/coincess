@@ -27,7 +27,7 @@ export default function NotFound() {
         <div className="mb-6 flex justify-center">
           <div className="relative">
             <div className="absolute -inset-4 bg-brand/10 rounded-full blur-2xl" />
-            <div className="relative bg-[#141620] border border-[#2a2e3e] rounded-2xl p-5">
+            <div className="relative bg-[#141620] rounded-2xl p-5">
               <span className="text-4xl">🔍</span>
             </div>
           </div>
@@ -51,7 +51,7 @@ export default function NotFound() {
           </Link>
           <Link
             href="/trade/BTC"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-brand/50 text-white font-semibold text-sm transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#141620] hover:border-brand/50 text-white font-semibold text-sm transition-all"
           >
             <TrendingUp className="h-4 w-4" />
             Start Trading
@@ -67,7 +67,7 @@ export default function NotFound() {
               <Link
                 key={href}
                 href={href}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 transition-colors group"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#141620] hover:border-brand/40 transition-colors group"
               >
                 <Icon className="h-4 w-4 text-[#848e9c] group-hover:text-brand transition-colors" />
                 <span className="text-[10px] font-medium text-[#848e9c] group-hover:text-white transition-colors">

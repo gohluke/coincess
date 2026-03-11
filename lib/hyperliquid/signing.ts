@@ -316,7 +316,11 @@ async function resolveAddress(preferredAddress?: string): Promise<string> {
 
 export async function getSigningAddress(): Promise<string | null> {
   try {
-    return await resolveAddress();
+    // Passive check only — use eth_accounts (no popup).
+    // eth_requestAccounts is reserved for user-initiated connect actions.
+    const provider = getProvider();
+    const accounts = (await provider.request({ method: "eth_accounts" })) as string[];
+    return accounts[0]?.toLowerCase() ?? null;
   } catch {
     return null;
   }

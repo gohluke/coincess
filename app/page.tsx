@@ -114,7 +114,7 @@ export default function Home() {
             </Link>
             <Link
               href="/coins"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#141620] border border-[#2a2e3e] hover:border-brand/50 text-white font-semibold text-sm transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#141620] hover:border-brand/50 text-white font-semibold text-sm transition-all"
             >
               Explore Markets
             </Link>
@@ -138,7 +138,7 @@ export default function Home() {
             <Link
               key={f.href}
               href={f.href}
-              className="group relative bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-2xl p-6 transition-all hover:shadow-lg hover:shadow-brand/5"
+              className="group relative bg-[#141620] hover:border-brand/40 rounded-2xl p-6 transition-all hover:shadow-lg hover:shadow-brand/5"
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${f.accent} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity`}
@@ -166,7 +166,7 @@ export default function Home() {
           {STATS.map((s) => (
             <div
               key={s.label}
-              className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 text-center"
+              className="bg-[#141620] rounded-xl p-4 text-center"
             >
               <s.icon className="h-5 w-5 text-brand mx-auto mb-2" />
               <p className="text-xl md:text-2xl font-bold text-white">
@@ -190,7 +190,7 @@ export default function Home() {
             <Link
               key={t.href}
               href={t.href}
-              className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] hover:border-brand/40 rounded-xl p-4 transition-colors"
+              className="flex items-center gap-3 bg-[#141620] hover:border-brand/40 rounded-xl p-4 transition-colors"
             >
               <t.icon className="h-5 w-5 text-brand shrink-0" />
               <div>

@@ -38,7 +38,7 @@ export function SecurityCheck() {
         <span className="text-[10px] text-[#848e9c]">powered by GoPlus</span>
       </div>
 
-      <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 sm:p-6">
+      <div className="bg-[#141620] rounded-xl p-4 sm:p-6">
         <p className="text-xs text-[#848e9c] mb-4">
           Paste a contract address to check for honeypots, rug pulls, hidden owners, and other risks.
         </p>
@@ -47,7 +47,7 @@ export function SecurityCheck() {
           <select
             value={chain}
             onChange={(e) => setChain(e.target.value)}
-            className="bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-xs text-white sm:w-36"
+            className="bg-[#0b0e11] rounded-lg px-3 py-2 text-xs text-white sm:w-36"
           >
             {getSupportedChains().map((c) => (
               <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
@@ -60,7 +60,7 @@ export function SecurityCheck() {
               onChange={(e) => setAddress(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCheck()}
               placeholder="0x... or token address"
-              className="flex-1 bg-[#0b0e11] border border-[#2a2e3e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand"
+              className="flex-1 bg-[#0b0e11] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand"
             />
             <button
               onClick={handleCheck}

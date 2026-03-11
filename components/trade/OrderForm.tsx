@@ -33,7 +33,7 @@ export function OrderForm() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [signingAddr, setSigningAddr] = useState<string | null>(null);
   const [signingAddrLoaded, setSigningAddrLoaded] = useState(false);
-  const [agentApproved, setAgentApproved] = useState(false);
+  const [agentApproved, setAgentApproved] = useState(() => !!address && !!getStoredAgent(address));
   const [enablingTrading, setEnablingTrading] = useState(false);
 
   // Pre-fill from copy trade query params (?side=buy&size=1.5&price=64300)
@@ -278,7 +278,7 @@ export function OrderForm() {
                 value={orderPrice}
                 onChange={(e) => setOrderPrice(e.target.value)}
                 placeholder={parseFloat(midPrice).toFixed(2)}
-                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-3 sm:py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
+                className="w-full bg-[#1a1d26] rounded-lg px-3 py-3 sm:py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#848e9c]">USD</span>
             </div>
@@ -297,7 +297,7 @@ export function OrderForm() {
               value={orderSize}
               onChange={(e) => setOrderSize(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg px-3 py-3 sm:py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
+              className="w-full bg-[#1a1d26] rounded-lg px-3 py-3 sm:py-2.5 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand transition-colors"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#848e9c]">{displayName}</span>
           </div>

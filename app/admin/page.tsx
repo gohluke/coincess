@@ -166,7 +166,7 @@ export default function AdminPage() {
         <button
           onClick={fetchStats}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] text-xs text-[#848e9c] hover:text-white transition-all disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#141620] text-xs text-[#848e9c] hover:text-white transition-all disabled:opacity-50"
         >
           <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -232,12 +232,12 @@ export default function AdminPage() {
       <div>
         <h2 className="text-sm font-semibold text-white mb-3">Top Traders by Volume</h2>
         {topTraders.length === 0 ? (
-          <div className="text-center py-12 bg-[#141620] border border-[#2a2e3e] rounded-2xl">
+          <div className="text-center py-12 bg-[#141620] rounded-2xl">
             <Users className="h-8 w-8 text-[#848e9c] mx-auto mb-2" />
             <p className="text-xs text-[#848e9c]">No traders yet</p>
           </div>
         ) : (
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-2xl overflow-hidden">
+          <div className="bg-[#141620] rounded-2xl overflow-hidden">
             <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-[#2a2e3e] text-[10px] text-[#555a66] uppercase tracking-wider font-medium">
               <span>#</span>
               <span>Trader</span>
@@ -290,7 +290,7 @@ function MetricCard({
   negative?: boolean;
 }) {
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-3.5">
+    <div className="bg-[#141620] rounded-xl p-3.5">
       <div className="flex items-center gap-2 mb-2">
         <Icon className="h-3.5 w-3.5 text-[#555a66]" />
         <span className="text-[10px] text-[#848e9c] uppercase tracking-wider">{label}</span>

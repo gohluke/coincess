@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Search, ChevronDown, TrendingUp, TrendingDown, Star } from "lucide-react";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { CATEGORIES, filterByCategory, type MarketCategory } from "@/lib/hyperliquid/categories";
+import { getLogoForTicker, type LogoResult } from "@/lib/coinLogos";
 
 type SortKey = "name" | "price" | "change" | "volume";
 
@@ -18,6 +19,51 @@ function loadFavorites(): Set<string> {
 
 function saveFavorites(favs: Set<string>) {
   localStorage.setItem(LS_KEY, JSON.stringify([...favs]));
+}
+
+const FALLBACK_COLORS = [
+  "#f6465d", "#0ecb81", "#f0b90b", "#3b82f6",
+  "#8b5cf6", "#ec4899", "#14b8a6", "#f97316",
+];
+
+function CoinLogo({ symbol, size = 24 }: { symbol: string; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const logo: LogoResult = useMemo(() => getLogoForTicker(symbol), [symbol]);
+  const stripped = symbol.replace(/^.*:/, "");
+
+  if (logo.type === "emoji") {
+    return (
+      <div
+        className="rounded-full flex items-center justify-center bg-[#1e2130] shrink-0"
+        style={{ width: size, height: size, fontSize: size * 0.5 }}
+      >
+        {logo.emoji}
+      </div>
+    );
+  }
+
+  if (logo.type === "url" && !failed) {
+    return (
+      <img
+        src={logo.src}
+        alt={stripped}
+        width={size}
+        height={size}
+        className="rounded-full shrink-0 object-cover bg-[#1e2130]"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
+  const ci = stripped.charCodeAt(0) % FALLBACK_COLORS.length;
+  return (
+    <div
+      className="rounded-full flex items-center justify-center text-white font-bold shrink-0"
+      style={{ width: size, height: size, backgroundColor: FALLBACK_COLORS[ci], fontSize: size * 0.36 }}
+    >
+      {stripped.charAt(0)}
+    </div>
+  );
 }
 
 function marketTypeBadge(name: string): { label: string; color: string } | null {
@@ -130,6 +176,7 @@ export function MarketSelector() {
           }`}
           onClick={(e) => toggleFavorite(selectedMarket, e)}
         />
+        <CoinLogo symbol={selectedMarket} size={24} />
         <span className="text-white font-bold text-lg">{displayLabel}</span>
         {badge && (
           <span className="text-[9px] px-1.5 py-0.5 rounded font-medium" style={{ background: `${badge.color}22`, color: badge.color }}>
@@ -180,7 +227,7 @@ export function MarketSelector() {
       )}
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-[520px] bg-[#12141a] border border-[#2a2e39] rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 w-[520px] bg-[#12141a] rounded-xl shadow-2xl z-50 overflow-hidden">
           <div className="p-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#848e9c]" />
@@ -190,7 +237,7 @@ export function MarketSelector() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={`Search ${totalCount} markets — crypto, stocks, commodities, forex...`}
-                className="w-full bg-[#1a1d26] border border-[#2a2e39] rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand"
+                className="w-full bg-[#1a1d26] rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-brand"
               />
             </div>
           </div>
@@ -212,7 +259,7 @@ export function MarketSelector() {
             ))}
           </div>
 
-          <div className="grid grid-cols-[20px_1.4fr_0.8fr_0.8fr_0.8fr] gap-1 px-3 py-1 text-[10px] text-[#848e9c] uppercase border-b border-[#2a2e39]">
+          <div className="grid grid-cols-[20px_1.6fr_0.8fr_0.8fr_0.8fr] gap-1 px-3 py-1 text-[10px] text-[#848e9c] uppercase border-b border-[#2a2e39]">
             <span />
             <button className="text-left hover:text-white" onClick={() => handleSort("name")}>
               Market {sortKey === "name" ? (sortAsc ? "↑" : "↓") : ""}
@@ -246,7 +293,7 @@ export function MarketSelector() {
                   <button
                     key={m.name}
                     onClick={() => { selectMarket(m.name); setOpen(false); setSearch(""); }}
-                    className={`grid grid-cols-[20px_1.4fr_0.8fr_0.8fr_0.8fr] gap-1 w-full px-3 py-2 text-xs hover:bg-[#1a1d26] transition-colors ${
+                    className={`grid grid-cols-[20px_1.6fr_0.8fr_0.8fr_0.8fr] gap-1 w-full px-3 py-2 text-xs hover:bg-[#1a1d26] transition-colors ${
                       m.name === selectedMarket ? "bg-[#1a1d26]" : ""
                     }`}
                   >
@@ -257,6 +304,7 @@ export function MarketSelector() {
                       onClick={(e) => toggleFavorite(m.name, e)}
                     />
                     <span className="text-left flex items-center gap-1.5">
+                      <CoinLogo symbol={m.name} size={20} />
                       <span className="text-white font-medium">{m.displayName}</span>
                       {mBadge && (
                         <span className="text-[8px] px-1 py-0.5 rounded font-medium" style={{ background: `${mBadge.color}22`, color: mBadge.color }}>

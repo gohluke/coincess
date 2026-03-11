@@ -133,7 +133,7 @@ function AuthButtonInner({
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-full mt-1.5 z-50 bg-[#141620] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/40 min-w-[240px] overflow-hidden">
+          <div className="absolute right-0 top-full mt-1.5 z-50 bg-[#141620] rounded-2xl shadow-2xl shadow-black/40 min-w-[240px] overflow-hidden">
             {/* Header */}
             <div className="px-4 py-3.5 border-b border-[#2a2e3e]">
               <div className="flex items-center gap-3">

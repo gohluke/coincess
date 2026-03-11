@@ -544,7 +544,7 @@ export function PositionsTable() {
                                       if (e.key === "Escape") setActionForm(null);
                                     }}
                                     placeholder="Price"
-                                    className="w-28 bg-[#1a1d26] border border-[#2a2e3e] focus:border-brand rounded px-2 py-1 text-white text-right text-xs focus:outline-none"
+                                    className="w-28 bg-[#1a1d26] focus:border-brand rounded px-2 py-1 text-white text-right text-xs focus:outline-none"
                                   />
                                   <button
                                     onClick={() => handleLimitClose(pos.coin, pos.szi, limitPrice)}
@@ -688,7 +688,7 @@ export function PositionsTable() {
                               onChange={(e) => setLimitPrice(e.target.value)}
                               onKeyDown={(e) => { if (e.key === "Enter") handleLimitClose(pos.coin, pos.szi, limitPrice); }}
                               placeholder="Price"
-                              className="flex-1 bg-[#1a1d26] border border-[#2a2e3e] focus:border-brand rounded px-2 py-1.5 text-white text-right text-xs focus:outline-none"
+                              className="flex-1 bg-[#1a1d26] focus:border-brand rounded px-2 py-1.5 text-white text-right text-xs focus:outline-none"
                             />
                             <button
                               onClick={() => handleLimitClose(pos.coin, pos.szi, limitPrice)}
@@ -870,7 +870,7 @@ export function PositionsTable() {
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setTpslModal(null); }}
         >
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-2xl w-full max-w-[400px] mx-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#141620] rounded-2xl w-full max-w-[400px] mx-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <h3 className="text-base font-semibold text-white">TP/SL for Position</h3>
               <button onClick={() => setTpslModal(null)} className="p-1 text-[#848e9c] hover:text-white rounded-lg hover:bg-[#2a2e3e] transition-colors">
@@ -911,7 +911,7 @@ export function PositionsTable() {
                       onChange={(e) => setTpPrice(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
                       placeholder="TP Price"
-                      className="w-full bg-[#0b0e11] border border-[#2a2e3e] focus:border-[#0ecb81] rounded-lg pl-7 pr-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
+                      className="w-full bg-[#0b0e11] focus:border-[#0ecb81] rounded-lg pl-7 pr-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
                     />
                   </div>
                   {(() => {
@@ -940,7 +940,7 @@ export function PositionsTable() {
                       onChange={(e) => setSlPrice(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
                       placeholder="SL Price"
-                      className="w-full bg-[#0b0e11] border border-[#2a2e3e] focus:border-[#f6465d] rounded-lg pl-7 pr-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
+                      className="w-full bg-[#0b0e11] focus:border-[#f6465d] rounded-lg pl-7 pr-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
                     />
                   </div>
                   {(() => {
@@ -1133,7 +1133,7 @@ function SharePnlModal({ position, onClose }: { position: ShareablePosition; onC
 
           <div className="px-4 sm:px-5 py-4 space-y-4">
             {/* Aspect ratio toggle */}
-            <div className="flex rounded-lg overflow-hidden border border-[#2a2e3e]">
+            <div className="flex rounded-lg overflow-hidden">
               {(["9:16", "1:1"] as const).map((r) => (
                 <button
                   key={r}

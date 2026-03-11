@@ -264,7 +264,7 @@ export default function PortfolioChart({ fills, ledger, currentAccountValue }: P
     : "Current";
 
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 overflow-hidden">
+    <div className="bg-[#141620] rounded-xl p-4 overflow-hidden">
       <div className="flex items-center justify-between mb-2">
         <div className="flex gap-0.5 bg-[#0b0e11] rounded-lg p-0.5">
           {(["accountValue", "pnl"] as const).map((m) => (

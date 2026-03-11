@@ -121,7 +121,7 @@ export function NewPairs() {
               href={row.profile.url || (p ? p.url : "#")}
               target="_blank"
               rel="noopener noreferrer"
-              className="block bg-[#141620] border border-[#2a2e3e] rounded-xl p-4 hover:border-[#3a3e4e] transition-colors"
+              className="block bg-[#141620] rounded-xl p-4 transition-colors"
             >
               <div className="flex items-start gap-3 mb-3">
                 <PairImg src={p?.info?.imageUrl || row.profile.icon} symbol={p?.baseToken.symbol ?? "?"} size={10} />

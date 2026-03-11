@@ -49,35 +49,35 @@ export function CopyTradeForm() {
 
   return (
     <div className="space-y-4 max-w-md">
-      <p className="text-xs text-[#848e9c] bg-[#141620] rounded-lg p-3 border border-[#2a2e3e]">
+      <p className="text-xs text-[#848e9c] bg-[#141620] rounded-lg p-3">
         Monitor a Hyperliquid wallet and automatically mirror new position changes. The bot checks every 15 seconds.
       </p>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Wallet Address</label>
-        <input value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand font-mono" placeholder="0x..." />
+        <input value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand font-mono" placeholder="0x..." />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Label (optional)</label>
-        <input value={label} onChange={(e) => setLabel(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Whale #1" />
+        <input value={label} onChange={(e) => setLabel(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="Whale #1" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Size Multiplier</label>
-          <input value={multiplier} onChange={(e) => setMultiplier(e.target.value)} type="number" step="0.1" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="1.0" />
+          <input value={multiplier} onChange={(e) => setMultiplier(e.target.value)} type="number" step="0.1" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="1.0" />
           <p className="text-[10px] text-[#848e9c] mt-0.5">1.0 = same size, 0.5 = half, 2.0 = double</p>
         </div>
         <div>
           <label className="block text-xs text-[#848e9c] mb-1">Max Position (USD)</label>
-          <input value={maxUsd} onChange={(e) => setMaxUsd(e.target.value)} type="number" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="1000" />
+          <input value={maxUsd} onChange={(e) => setMaxUsd(e.target.value)} type="number" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="1000" />
         </div>
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Allowed Coins (optional, comma-separated)</label>
-        <input value={allowedCoins} onChange={(e) => setAllowedCoins(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="BTC, ETH, SOL (leave empty for all)" />
+        <input value={allowedCoins} onChange={(e) => setAllowedCoins(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="BTC, ETH, SOL (leave empty for all)" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Excluded Coins (optional, comma-separated)</label>
-        <input value={excludedCoins} onChange={(e) => setExcludedCoins(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="DOGE, SHIB" />
+        <input value={excludedCoins} onChange={(e) => setExcludedCoins(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" placeholder="DOGE, SHIB" />
       </div>
       <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-semibold transition-colors">
         Start Copy Trading

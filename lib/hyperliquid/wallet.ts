@@ -31,11 +31,16 @@ export async function connectWallet(): Promise<string | null> {
 }
 
 export async function getConnectedAddress(): Promise<string | null> {
-  const client = getWalletClient();
-  if (!client) return null;
+  const eth = (window as unknown as {
+    ethereum?: {
+      request: (args: { method: string; params?: unknown[] }) => Promise<string[]>;
+    };
+  }).ethereum;
+  if (!eth) return null;
   try {
-    const [addr] = await client.getAddresses();
-    return addr || null;
+    // Use eth_accounts (read-only, no popup) instead of eth_requestAccounts
+    const accounts = await eth.request({ method: "eth_accounts" });
+    return accounts[0] || null;
   } catch {
     return null;
   }

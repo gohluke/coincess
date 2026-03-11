@@ -64,13 +64,13 @@ export function TokenSearch() {
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Search any token by name, symbol, or contract address..."
-          className="w-full bg-[#141620] border border-[#2a2e3e] rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand transition-colors"
+          className="w-full bg-[#141620] rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder:text-[#848e9c] focus:outline-none focus:border-brand transition-colors"
         />
         {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#848e9c] animate-spin" />}
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-[#141620] border border-[#2a2e3e] rounded-xl shadow-2xl max-h-[400px] overflow-y-auto scrollbar-thin">
+        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-[#141620] rounded-xl shadow-2xl max-h-[400px] overflow-y-auto scrollbar-thin">
           {results.map((p, i) => (
             <a
               key={`${p.chainId}-${p.pairAddress}-${i}`}

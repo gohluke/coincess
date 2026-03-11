@@ -20,7 +20,7 @@ export function SkeletonHeading({ className = "", width = "w-32" }: SkeletonProp
 
 export function SkeletonCard({ className = "" }: SkeletonProps) {
   return (
-    <div className={`bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 space-y-2 ${className}`}>
+    <div className={`bg-[#141620] rounded-xl px-4 py-3.5 space-y-2 ${className}`}>
       <Skeleton className="h-3 w-24" />
       <Skeleton className="h-6 w-20" />
     </div>
@@ -39,7 +39,7 @@ export function SkeletonRow({ cols = 4, className = "" }: SkeletonProps & { cols
 
 export function SkeletonChart({ className = "" }: SkeletonProps) {
   return (
-    <div className={`bg-[#141620] border border-[#2a2e3e] rounded-xl p-6 flex items-center justify-center ${className}`}>
+    <div className={`bg-[#141620] rounded-xl p-6 flex items-center justify-center ${className}`}>
       <Skeleton className="w-40 h-40 rounded-full" />
     </div>
   );

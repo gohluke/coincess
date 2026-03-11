@@ -20,7 +20,7 @@ export function MarketRow({ market }: { market: PolymarketMarket }) {
     : "0.00";
 
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+    <div className="bg-[#141620] rounded-xl overflow-hidden">
       <div className="p-4">
         <h4 className="text-sm font-medium text-white mb-3 leading-tight">
           {market.question}
@@ -94,7 +94,7 @@ export function MarketRow({ market }: { market: PolymarketMarket }) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-7 pr-3 py-2 bg-[#141620] border border-[#2a2e3e] rounded-lg text-sm text-white placeholder-[#4a4e5c] focus:outline-none focus:border-brand/50"
+                className="w-full pl-7 pr-3 py-2 bg-[#141620] rounded-lg text-sm text-white placeholder-[#4a4e5c] focus:outline-none focus:border-brand/50"
               />
             </div>
             <div className="flex items-center justify-between text-xs">

@@ -202,7 +202,7 @@ export function DepositButton({ variant = "default" }: { variant?: "default" | "
       {variant === "icon" ? (
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center justify-center w-9 h-9 rounded-full bg-[#1a1d26] hover:bg-[#252830] border border-[#2a2e3e] transition-colors"
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-[#1a1d26] hover:bg-[#252830] transition-colors"
           title="Deposit"
         >
           <ArrowDownToLine className="h-4 w-4 text-[#848e9c]" />
@@ -293,7 +293,7 @@ function DepositModal({ address, onClose }: { address: string; onClose: () => vo
     <div className="fixed inset-0 z-[100] overflow-y-auto">
       <div className="min-h-full flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#1a1d2e] border border-[#2a2e3e] rounded-2xl shadow-2xl shadow-black/50 w-full max-w-sm">
+      <div className="relative bg-[#1a1d2e] rounded-2xl shadow-2xl shadow-black/50 w-full max-w-sm">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
           {step !== "methods" ? (
@@ -376,7 +376,7 @@ function MethodsStep({
       {/* Wallet balance card — shows total across all chains */}
       <button
         onClick={onWalletClick}
-        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#3a3e4e] hover:border-[#4a4e5e] transition-colors group"
+        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] transition-colors group"
       >
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shrink-0">
           <Wallet className="h-4 w-4 text-white" />
@@ -399,7 +399,7 @@ function MethodsStep({
       {/* Transfer crypto (→ token select) */}
       <button
         onClick={onTransfer}
-        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
+        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] transition-colors group"
       >
         <div className="w-9 h-9 rounded-full bg-blue-500/15 flex items-center justify-center shrink-0">
           <Zap className="h-4 w-4 text-blue-400" />
@@ -420,7 +420,7 @@ function MethodsStep({
         href={`https://app.hyperliquid.xyz/buy?address=${address}&ref=${BRAND_CONFIG.referral.code}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
+        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] transition-colors group"
       >
         <div className="w-9 h-9 rounded-full bg-brand/15 flex items-center justify-center shrink-0">
           <CreditCard className="h-4 w-4 text-brand" />
@@ -438,7 +438,7 @@ function MethodsStep({
       {/* Bridge from Arbitrum */}
       <a
         href={BRAND_CONFIG.referral.ghostLink}
-        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
+        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] transition-colors group"
       >
         <div className="w-9 h-9 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
           <ArrowDownToLine className="h-4 w-4 text-emerald-400" />
@@ -453,7 +453,7 @@ function MethodsStep({
       {/* Connect exchange */}
       <a
         href={BRAND_CONFIG.referral.ghostLink}
-        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] transition-colors group"
+        className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[#141620] transition-colors group"
       >
         <div className="w-9 h-9 rounded-full bg-[#848e9c]/10 flex items-center justify-center shrink-0">
           <Link2 className="h-4 w-4 text-[#848e9c]" />
@@ -603,7 +603,7 @@ function AmountStep({
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         placeholder="0.00"
-        className="w-full text-center bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3 text-sm text-white font-medium focus:border-brand focus:outline-none transition-colors mb-4"
+        className="w-full text-center bg-[#141620] rounded-xl px-4 py-3 text-sm text-white font-medium focus:border-brand focus:outline-none transition-colors mb-4"
         step="any"
         min="0"
         max={token.balance}
@@ -615,7 +615,7 @@ function AmountStep({
           <button
             key={pct}
             onClick={() => onPct(pct)}
-            className="px-4 py-2 rounded-lg bg-[#141620] border border-[#2a2e3e] hover:border-[#3a3e4e] text-xs font-medium text-white transition-colors hover:bg-[#1a1d26]"
+            className="px-4 py-2 rounded-lg bg-[#141620] text-xs font-medium text-white transition-colors hover:bg-[#1a1d26]"
           >
             {pct === 1 ? "Max" : `${pct * 100}%`}
           </button>
@@ -623,7 +623,7 @@ function AmountStep({
       </div>
 
       {/* Flow indicator */}
-      <div className="flex items-center justify-center gap-3 mb-6 py-2.5 px-4 rounded-full bg-[#141620] border border-[#2a2e3e]">
+      <div className="flex items-center justify-center gap-3 mb-6 py-2.5 px-4 rounded-full bg-[#141620]">
         <div className="flex items-center gap-1.5">
           <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px]" style={{ backgroundColor: token.color + "22" }}>
             {token.symbol[0]}

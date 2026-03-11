@@ -456,19 +456,19 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <div className="bg-[#141620] rounded-xl px-4 py-3.5">
                   <p className="text-[11px] text-[#848e9c] mb-1">Available Balance</p>
                   <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
                 </div>
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <div className="bg-[#141620] rounded-xl px-4 py-3.5">
                   <p className="text-[11px] text-[#848e9c] mb-1">USDC (Perps)</p>
                   <p className="text-xl font-bold">{formatUsd(perpsBalance)}</p>
                 </div>
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <div className="bg-[#141620] rounded-xl px-4 py-3.5">
                   <p className="text-[11px] text-[#848e9c] mb-1">Spot Balance</p>
                   <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
                 </div>
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5">
+                <div className="bg-[#141620] rounded-xl px-4 py-3.5">
                   <p className="text-[11px] text-[#848e9c] mb-1">EVM Balance</p>
                   <p className="text-xl font-bold">{formatUsd(evmBalance)}</p>
                 </div>
@@ -486,7 +486,7 @@ export default function DashboardPage() {
             {firstLoad ? (
               <SkeletonChart className="h-[280px]" />
             ) : (
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-6">
+              <div className="bg-[#141620] rounded-xl p-6">
                 <div className="flex items-center justify-center">
                   <DonutChart items={assetDistribution} total={accountValue} />
                 </div>
@@ -519,21 +519,21 @@ export default function DashboardPage() {
 
             {/* Quick actions */}
             <div className="grid grid-cols-3 gap-3">
-              <Link href="/trade/BTC" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
+              <Link href="/trade/BTC" className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
                 <TrendingUp className="h-5 w-5 text-emerald-400 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Trade</p>
                   <p className="text-[10px] text-[#848e9c]">Perps</p>
                 </div>
               </Link>
-              <Link href="/predict" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
+              <Link href="/predict" className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
                 <BarChart3 className="h-5 w-5 text-blue-400 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Predict</p>
                   <p className="text-[10px] text-[#848e9c]">Markets</p>
                 </div>
               </Link>
-              <Link href="/automate" className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
+              <Link href="/automate" className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-3.5 hover:border-brand/50 transition-colors">
                 <Bot className="h-5 w-5 text-brand shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">Automate</p>
@@ -555,7 +555,7 @@ export default function DashboardPage() {
               {firstLoad ? (
                 <div className="space-y-2">
                   {[0, 1].map((i) => (
-                    <div key={i} className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-4 space-y-3">
+                    <div key={i} className="bg-[#141620] rounded-xl px-4 py-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Skeleton className="h-5 w-10 rounded" />
@@ -572,7 +572,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : positions.length === 0 ? (
-                <div className="text-center py-8 bg-[#141620] border border-[#2a2e3e] rounded-xl">
+                <div className="text-center py-8 bg-[#141620] rounded-xl">
                   <Wallet className="h-6 w-6 text-[#848e9c] mx-auto mb-2" />
                   <p className="text-sm text-[#848e9c]">No open positions</p>
                   {accountValue > 0 && (
@@ -603,7 +603,7 @@ export default function DashboardPage() {
                     const markPx = mkt ? parseFloat(mkt.markPx) : 0;
                     const distPct = markPx > 0 ? ((limitPx - markPx) / markPx * 100) : 0;
                     return (
-                      <div key={o.oid} className="flex items-center gap-3 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5">
+                      <div key={o.oid} className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-2.5">
                         <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${o.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
                           {o.side === "B" ? "BUY" : "SELL"}
                         </span>
@@ -642,7 +642,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {browserStrategies.slice(0, 4).map((s) => (
-                    <div key={s.id} className="flex items-center justify-between bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-3">
+                    <div key={s.id} className="flex items-center justify-between bg-[#141620] rounded-xl px-4 py-3">
                       <div>
                         <p className="text-xs font-semibold">{s.name}</p>
                         <p className="text-[10px] text-[#848e9c]">{s.type} · {s.totalTrades} trades</p>
@@ -690,25 +690,25 @@ export default function DashboardPage() {
 
             {/* Aggregate stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+              <div className="bg-[#141620] rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Total PnL</p>
                 <p className={`text-sm font-bold ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                   {totalPnlAll >= 0 ? "+" : ""}{formatUsd(totalPnlAll)}
                 </p>
               </div>
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+              <div className="bg-[#141620] rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Closed PnL</p>
                 <p className={`text-sm font-bold ${totalClosedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                   {totalClosedPnl >= 0 ? "+" : ""}{formatUsd(totalClosedPnl)}
                 </p>
               </div>
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+              <div className="bg-[#141620] rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Funding</p>
                 <p className={`text-sm font-bold ${totalFundingPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                   {totalFundingPnl >= 0 ? "+" : ""}{formatUsd(totalFundingPnl)}
                 </p>
               </div>
-              <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+              <div className="bg-[#141620] rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Win Rate</p>
                 <p className="text-sm font-bold text-white">
                   {winRate}%
@@ -842,7 +842,7 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
     new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+    <div className="bg-[#141620] rounded-xl overflow-hidden">
       <button onClick={() => setExpanded((v) => !v)} className="w-full px-4 py-3 text-left hover:bg-[#1a1d2e]/50 transition-colors">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -934,7 +934,7 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
 
           {/* Phantom P&L for closed trades */}
           {hasPhantom && (
-            <div className="bg-[#0b0e11]/80 border border-[#2a2e3e]/60 rounded-lg px-3 py-2">
+            <div className="bg-[#0b0e11]/80/60 rounded-lg px-3 py-2">
               <p className="text-[10px] text-[#848e9c] font-medium mb-1.5 flex items-center gap-1">
                 <span className="text-brand">&#9673;</span> Phantom P&L <span className="text-[#848e9c]/60">— if you had kept this position</span>
               </p>
@@ -1054,7 +1054,7 @@ function PositionRow({ ap, markets, fills }: { ap: AssetPosition; markets: Marke
   }, [fills, bare]);
 
   return (
-    <Link href={`/trade/${tradeCoin}`} className="flex items-center gap-3 px-4 py-2.5 bg-[#141620] border border-[#2a2e3e] rounded-xl hover:border-[#3a3e4e] transition-colors">
+    <Link href={`/trade/${tradeCoin}`} className="flex items-center gap-3 px-4 py-2.5 bg-[#141620] rounded-xl transition-colors">
       {/* Direction badge */}
       <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
         {isLong ? "LONG" : "SHORT"}
@@ -1119,7 +1119,7 @@ function PositionRow({ ap, markets, fills }: { ap: AssetPosition; markets: Marke
 function TransactionTable({ fills }: { fills: Fill[] }) {
   const sorted = [...fills].sort((a, b) => b.time - a.time);
   return (
-    <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+    <div className="bg-[#141620] rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
         <p className="text-xs font-semibold text-white">Transaction History</p>
         <p className="text-[10px] text-[#848e9c]">Total: {fills.length}</p>
@@ -1245,23 +1245,23 @@ function PnlCalendar({
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
           <p className="text-[10px] text-[#848e9c] uppercase">Total PnL</p>
           <p className={`text-sm font-bold ${monthTotalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {monthTotalPnl >= 0 ? "+" : ""}{formatUsd(monthTotalPnl)}
           </p>
         </div>
-        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
           <p className="text-[10px] text-[#848e9c] uppercase">Closed PnL</p>
           <p className={`text-sm font-bold ${monthClosedPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {monthClosedPnl >= 0 ? "+" : ""}{formatUsd(monthClosedPnl)}
           </p>
         </div>
-        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
           <p className="text-[10px] text-[#848e9c] uppercase">Profitable Days</p>
           <p className="text-sm font-bold text-white">{profitDays} / {profitDays + lossDays}</p>
         </div>
-        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2.5">
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
           <p className="text-[10px] text-[#848e9c] uppercase">Funding</p>
           <p className={`text-sm font-bold ${monthFunding >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {monthFunding >= 0 ? "+" : ""}{formatUsd(monthFunding)}
@@ -1283,7 +1283,7 @@ function PnlCalendar({
       </div>
 
       {/* Calendar grid */}
-      <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+      <div className="bg-[#141620] rounded-xl overflow-hidden">
         <div className="grid grid-cols-7 border-b border-[#2a2e3e]">
           {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
             <div key={d} className="text-center text-[10px] text-[#848e9c] font-medium py-2 border-r border-[#2a2e3e]/30 last:border-r-0">
@@ -1331,7 +1331,7 @@ function PnlCalendar({
 
       {/* Selected day detail panel */}
       {selectedDay && selectedPnlEntry && (
-        <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
+        <div className="bg-[#141620] rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
             <div className="flex items-center gap-3">
               <p className="text-xs font-semibold text-white">

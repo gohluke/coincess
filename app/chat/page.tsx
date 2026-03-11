@@ -138,7 +138,7 @@ export default function ChatPage() {
         </div>
         <button
           onClick={startNewConversation}
-          className="px-3 py-1.5 text-xs text-[#848e9c] border border-[#2a2e3e] rounded-lg hover:text-white hover:border-[#3a3e4e] transition-colors flex items-center gap-1"
+          className="px-3 py-1.5 text-xs text-[#848e9c] rounded-lg hover:text-white transition-colors flex items-center gap-1"
         >
           <Plus className="h-3 w-3" /> New Chat
         </button>
@@ -155,7 +155,7 @@ export default function ChatPage() {
           <div className="p-3 space-y-1">
             <button
               onClick={startNewConversation}
-              className="w-full px-3 py-2 text-xs text-[#848e9c] border border-[#2a2e3e] border-dashed rounded-lg hover:text-white hover:border-[#3a3e4e] transition-colors flex items-center gap-2"
+              className="w-full px-3 py-2 text-xs text-[#848e9c] border-dashed rounded-lg hover:text-white transition-colors flex items-center gap-2"
             >
               <Plus className="h-3 w-3" /> New conversation
             </button>
@@ -192,7 +192,7 @@ export default function ChatPage() {
                         key={action.label}
                         onClick={() => handleSend(action.prompt)}
                         disabled={isLoading}
-                        className="flex items-center gap-2.5 px-4 py-3 bg-[#141620] border border-[#2a2e3e] rounded-xl text-left hover:border-brand/30 hover:bg-[#1a1d2e] transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2.5 px-4 py-3 bg-[#141620] rounded-xl text-left hover:border-brand/30 hover:bg-[#1a1d2e] transition-colors disabled:opacity-50"
                       >
                         <Icon className="h-4 w-4 text-brand shrink-0" />
                         <span className="text-xs text-[#c0c4cc]">{action.label}</span>
@@ -216,7 +216,7 @@ export default function ChatPage() {
                     <div className={`max-w-[80%] ${
                       msg.role === "user"
                         ? "bg-brand text-white rounded-2xl rounded-br-md px-4 py-2.5"
-                        : "bg-[#141620] border border-[#2a2e3e] rounded-2xl rounded-bl-md px-4 py-2.5"
+                        : "bg-[#141620] rounded-2xl rounded-bl-md px-4 py-2.5"
                     }`}>
                       {text && (
                         <div className={msg.role === "assistant" ? "journal-prose text-xs" : "text-xs leading-relaxed whitespace-pre-wrap"}>
@@ -263,7 +263,7 @@ export default function ChatPage() {
                 <div className="w-7 h-7 rounded-lg bg-brand/15 flex items-center justify-center shrink-0">
                   <Bot className="h-4 w-4 text-brand" />
                 </div>
-                <div className="bg-[#141620] border border-[#2a2e3e] rounded-2xl rounded-bl-md px-4 py-3">
+                <div className="bg-[#141620] rounded-2xl rounded-bl-md px-4 py-3">
                   <div className="flex items-center gap-2 text-xs text-[#848e9c]">
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />
                     Thinking...
@@ -282,7 +282,7 @@ export default function ChatPage() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about your trades, positions, or market..."
                 disabled={isLoading}
-                className="flex-1 bg-[#141620] border border-[#2a2e3e] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors disabled:opacity-50"
+                className="flex-1 bg-[#141620] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"

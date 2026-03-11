@@ -57,32 +57,32 @@ export function PredictionExitForm() {
 
   return (
     <div className="space-y-4 max-w-md">
-      <p className="text-xs text-[#848e9c] bg-[#141620] rounded-lg p-3 border border-[#2a2e3e]">
+      <p className="text-xs text-[#848e9c] bg-[#141620] rounded-lg p-3">
         Automatically exit your position before a prediction market closes to avoid resolution risk.
       </p>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Event Title</label>
-        <input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+        <input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Event ID</label>
-        <input value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+        <input value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market ID</label>
-        <input value={marketId} onChange={(e) => setMarketId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+        <input value={marketId} onChange={(e) => setMarketId(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Token ID</label>
-        <input value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+        <input value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Market End Date</label>
-        <input value={endDate} onChange={(e) => setEndDate(e.target.value)} type="datetime-local" className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
+        <input value={endDate} onChange={(e) => setEndDate(e.target.value)} type="datetime-local" className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand" />
       </div>
       <div>
         <label className="block text-xs text-[#848e9c] mb-1">Exit Before Close</label>
-        <select value={exitBefore} onChange={(e) => setExitBefore(e.target.value)} className="w-full bg-[#0b0e17] border border-[#2a2e3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
+        <select value={exitBefore} onChange={(e) => setExitBefore(e.target.value)} className="w-full bg-[#0b0e17] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
           {EXIT_PRESETS.map((p) => (
             <option key={p.ms} value={p.ms}>{p.label}</option>
           ))}
