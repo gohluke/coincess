@@ -264,55 +264,28 @@ function getNativeWalletAdapter(preferredAddress?: string): AbstractViemJsonRpcA
 /**
  * One-time agent approval: generates a local keypair, has the user sign
  * an ApproveAgent EIP-712 message, registers with Hyperliquid, and stores
- * the agent key in localStorage. Tries window.ethereum (MetaMask) first
- * for a direct popup, then falls back to Privy's wrapped provider.
+ * the agent key in localStorage. Tries the best available wallet provider.
  */
 export async function signAndApproveAgent(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Try to switch to Arbitrum One (best-effort, don't block on failure)
-    const nativeEth = getNativeEthereum();
-    if (nativeEth) {
-      try {
-        await nativeEth.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0xa4b1" }],
-        });
-      } catch (switchErr) {
-        if ((switchErr as { code?: number }).code === 4902) {
-          try {
-            await nativeEth.request({
-              method: "wallet_addEthereumChain",
-              params: [{
-                chainId: "0xa4b1",
-                chainName: "Arbitrum One",
-                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-                rpcUrls: ["https://arb1.arbitrum.io/rpc"],
-                blockExplorerUrls: ["https://arbiscan.io"],
-              }],
-            });
-          } catch { /* ignore */ }
-        }
-      }
+    // Step 1: Resolve the signing wallet -- use the same adapter that will be
+    // used to sign, so the address stored matches the signer.
+    const userWallet = getWalletAdapter(expectedAddress);
+
+    // Resolve the address from the SAME wallet that will sign
+    const addrs = await userWallet.getAddresses();
+    if (!addrs.length) {
+      return { success: false, error: "No wallet connected. Please connect your wallet first." };
     }
+    const userAddr = addrs[0].toLowerCase();
 
-    // Try native wallet first (MetaMask popup), fall back to Privy provider
-    let userWallet: AbstractViemJsonRpcAccount;
-    try {
-      const native = getNativeWalletAdapter(expectedAddress);
-      const addrs = await native.getAddresses();
-      if (addrs.length === 0) throw new Error("No accounts");
-      userWallet = native;
-    } catch {
-      userWallet = getWalletAdapter(expectedAddress);
-    }
-
-    const userAddr = await getAddress(expectedAddress);
-
+    // Step 2: Generate a fresh agent keypair
     const agentPrivateKey = generatePrivateKey();
     const agentAcc = privateKeyToAccount(agentPrivateKey);
 
+    // Step 3: Build the ApproveAgent action
     const nonce = Date.now();
     const action = {
       type: "approveAgent" as const,
@@ -323,12 +296,14 @@ export async function signAndApproveAgent(
       nonce,
     };
 
+    // Step 4: Sign with the user's wallet (triggers wallet popup)
     const signature = await signUserSignedAction({
       wallet: userWallet,
       action,
       types: ApproveAgentTypes,
     });
 
+    // Step 5: Submit to Hyperliquid
     const res = await fetch(EXCHANGE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -346,10 +321,17 @@ export async function signAndApproveAgent(
       return { success: true };
     }
 
-    const apiError = data.response || JSON.stringify(data);
-    return { success: false, error: apiError };
+    const apiError = typeof data.response === "string"
+      ? data.response
+      : JSON.stringify(data);
+    return { success: false, error: `Hyperliquid rejected: ${apiError}` };
   } catch (err) {
-    return { success: false, error: (err as Error).message };
+    const msg = (err as Error).message || String(err);
+    // Provide actionable messages for known errors
+    if (msg.includes("User rejected") || msg.includes("user rejected") || msg.includes("denied")) {
+      return { success: false, error: "Signature rejected. Please approve the signing request in your wallet." };
+    }
+    return { success: false, error: msg };
   }
 }
 
@@ -357,7 +339,8 @@ export async function signAndPlaceOrder(
   params: PlaceOrderParams & { expectedAddress?: string },
 ): Promise<{ success: boolean; error?: string; oid?: number }> {
   try {
-    const userAddr = await getAddress(params.expectedAddress);
+    // Use expectedAddress directly if provided (matches how agent was stored)
+    const userAddr = params.expectedAddress?.toLowerCase() ?? (await getAddress()).toLowerCase();
     const agentAcc = getAgentAccount(userAddr);
     const wallet = agentAcc ?? getWalletAdapter(params.expectedAddress);
 
@@ -408,7 +391,7 @@ export async function signAndCancelOrder(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userAddr = await getAddress(expectedAddress);
+    const userAddr = expectedAddress?.toLowerCase() ?? (await getAddress()).toLowerCase();
     const agentAcc = getAgentAccount(userAddr);
     const wallet = agentAcc ?? getWalletAdapter(expectedAddress);
 
@@ -438,7 +421,7 @@ export async function signAndUpdateLeverage(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const userAddr = await getAddress(expectedAddress);
+    const userAddr = expectedAddress?.toLowerCase() ?? (await getAddress()).toLowerCase();
     const agentAcc = getAgentAccount(userAddr);
     const wallet = agentAcc ?? getWalletAdapter(expectedAddress);
 
