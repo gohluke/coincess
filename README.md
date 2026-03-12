@@ -30,6 +30,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Market status** — visual indicators for closed/ended markets, urgency badges
 
 ### Automation Suite
+- **Wallet Positions (source of truth)** — the Server 24/7 tab now shows real positions from the Hyperliquid clearinghouse API (not the quant engine's internal records), so positions are always in sync with the actual wallet; includes account equity, margin used, open order count, leverage, liquidation price, funding rate; positions tagged AUTO when they match a quant strategy; click any position to navigate to its trade page
 - **DCA** — dollar-cost average into any Hyperliquid market on a schedule
 - **Grid Trading** — set a price range, auto-place buy/sell limit orders across grid levels
 - **Trailing Stop** — track peak/trough, auto-exit when price reverses by a percentage

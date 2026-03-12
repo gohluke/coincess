@@ -35,8 +35,8 @@ import { Skeleton, SkeletonCard } from "@/components/ui/Skeleton";
 import { StrategyCard } from "@/components/automate/StrategyCard";
 import { ActivityLog } from "@/components/automate/ActivityLog";
 import type { QuantStrategy, QuantState, QuantTrade } from "@/lib/quant/types";
-import type { MarketInfo } from "@/lib/hyperliquid/types";
-import { fetchAllMarkets } from "@/lib/hyperliquid/api";
+import type { MarketInfo, AssetPosition } from "@/lib/hyperliquid/types";
+import { fetchAllMarkets, fetchCombinedClearinghouseState, fetchOpenOrders } from "@/lib/hyperliquid/api";
 
 type Tab = "server" | "browser" | "lab";
 
@@ -187,33 +187,58 @@ export default function AutomatePage() {
 function ServerStrategies({ address }: { address: string | null }) {
   const [engine, setEngine] = useState<QuantState | null>(null);
   const [strategies, setStrategies] = useState<QuantStrategy[]>([]);
-  const [openTrades, setOpenTrades] = useState<QuantTrade[]>([]);
+  const [quantTrades, setQuantTrades] = useState<QuantTrade[]>([]);
   const [trades, setTrades] = useState<QuantTrade[]>([]);
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
+  const [walletPositions, setWalletPositions] = useState<AssetPosition[]>([]);
+  const [openOrderCount, setOpenOrderCount] = useState(0);
+  const [accountValue, setAccountValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [addingStrategy, setAddingStrategy] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statusRes, tradesRes, marketsData] = await Promise.all([
+      const fetches: Promise<unknown>[] = [
         fetch("/api/quant/status"),
         fetch("/api/quant/trades?limit=50"),
         fetchAllMarkets().catch(() => [] as MarketInfo[]),
-      ]);
-      const statusData = await statusRes.json();
-      const tradesData = await tradesRes.json();
+      ];
+      if (address) {
+        fetches.push(
+          fetchCombinedClearinghouseState(address).catch(() => null),
+          fetchOpenOrders(address).catch(() => []),
+        );
+      }
+
+      const results = await Promise.all(fetches);
+      const statusData = await (results[0] as Response).json();
+      const tradesData = await (results[1] as Response).json();
+      const marketsData = results[2] as MarketInfo[];
 
       setEngine(statusData.engine);
       setStrategies(statusData.strategies ?? []);
-      setOpenTrades(statusData.openTrades ?? []);
+      setQuantTrades(statusData.openTrades ?? []);
       setTrades(tradesData.trades ?? []);
       setMarkets(marketsData);
+
+      if (address && results[3]) {
+        const ch = results[3] as { assetPositions: AssetPosition[]; marginSummary: { accountValue: string } };
+        const positions = ch.assetPositions?.filter(
+          (ap) => parseFloat(ap.position.szi) !== 0
+        ) ?? [];
+        setWalletPositions(positions);
+        setAccountValue(parseFloat(ch.marginSummary?.accountValue ?? "0"));
+      }
+      if (address && results[4]) {
+        const orders = results[4] as { coin: string }[];
+        setOpenOrderCount(Array.isArray(orders) ? orders.length : 0);
+      }
     } catch (err) {
       console.error("Failed to fetch quant data:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [address]);
 
   useEffect(() => {
     fetchData();
@@ -253,22 +278,18 @@ function ServerStrategies({ address }: { address: string | null }) {
     engine?.engine_status === "paused" ? "#f59e0b" : "#848e9c";
 
   const realizedPnl = strategies.reduce((s, st) => s + (st.total_pnl ?? 0), 0);
-  const unrealizedPnl = openTrades.reduce((sum, trade) => {
-    const market = markets.find((m) => m.name === trade.coin);
-    const markPx = market ? parseFloat(market.markPx) : 0;
-    if (markPx === 0) return sum;
-    const entryPx = Number(trade.entry_px);
-    const sz = Number(trade.size);
-    return sum + (trade.side === "long" ? (markPx - entryPx) * sz : (entryPx - markPx) * sz);
-  }, 0);
+  const unrealizedPnl = walletPositions.reduce(
+    (sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0
+  );
   const totalPnl = realizedPnl + unrealizedPnl;
   const dailyPnl = (engine?.daily_pnl ?? 0) + unrealizedPnl;
   const drawdown = engine?.max_drawdown ?? 0;
-  const exposure = openTrades.reduce((sum, trade) => {
-    const market = markets.find((m) => m.name === trade.coin);
-    const markPx = market ? parseFloat(market.markPx) : Number(trade.entry_px);
-    return sum + Math.abs(Number(trade.size) * markPx);
-  }, 0);
+  const exposure = walletPositions.reduce(
+    (sum, ap) => sum + Math.abs(parseFloat(ap.position.positionValue)), 0
+  );
+  const totalMarginUsed = walletPositions.reduce(
+    (sum, ap) => sum + parseFloat(ap.position.marginUsed), 0
+  );
 
   return (
     <div className="space-y-6">
@@ -307,30 +328,36 @@ function ServerStrategies({ address }: { address: string | null }) {
           <SkeletonCard />
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <StatCard
-            label="Total P&L"
-            value={formatPnl(totalPnl)}
-            icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
-            color={totalPnl >= 0 ? "#10b981" : "#ef4444"}
+            label="Unrealized P&L"
+            value={formatPnl(unrealizedPnl)}
+            icon={unrealizedPnl >= 0 ? TrendingUp : TrendingDown}
+            color={unrealizedPnl >= 0 ? "#10b981" : "#ef4444"}
           />
           <StatCard
-            label="Daily P&L"
-            value={formatPnl(dailyPnl)}
+            label="Account Value"
+            value={`$${accountValue.toFixed(2)}`}
             icon={DollarSign}
-            color={dailyPnl >= 0 ? "#10b981" : "#ef4444"}
+            color="#3b82f6"
+          />
+          <StatCard
+            label="Positions"
+            value={walletPositions.length.toString()}
+            icon={Activity}
+            color="#8b5cf6"
+          />
+          <StatCard
+            label="Exposure"
+            value={`$${exposure.toFixed(0)}`}
+            icon={BarChart3}
+            color="#ec4899"
           />
           <StatCard
             label="Max Drawdown"
             value={`${(drawdown * 100).toFixed(2)}%`}
             icon={Shield}
             color={drawdown > 0.1 ? "#ef4444" : drawdown > 0.05 ? "#f59e0b" : "#10b981"}
-          />
-          <StatCard
-            label="Exposure"
-            value={`$${exposure.toFixed(0)}`}
-            icon={BarChart3}
-            color="#8b5cf6"
           />
         </div>
       )}
@@ -469,77 +496,103 @@ function ServerStrategies({ address }: { address: string | null }) {
         )}
       </div>
 
-      {/* Open Positions */}
-      {openTrades.length > 0 && (
+      {/* Wallet Positions (source of truth from Hyperliquid clearinghouse) */}
+      {walletPositions.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Open Positions ({openTrades.length})
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Wallet Positions ({walletPositions.length})
+            </h2>
+            <div className="flex items-center gap-3 text-[10px] text-[#848e9c]">
+              {openOrderCount > 0 && <span>{openOrderCount} open order{openOrderCount !== 1 ? "s" : ""}</span>}
+              {accountValue > 0 && <span>Equity: <span className="text-white font-medium">${accountValue.toFixed(2)}</span></span>}
+              {totalMarginUsed > 0 && <span>Margin: <span className="text-white">${totalMarginUsed.toFixed(2)}</span></span>}
+            </div>
+          </div>
           <div className="space-y-2">
-            {openTrades.map((trade) => {
-              const market = markets.find((m) => m.name === trade.coin);
+            {walletPositions.map((ap) => {
+              const pos = ap.position;
+              const sz = parseFloat(pos.szi);
+              const isLong = sz > 0;
+              const absSz = Math.abs(sz);
+              const entryPx = parseFloat(pos.entryPx ?? "0");
+              const uPnl = parseFloat(pos.unrealizedPnl);
+              const roe = parseFloat(pos.returnOnEquity) * 100;
+              const lev = pos.leverage.value;
+              const margin = parseFloat(pos.marginUsed);
+              const liqPx = pos.liquidationPx ? parseFloat(pos.liquidationPx) : null;
+              const coin = pos.coin;
+              const displayCoin = coin.includes(":") ? coin.split(":")[1] : coin;
+              const market = markets.find((m) => m.name === coin);
               const markPx = market ? parseFloat(market.markPx) : 0;
-              const entryPx = Number(trade.entry_px);
-              const sz = Number(trade.size);
-              const uPnl = trade.side === "long"
-                ? (markPx - entryPx) * sz
-                : (entryPx - markPx) * sz;
-              const roe = entryPx > 0 ? (uPnl / (entryPx * sz)) * 100 : 0;
               const fundingRate = market ? parseFloat(market.funding) : 0;
               const fundingPct = (fundingRate * 100).toFixed(4);
-              const meta = STRATEGY_LABELS[trade.strategy_type] ?? { name: trade.strategy_type, emoji: "🤖", color: "#848e9c" };
-              const reason = (trade.meta as { reason?: string } | null)?.reason;
+
+              const quantMatch = quantTrades.find(
+                (qt) => qt.coin === coin && qt.status === "open"
+              );
+              const isAuto = !!quantMatch;
+              const autoMeta = isAuto
+                ? STRATEGY_LABELS[quantMatch!.strategy_type] ?? { name: quantMatch!.strategy_type, emoji: "🤖", color: "#848e9c" }
+                : null;
 
               return (
-                <div key={trade.id} className="bg-[#141620] rounded-xl overflow-hidden">
-                  <div className="flex items-center justify-between px-4 pt-3 pb-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                        trade.side === "long" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
-                      }`}>
-                        {trade.side.toUpperCase()}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand/15 text-brand font-medium flex items-center gap-0.5">
-                        <Bot className="h-2.5 w-2.5" /> {meta.emoji} {meta.name}
-                      </span>
-                      <span className="text-sm font-semibold">{trade.coin}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 justify-end">
-                        <span className={`text-sm font-bold ${uPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                          {uPnl >= 0 ? "+" : ""}${uPnl.toFixed(2)}
+                <Link key={coin} href={`/trade/${displayCoin}`} className="block">
+                  <div className="bg-[#141620] rounded-xl overflow-hidden hover:bg-[#181b28] transition-colors">
+                    <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                          isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                        }`}>
+                          {isLong ? "LONG" : "SHORT"}
                         </span>
-                        <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                          ({roe >= 0 ? "+" : ""}{roe.toFixed(2)}%)
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2e3e] text-[#c0c4cc] font-medium">
+                          {lev}x
                         </span>
+                        {isAuto && autoMeta && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand/15 text-brand font-medium flex items-center gap-0.5">
+                            <Bot className="h-2.5 w-2.5" /> {autoMeta.emoji} AUTO
+                          </span>
+                        )}
+                        <span className="text-sm font-semibold text-white">{displayCoin}</span>
                       </div>
-                      <p className="text-[10px] text-[#848e9c]">{sz.toFixed(4)} @ ${markPx.toLocaleString()}</p>
+                      <div className="text-right">
+                        <div className="flex items-center gap-2 justify-end">
+                          <span className={`text-sm font-bold ${uPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {uPnl >= 0 ? "+" : ""}${uPnl.toFixed(2)}
+                          </span>
+                          <span className={`text-[10px] font-medium ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            ({roe >= 0 ? "+" : ""}{roe.toFixed(2)}%)
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#848e9c]">{absSz.toFixed(4)} @ ${markPx > 0 ? markPx.toLocaleString() : entryPx.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
+                      <QuantDetailCell label="Entry" value={`$${entryPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
+                      <QuantDetailCell label="Mark" value={markPx > 0 ? `$${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}` : "—"} />
+                      <QuantDetailCell label="Margin" value={`$${margin.toFixed(2)}`} />
+                      <QuantDetailCell
+                        label="Fund/8h"
+                        value={`${fundingRate >= 0 ? "+" : ""}${fundingPct}%`}
+                        valueColor={fundingRate >= 0 ? "text-emerald-400" : "text-red-400"}
+                      />
+                      <QuantDetailCell label="Notional" value={`$${Math.abs(parseFloat(pos.positionValue)).toFixed(2)}`} />
+                      <QuantDetailCell label="Liq. Price" value={liqPx ? `$${liqPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"} valueColor="text-amber-400" />
                     </div>
                   </div>
-                  {reason && (
-                    <div className="px-4 pb-1.5">
-                      <p className="text-[10px] text-[#848e9c]">{reason}</p>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-px bg-[#2a2e3e]/30 border-t border-[#2a2e3e]/50">
-                    <QuantDetailCell label="Entry" value={`$${entryPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}`} />
-                    <QuantDetailCell label="Mark" value={markPx > 0 ? `$${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}` : "—"} />
-                    <QuantDetailCell
-                      label="Fund/8h"
-                      value={`${fundingRate >= 0 ? "+" : ""}${fundingPct}%`}
-                      valueColor={fundingRate >= 0 ? "text-emerald-400" : "text-red-400"}
-                    />
-                    <QuantDetailCell label="Notional" value={`$${(sz * (markPx || entryPx)).toFixed(2)}`} />
-                    <div className="bg-[#141620] px-3 py-2">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-0.5">Opened</p>
-                      <LiveTimer iso={trade.opened_at} />
-                    </div>
-                  </div>
-                </div>
+                </Link>
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* No positions state */}
+      {!loading && walletPositions.length === 0 && address && (
+        <div className="text-center text-[#848e9c] text-sm py-8 border border-dashed border-[#2a2e39] rounded-xl">
+          No open positions in this wallet
         </div>
       )}
 
