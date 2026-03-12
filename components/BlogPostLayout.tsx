@@ -24,6 +24,7 @@ export function BlogPostLayout({ post, children }: BlogPostLayoutProps) {
     Guide: "bg-green-100 text-green-800",
     Privacy: "bg-rose-100 text-rose-800",
     Beginner: "bg-orange-100 text-orange-800",
+    Intelligence: "bg-amber-100 text-amber-800",
   }
 
   return (

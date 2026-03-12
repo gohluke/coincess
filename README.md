@@ -229,15 +229,21 @@ Strategy backtesting and performance analysis tools.
 - **Bot fleet stats** — total bots, active bots, fleet volume, fleet PnL, fleet trade count
 - **Top traders table** — top 20 traders by Coincess volume with address, volume, order count, last active time
 - **Referral card** — one-click copy of the `coincess.com/join` referral link
+- **Blog CMS (`/admin/blog`)** — create/edit/delete articles, manage categories, keywords, CTAs; publish/unpublish and feature/unfeature with one click; HTML content editor with SEO metadata fields
 - **Not indexed** — `/admin` is excluded from robots.txt and sitemap
 
-### Content & SEO
-- Landing page with crypto education content
-- Blog with articles on wallets, privacy, swapping
-- SEO-optimized pages with sitemap and schema.org markup
-- **Structured data** — Organization, WebApplication (FinanceApplication), and WebSite schemas with SearchAction for sitelinks
-- **Expanded sitemap** — includes all app pages (`/trade`, `/predict`, `/dashboard`, `/traders`, `/automate`) plus top 20 coin trade pages (BTC, ETH, SOL, HYPE, TSLA, etc.)
-- **robots.txt** — allows all crawlers, disallows `/api/` and `/settings`
+### Content & SEO (Supabase CMS)
+- **Supabase-powered Blog CMS** — `blog_posts` table stores all articles (title, slug, HTML content, keywords, category, CTA config); admin panel at `/admin/blog` for CRUD; ISR (60s revalidate) serves pages via `/blog/[slug]`; graceful fallback to static `lib/blog-posts.ts` if Supabase is unreachable
+- **Coincess Intelligence** — market analysis articles (oil prices, geopolitical trading, crypto guides) with trade-specific CTAs driving users to `/trade/CL`, `/trade/BRENTOIL`, etc.
+- **Blog categories** — Intelligence (amber), Tutorial (blue), Security (red), Guide (green), Privacy (rose), Beginner (orange)
+- **ISR blog pages** — `/blog` listing and `/blog/[slug]` article pages use Next.js ISR with 60-second revalidation; `generateStaticParams` pre-builds known slugs at build time
+- **JSON-LD structured data** — Article schema + BreadcrumbList on every blog post; Organization + WebApplication + WebSite schemas on root layout
+- **Dynamic sitemap** — `app/sitemap.ts` pulls published posts from Supabase (fallback to static data); blog posts get 0.85 priority for Intelligence, 0.7 for others
+- **Open Graph + Twitter Cards** — per-article OG tags with title, description, published date, author, keywords; Twitter summary_large_image cards
+- **Canonical URLs** — each post has `alternates.canonical` set; supports custom canonical overrides from the CMS
+- **Admin Blog CMS (`/admin/blog`)** — wallet-gated CRUD panel; create/edit articles with HTML content editor, SEO description (155 char counter), keywords, category, CTA type/coins, featured/published toggles; publish/unpublish, feature/unfeature with one click
+- **Migration script** — `scripts/migrate-blog-posts.ts` seeds the Supabase table with existing static articles
+- **robots.txt** — allows all crawlers, disallows `/api/`, `/settings`, `/admin`
 - **Extended keywords** — 18 keyword phrases covering crypto leverage trading, perpetual futures, DCA, grid trading, copy trading, portfolio tracker
 
 ## Tech Stack
@@ -450,7 +456,10 @@ coincess/
 │   │   ├── polymarket/sign/            # Builder attribution signing
 │   │   └── news/                       # News API
 │   ├── coins/page.tsx                  # Market overview
-│   ├── blog/                           # Blog articles
+│   ├── blog/
+│   │   ├── page.tsx                    # Blog listing (ISR, Supabase + fallback)
+│   │   ├── [slug]/page.tsx            # Dynamic article page (ISR, JSON-LD)
+│   │   └── .../page.tsx               # Legacy static articles (fallback)
 │   └── page.tsx                        # Landing page
 ├── components/
 │   ├── AppShell.tsx                    # Client shell (Privy + MobileNav + AlertBanner)
@@ -504,6 +513,8 @@ coincess/
 │   │   └── tools.ts                    # AI tools (positions, fills, journal, market data)
 │   ├── dayze/
 │   │   └── sync.ts                     # Dayze activity sync + formatters
+│   ├── blog/
+│   │   └── index.ts                    # Blog data layer (Supabase + static fallback)
 │   ├── supabase/
 │   │   ├── client.ts                   # Supabase client (lazy-initialized)
 │   │   └── schema.sql                  # Database schema (journal + chat tables)
@@ -515,7 +526,8 @@ coincess/
 │   ├── fleet-runner.ts                # Run quant strategies across all accounts
 │   ├── whitelist-accounts.ts          # Update brand.config.ts feeWhitelist
 │   ├── create-traders-table.sql       # Full schema (fresh install)
-│   └── migrate-add-volume.sql         # Migration: add coincess_volume + accounts table
+│   ├── migrate-add-volume.sql         # Migration: add coincess_volume + accounts table
+│   └── migrate-blog-posts.ts         # Seed blog_posts table from static content
 ├── public/
 │   ├── manifest.json                   # PWA manifest
 │   ├── sw.js                           # Service worker
