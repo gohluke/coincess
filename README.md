@@ -7,6 +7,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 ### Perpetual Futures Trading
 - **279 perpetual markets** — crypto (BTC, ETH, SOL, memecoins, AI tokens) + HIP-3 markets (stocks, commodities, forex, indices)
 - **Coin logos everywhere** — multi-tier logo resolver (local SVG/PNG for commodities, Clearbit CDN for stocks, CoinCap CDN for crypto, emoji fallback for forex/indices, letter avatar as last resort); shown in market selector header, dropdown rows, and search modal
+- **URL-driven navigation** — clicking a coin in the market selector dropdown or search modal updates the URL to `/trade/COIN`, enabling shareable links and proper browser history
 - **Search modal** — max leverage shown per market, category badges, real-time prices with flash animation
 - **Real-time order book** and recent trades via WebSocket
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
