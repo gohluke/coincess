@@ -69,12 +69,18 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Cmd/Ctrl+K to open search
+  // '/' or Cmd/Ctrl+K to open search
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setSearchOpen((v) => !v);
+      }
+      if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+        e.preventDefault();
+        setSearchOpen(true);
       }
     }
     window.addEventListener("keydown", handleKey);
@@ -108,7 +114,7 @@ export function Navbar() {
           >
             <Search className="h-4 w-4 text-[#555a66] shrink-0" />
             <span className="text-[13px] text-[#555a66] flex-1 text-left">Search</span>
-            <kbd className="text-[10px] text-[#3a3e4e] font-mono">⌘K</kbd>
+            <kbd className="text-[10px] text-[#3a3e4e] font-mono">/</kbd>
           </button>
 
           {/* Nav icons (desktop) + More */}

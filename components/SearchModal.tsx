@@ -458,26 +458,10 @@ export function SearchModal({ open, onClose }: Props) {
           )}
         </div>
 
-        {/* ─ Footer (fixed) ─ */}
+        {/* ─ Footer (minimal) ─ */}
         <div className="shrink-0 h-px bg-[#1e2130]" />
-        <div className="shrink-0 px-5 py-2.5 flex items-center justify-between text-[10px] text-[#3a3e4e]">
-          <span>
-            {isLoading ? "Loading markets…" : `${markets.length} markets · Live`}
-          </span>
-          <div className="flex items-center gap-3">
-            <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-[#1e2130] text-[#555a66] font-mono text-[9px]">
-                ESC
-              </kbd>{" "}
-              close
-            </span>
-            <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-[#1e2130] text-[#555a66] font-mono text-[9px]">
-                ⌘K
-              </kbd>{" "}
-              search
-            </span>
-          </div>
+        <div className="shrink-0 px-5 py-2 text-[10px] text-[#3a3e4e]">
+          {isLoading ? "Loading markets…" : `${markets.length} markets · Live`}
         </div>
       </div>
     </div>,
