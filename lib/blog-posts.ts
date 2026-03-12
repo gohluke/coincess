@@ -12,6 +12,17 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "hyperliquid-oil-whales-biggest-traders-2026",
+    title: "The Whales of Hyperliquid Oil: Who's Making (and Losing) Millions in the Crude Oil Crisis",
+    description: "Meet the biggest traders in Hyperliquid's oil market: a $13M short facing liquidation, Rune Christensen's $6M long, suspected insiders, and the counter-trend sniper who shorted the top. Whale positions, liquidation levels, and what it means for your next trade.",
+    category: "Intelligence",
+    readTime: "8 min",
+    publishedAt: "2026-03-13",
+    author: "Coincess Intelligence",
+    featured: true,
+    keywords: ["Hyperliquid oil whales", "crude oil whale traders", "Hyperliquid liquidation", "oil short squeeze", "Rune Christensen oil trade", "DeFi oil trading", "whale watching crypto", "oil perpetual futures", "Hyperliquid CL contract", "trade crude oil on-chain", "Coincess oil trading", "oil market whales 2026"],
+  },
+  {
     slug: "oil-prices-iran-war-how-to-trade-crude-oil-2026",
     title: "Oil Prices Are Surging: How the Iran War Is Driving Crude to $120 and How to Trade It",
     description: "Crude oil surged 35% in one week as Iran threatens to close the Strait of Hormuz. Learn what drives oil prices, why this is the biggest supply disruption in history, and how to trade oil on Coincess.",
