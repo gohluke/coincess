@@ -45,8 +45,6 @@ function toLocal(utcMs: number): UTCTimestamp {
   return (utcMs / 1000 + TZ_OFFSET_SEC) as UTCTimestamp;
 }
 
-// Snap a local-time value to the nearest candle's time via binary search.
-// timeToCoordinate only resolves times that exist as data points.
 function snapToCandleTime(localTime: UTCTimestamp, candles: CandlestickData[]): UTCTimestamp | null {
   if (candles.length === 0) return null;
   let lo = 0;
@@ -64,23 +62,41 @@ function snapToCandleTime(localTime: UTCTimestamp, candles: CandlestickData[]): 
   return best >= 0 ? (candles[best].time as UTCTimestamp) : null;
 }
 
-function formatFillLabel(f: Fill): string {
+function buildFillTooltip(f: Fill): string {
   const dir = f.dir.toLowerCase();
   const px = parseFloat(f.px);
-  if (dir.includes("open") && dir.includes("long")) return `Open Long at ${px}`;
-  if (dir.includes("open") && dir.includes("short")) return `Open Short at ${px}`;
-  if (dir.includes("close") && dir.includes("long")) return `Close Long at ${px}`;
-  if (dir.includes("close") && dir.includes("short")) return `Close Short at ${px}`;
-  if (f.side === "B") return `Buy at ${px}`;
-  return `Sell at ${px}`;
+  let action: string;
+  if (dir.includes("open") && dir.includes("long")) action = "Open Long";
+  else if (dir.includes("open") && dir.includes("short")) action = "Open Short";
+  else if (dir.includes("close") && dir.includes("long")) action = "Close Long";
+  else if (dir.includes("close") && dir.includes("short")) action = "Close Short";
+  else action = f.side === "B" ? "Buy" : "Sell";
+
+  const pnl = parseFloat(f.closedPnl);
+  const sz = parseFloat(f.sz);
+  let line1 = `${action} at ${px}`;
+  const parts: string[] = [];
+  if (sz) parts.push(`Size: ${sz}`);
+  if (pnl !== 0) {
+    const sign = pnl > 0 ? "+" : "";
+    const color = pnl > 0 ? "#0ecb81" : "#f6465d";
+    parts.push(`PnL: <span style="color:${color}">${sign}$${pnl.toFixed(2)}</span>`);
+  }
+  if (parts.length > 0) {
+    line1 += `<br/><span style="color:#848e9c;font-size:10px">${parts.join(" · ")}</span>`;
+  }
+  return line1;
 }
 
 interface FillOverlayItem {
-  localTime: UTCTimestamp;
+  snappedTime: UTCTimestamp;
   price: number;
   side: "B" | "A";
-  label: string;
   el: HTMLDivElement;
+}
+
+interface FillTooltipEntry {
+  html: string;
 }
 
 export function TradingChart({ fills }: { fills?: Fill[] }) {
@@ -93,6 +109,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const volumeRef = useRef<ISeriesApi<any> | null>(null);
   const fillOverlaysRef = useRef<FillOverlayItem[]>([]);
+  const fillTooltipMapRef = useRef<Map<string, FillTooltipEntry[]>>(new Map());
 
   const candleDataRef = useRef<CandlestickData[]>([]);
   const volumeDataRef = useRef<HistogramData[]>([]);
@@ -122,7 +139,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     const ts = chart.timeScale();
     const half = MARKER_SIZE / 2;
     for (const fo of fillOverlaysRef.current) {
-      const x = ts.timeToCoordinate(fo.localTime as Time);
+      const x = ts.timeToCoordinate(fo.snappedTime as Time);
       const y = series.priceToCoordinate(fo.price);
       if (x === null || y === null) {
         fo.el.style.display = "none";
@@ -136,6 +153,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   const refreshOverlays = useCallback(() => {
     for (const fo of fillOverlaysRef.current) fo.el.remove();
     fillOverlaysRef.current = [];
+    fillTooltipMapRef.current = new Map();
 
     const overlay = overlayRef.current;
     const f = fillsRef.current;
@@ -155,7 +173,13 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       const isBuy = fi.side === "B";
       const color = isBuy ? "#0ecb81" : "#f6465d";
       const letter = isBuy ? "B" : "S";
-      const label = formatFillLabel(fi);
+
+      // Build tooltip map keyed by snapped candle time
+      const key = String(snapped);
+      const tooltipEntry: FillTooltipEntry = { html: buildFillTooltip(fi) };
+      const arr = fillTooltipMapRef.current.get(key);
+      if (arr) arr.push(tooltipEntry);
+      else fillTooltipMapRef.current.set(key, [tooltipEntry]);
 
       const el = document.createElement("div");
       el.textContent = letter;
@@ -173,47 +197,22 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         fontSize: "6px",
         fontWeight: "700",
         color: "#fff",
-        pointerEvents: "auto",
+        pointerEvents: "none",
         cursor: "default",
         zIndex: "5",
         lineHeight: "1",
         userSelect: "none",
-        transition: "box-shadow 0.15s",
-      });
-
-      el.addEventListener("mouseenter", () => {
-        const tip = tooltipRef.current;
-        if (!tip || !overlay) return;
-        el.style.boxShadow = `0 0 0 2px ${color}44`;
-        tip.innerHTML = `<span>${label}</span>`;
-        tip.style.display = "block";
-
-        const eRect = el.getBoundingClientRect();
-        const oRect = overlay.getBoundingClientRect();
-        let left = eRect.right - oRect.left + 8;
-        const top = eRect.top - oRect.top + eRect.height / 2 - 12;
-        if (left + 180 > oRect.width) left = eRect.left - oRect.left - 190;
-        tip.style.left = `${left}px`;
-        tip.style.top = `${Math.max(4, top)}px`;
-      });
-
-      el.addEventListener("mouseleave", () => {
-        el.style.boxShadow = "none";
-        const tip = tooltipRef.current;
-        if (tip) tip.style.display = "none";
       });
 
       overlay.appendChild(el);
       fillOverlaysRef.current.push({
-        localTime: snapped,
+        snappedTime: snapped,
         price: parseFloat(fi.px),
         side: fi.side,
-        label,
         el,
       });
     }
 
-    // Allow chart to finish layout before first position pass
     requestAnimationFrame(() => repositionOverlays());
   }, [repositionOverlays]);
 
@@ -334,9 +333,36 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       }
     });
 
-    // Reposition overlays when crosshair moves (covers price-scale auto-fit)
-    chart.subscribeCrosshairMove(() => {
+    // Reposition overlays + show tooltip near fill markers
+    chart.subscribeCrosshairMove((param) => {
       repositionOverlays();
+
+      const tip = tooltipRef.current;
+      if (!tip) return;
+
+      if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
+        tip.style.display = "none";
+        return;
+      }
+
+      const key = String(param.time);
+      const entries = fillTooltipMapRef.current.get(key);
+      if (!entries || entries.length === 0) {
+        tip.style.display = "none";
+        return;
+      }
+
+      tip.innerHTML = entries.map((e) => e.html).join("<hr style='border:none;border-top:1px solid #2a2e39;margin:4px 0'/>");
+      tip.style.display = "block";
+
+      const cRect = containerRef.current?.getBoundingClientRect();
+      if (!cRect) return;
+      let left = param.point.x + 16;
+      let top = param.point.y - 12;
+      if (left + 200 > cRect.width) left = param.point.x - 210;
+      if (top < 0) top = 4;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
     });
 
     const resizeObserver = new ResizeObserver((entries) => {
@@ -432,12 +458,9 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     return unsub;
   }, [selectedMarket, selectedInterval, fills, refreshOverlays, repositionOverlays]);
 
-  // Re-create overlay markers when fills change
   useEffect(() => {
     refreshOverlays();
   }, [fills, refreshOverlays]);
-
-  /* ── Cleanup overlay DOM on unmount ─────────────────────── */
 
   useEffect(() => {
     return () => {
@@ -489,7 +512,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
             fontSize: 11,
             color: "#e0e0e0",
             whiteSpace: "nowrap",
-            lineHeight: "20px",
+            lineHeight: "18px",
             boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
           }}
         />
