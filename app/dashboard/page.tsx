@@ -305,8 +305,11 @@ export default function DashboardPage() {
     }, 0);
   }, [spot]);
 
-  // In unified mode, spot USDC `total` already includes perps backing — don't add them.
-  const accountValue = spotUsdcBalance > 0 ? spotUsdcBalance : perpsAccountValue;
+  // In unified mode, spotUsdcBalance already includes USDC locked as perp margin.
+  // Add only unrealized PnL to get true total equity.
+  const accountValue = spotUsdcBalance > 0
+    ? spotUsdcBalance + totalPnl
+    : perpsAccountValue;
   const activeStrategies =
     serverStrategies.filter((s) => s.status === "active").length +
     browserStrategies.filter((s) => s.status === "active").length;

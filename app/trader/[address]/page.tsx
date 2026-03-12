@@ -365,7 +365,11 @@ export default function TraderProfilePage() {
     }, 0);
   }, [spotState]);
 
-  const totalAccountValue = accountValue + spotTotalUsd;
+  // In unified mode, spotTotalUsd already includes USDC locked as perp margin.
+  // Only add unrealized PnL to avoid double-counting margin.
+  const totalAccountValue = spotTotalUsd > 0
+    ? spotTotalUsd + totalUnrealizedPnl
+    : accountValue;
 
   const longExposure = positions.reduce((s, ap) => {
     const sz = parseFloat(ap.position.szi);
@@ -544,7 +548,7 @@ export default function TraderProfilePage() {
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
                       <span className="text-[#848e9c]">Spot</span>
-                      <span className="text-white font-medium">{formatUsd(spotTotalUsd)}</span>
+                      <span className="text-white font-medium">{formatUsd(Math.max(0, totalAccountValue - accountValue))}</span>
                     </span>
                   </div>
                 </div>
@@ -553,7 +557,7 @@ export default function TraderProfilePage() {
                   strokeWidth={10}
                   segments={[
                     { value: accountValue, color: "#3b82f6", label: "Perpetual" },
-                    { value: spotTotalUsd, color: "#f59e0b", label: "Spot" },
+                    { value: Math.max(0, totalAccountValue - accountValue), color: "#f59e0b", label: "Spot" },
                   ]}
                 />
               </div>

@@ -87,22 +87,27 @@ export async function fetchCombinedClearinghouseState(user: string): Promise<Cle
   if (!xyz) return main;
 
   const mainVal = parseFloat(main.marginSummary.accountValue || "0");
-  const xyzVal = parseFloat(xyz.marginSummary.accountValue || "0");
   const mainMargin = parseFloat(main.marginSummary.totalMarginUsed || "0");
   const xyzMargin = parseFloat(xyz.marginSummary.totalMarginUsed || "0");
-  const mainWithdrawable = parseFloat(main.withdrawable || "0");
-  const xyzWithdrawable = parseFloat(xyz.withdrawable || "0");
+
+  // In unified mode both dexes share the same USDC collateral.
+  // main.accountValue = shared_USDC + main_unrealizedPnl, so it already
+  // contains the full backing. We only add xyz positions' unrealized PnL
+  // to avoid double-counting the USDC base.
+  const xyzUPnl = xyz.assetPositions.reduce(
+    (sum, ap) => sum + parseFloat(ap.position.unrealizedPnl || "0"), 0,
+  );
 
   return {
     marginSummary: {
-      accountValue: (mainVal + xyzVal).toString(),
+      accountValue: (mainVal + xyzUPnl).toString(),
       totalMarginUsed: (mainMargin + xyzMargin).toString(),
       totalNtlPos: main.marginSummary.totalNtlPos,
       totalRawUsd: main.marginSummary.totalRawUsd,
     },
     crossMarginSummary: main.crossMarginSummary,
     crossMaintenanceMarginUsed: main.crossMaintenanceMarginUsed,
-    withdrawable: (mainWithdrawable + xyzWithdrawable).toString(),
+    withdrawable: main.withdrawable,
     assetPositions: [...main.assetPositions, ...xyz.assetPositions],
     time: main.time,
   };
@@ -148,7 +153,11 @@ export async function fetchUserLedger(user: string): Promise<LedgerUpdate[]> {
 }
 
 export async function fetchUserFunding(user: string, startTime = 0, endTime = 9999999999999): Promise<FundingPayment[]> {
-  return post<FundingPayment[]>("/info", { type: "userFunding", user, startTime, endTime });
+  const [main, xyz] = await Promise.all([
+    post<FundingPayment[]>("/info", { type: "userFunding", user, startTime, endTime }).catch(() => []),
+    post<FundingPayment[]>("/info", { type: "userFunding", user, startTime, endTime, dex: "xyz" }).catch(() => []),
+  ]);
+  return [...main, ...xyz];
 }
 
 export async function fetchUserAbstraction(user: string): Promise<string | null> {
