@@ -583,7 +583,7 @@ export default function DashboardPage() {
               ) : (
                 <div className="space-y-2">
                   {positions.map((ap) => (
-                    <PositionRow key={ap.position.coin} ap={ap} markets={markets} fills={fills} />
+                    <PositionRow key={ap.position.coin} ap={ap} markets={markets} fills={fills} trades={trades} />
                   ))}
                 </div>
               )}
@@ -1032,7 +1032,7 @@ function LiveDuration({ since }: { since: number }) {
   return <>{sec}s</>;
 }
 
-function PositionRow({ ap, markets, fills }: { ap: AssetPosition; markets: MarketInfo[]; fills: Fill[] }) {
+function PositionRow({ ap, markets, fills, trades }: { ap: AssetPosition; markets: MarketInfo[]; fills: Fill[]; trades: RoundTripTrade[] }) {
   const pos = ap.position;
   const size = parseFloat(pos.szi);
   const pnl = parseFloat(pos.unrealizedPnl);
@@ -1047,11 +1047,19 @@ function PositionRow({ ap, markets, fills }: { ap: AssetPosition; markets: Marke
   const isLong = size > 0;
 
   const entryTime = useMemo(() => {
+    // Use the open round-trip trade's openTime (properly accounts for
+    // previous positions that were closed and re-opened).
+    const openTrade = trades.find(
+      (t) => t.isOpen && stripPrefix(t.coin) === bare
+    );
+    if (openTrade) return openTrade.openTime;
+
+    // Fallback: earliest "Open" fill for this coin
     const openFills = fills
       .filter((f) => stripPrefix(f.coin) === bare && f.dir.toLowerCase().includes("open"))
       .sort((a, b) => a.time - b.time);
     return openFills.length > 0 ? openFills[0].time : null;
-  }, [fills, bare]);
+  }, [fills, bare, trades]);
 
   return (
     <Link href={`/trade/${tradeCoin}`} className="flex items-center gap-3 px-4 py-2.5 bg-[#141620] rounded-xl transition-colors">

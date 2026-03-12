@@ -58,11 +58,12 @@ export function PositionsTable() {
   );
 
   useEffect(() => {
-    fetch("/api/quant/trades?status=open&limit=50")
+    if (!address) return;
+    fetch(`/api/quant/trades?status=open&limit=50&wallet=${encodeURIComponent(address)}`)
       .then((r) => r.ok ? r.json() : { trades: [] })
       .then((d) => setQuantTrades(d.trades ?? []))
       .catch(() => {});
-  }, []);
+  }, [address]);
 
   const getQuantInfo = (coin: string) => quantTrades.find((t) => t.coin === coin);
 
