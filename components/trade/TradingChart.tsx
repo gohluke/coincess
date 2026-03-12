@@ -6,6 +6,7 @@ import {
   CandlestickSeries,
   HistogramSeries,
   ColorType,
+  createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type CandlestickData,
@@ -13,12 +14,14 @@ import {
   type UTCTimestamp,
   type CandlestickSeriesOptions,
   type HistogramSeriesOptions,
+  type SeriesMarker,
+  type Time,
 } from "lightweight-charts";
 import { BRAND } from "@/lib/brand";
 import { fetchCandles } from "@/lib/hyperliquid/api";
 import { getWs } from "@/lib/hyperliquid/websocket";
 import { useTradingStore } from "@/lib/hyperliquid/store";
-import type { CandleInterval } from "@/lib/hyperliquid/types";
+import type { CandleInterval, Fill } from "@/lib/hyperliquid/types";
 
 const INTERVALS: { label: string; value: CandleInterval }[] = [
   { label: "1m", value: "1m" },
@@ -36,13 +39,15 @@ function toLocal(utcMs: number): UTCTimestamp {
   return (utcMs / 1000 + TZ_OFFSET_SEC) as UTCTimestamp;
 }
 
-export function TradingChart() {
+export function TradingChart({ fills }: { fills?: Fill[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const volumeRef = useRef<ISeriesApi<any> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const markersRef = useRef<any>(null);
 
   const selectedMarket = useTradingStore((s) => s.selectedMarket);
   const selectedInterval = useTradingStore((s) => s.selectedInterval);
@@ -130,7 +135,7 @@ export function TradingChart() {
       "8h": 28_800_000, "12h": 43_200_000, "1d": 86_400_000, "3d": 259_200_000,
       "1w": 604_800_000, "1M": 2_592_000_000,
     };
-    const lookback = (intervalMs[selectedInterval] ?? 900_000) * 300;
+    const lookback = (intervalMs[selectedInterval] ?? 900_000) * 1500;
     const startTime = now - lookback;
 
     fetchCandles(selectedMarket, selectedInterval, startTime, now)
@@ -149,6 +154,29 @@ export function TradingChart() {
         }));
         series.setData(candleData);
         volume.setData(volumeData);
+
+        // B/S fill markers
+        if (markersRef.current) {
+          try { markersRef.current.detach(); } catch {}
+          markersRef.current = null;
+        }
+        if (fills && fills.length > 0) {
+          const coin = selectedMarket.replace(/^.*:/, "").toUpperCase();
+          const markers: SeriesMarker<Time>[] = fills
+            .filter((f) => f.coin.replace(/^.*:/, "").toUpperCase() === coin && f.time >= startTime)
+            .sort((a, b) => a.time - b.time)
+            .map((f) => ({
+              time: toLocal(f.time) as Time,
+              position: f.side === "B" ? ("belowBar" as const) : ("aboveBar" as const),
+              color: f.side === "B" ? "#0ecb81" : "#f6465d",
+              shape: f.side === "B" ? ("arrowUp" as const) : ("arrowDown" as const),
+              text: f.side === "B" ? "B" : "S",
+            }));
+          if (markers.length > 0) {
+            markersRef.current = createSeriesMarkers(series, markers);
+          }
+        }
+
         chartRef.current?.timeScale().fitContent();
       })
       .catch(console.error);
@@ -173,7 +201,7 @@ export function TradingChart() {
     });
 
     return unsub;
-  }, [selectedMarket, selectedInterval]);
+  }, [selectedMarket, selectedInterval, fills]);
 
   return (
     <div className="flex flex-col h-full">

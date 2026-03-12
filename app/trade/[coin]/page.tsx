@@ -12,6 +12,8 @@ import { RecentTrades } from "@/components/trade/RecentTrades";
 import { useWallet } from "@/hooks/useWallet";
 import { useSettingsStore } from "@/lib/settings/store";
 import { getConnectedAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
+import { fetchUserFills } from "@/lib/hyperliquid/api";
+import type { Fill } from "@/lib/hyperliquid/types";
 
 const TradingChart = dynamic(
   () => import("@/components/trade/TradingChart").then((m) => m.TradingChart),
@@ -48,6 +50,8 @@ export default function TradePageDynamic() {
   const [bookTab, setBookTab] = useState<BookTab>("book");
   const marketsReady = markets.length > 0;
   const initialSynced = useRef(false);
+
+  const [userFills, setUserFills] = useState<Fill[]>([]);
 
   const { address: walletAddr, source } = useWallet();
   const activeLinkedAddr = useSettingsStore((s) => s.getActiveAddress)();
@@ -129,6 +133,12 @@ export default function TradePageDynamic() {
     return () => clearInterval(interval);
   }, [address, loadUserState]);
 
+  // Fetch user fills for chart markers
+  useEffect(() => {
+    if (!address) { setUserFills([]); return; }
+    fetchUserFills(address).then(setUserFills).catch(() => {});
+  }, [address]);
+
   return (
     <div className="h-screen flex flex-col bg-[#0b0e11] text-white overflow-hidden">
       {/* Market selector bar */}
@@ -155,7 +165,7 @@ export default function TradePageDynamic() {
       <div className="flex-1 min-h-0 hidden md:flex flex-col">
         <div className="flex-1 min-h-0 flex">
           <div className="flex-1 min-w-0 border-r border-[#2a2e39]">
-            <TradingChart />
+            <TradingChart fills={userFills} />
           </div>
           <div className="w-[240px] shrink-0 flex flex-col border-r border-[#2a2e39]">
             <div className="flex border-b border-[#2a2e39]">
@@ -188,7 +198,7 @@ export default function TradePageDynamic() {
       <div className="flex-1 min-h-0 md:hidden">
         {mobileTab === "chart" && (
           <div className="h-full">
-            <TradingChart />
+            <TradingChart fills={userFills} />
           </div>
         )}
         {mobileTab === "book" && (

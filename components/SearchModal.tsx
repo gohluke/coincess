@@ -451,7 +451,14 @@ export function SearchModal({ open, onClose }: Props) {
                     </div>
                   </div>
 
-                  <PriceCell markPx={m.markPx} prevDayPx={m.prevDayPx} />
+                  <div className="flex items-center gap-3 shrink-0">
+                    {m.maxLeverage > 0 && (
+                      <span className="text-[10px] text-[#555a66] tabular-nums whitespace-nowrap">
+                        {m.maxLeverage}x
+                      </span>
+                    )}
+                    <PriceCell markPx={m.markPx} prevDayPx={m.prevDayPx} />
+                  </div>
                 </button>
               );
             })

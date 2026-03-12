@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil, ArrowLeftRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder, STALE_AGENT_ERROR } from "@/lib/hyperliquid/signing";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -19,6 +20,7 @@ interface QuantTradeInfo {
 }
 
 export function PositionsTable() {
+  const router = useRouter();
   const { clearinghouse, openOrders, address, markets, loadUserState } = useTradingStore();
   const [tab, setTab] = useState<Tab>("positions");
   const [closingCoin, setClosingCoin] = useState<string | null>(null);
@@ -462,9 +464,15 @@ export function PositionsTable() {
                     return (
                       <React.Fragment key={pos.coin}>
                         <tr className="hover:bg-[#1a1d26] border-b border-[#1a1d26]">
-                          <td className="px-4 py-2">
+                          <td
+                            className="px-4 py-2 cursor-pointer"
+                            onClick={() => {
+                              const urlCoin = pos.coin.includes(":") ? pos.coin.split(":")[1] : pos.coin;
+                              router.push(`/trade/${urlCoin}`);
+                            }}
+                          >
                             <div className="flex items-center gap-1.5">
-                              <span className="text-white font-medium">{pos.coin}</span>
+                              <span className="text-white font-medium hover:text-brand transition-colors">{pos.coin}</span>
                               <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
                                 isLong ? "bg-[#0ecb81]/10 text-[#0ecb81]" : "bg-[#f6465d]/10 text-[#f6465d]"
                               }`}>

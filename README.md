@@ -7,11 +7,13 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 ### Perpetual Futures Trading
 - **279 perpetual markets** — crypto (BTC, ETH, SOL, memecoins, AI tokens) + HIP-3 markets (stocks, commodities, forex, indices)
 - **Coin logos everywhere** — multi-tier logo resolver (local SVG/PNG for commodities, Clearbit CDN for stocks, CoinCap CDN for crypto, emoji fallback for forex/indices, letter avatar as last resort); shown in market selector header, dropdown rows, and search modal
+- **Search modal** — max leverage shown per market, category badges, real-time prices with flash animation
 - **Real-time order book** and recent trades via WebSocket
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); order form reads spot clearinghouse balance for accurate "Available" display
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
-- **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position; TP/SL prices shown inline on positions; AUTO badge scoped to user's own quant strategies (wallet-filtered); accurate round-trip duration on dashboard
+- **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position; TP/SL prices shown inline on positions; AUTO badge scoped to user's own quant strategies (wallet-filtered); accurate round-trip duration on dashboard; click position to navigate to coin
+- **Chart** — 1500 candles of history (vs 300 previously); Buy/Sell fill markers (B/S arrows) on the chart for the connected user's trades
 - **TP/SL modal (Hyperliquid-style)** — clicking the pencil icon opens a centered modal with coin info, position size, entry/mark prices; **bidirectional inputs**: typing TP Price auto-calculates Gain in $, and typing Gain auto-calculates TP Price (same for SL Price ↔ Loss in $); pre-fills existing TP/SL values; TP/SL trigger orders are hidden from open orders and reflected directly on the position row
 - **Order management** — compact single-row open orders table with inline edit for size/price, placed date, duration with seconds, and cancel all (TP/SL orders excluded)
 - **Tabbed Order Book / Recent Trades** — order book and recent trades displayed as tabs side-by-side, only one visible at a time
