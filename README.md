@@ -29,17 +29,46 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Bet slips** — Buy Yes/No with potential payout calculator
 - **Market status** — visual indicators for closed/ended markets, urgency badges
 
-### Automation Suite
-- **Wallet Positions (source of truth)** — the Server 24/7 tab now shows real positions from the Hyperliquid clearinghouse API (not the quant engine's internal records), so positions are always in sync with the actual wallet; includes account equity, margin used, open order count, leverage, liquidation price, funding rate; positions tagged AUTO when they match a quant strategy; click any position to navigate to its trade page; **UI aligned with /dashboard** — borderless cards (`bg-[#141620] rounded-xl`, no outline borders), system font for numbers, `gap-2` metric grids, subtle `/30` opacity internal dividers for a cohesive experience across the app
-- **DCA** — dollar-cost average into any Hyperliquid market on a schedule
+### Automation Suite (`/automate`)
+
+The automation page is a three-tab dashboard for managing all automated trading activity.
+
+#### Tab 1: Server (24/7 Quant Engine)
+Runs on a dedicated Contabo VPS via `pm2` — no browser needed. The quant engine ticks every 30 seconds, evaluating all active strategies and placing orders via the Hyperliquid API wallet.
+
+- **Engine status bar** — live indicator (running / paused / error), last tick time, "Reset Engine" button when in error state (clears stale drawdown, resets peak equity to current NAV)
+- **Key metrics row** — Total P&L (computed from actual closed trades + unrealized + funding), Funding Income, Unrealized P&L, NAV (live account value), Gross Exposure, Max Drawdown
+- **Risk alert banner** — appears when engine hits an error (e.g. kill switch triggered); shows the exact error message with an inline "Reset" button to recover
+- **Strategies table** — add/remove/toggle strategies (Funding Rate, Momentum, Grid, Mean Reversion, Market Maker); each card shows status, trade count, PnL, last execution time; funding rate cards expand to show per-position metrics
+- **Open positions** — real-time positions from the Hyperliquid clearinghouse API (source of truth, not the engine's internal records); shows side, leverage, instrument, entry/mark price, size, 8-hour funding rate, unrealized PnL, ROE; positions tagged with strategy badge (FR, MOM, GRID, etc.) when they match a quant trade; click any row to navigate to the trade page
+- **Execution log** — last 30 trades with timestamp, instrument, side, strategy tag, entry/exit price, P&L, and open/closed status; open trades show live unrealized PnL using current mark price
+- **Footer** — peak equity, last tick time, funding payment count, error messages
+
+#### Tab 2: Browser (Client-Side Bots)
+Runs in the browser tab — strategies only execute while the page is open. Uses IndexedDB for persistence (survives page refresh).
+
+- **DCA** — dollar-cost average into any Hyperliquid market on a configurable schedule
 - **Grid Trading** — set a price range, auto-place buy/sell limit orders across grid levels
-- **Trailing Stop** — track peak/trough, auto-exit when price reverses by a percentage
-- **Prediction Auto-Bet** — trigger bets when Polymarket odds hit your price target
-- **Prediction Auto-Exit** — sell positions before markets close
+- **Trailing Stop** — track peak/trough price, auto-exit when price reverses by a percentage
+- **Prediction Auto-Bet** — trigger Polymarket bets when odds hit your price target
+- **Prediction Auto-Exit** — sell Polymarket positions before markets close
 - **Copy Trading** — mirror any Hyperliquid wallet's trades in real-time
 - **Price Alerts** — browser notifications when price crosses your levels
 - **Activity Log** — full history of automated trades and triggered alerts
-- All strategies persist in IndexedDB (survives page refresh)
+
+#### Tab 3: Lab (Backtesting & Analytics)
+Strategy backtesting and performance analysis tools.
+
+- **Backtest runner** — select strategy type, date range, coins, and interval; runs against historical candle data
+- **Performance metrics** — total trades, win rate, total PnL, max drawdown, Sharpe ratio, profit factor
+- **Data pipeline status** — candle storage counts, instruments tracked, data freshness
+
+#### Architecture
+- **Server strategies**: Contabo VPS runs `scripts/quant-server.ts` via pm2; signs orders with Hyperliquid API wallet key; writes to Supabase (`quant_strategies`, `quant_trades`, `quant_state`); frontend reads via `/api/quant/status` and `/api/quant/trades` API routes
+- **Browser strategies**: Zustand store + IndexedDB; executes in the browser's event loop; uses the connected wallet for signing
+- **PnL accuracy**: Fills are deduplicated by `tid` across main and xyz dexes; total PnL is computed from closed trade records (not stale engine state); funding income fetched separately from Hyperliquid's funding API
+- **Risk management**: 80% max total exposure, 50% max per position, 8% daily loss limit (pauses trading for 24h), 20% kill switch (stops engine, requires manual reset), $100 reserve; position sizes scale down with drawdown (4x multiplier)
+- **UI**: Page background `bg-[#0b0e11]` matches `/dashboard`; cards use `bg-[#141620] rounded-xl` (borderless); system font for numbers; subtle row separators (`border-[#2a2e3e]/30`); hover states on position and trade rows
 
 ### Unified Portfolio Dashboard (`/dashboard`)
 - **Total Equity** — uses Spot USDC `total` as the single source of truth (unified account mode avoids double-counting perps backing); Available Balance = Spot total - Spot hold

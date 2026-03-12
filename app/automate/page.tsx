@@ -96,8 +96,8 @@ export default function AutomatePage() {
   const [tab, setTab] = useState<Tab>("server");
 
   return (
-    <div className="min-h-screen bg-[#141620] text-white">
-      <div className="border-b border-[#2a2e3e]/30 bg-[#141620]">
+    <div className="min-h-screen bg-[#0b0e11] text-white">
+      <div className="border-b border-[#2a2e3e]/30 bg-[#0b0e11]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-11 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-[0.2em]">Automation</span>
@@ -631,7 +631,7 @@ function ServerStrategies({ address }: { address: string | null }) {
 
               return (
                 <Link key={coin} href={`/trade/${displayCoin}`} className="block">
-                  <div className="grid grid-cols-[80px_40px_1fr_repeat(5,minmax(0,1fr))_80px] items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/30/50 hover:bg-[#1a1d2e] transition-colors">
+                  <div className="grid grid-cols-[80px_40px_1fr_repeat(5,minmax(0,1fr))_80px] items-center px-4 py-2.5 text-xs hover:bg-[#1a1d2e]/50 transition-colors">
                     <span className={`font-semibold text-[10px] ${isLong ? "text-emerald-400" : "text-red-400"}`}>
                       {isLong ? "LONG" : "SHORT"}
                     </span>
@@ -794,8 +794,8 @@ function BrowserBots() {
             onClick={toggleEngine}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-medium transition-all border ${
               engineRunning
-                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                : "bg-[#141620] text-[#848e9c] hover:text-white border-[#2a2e3e]"
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                : "bg-[#141620] text-[#848e9c] hover:text-white border-transparent"
             }`}
           >
             {engineRunning ? <Zap className="h-3 w-3" /> : <ZapOff className="h-3 w-3" />}
@@ -811,7 +811,7 @@ function BrowserBots() {
         </Link>
       </div>
 
-      <div className="border border-yellow-900/30 bg-yellow-950/10 rounded-xl px-4 py-2.5 flex items-center gap-3">
+      <div className="bg-yellow-950/20 rounded-xl px-4 py-2.5 flex items-center gap-3">
         <Monitor className="h-3.5 w-3.5 text-yellow-500/70 shrink-0" />
         <p className="text-[10px] text-yellow-500/60">
           Browser strategies only run while this tab is open. Use <span className="text-yellow-400/80">Server Strategies</span> for 24/7 execution.
@@ -844,7 +844,7 @@ function BrowserBots() {
 
         <div>
           <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-widest block mb-3">Activity Log</span>
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl p-3">
+          <div className="bg-[#141620] rounded-xl p-3">
             <ActivityLog />
           </div>
         </div>
