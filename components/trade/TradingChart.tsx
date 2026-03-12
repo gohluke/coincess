@@ -45,6 +45,25 @@ function toLocal(utcMs: number): UTCTimestamp {
   return (utcMs / 1000 + TZ_OFFSET_SEC) as UTCTimestamp;
 }
 
+// Snap a local-time value to the nearest candle's time via binary search.
+// timeToCoordinate only resolves times that exist as data points.
+function snapToCandleTime(localTime: UTCTimestamp, candles: CandlestickData[]): UTCTimestamp | null {
+  if (candles.length === 0) return null;
+  let lo = 0;
+  let hi = candles.length - 1;
+  let best = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if ((candles[mid].time as number) <= (localTime as number)) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return best >= 0 ? (candles[best].time as UTCTimestamp) : null;
+}
+
 function formatFillLabel(f: Fill): string {
   const dir = f.dir.toLowerCase();
   const px = parseFloat(f.px);
@@ -127,7 +146,12 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       (fi) => fi.coin.replace(/^.*:/, "").toUpperCase() === coin && fi.time >= oldestLoadedRef.current,
     );
 
+    const candles = candleDataRef.current;
     for (const fi of relevant) {
+      const rawLocal = toLocal(fi.time);
+      const snapped = snapToCandleTime(rawLocal, candles);
+      if (snapped === null) continue;
+
       const isBuy = fi.side === "B";
       const color = isBuy ? "#0ecb81" : "#f6465d";
       const letter = isBuy ? "B" : "S";
@@ -182,7 +206,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
 
       overlay.appendChild(el);
       fillOverlaysRef.current.push({
-        localTime: toLocal(fi.time),
+        localTime: snapped,
         price: parseFloat(fi.px),
         side: fi.side,
         label,
@@ -190,7 +214,8 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       });
     }
 
-    repositionOverlays();
+    // Allow chart to finish layout before first position pass
+    requestAnimationFrame(() => repositionOverlays());
   }, [repositionOverlays]);
 
   /* ── Infinite scroll ────────────────────────────────────── */

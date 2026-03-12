@@ -100,23 +100,17 @@ export default function TradePageDynamic() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coinParam]);
 
-  // When the store's selected market changes (user picks from dropdown), sync to URL
-  // and persist the ticker so /trade redirects back here next time.
-  // Guard: if the current URL already resolves to a valid different market, the URL is
-  // authoritative (user just navigated here) — let the URL→store sync handle it.
+  // When the store's selected market changes (user picks from dropdown), sync to URL.
+  // Don't run until the initial URL→store sync has completed to avoid the store's
+  // default "BTC" overwriting the URL param on first load.
   useEffect(() => {
-    if (!selectedMarket) return;
+    if (!selectedMarket || !initialSynced.current) return;
     const urlCoin = selectedMarket.replace(/^.*:/, "").toUpperCase();
     const current = params.coin?.toUpperCase() ?? "BTC";
 
     try { localStorage.setItem("coincess:lastTicker", urlCoin); } catch {}
 
     if (urlCoin !== current) {
-      const ms = useTradingStore.getState().markets;
-      const urlMatch = ms.length > 0 ? findMarketByCoin(ms, current) : null;
-      if (urlMatch && urlMatch.name !== selectedMarket) {
-        return;
-      }
       router.replace(`/trade/${urlCoin}`, { scroll: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
