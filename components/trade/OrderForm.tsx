@@ -76,13 +76,18 @@ export function OrderForm() {
 
   const market = markets.find((m) => m.name === selectedMarket);
   const displayName = market?.displayName || selectedMarket;
-  const midPrice = orderbook?.levels
-    ? (
-        (parseFloat(orderbook.levels[0]?.[0]?.px ?? "0") +
-          parseFloat(orderbook.levels[1]?.[0]?.px ?? "0")) /
-        2
-      ).toString()
-    : market?.markPx ?? "0";
+  const midPrice = (() => {
+    let raw: string;
+    if (orderbook?.levels) {
+      const bid = parseFloat(orderbook.levels[0]?.[0]?.px || "0");
+      const ask = parseFloat(orderbook.levels[1]?.[0]?.px || "0");
+      raw = ((bid + ask) / 2).toString();
+    } else {
+      raw = market?.markPx || "0";
+    }
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? raw : "0";
+  })();
 
   const spotUsdcBalance = useMemo(() => {
     if (!spotClearinghouse?.balances) return 0;
@@ -142,8 +147,14 @@ export function OrderForm() {
     setFeedback(null);
 
     try {
+      const numMid = parseFloat(midPrice);
+      if (orderType === "market" && (!Number.isFinite(numMid) || numMid <= 0)) {
+        toast.error("Unable to get market price. Try a limit order.", { id: "order-submit" });
+        setSubmitting(false);
+        return;
+      }
       const price = orderType === "market"
-        ? getMarketOrderPrice(orderSide === "buy", parseFloat(midPrice))
+        ? getMarketOrderPrice(orderSide === "buy", numMid)
         : orderPrice;
 
       const sideLabel = orderSide === "buy" ? "Long" : "Short";

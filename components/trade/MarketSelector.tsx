@@ -261,11 +261,12 @@ export function MarketSelector() {
             ))}
           </div>
 
-          <div className="grid grid-cols-[20px_1.6fr_0.8fr_0.8fr_0.8fr] gap-1 px-3 py-1 text-[10px] text-[#848e9c] uppercase border-b border-[#2a2e39]">
+          <div className="grid grid-cols-[20px_1.6fr_0.5fr_0.8fr_0.8fr_0.8fr] gap-1 px-3 py-1 text-[10px] text-[#848e9c] uppercase border-b border-[#2a2e39]">
             <span />
             <button className="text-left hover:text-white" onClick={() => handleSort("name")}>
               Market {sortKey === "name" ? (sortAsc ? "↑" : "↓") : ""}
             </button>
+            <span className="text-right">Lev</span>
             <button className="text-right hover:text-white" onClick={() => handleSort("price")}>
               Price {sortKey === "price" ? (sortAsc ? "↑" : "↓") : ""}
             </button>
@@ -300,7 +301,7 @@ export function MarketSelector() {
                       setOpen(false);
                       setSearch("");
                     }}
-                    className={`grid grid-cols-[20px_1.6fr_0.8fr_0.8fr_0.8fr] gap-1 w-full px-3 py-2 text-xs hover:bg-[#1a1d26] transition-colors ${
+                    className={`grid grid-cols-[20px_1.6fr_0.5fr_0.8fr_0.8fr_0.8fr] gap-1 w-full px-3 py-2 text-xs hover:bg-[#1a1d26] transition-colors ${
                       m.name === selectedMarket ? "bg-[#1a1d26]" : ""
                     }`}
                   >
@@ -319,6 +320,9 @@ export function MarketSelector() {
                         </span>
                       )}
                       <span className="text-[#4a4e59]">/USD</span>
+                    </span>
+                    <span className="text-right text-[#555a66] tabular-nums">
+                      {m.maxLeverage > 0 ? `${m.maxLeverage}x` : "—"}
                     </span>
                     <span className="text-right text-[#eaecef]">
                       {px >= 1000 ? px.toLocaleString(undefined, { maximumFractionDigits: 1 })
