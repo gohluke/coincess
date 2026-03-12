@@ -358,9 +358,9 @@ export default function TraderProfilePage() {
   const spotTotalUsd = useMemo(() => {
     if (!spotState?.balances) return 0;
     return spotState.balances.reduce((sum, b) => {
-      if (b.coin === "USDC" || b.coin === "USDT") return sum;
       const total = parseFloat(b.total);
       if (total === 0) return sum;
+      if (b.coin === "USDC" || b.coin === "USDT") return sum + total;
       return sum + parseFloat(b.entryNtl || "0");
     }, 0);
   }, [spotState]);
@@ -533,7 +533,7 @@ export default function TraderProfilePage() {
               {/* Card 1: Account Total Value */}
               <div className="bg-[#141620] rounded-xl p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[11px] text-[#848e9c] mb-1">Account Total Value</p>
+                  <p className="text-[11px] text-[#848e9c] mb-1">Account Total Equity</p>
                   <p className="text-2xl font-bold text-white tracking-tight">{formatUsd(totalAccountValue)}</p>
                   <div className="flex items-center gap-3 mt-2 text-[10px]">
                     <span className="flex items-center gap-1">
