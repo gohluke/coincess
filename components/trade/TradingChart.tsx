@@ -33,10 +33,38 @@ const INTERVALS: { label: string; value: CandleInterval }[] = [
   { label: "1W", value: "1w" },
 ];
 
+const INTERVAL_MS: Record<string, number> = {
+  "1m": 60_000, "3m": 180_000, "5m": 300_000, "15m": 900_000,
+  "30m": 1_800_000, "1h": 3_600_000, "2h": 7_200_000, "4h": 14_400_000,
+  "8h": 28_800_000, "12h": 43_200_000, "1d": 86_400_000, "3d": 259_200_000,
+  "1w": 604_800_000, "1M": 2_592_000_000,
+};
+
+const BATCH_SIZE = 1500;
+const SCROLL_TRIGGER = 20;
+
 // Shift UTC epoch seconds → local epoch seconds so the chart axis shows local time
 const TZ_OFFSET_SEC = -(new Date().getTimezoneOffset() * 60);
 function toLocal(utcMs: number): UTCTimestamp {
   return (utcMs / 1000 + TZ_OFFSET_SEC) as UTCTimestamp;
+}
+
+function buildFillMarkers(
+  fills: Fill[],
+  market: string,
+  oldestMs: number,
+): SeriesMarker<Time>[] {
+  const coin = market.replace(/^.*:/, "").toUpperCase();
+  return fills
+    .filter((f) => f.coin.replace(/^.*:/, "").toUpperCase() === coin && f.time >= oldestMs)
+    .sort((a, b) => a.time - b.time)
+    .map((f) => ({
+      time: toLocal(f.time) as Time,
+      position: f.side === "B" ? ("belowBar" as const) : ("aboveBar" as const),
+      color: f.side === "B" ? "#0ecb81" : "#f6465d",
+      shape: f.side === "B" ? ("arrowUp" as const) : ("arrowDown" as const),
+      text: f.side === "B" ? "B" : "S",
+    }));
 }
 
 export function TradingChart({ fills }: { fills?: Fill[] }) {
@@ -49,9 +77,91 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any>(null);
 
+  // Accumulated data for infinite scroll
+  const candleDataRef = useRef<CandlestickData[]>([]);
+  const volumeDataRef = useRef<HistogramData[]>([]);
+  const oldestLoadedRef = useRef<number>(0);
+  const fetchingRef = useRef(false);
+  const noMoreDataRef = useRef(false);
+  const fillsRef = useRef(fills);
+  fillsRef.current = fills;
+
+  // Keep stable refs to market/interval for the scroll handler
+  const marketRef = useRef(useTradingStore.getState().selectedMarket);
+  const intervalRef = useRef(useTradingStore.getState().selectedInterval);
+
   const selectedMarket = useTradingStore((s) => s.selectedMarket);
   const selectedInterval = useTradingStore((s) => s.selectedInterval);
   const setInterval = useTradingStore((s) => s.setInterval);
+
+  marketRef.current = selectedMarket;
+  intervalRef.current = selectedInterval;
+
+  const refreshMarkers = useCallback(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+    if (markersRef.current) {
+      try { markersRef.current.detach(); } catch {}
+      markersRef.current = null;
+    }
+    const f = fillsRef.current;
+    if (f && f.length > 0) {
+      const markers = buildFillMarkers(f, marketRef.current, oldestLoadedRef.current);
+      if (markers.length > 0) {
+        markersRef.current = createSeriesMarkers(series, markers);
+      }
+    }
+  }, []);
+
+  const loadOlderCandles = useCallback(async () => {
+    if (fetchingRef.current || noMoreDataRef.current) return;
+    const series = seriesRef.current;
+    const volume = volumeRef.current;
+    if (!series || !volume) return;
+
+    fetchingRef.current = true;
+    const ivMs = INTERVAL_MS[intervalRef.current] ?? 900_000;
+    const endTime = oldestLoadedRef.current;
+    const startTime = endTime - ivMs * BATCH_SIZE;
+
+    try {
+      const candles = await fetchCandles(marketRef.current, intervalRef.current, startTime, endTime - 1);
+      if (candles.length === 0) {
+        noMoreDataRef.current = true;
+        return;
+      }
+
+      const newCandle: CandlestickData[] = candles.map((c) => ({
+        time: toLocal(c.t),
+        open: parseFloat(c.o),
+        high: parseFloat(c.h),
+        low: parseFloat(c.l),
+        close: parseFloat(c.c),
+      }));
+      const newVol: HistogramData[] = candles.map((c) => ({
+        time: toLocal(c.t),
+        value: parseFloat(c.v) * parseFloat(c.c),
+        color: parseFloat(c.c) >= parseFloat(c.o) ? "#0ecb8133" : "#f6465d33",
+      }));
+
+      // Deduplicate by time and merge
+      const existingTimes = new Set(candleDataRef.current.map((d) => d.time));
+      const uniqueCandles = newCandle.filter((d) => !existingTimes.has(d.time));
+      const uniqueVol = newVol.filter((d) => !existingTimes.has(d.time));
+
+      candleDataRef.current = [...uniqueCandles, ...candleDataRef.current];
+      volumeDataRef.current = [...uniqueVol, ...volumeDataRef.current];
+      oldestLoadedRef.current = Math.min(oldestLoadedRef.current, candles[0].t);
+
+      series.setData(candleDataRef.current);
+      volume.setData(volumeDataRef.current);
+      refreshMarkers();
+    } catch {
+      // network error — will retry next scroll
+    } finally {
+      fetchingRef.current = false;
+    }
+  }, [refreshMarkers]);
 
   const initChart = useCallback(() => {
     if (!containerRef.current) return;
@@ -108,6 +218,14 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     seriesRef.current = candleSeries;
     volumeRef.current = volumeSeries;
 
+    // Infinite scroll: fetch older candles when user scrolls near left edge
+    chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+      if (!range || fetchingRef.current || noMoreDataRef.current) return;
+      if (range.from < SCROLL_TRIGGER) {
+        loadOlderCandles();
+      }
+    });
+
     const resizeObserver = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
       chart.applyOptions({ width, height });
@@ -115,27 +233,29 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     resizeObserver.observe(containerRef.current);
 
     return () => resizeObserver.disconnect();
-  }, []);
+  }, [loadOlderCandles]);
 
   useEffect(() => {
     const cleanup = initChart();
     return () => cleanup?.();
   }, [initChart]);
 
+  // Initial load + WebSocket subscription
   useEffect(() => {
     if (!seriesRef.current || !volumeRef.current) return;
 
     const series = seriesRef.current;
     const volume = volumeRef.current;
 
+    // Reset scroll state
+    candleDataRef.current = [];
+    volumeDataRef.current = [];
+    fetchingRef.current = false;
+    noMoreDataRef.current = false;
+
     const now = Date.now();
-    const intervalMs: Record<string, number> = {
-      "1m": 60_000, "3m": 180_000, "5m": 300_000, "15m": 900_000,
-      "30m": 1_800_000, "1h": 3_600_000, "2h": 7_200_000, "4h": 14_400_000,
-      "8h": 28_800_000, "12h": 43_200_000, "1d": 86_400_000, "3d": 259_200_000,
-      "1w": 604_800_000, "1M": 2_592_000_000,
-    };
-    const lookback = (intervalMs[selectedInterval] ?? 900_000) * 1500;
+    const ivMs = INTERVAL_MS[selectedInterval] ?? 900_000;
+    const lookback = ivMs * BATCH_SIZE;
     const startTime = now - lookback;
 
     fetchCandles(selectedMarket, selectedInterval, startTime, now)
@@ -152,31 +272,14 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
           value: parseFloat(c.v) * parseFloat(c.c),
           color: parseFloat(c.c) >= parseFloat(c.o) ? "#0ecb8133" : "#f6465d33",
         }));
+
+        candleDataRef.current = candleData;
+        volumeDataRef.current = volumeData;
+        oldestLoadedRef.current = candles.length > 0 ? candles[0].t : startTime;
+
         series.setData(candleData);
         volume.setData(volumeData);
-
-        // B/S fill markers
-        if (markersRef.current) {
-          try { markersRef.current.detach(); } catch {}
-          markersRef.current = null;
-        }
-        if (fills && fills.length > 0) {
-          const coin = selectedMarket.replace(/^.*:/, "").toUpperCase();
-          const markers: SeriesMarker<Time>[] = fills
-            .filter((f) => f.coin.replace(/^.*:/, "").toUpperCase() === coin && f.time >= startTime)
-            .sort((a, b) => a.time - b.time)
-            .map((f) => ({
-              time: toLocal(f.time) as Time,
-              position: f.side === "B" ? ("belowBar" as const) : ("aboveBar" as const),
-              color: f.side === "B" ? "#0ecb81" : "#f6465d",
-              shape: f.side === "B" ? ("arrowUp" as const) : ("arrowDown" as const),
-              text: f.side === "B" ? "B" : "S",
-            }));
-          if (markers.length > 0) {
-            markersRef.current = createSeriesMarkers(series, markers);
-          }
-        }
-
+        refreshMarkers();
         chartRef.current?.timeScale().fitContent();
       })
       .catch(console.error);
@@ -185,23 +288,40 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     const unsub = ws.subscribeCandle(selectedMarket, selectedInterval, (data) => {
       const candles = Array.isArray(data) ? data : [data];
       for (const c of candles) {
-        series.update({
+        const cd: CandlestickData = {
           time: toLocal(c.t),
           open: parseFloat(c.o),
           high: parseFloat(c.h),
           low: parseFloat(c.l),
           close: parseFloat(c.c),
-        });
-        volume.update({
+        };
+        const vd: HistogramData = {
           time: toLocal(c.t),
           value: parseFloat(c.v) * parseFloat(c.c),
           color: parseFloat(c.c) >= parseFloat(c.o) ? "#0ecb8133" : "#f6465d33",
-        });
+        };
+        series.update(cd);
+        volume.update(vd);
+
+        // Keep refs in sync for future prepend merges
+        const last = candleDataRef.current[candleDataRef.current.length - 1];
+        if (last && last.time === cd.time) {
+          candleDataRef.current[candleDataRef.current.length - 1] = cd;
+          volumeDataRef.current[volumeDataRef.current.length - 1] = vd;
+        } else {
+          candleDataRef.current.push(cd);
+          volumeDataRef.current.push(vd);
+        }
       }
     });
 
     return unsub;
-  }, [selectedMarket, selectedInterval, fills]);
+  }, [selectedMarket, selectedInterval, fills, refreshMarkers]);
+
+  // Re-apply markers when fills change (without re-fetching candles)
+  useEffect(() => {
+    refreshMarkers();
+  }, [fills, refreshMarkers]);
 
   return (
     <div className="flex flex-col h-full">

@@ -768,7 +768,9 @@ export async function signAndApproveBuilderFee(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const nativeEth = getNativeEthereum();
-    if (nativeEth) await switchToArbitrum(nativeEth);
+    if (nativeEth) {
+      try { await switchToArbitrum(nativeEth); } catch { /* non-blocking */ }
+    }
     const wallet = nativeEth ? createNativeWallet(expectedAddress) : createHyperliquidWallet(expectedAddress);
 
     const nonce = Date.now();
@@ -815,7 +817,11 @@ export async function signAndEnableDexAbstraction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const nativeEth = getNativeEthereum();
-    if (nativeEth) await switchToArbitrum(nativeEth);
+    // Best-effort chain switch — signing uses Hyperliquid's domain chainId (0x66eee),
+    // not the wallet's active chain, so Arbitrum isn't strictly required.
+    if (nativeEth) {
+      try { await switchToArbitrum(nativeEth); } catch { /* non-blocking */ }
+    }
     const wallet = nativeEth ? createNativeWallet(expectedAddress) : createHyperliquidWallet(expectedAddress);
     const address = await resolveAddress(expectedAddress);
 
