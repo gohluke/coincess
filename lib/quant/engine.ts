@@ -388,8 +388,9 @@ export class QuantEngine {
         opened_at: new Date().toISOString(),
       });
 
+      strategy.total_trades += 1;
       await this.updateStrategy(strategy.id, {
-        total_trades: strategy.total_trades + 1,
+        total_trades: strategy.total_trades,
         last_executed_at: new Date().toISOString(),
       });
     }
