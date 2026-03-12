@@ -12,7 +12,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); order form reads spot clearinghouse balance for accurate "Available" display
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
 - **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position; TP/SL prices shown inline on positions
-- **TP/SL modal** — clicking the pencil icon opens a centered modal (Hyperliquid-style) with coin info, position size, entry/mark prices, TP and SL price inputs, and Confirm button; pre-fills existing TP/SL values; TP/SL trigger orders are hidden from open orders and reflected directly on the position row
+- **TP/SL modal (Hyperliquid-style)** — clicking the pencil icon opens a centered modal with coin info, position size, entry/mark prices; **bidirectional inputs**: typing TP Price auto-calculates Gain in $, and typing Gain auto-calculates TP Price (same for SL Price ↔ Loss in $); pre-fills existing TP/SL values; TP/SL trigger orders are hidden from open orders and reflected directly on the position row
 - **Order management** — compact single-row open orders table with inline edit for size/price, placed date, duration with seconds, and cancel all (TP/SL orders excluded)
 - **Tabbed Order Book / Recent Trades** — order book and recent trades displayed as tabs side-by-side, only one visible at a time
 - **Full-width positions panel** — positions/orders span the entire screen width below the chart (Based.app-style layout)

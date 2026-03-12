@@ -37,6 +37,8 @@ export function PositionsTable() {
   const [slPrice, setSlPrice] = useState("");
   const [reversingCoin, setReversingCoin] = useState<string | null>(null);
   const [submittingTpsl, setSubmittingTpsl] = useState(false);
+  const [tpGain, setTpGain] = useState("");
+  const [slLoss, setSlLoss] = useState("");
   const [tpslModal, setTpslModal] = useState<{
     coin: string; szi: string; entryPx: string; markPx: string; posSize: string; leverage: string; isLong: boolean;
   } | null>(null);
@@ -176,6 +178,8 @@ export function PositionsTable() {
     setTpslModal(null);
     setTpPrice("");
     setSlPrice("");
+    setTpGain("");
+    setSlLoss("");
     loadUserState();
   };
 
@@ -194,16 +198,38 @@ export function PositionsTable() {
     const mkt = markets.find((m) => m.name === pos.coin);
     const mkPx = mkt ? parseFloat(mkt.markPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0";
     const { tp, sl } = getTpslForCoin(pos.coin);
-    setTpPrice(tp ? parseFloat(tp.triggerPx).toString() : "");
-    setSlPrice(sl ? parseFloat(sl.triggerPx).toString() : "");
+    const entry = pos.entryPx ? parseFloat(pos.entryPx) : 0;
+    const sz = Math.abs(parseFloat(pos.szi));
+    const isLong = parseFloat(pos.szi) > 0;
+
+    const tpVal = tp ? parseFloat(tp.triggerPx).toString() : "";
+    const slVal = sl ? parseFloat(sl.triggerPx).toString() : "";
+    setTpPrice(tpVal);
+    setSlPrice(slVal);
+
+    if (tpVal && entry > 0 && sz > 0) {
+      const tpNum = parseFloat(tpVal);
+      const gain = isLong ? (tpNum - entry) * sz : (entry - tpNum) * sz;
+      setTpGain(gain.toFixed(2));
+    } else {
+      setTpGain("");
+    }
+    if (slVal && entry > 0 && sz > 0) {
+      const slNum = parseFloat(slVal);
+      const loss = isLong ? (entry - slNum) * sz : (slNum - entry) * sz;
+      setSlLoss(loss.toFixed(2));
+    } else {
+      setSlLoss("");
+    }
+
     setTpslModal({
       coin: pos.coin,
       szi: pos.szi,
-      entryPx: pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—",
+      entryPx: entry > 0 ? entry.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—",
       markPx: mkPx,
-      posSize: `${Math.abs(parseFloat(pos.szi)).toFixed(4)}`,
+      posSize: `${sz.toFixed(4)}`,
       leverage: `${pos.leverage.value}x`,
-      isLong: parseFloat(pos.szi) > 0,
+      isLong,
     });
   };
 
@@ -899,59 +925,130 @@ export function PositionsTable() {
               </div>
 
               <div className="border-t border-[#2a2e3e] pt-3 space-y-3">
+                {/* Take Profit row: TP Price | Gain */}
                 <div>
                   <label className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1 block">Take Profit</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#848e9c]">$</span>
-                    <input
-                      autoFocus
-                      type="text"
-                      inputMode="decimal"
-                      value={tpPrice}
-                      onChange={(e) => setTpPrice(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
-                      placeholder="TP Price"
-                      className="w-full bg-[#0b0e11] focus:border-[#0ecb81] rounded-lg pl-7 pr-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <input
+                        autoFocus
+                        type="text"
+                        inputMode="decimal"
+                        value={tpPrice}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setTpPrice(val);
+                          const tp = parseFloat(val);
+                          const entry = parseFloat(tpslModal.entryPx.replace(/,/g, ""));
+                          const sz = Math.abs(parseFloat(tpslModal.szi));
+                          if (!isNaN(tp) && tp > 0 && entry > 0 && sz > 0) {
+                            const gain = tpslModal.isLong ? (tp - entry) * sz : (entry - tp) * sz;
+                            setTpGain(gain.toFixed(2));
+                          } else {
+                            setTpGain("");
+                          }
+                        }}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
+                        placeholder="TP Price"
+                        className="w-full bg-[#0b0e11] focus:border-[#0ecb81] rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none transition-colors"
+                      />
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={tpGain}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setTpGain(val);
+                          const gain = parseFloat(val);
+                          const entry = parseFloat(tpslModal.entryPx.replace(/,/g, ""));
+                          const sz = Math.abs(parseFloat(tpslModal.szi));
+                          if (!isNaN(gain) && entry > 0 && sz > 0) {
+                            const tp = tpslModal.isLong ? entry + gain / sz : entry - gain / sz;
+                            setTpPrice(tp > 0 ? tp.toFixed(2) : "");
+                          } else {
+                            setTpPrice("");
+                          }
+                        }}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
+                        placeholder="Gain"
+                        className="w-full bg-[#0b0e11] focus:border-[#0ecb81] rounded-lg pl-3 pr-7 py-2.5 text-white text-sm focus:outline-none transition-colors"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#848e9c]">$</span>
+                    </div>
                   </div>
                   {(() => {
-                    const tp = parseFloat(tpPrice);
-                    if (!isNaN(tp) && tp > 0) {
-                      const entry = parseFloat(tpslModal.entryPx);
-                      const sz = Math.abs(parseFloat(tpslModal.szi));
-                      const est = tpslModal.isLong ? (tp - entry) * sz : (entry - tp) * sz;
+                    const g = parseFloat(tpGain);
+                    if (!isNaN(g) && tpPrice) {
                       return (
-                        <p className={`text-[10px] mt-1 ${est >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          Est. PnL: {est >= 0 ? "+" : ""}${est.toFixed(2)}
+                        <p className={`text-[10px] mt-1 ${g >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                          Est. PnL: {g >= 0 ? "+" : ""}${g.toFixed(2)}
                         </p>
                       );
                     }
                     return null;
                   })()}
                 </div>
+
+                {/* Stop Loss row: SL Price | Loss */}
                 <div>
                   <label className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1 block">Stop Loss</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#848e9c]">$</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={slPrice}
-                      onChange={(e) => setSlPrice(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
-                      placeholder="SL Price"
-                      className="w-full bg-[#0b0e11] focus:border-[#f6465d] rounded-lg pl-7 pr-3 py-2.5 text-white text-sm text-right focus:outline-none transition-colors"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={slPrice}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSlPrice(val);
+                          const sl = parseFloat(val);
+                          const entry = parseFloat(tpslModal.entryPx.replace(/,/g, ""));
+                          const sz = Math.abs(parseFloat(tpslModal.szi));
+                          if (!isNaN(sl) && sl > 0 && entry > 0 && sz > 0) {
+                            const loss = tpslModal.isLong ? (entry - sl) * sz : (sl - entry) * sz;
+                            setSlLoss(loss.toFixed(2));
+                          } else {
+                            setSlLoss("");
+                          }
+                        }}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
+                        placeholder="SL Price"
+                        className="w-full bg-[#0b0e11] focus:border-[#f6465d] rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none transition-colors"
+                      />
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={slLoss}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSlLoss(val);
+                          const loss = parseFloat(val);
+                          const entry = parseFloat(tpslModal.entryPx.replace(/,/g, ""));
+                          const sz = Math.abs(parseFloat(tpslModal.szi));
+                          if (!isNaN(loss) && entry > 0 && sz > 0) {
+                            const sl = tpslModal.isLong ? entry - loss / sz : entry + loss / sz;
+                            setSlPrice(sl > 0 ? sl.toFixed(2) : "");
+                          } else {
+                            setSlPrice("");
+                          }
+                        }}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSetTpsl(tpslModal.coin, tpslModal.szi); }}
+                        placeholder="Loss"
+                        className="w-full bg-[#0b0e11] focus:border-[#f6465d] rounded-lg pl-3 pr-7 py-2.5 text-white text-sm focus:outline-none transition-colors"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#848e9c]">$</span>
+                    </div>
                   </div>
                   {(() => {
-                    const sl = parseFloat(slPrice);
-                    if (!isNaN(sl) && sl > 0) {
-                      const entry = parseFloat(tpslModal.entryPx);
-                      const sz = Math.abs(parseFloat(tpslModal.szi));
-                      const est = tpslModal.isLong ? (sl - entry) * sz : (entry - sl) * sz;
+                    const l = parseFloat(slLoss);
+                    if (!isNaN(l) && slPrice) {
                       return (
-                        <p className={`text-[10px] mt-1 ${est >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          Est. PnL: {est >= 0 ? "+" : ""}${est.toFixed(2)}
+                        <p className={`text-[10px] mt-1 ${l <= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                          Est. Loss: -${Math.abs(l).toFixed(2)}
                         </p>
                       );
                     }
