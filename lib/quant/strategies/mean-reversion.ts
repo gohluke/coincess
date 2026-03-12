@@ -40,7 +40,17 @@ export function evaluate(
   coinsData: CoinCandles[],
   ctx: TickContext,
 ): StrategySignal[] {
-  const cfg: MeanReversionConfig = { ...DEFAULT_CONFIG, ...(strategy.config as Partial<MeanReversionConfig>) };
+  const raw = strategy.config as Record<string, unknown>;
+  const cfg: MeanReversionConfig = {
+    ...DEFAULT_CONFIG,
+    rsiPeriod: (raw.rsiPeriod as number) ?? DEFAULT_CONFIG.rsiPeriod,
+    oversoldThreshold: (raw.rsiOversold as number) ?? (raw.oversoldThreshold as number) ?? DEFAULT_CONFIG.oversoldThreshold,
+    overboughtThreshold: (raw.rsiOverbought as number) ?? (raw.overboughtThreshold as number) ?? DEFAULT_CONFIG.overboughtThreshold,
+    exitLow: (raw.exitRsiLow as number) ?? (raw.exitLow as number) ?? DEFAULT_CONFIG.exitLow,
+    exitHigh: (raw.exitRsiHigh as number) ?? (raw.exitHigh as number) ?? DEFAULT_CONFIG.exitHigh,
+    positionSizePct: (raw.positionSizePct as number) ?? DEFAULT_CONFIG.positionSizePct,
+    leverage: (raw.leverage as number) ?? DEFAULT_CONFIG.leverage,
+  };
   const signals: StrategySignal[] = [];
 
   // Sort by volume to focus on top liquid coins

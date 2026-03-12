@@ -127,6 +127,9 @@ export class QuantEngine {
 
       const ctx: TickContext = { accountValue, positions, timestamp: Date.now() };
 
+      // Reconcile Supabase open trades with actual Hyperliquid positions
+      await this.reconcileOpenTrades(positions);
+
       // Risk check
       const riskUpdate = this.risk.updatePostTick(state, accountValue);
       if (riskUpdate.shouldKill) {
@@ -287,17 +290,34 @@ export class QuantEngine {
       );
 
       if (result.success) {
-        // Mark open trade as closed
-        await this.supabase
+        const fillPx = parseFloat(result.avgPx ?? String(signal.price));
+        const { data: closedTrades } = await this.supabase
           .from("quant_trades")
-          .update({
-            status: "closed",
-            exit_px: signal.price,
-            closed_at: new Date().toISOString(),
-          })
+          .select("id, entry_px, size, side")
           .eq("coin", signal.coin)
           .eq("strategy_id", strategy.id)
           .eq("status", "open");
+
+        let totalClosePnl = 0;
+        for (const t of closedTrades ?? []) {
+          const pnl = t.side === "long"
+            ? (fillPx - Number(t.entry_px)) * Number(t.size)
+            : (Number(t.entry_px) - fillPx) * Number(t.size);
+          totalClosePnl += pnl;
+          await this.supabase.from("quant_trades").update({
+            status: "closed",
+            exit_px: fillPx,
+            pnl,
+            closed_at: new Date().toISOString(),
+          }).eq("id", t.id);
+          recordTradeResult(strategy.id, pnl, 0);
+        }
+
+        if (totalClosePnl !== 0) {
+          await this.updateStrategy(strategy.id, {
+            total_pnl: strategy.total_pnl + totalClosePnl,
+          });
+        }
       }
       return;
     }
@@ -577,6 +597,74 @@ export class QuantEngine {
       ...r,
       volume24h: markets.find((m) => m.coin === r.coin)?.volume24h ?? 0,
     }));
+  }
+
+  /**
+   * Reconcile Supabase open trades with actual HL positions.
+   * Any trade whose coin has no matching HL position is marked closed.
+   */
+  async reconcileOpenTrades(positions: PositionInfo[]): Promise<number> {
+    const { data: openTrades } = await this.supabase
+      .from("quant_trades")
+      .select("id, coin, side, size, entry_px, strategy_id, strategy_type")
+      .eq("status", "open");
+
+    if (!openTrades || openTrades.length === 0) return 0;
+
+    const hlCoins = new Set(positions.map((p) => p.coin));
+
+    // Fetch current mark prices for PnL calculation
+    let allMids: Record<string, string> = {};
+    try {
+      const res = await fetch(`${HL_API}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "allMids" }),
+      });
+      allMids = (await res.json()) as Record<string, string>;
+    } catch { /* best-effort */ }
+
+    let closed = 0;
+    for (const trade of openTrades) {
+      if (hlCoins.has(trade.coin)) continue;
+
+      const markPx = parseFloat(allMids[trade.coin] ?? "0");
+      const entryPx = Number(trade.entry_px);
+      const size = Number(trade.size);
+      const pnl = trade.side === "long"
+        ? (markPx - entryPx) * size
+        : (entryPx - markPx) * size;
+
+      await this.supabase.from("quant_trades").update({
+        status: "closed",
+        exit_px: markPx || null,
+        pnl: markPx > 0 ? pnl : 0,
+        closed_at: new Date().toISOString(),
+        meta: { close_reason: "Position reconciliation: no matching HL position" },
+      }).eq("id", trade.id);
+
+      if (trade.strategy_id) {
+        const { data: strat } = await this.supabase
+          .from("quant_strategies")
+          .select("total_pnl")
+          .eq("id", trade.strategy_id)
+          .single();
+        if (strat) {
+          await this.supabase.from("quant_strategies").update({
+            total_pnl: (strat.total_pnl ?? 0) + (markPx > 0 ? pnl : 0),
+          }).eq("id", trade.strategy_id);
+        }
+        recordTradeResult(trade.strategy_id, markPx > 0 ? pnl : 0, 0);
+      }
+
+      console.log(`[engine] RECONCILE: closed stale trade ${trade.coin} ${trade.side} (pnl=${pnl.toFixed(4)})`);
+      closed++;
+    }
+
+    if (closed > 0) {
+      console.log(`[engine] Reconciled ${closed} stale trade(s)`);
+    }
+    return closed;
   }
 
   // Supabase helpers

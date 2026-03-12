@@ -39,7 +39,19 @@ export function evaluate(
   candles: CandleData[],
   ctx: TickContext,
 ): StrategySignal[] {
-  const cfg: MomentumConfig = { ...DEFAULT_CONFIG, ...(strategy.config as Partial<MomentumConfig>) };
+  const raw = strategy.config as Record<string, unknown>;
+  const cfg: MomentumConfig = {
+    ...DEFAULT_CONFIG,
+    coins: (raw.coins as string[]) ?? DEFAULT_CONFIG.coins,
+    fastPeriod: (raw.fastPeriod as number) ?? (raw.emaFast as number) ?? DEFAULT_CONFIG.fastPeriod,
+    slowPeriod: (raw.slowPeriod as number) ?? (raw.emaSlow as number) ?? DEFAULT_CONFIG.slowPeriod,
+    rsiPeriod: (raw.rsiPeriod as number) ?? DEFAULT_CONFIG.rsiPeriod,
+    rsiBuyThreshold: (raw.rsiBuyThreshold as number) ?? DEFAULT_CONFIG.rsiBuyThreshold,
+    rsiSellThreshold: (raw.rsiSellThreshold as number) ?? DEFAULT_CONFIG.rsiSellThreshold,
+    trailingStopPct: (raw.trailingStopPct as number) ?? DEFAULT_CONFIG.trailingStopPct,
+    positionSizePct: (raw.positionSizePct as number) ?? DEFAULT_CONFIG.positionSizePct,
+    leverage: (raw.leverage as number) ?? DEFAULT_CONFIG.leverage,
+  };
   const signals: StrategySignal[] = [];
 
   for (const data of candles) {
