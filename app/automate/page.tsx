@@ -96,12 +96,12 @@ export default function AutomatePage() {
   const [tab, setTab] = useState<Tab>("server");
 
   return (
-    <div className="min-h-screen bg-[#0b0e11] text-white">
-      <div className="border-b border-[#2a2e3e] bg-[#0b0e11]">
+    <div className="min-h-screen bg-[#141620] text-white">
+      <div className="border-b border-[#2a2e3e]/30 bg-[#141620]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-11 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-[0.2em]">Automation</span>
-            <div className="flex items-center gap-0.5 border-l border-[#2a2e3e] pl-4">
+            <div className="flex items-center gap-0.5 border-l border-[#2a2e3e]/30 pl-4">
               <button
                 onClick={() => setTab("server")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-medium transition-all ${
@@ -176,6 +176,7 @@ function ServerStrategies({ address }: { address: string | null }) {
   const [strategies, setStrategies] = useState<QuantStrategy[]>([]);
   const [quantTrades, setQuantTrades] = useState<QuantTrade[]>([]);
   const [trades, setTrades] = useState<QuantTrade[]>([]);
+  const [tradesSummary, setTradesSummary] = useState<{ totalPnl: number; totalFees: number; netPnl: number }>({ totalPnl: 0, totalFees: 0, netPnl: 0 });
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [walletPositions, setWalletPositions] = useState<AssetPosition[]>([]);
   const [fundingPayments, setFundingPayments] = useState<FundingPayment[]>([]);
@@ -208,6 +209,7 @@ function ServerStrategies({ address }: { address: string | null }) {
       setStrategies(statusData.strategies ?? []);
       setQuantTrades(statusData.openTrades ?? []);
       setTrades(tradesData.trades ?? []);
+      setTradesSummary(tradesData.summary ?? { totalPnl: 0, totalFees: 0, netPnl: 0 });
       setMarkets(marketsData);
 
       if (address && results[3]) {
@@ -265,14 +267,28 @@ function ServerStrategies({ address }: { address: string | null }) {
     fetchData();
   };
 
+  const resetEngine = async () => {
+    await fetch("/api/quant/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        engine_status: "paused",
+        error_message: null,
+        max_drawdown: 0,
+        peak_equity: accountValue > 0 ? accountValue : 0,
+      }),
+    });
+    fetchData();
+  };
+
   const totalFundingIncome = fundingPayments.reduce(
     (sum, fp) => sum + parseFloat(fp.delta.usdc ?? "0"), 0
   );
-  const realizedPnl = strategies.reduce((s, st) => s + (st.total_pnl ?? 0), 0);
+  const closedPnl = tradesSummary.netPnl;
   const unrealizedPnl = walletPositions.reduce(
     (sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0
   );
-  const totalPnl = realizedPnl + unrealizedPnl + totalFundingIncome;
+  const totalPnl = closedPnl + unrealizedPnl + totalFundingIncome;
   const drawdown = engine?.max_drawdown ?? 0;
   const exposure = walletPositions.reduce(
     (sum, ap) => sum + Math.abs(parseFloat(ap.position.positionValue)), 0
@@ -290,7 +306,7 @@ function ServerStrategies({ address }: { address: string | null }) {
   return (
     <div className="space-y-5">
       {/* Engine Status Bar */}
-      <div className="flex items-center justify-between border-b border-[#2a2e3e] pb-4">
+      <div className="flex items-center justify-between border-b border-[#2a2e3e]/30 pb-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -304,11 +320,10 @@ function ServerStrategies({ address }: { address: string | null }) {
             </span>
           </div>
           <span
-            className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border"
+            className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded"
             style={{
               color: statusColor,
-              borderColor: statusColor + "40",
-              backgroundColor: statusColor + "10",
+              backgroundColor: statusColor + "15",
             }}
           >
             {engine?.engine_status?.toUpperCase() ?? "OFFLINE"}
@@ -319,27 +334,37 @@ function ServerStrategies({ address }: { address: string | null }) {
             </span>
           )}
         </div>
-        <button
-          onClick={fetchData}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#1a1d2e] transition-colors border border-[#2a2e3e]"
-        >
-          <RefreshCw className="h-3 w-3" />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          {engine?.engine_status === "error" && (
+            <button
+              onClick={resetEngine}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-medium text-red-400 hover:text-white hover:bg-red-500/20 transition-colors"
+            >
+              Reset Engine
+            </button>
+          )}
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#1a1d2e] transition-colors"
+          >
+            <RefreshCw className="h-3 w-3" />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Key Metrics Row */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-[#1e2030] rounded-xl overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
           {[0,1,2,3,4,5].map(i => (
-            <div key={i} className="bg-[#0b0e11] p-3">
+            <div key={i} className="bg-[#141620] rounded-xl p-3">
               <Skeleton className="h-3 w-16 mb-2" />
               <Skeleton className="h-5 w-20" />
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-[#1e2030] rounded-xl overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
           <MetricCell
             label="Total P&L"
             value={formatPnl(totalPnl)}
@@ -366,13 +391,21 @@ function ServerStrategies({ address }: { address: string | null }) {
       )}
 
       {/* Risk Warning */}
-      {drawdown > 0.1 && (
-        <div className="border border-red-900/40 bg-red-950/20 rounded-xl px-4 py-3 flex items-center gap-3">
-          <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
-          <div>
-            <p className="text-red-400 text-xs font-medium">RISK ALERT: Drawdown at {(drawdown * 100).toFixed(1)}%</p>
-            <p className="text-red-500/60 text-[10px]">Kill switch triggers at 20%.</p>
+      {engine?.engine_status === "error" && engine?.error_message && (
+        <div className="bg-red-950/30 rounded-xl px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
+            <div>
+              <p className="text-red-400 text-xs font-medium">{engine.error_message}</p>
+              {drawdown > 0 && <p className="text-red-500/60 text-[10px]">Stored drawdown: {(drawdown * 100).toFixed(1)}%</p>}
+            </div>
           </div>
+          <button
+            onClick={resetEngine}
+            className="text-[10px] px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-white transition-colors font-medium"
+          >
+            Reset
+          </button>
         </div>
       )}
 
@@ -382,7 +415,7 @@ function ServerStrategies({ address }: { address: string | null }) {
           <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-widest">Strategies</span>
           <button
             onClick={() => setAddingStrategy(!addingStrategy)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#1a1d2e] transition-colors border border-[#2a2e3e]"
+            className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#1a1d2e] transition-colors"
           >
             <Plus className="h-3 w-3" />
             Add
@@ -395,9 +428,9 @@ function ServerStrategies({ address }: { address: string | null }) {
               <button
                 key={type}
                 onClick={() => addStrategy(type)}
-                className="px-3 py-2.5 rounded-xl bg-[#141620] border border-[#2a2e3e] hover:border-[#374151] transition-colors text-left"
+                className="px-3 py-2.5 rounded-xl bg-[#141620] hover:bg-[#1a1d2e] transition-colors text-left"
               >
-                <span className="text-[9px] font-mono font-bold text-[#848e9c] tracking-wider">{tag}</span>
+                <span className="text-[9px] font-bold text-[#848e9c] tracking-wider">{tag}</span>
                 <p className="text-[11px] text-white mt-0.5">{name}</p>
               </button>
             ))}
@@ -407,14 +440,14 @@ function ServerStrategies({ address }: { address: string | null }) {
         {loading ? (
           <div className="space-y-2">
             {[0, 1].map((i) => (
-              <div key={i} className="p-4 bg-[#141620] border border-[#2a2e3e] rounded-xl">
+              <div key={i} className="p-4 bg-[#141620] rounded-xl">
                 <Skeleton className="h-4 w-48 mb-2" />
                 <Skeleton className="h-3 w-32" />
               </div>
             ))}
           </div>
         ) : strategies.length === 0 ? (
-          <div className="text-center text-[#848e9c] text-xs py-10 border border-dashed border-[#2a2e3e] rounded-xl">
+          <div className="text-center text-[#848e9c] text-xs py-10 bg-[#141620] rounded-xl">
             No strategies configured
           </div>
         ) : (
@@ -436,12 +469,12 @@ function ServerStrategies({ address }: { address: string | null }) {
               return (
                 <div
                   key={strat.id}
-                  className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden"
+                  className="bg-[#141620] rounded-xl overflow-hidden"
                 >
                   <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
                       <span
-                        className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded tracking-wider"
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider"
                         style={{ color: meta.color, backgroundColor: meta.color + "15", border: `1px solid ${meta.color}30` }}
                       >
                         {meta.tag}
@@ -455,17 +488,17 @@ function ServerStrategies({ address }: { address: string | null }) {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <p className={`text-sm font-mono font-semibold tabular-nums ${netPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        <p className={`text-sm font-semibold tabular-nums ${netPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                           {formatPnl(netPnl)}
                         </p>
                         <div className="flex items-center gap-1.5 justify-end">
                           {isFundingRate && stratFundingPnl !== 0 && (
-                            <span className="text-[9px] font-mono text-[#848e9c]">
+                            <span className="text-[9px] text-[#848e9c]">
                               fund: {formatPnl(stratFundingPnl)}
                             </span>
                           )}
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] font-mono font-medium"
+                            className="inline-flex items-center gap-1 text-[9px] font-medium"
                             style={{ color: strat.status === "active" ? "#34d399" : strat.status === "paused" ? "#eab308" : "#6b7280" }}
                           >
                             <span className="h-1.5 w-1.5 rounded-full inline-block" style={{
@@ -475,7 +508,7 @@ function ServerStrategies({ address }: { address: string | null }) {
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-0.5 border-l border-[#2a2e3e] pl-3 ml-1">
+                      <div className="flex items-center gap-0.5 border-l border-[#2a2e3e]/30 pl-3 ml-1">
                         <button
                           onClick={() => toggleStrategy(strat.id, strat.status)}
                           className="p-1.5 rounded hover:bg-[#1a1d2e] transition-colors"
@@ -499,7 +532,7 @@ function ServerStrategies({ address }: { address: string | null }) {
                   </div>
 
                   {isFundingRate && stratPositions.length > 0 && (
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-px bg-[#1e2030] border-t border-[#2a2e3e]">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 pt-2 border-t border-[#2a2e3e]/30 px-4 pb-3">
                       <MetricCell
                         label="Funding Income"
                         value={formatPnl(stratFundingPnl)}
@@ -534,7 +567,7 @@ function ServerStrategies({ address }: { address: string | null }) {
 
                   {strat.error_message && (
                     <div className="px-4 py-2 border-t border-red-900/30 bg-red-950/20">
-                      <p className="text-[10px] font-mono text-red-400">{strat.error_message}</p>
+                      <p className="text-[10px] text-red-400">{strat.error_message}</p>
                     </div>
                   )}
                 </div>
@@ -551,7 +584,7 @@ function ServerStrategies({ address }: { address: string | null }) {
             <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-widest">
               Open Positions ({walletPositions.length})
             </span>
-            <div className="flex items-center gap-4 text-[10px] font-mono text-[#848e9c]">
+            <div className="flex items-center gap-4 text-[10px] text-[#848e9c]">
               {openOrderCount > 0 && <span>{openOrderCount} order{openOrderCount !== 1 ? "s" : ""}</span>}
               {accountValue > 0 && <span>NAV <span className="text-[#9ca3af]">${accountValue.toFixed(2)}</span></span>}
               {totalMarginUsed > 0 && <span>Margin <span className="text-[#9ca3af]">${totalMarginUsed.toFixed(2)}</span> ({utilizationPct.toFixed(1)}%)</span>}
@@ -559,8 +592,8 @@ function ServerStrategies({ address }: { address: string | null }) {
           </div>
 
           {/* Position table header */}
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
-            <div className="grid grid-cols-[80px_40px_1fr_repeat(5,minmax(0,1fr))_80px] px-4 py-2 text-[9px] font-medium text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]">
+          <div className="bg-[#141620] rounded-xl overflow-hidden">
+            <div className="grid grid-cols-[80px_40px_1fr_repeat(5,minmax(0,1fr))_80px] px-4 py-2 text-[9px] font-medium text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/30">
               <span>Side</span>
               <span>Lev</span>
               <span>Instrument</span>
@@ -598,32 +631,32 @@ function ServerStrategies({ address }: { address: string | null }) {
 
               return (
                 <Link key={coin} href={`/trade/${displayCoin}`} className="block">
-                  <div className="grid grid-cols-[80px_40px_1fr_repeat(5,minmax(0,1fr))_80px] items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/50 hover:bg-[#1a1d2e] transition-colors">
-                    <span className={`font-mono font-semibold text-[10px] ${isLong ? "text-emerald-400" : "text-red-400"}`}>
+                  <div className="grid grid-cols-[80px_40px_1fr_repeat(5,minmax(0,1fr))_80px] items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/30/50 hover:bg-[#1a1d2e] transition-colors">
+                    <span className={`font-semibold text-[10px] ${isLong ? "text-emerald-400" : "text-red-400"}`}>
                       {isLong ? "LONG" : "SHORT"}
                     </span>
-                    <span className="font-mono text-[10px] text-[#848e9c]">{lev}x</span>
+                    <span className="text-[10px] text-[#848e9c]">{lev}x</span>
                     <div className="flex items-center gap-2">
                       <span className="text-[13px] font-medium text-white">{displayCoin}</span>
                       {isAuto && autoMeta && (
                         <span
-                          className="text-[8px] font-mono font-bold px-1 py-px rounded"
+                          className="text-[8px] font-bold px-1 py-px rounded"
                           style={{ color: autoMeta.color, backgroundColor: autoMeta.color + "15" }}
                         >
                           {autoMeta.tag}
                         </span>
                       )}
                     </div>
-                    <span className="text-right font-mono text-[#9ca3af] tabular-nums">${entryPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
-                    <span className="text-right font-mono text-white tabular-nums">{markPx > 0 ? `$${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}` : "--"}</span>
-                    <span className="text-right font-mono text-[#9ca3af] tabular-nums">{absSz.toFixed(4)}</span>
-                    <span className={`text-right font-mono tabular-nums ${fundingRate >= 0 ? "text-emerald-400/70" : "text-red-400/70"}`}>
+                    <span className="text-right text-[#9ca3af] tabular-nums">${entryPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                    <span className="text-right text-white tabular-nums">{markPx > 0 ? `$${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}` : "--"}</span>
+                    <span className="text-right text-[#9ca3af] tabular-nums">{absSz.toFixed(4)}</span>
+                    <span className={`text-right tabular-nums ${fundingRate >= 0 ? "text-emerald-400/70" : "text-red-400/70"}`}>
                       {fundingRate >= 0 ? "+" : ""}{fundingPct}%
                     </span>
-                    <span className={`text-right font-mono font-semibold tabular-nums ${uPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    <span className={`text-right font-semibold tabular-nums ${uPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                       {uPnl >= 0 ? "+" : ""}${uPnl.toFixed(2)}
                     </span>
-                    <span className={`text-right font-mono text-[10px] tabular-nums ${roe >= 0 ? "text-emerald-400/80" : "text-red-400/80"}`}>
+                    <span className={`text-right text-[10px] tabular-nums ${roe >= 0 ? "text-emerald-400/80" : "text-red-400/80"}`}>
                       {roe >= 0 ? "+" : ""}{roe.toFixed(2)}%
                     </span>
                   </div>
@@ -635,7 +668,7 @@ function ServerStrategies({ address }: { address: string | null }) {
       )}
 
       {!loading && walletPositions.length === 0 && address && (
-        <div className="text-center text-[#848e9c] text-xs py-10 border border-dashed border-[#2a2e3e] rounded-xl font-mono">
+        <div className="text-center text-[#848e9c] text-xs py-10 bg-[#141620] rounded-xl font-mono">
           No open positions
         </div>
       )}
@@ -649,8 +682,8 @@ function ServerStrategies({ address }: { address: string | null }) {
         {trades.length === 0 ? (
           <p className="text-[#848e9c] text-xs py-6 text-center font-mono">No executions recorded</p>
         ) : (
-          <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl overflow-hidden">
-            <div className="grid grid-cols-8 px-4 py-2 text-[9px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e] font-medium">
+          <div className="bg-[#141620] rounded-xl overflow-hidden">
+            <div className="grid grid-cols-8 px-4 py-2 text-[9px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/30 font-medium">
               <span>Time</span>
               <span>Instrument</span>
               <span>Side</span>
@@ -678,7 +711,7 @@ function ServerStrategies({ address }: { address: string | null }) {
 
               return (
                 <div key={trade.id} className="grid grid-cols-8 items-center px-4 py-2 text-xs border-b border-[#2a2e3e]/30 hover:bg-[#1a1d2e]/50 transition-colors group">
-                  <span className="text-[10px] font-mono text-[#848e9c]">
+                  <span className="text-[10px] text-[#848e9c]">
                     {trade.opened_at
                       ? new Date(trade.opened_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
                       : "--"}
@@ -689,26 +722,26 @@ function ServerStrategies({ address }: { address: string | null }) {
                       <p className="text-[9px] text-[#555a66] truncate max-w-[140px] hidden group-hover:block font-mono">{reason}</p>
                     )}
                   </div>
-                  <span className={`font-mono font-medium text-[10px] ${trade.side === "long" ? "text-emerald-400" : "text-red-400"}`}>
+                  <span className={`font-medium text-[10px] ${trade.side === "long" ? "text-emerald-400" : "text-red-400"}`}>
                     {trade.side === "long" ? "LONG" : "SHORT"}
                   </span>
                   <span
-                    className="text-[9px] font-mono font-bold"
+                    className="text-[9px] font-bold"
                     style={{ color: meta.color }}
                   >
                     {meta.tag}
                   </span>
-                  <span className="text-right font-mono text-[#9ca3af] tabular-nums">${entryPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
-                  <span className="text-right font-mono tabular-nums text-[#9ca3af]">
+                  <span className="text-right text-[#9ca3af] tabular-nums">${entryPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                  <span className="text-right tabular-nums text-[#9ca3af]">
                     {trade.exit_px ? `$${Number(trade.exit_px).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : isOpen && markPx > 0 ? (
                       <span className="text-[#848e9c]">${markPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
                     ) : "--"}
                   </span>
-                  <span className={`text-right font-mono font-medium tabular-nums ${(pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  <span className={`text-right font-medium tabular-nums ${(pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                     {pnl != null ? formatPnl(pnl) : "--"}
                   </span>
                   <span className="text-right">
-                    <span className={`text-[9px] font-mono font-medium ${
+                    <span className={`text-[9px] font-medium ${
                       trade.status === "open" ? "text-blue-400"
                         : trade.status === "closed" ? "text-emerald-400/70"
                         : "text-[#848e9c]"
@@ -725,7 +758,7 @@ function ServerStrategies({ address }: { address: string | null }) {
 
       {/* Footer */}
       {engine && (
-        <div className="text-[10px] font-mono text-[#555a66] flex items-center gap-4 border-t border-[#2a2e3e] pt-3">
+        <div className="text-[10px] text-[#555a66] flex items-center gap-4 border-t border-[#2a2e3e]/30 pt-3">
           <span>Peak: ${engine.peak_equity?.toFixed(2) ?? "0.00"}</span>
           <span>Tick: {relativeTime(engine.last_tick_at)}</span>
           <span>Funding payments: {fundingPayments.length}</span>
@@ -753,13 +786,13 @@ function BrowserBots() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between border-b border-[#2a2e3e] pb-4">
+      <div className="flex items-center justify-between border-b border-[#2a2e3e]/30 pb-4">
         <div className="flex items-center gap-3">
           <Monitor className="h-4 w-4 text-[#848e9c]" />
           <span className="text-xs font-medium text-[#9ca3af] uppercase tracking-widest">Browser Engine</span>
           <button
             onClick={toggleEngine}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-mono font-medium transition-all border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-medium transition-all border ${
               engineRunning
                 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                 : "bg-[#141620] text-[#848e9c] hover:text-white border-[#2a2e3e]"
@@ -771,7 +804,7 @@ function BrowserBots() {
         </div>
         <Link
           href="/automate/create"
-          className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#1a1d2e] transition-colors border border-[#2a2e3e]"
+          className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#1a1d2e] transition-colors"
         >
           <Plus className="h-3 w-3" />
           New Strategy
@@ -780,12 +813,12 @@ function BrowserBots() {
 
       <div className="border border-yellow-900/30 bg-yellow-950/10 rounded-xl px-4 py-2.5 flex items-center gap-3">
         <Monitor className="h-3.5 w-3.5 text-yellow-500/70 shrink-0" />
-        <p className="text-[10px] font-mono text-yellow-500/60">
+        <p className="text-[10px] text-yellow-500/60">
           Browser strategies only run while this tab is open. Use <span className="text-yellow-400/80">Server Strategies</span> for 24/7 execution.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#1e2030] rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <MetricCell label="Strategies" value={strategies.length.toString()} />
         <MetricCell label="Active" value={activeCount.toString()} valueColor={activeCount > 0 ? "text-emerald-400" : "text-white"} />
         <MetricCell label="Executions" value={totalTrades.toString()} />
@@ -798,7 +831,7 @@ function BrowserBots() {
           {loading ? (
             <div className="text-center py-12 text-[#848e9c] text-xs font-mono">Loading...</div>
           ) : strategies.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-[#2a2e3e] rounded-xl">
+            <div className="text-center py-12 bg-[#141620] rounded-xl">
               <p className="text-xs text-[#848e9c] mb-3 font-mono">No browser strategies configured</p>
               <Link href="/automate/create" className="text-xs text-brand hover:underline">Create strategy</Link>
             </div>
@@ -911,11 +944,11 @@ function QuantLab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-[#2a2e3e] pb-4">
+      <div className="flex items-center justify-between border-b border-[#2a2e3e]/30 pb-4">
         <div className="flex items-center gap-3">
           <FlaskConical className="h-4 w-4 text-[#848e9c]" />
           <span className="text-xs font-medium text-[#9ca3af] uppercase tracking-widest">Quant Lab</span>
-          <span className="text-[10px] font-mono text-[#555a66]">Backtesting + Analytics</span>
+          <span className="text-[10px] text-[#555a66]">Backtesting + Analytics</span>
         </div>
         <button
           onClick={fetchLabData}
@@ -926,7 +959,7 @@ function QuantLab() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#1e2030] rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <MetricCell label="Candles Stored" value={totalCandles.toLocaleString()} />
         <MetricCell label="Instruments" value={dataStatus.length.toString()} />
         <MetricCell label="Backtests" value={backtests.length.toString()} />
@@ -948,7 +981,7 @@ function QuantLab() {
             <select
               value={btStrategy}
               onChange={(e) => setBtStrategy(e.target.value)}
-              className="bg-[#0b0e11] border border-[#2a2e3e] rounded px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-brand"
+              className="bg-[#141620] border border-[#2a2e3e] rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
             >
               <option value="momentum">Momentum Scalper</option>
               <option value="grid">Grid Trading</option>
@@ -963,7 +996,7 @@ function QuantLab() {
             <select
               value={btDays}
               onChange={(e) => setBtDays(Number(e.target.value))}
-              className="bg-[#0b0e11] border border-[#2a2e3e] rounded px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-brand"
+              className="bg-[#141620] border border-[#2a2e3e] rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand"
             >
               <option value={3}>3 days</option>
               <option value={7}>7 days</option>
@@ -981,7 +1014,7 @@ function QuantLab() {
           </button>
         </div>
         {totalCandles < 10 && (
-          <p className="text-[10px] font-mono text-yellow-500/70">
+          <p className="text-[10px] text-yellow-500/70">
             No candle data. Run: <code className="bg-[#1a1d2e] px-1 rounded text-yellow-400/80">npx tsx scripts/backtest.ts backfill</code>
           </p>
         )}
@@ -996,8 +1029,8 @@ function QuantLab() {
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2">
             {dataStatus.slice(0, 24).map((d) => (
               <div key={d.coin} className="bg-[#141620] border border-[#2a2e3e] rounded px-2.5 py-2 text-center">
-                <p className="text-[10px] font-mono font-medium text-white">{d.coin}</p>
-                <p className="text-[9px] font-mono text-[#555a66]">{d.total_candles.toLocaleString()}</p>
+                <p className="text-[10px] font-medium text-white">{d.coin}</p>
+                <p className="text-[9px] text-[#555a66]">{d.total_candles.toLocaleString()}</p>
               </div>
             ))}
           </div>
@@ -1020,7 +1053,7 @@ function QuantLab() {
             ))}
           </div>
         ) : backtests.length === 0 ? (
-          <div className="text-center text-[#848e9c] text-xs py-10 border border-dashed border-[#2a2e3e] rounded-xl font-mono">
+          <div className="text-center text-[#848e9c] text-xs py-10 bg-[#141620] rounded-xl font-mono">
             No backtests recorded. Run one above or via CLI.
           </div>
         ) : (
@@ -1044,7 +1077,7 @@ function QuantLab() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <span
-                          className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded tracking-wider"
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider"
                           style={{ color: meta.color, backgroundColor: meta.color + "15" }}
                         >
                           {meta.tag}
@@ -1059,15 +1092,15 @@ function QuantLab() {
                       </div>
                       <div className="text-right flex items-center gap-4">
                         <div>
-                          <p className={`text-sm font-mono font-semibold tabular-nums ${profitable ? "text-emerald-400" : "text-red-400"}`}>
+                          <p className={`text-sm font-semibold tabular-nums ${profitable ? "text-emerald-400" : "text-red-400"}`}>
                             {profitable ? "+" : ""}${bt.total_pnl.toFixed(2)}
                           </p>
-                          <p className="text-[10px] font-mono text-[#848e9c]">{bt.total_trades} trades</p>
+                          <p className="text-[10px] text-[#848e9c]">{bt.total_trades} trades</p>
                         </div>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
                           sharpe > 1 ? "bg-emerald-500/10 border-emerald-500/20" : sharpe > 0 ? "bg-yellow-500/10 border-yellow-500/20" : "bg-red-500/10 border-red-500/20"
                         }`}>
-                          <span className={`text-xs font-mono font-bold ${
+                          <span className={`text-xs font-bold ${
                             sharpe > 1 ? "text-emerald-400" : sharpe > 0 ? "text-yellow-400" : "text-red-400"
                           }`}>
                             {sharpe.toFixed(1)}
@@ -1076,7 +1109,7 @@ function QuantLab() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-3 mt-3 pt-3 border-t border-[#2a2e3e]">
+                    <div className="grid grid-cols-4 gap-3 mt-3 pt-3 border-t border-[#2a2e3e]/30">
                       <BacktestMetric label="Win Rate" value={bt.win_rate != null ? `${(bt.win_rate * 100).toFixed(1)}%` : "--"} good={bt.win_rate != null && bt.win_rate > 0.5} />
                       <BacktestMetric label="Max DD" value={`${(bt.max_drawdown * 100).toFixed(1)}%`} good={bt.max_drawdown < 0.1} />
                       <BacktestMetric label="Sharpe" value={sharpe.toFixed(2)} good={sharpe > 1} />
@@ -1123,11 +1156,11 @@ function QuantLab() {
               <p className="text-white text-[13px] font-medium">
                 {STRATEGY_LABELS[bestBacktest.strategy_type]?.name ?? bestBacktest.strategy_type}
               </p>
-              <p className="text-[10px] font-mono text-emerald-400/60">
+              <p className="text-[10px] text-emerald-400/60">
                 Sharpe {(bestBacktest.sharpe_ratio ?? 0).toFixed(2)} | WR {((bestBacktest.win_rate ?? 0) * 100).toFixed(1)}% | {bestBacktest.total_trades} trades
               </p>
             </div>
-            <p className={`text-lg font-mono font-bold tabular-nums ${bestBacktest.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            <p className={`text-lg font-bold tabular-nums ${bestBacktest.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               {bestBacktest.total_pnl >= 0 ? "+" : ""}${bestBacktest.total_pnl.toFixed(2)}
             </p>
           </div>
@@ -1141,7 +1174,7 @@ function BacktestMetric({ label, value, good }: { label: string; value: string; 
   return (
     <div>
       <p className="text-[9px] text-[#848e9c] uppercase tracking-wider font-medium">{label}</p>
-      <p className={`text-xs font-mono font-semibold tabular-nums ${good ? "text-emerald-400" : "text-[#848e9c]"}`}>{value}</p>
+      <p className={`text-xs font-semibold tabular-nums ${good ? "text-emerald-400" : "text-[#848e9c]"}`}>{value}</p>
     </div>
   );
 }
@@ -1150,7 +1183,7 @@ function DetailMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-[#141620] border border-[#2a2e3e] rounded-xl px-3 py-2">
       <p className="text-[9px] text-[#848e9c] uppercase tracking-wider font-medium">{label}</p>
-      <p className="text-xs font-mono font-medium text-white tabular-nums">{value}</p>
+      <p className="text-xs font-medium text-white tabular-nums">{value}</p>
     </div>
   );
 }
@@ -1209,9 +1242,9 @@ function MetricCell({
   compact?: boolean;
 }) {
   return (
-    <div className={`bg-[#0b0e11] ${compact ? "px-3 py-2" : "px-3 py-3"}`}>
-      <p className="text-[9px] font-medium text-[#848e9c] uppercase tracking-wider mb-0.5">{label}</p>
-      <p className={`font-mono font-semibold tabular-nums ${compact ? "text-[11px]" : "text-sm"} ${valueColor ?? "text-white"}`}>{value}</p>
+    <div className={`bg-[#141620] rounded-xl ${compact ? "px-3 py-2" : "px-3 py-2.5"}`}>
+      <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">{label}</p>
+      <p className={`font-bold tabular-nums ${compact ? "text-[11px]" : "text-sm"} ${valueColor ?? "text-white"}`}>{value}</p>
     </div>
   );
 }

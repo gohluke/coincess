@@ -41,16 +41,25 @@ export async function GET() {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { engine_status } = body;
+    const supabase = getServiceClient();
 
-    if (!engine_status) {
-      return NextResponse.json({ error: "engine_status required" }, { status: 400 });
+    // Allow updating any combination of engine state fields
+    const allowedFields = [
+      "engine_status", "error_message", "max_drawdown", "peak_equity",
+      "daily_pnl", "total_pnl", "current_exposure",
+    ];
+    const updates: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in body) updates[key] = body[key];
     }
 
-    const supabase = getServiceClient();
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
+
     const { data, error } = await supabase
       .from("quant_state")
-      .update({ engine_status })
+      .update(updates)
       .eq("id", 1)
       .select()
       .single();

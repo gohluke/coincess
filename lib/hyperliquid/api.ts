@@ -121,7 +121,15 @@ export async function fetchUserFills(user: string): Promise<Fill[]> {
     post<Fill[]>("/info", { type: "userFills", user }).catch(() => []),
     post<Fill[]>("/info", { type: "userFills", user, dex: "xyz" }).catch(() => []),
   ]);
-  return [...main, ...xyz];
+  const seen = new Set<number>();
+  const deduped: Fill[] = [];
+  for (const f of [...main, ...xyz]) {
+    if (!seen.has(f.tid)) {
+      seen.add(f.tid);
+      deduped.push(f);
+    }
+  }
+  return deduped;
 }
 
 export interface LedgerUpdate {
