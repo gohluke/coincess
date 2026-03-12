@@ -336,7 +336,8 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         timeVisible: true,
         secondsVisible: false,
       },
-      handleScroll: { vertTouchDrag: false },
+      handleScroll: { pressedMouseMove: true, mouseWheel: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {

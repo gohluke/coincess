@@ -9,40 +9,23 @@ import {
   ExternalLink,
   Clock,
   Users,
-  Copy,
-  Check,
   Star,
   Trophy,
-  ArrowUpDown,
-  ChevronLeft,
   Crosshair,
   TrendingUp,
   TrendingDown,
   Loader2,
   Flame,
-  Zap,
-  ArrowRightLeft,
 } from "lucide-react";
 import {
-  fetchCombinedClearinghouseState,
-  fetchOpenOrders,
   fetchAllMarkets,
-  fetchUserFills,
-  fetchUserFunding,
+  fetchCombinedClearinghouseState,
   fetchLeaderboard,
-  fetchSpotClearinghouseState,
+  fetchUserFills,
   fetchCoincessTraderStats,
 } from "@/lib/hyperliquid/api";
-import type {
-  ClearinghouseState,
-  OpenOrder,
-  MarketInfo,
-  AssetPosition,
-  Fill,
-  FundingPayment,
-} from "@/lib/hyperliquid/types";
+import type { MarketInfo, Fill } from "@/lib/hyperliquid/types";
 import type { LeaderboardEntry, CoincessTraderStats } from "@/lib/hyperliquid/api";
-import type { SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { getTrackedAddresses, starTrader, unstarTrader, getStarredTraders, fetchTrackedTradersFromSupabase } from "@/lib/coincess/tracker";
 import { useWallet } from "@/hooks/useWallet";
 
@@ -112,24 +95,17 @@ export default function TradersPage() {
   const addrParam = searchParams.get("address") ?? "";
   const { address: myAddress } = useWallet();
 
-  const [searchInput, setSearchInput] = useState(addrParam);
-  const [activeAddress, setActiveAddress] = useState(addrParam);
-  const [ch, setCh] = useState<ClearinghouseState | null>(null);
-  const [orders, setOrders] = useState<OpenOrder[]>([]);
-  const [markets, setMarkets] = useState<MarketInfo[]>([]);
-  const [fills, setFills] = useState<Fill[]>([]);
-  const [funding, setFunding] = useState<FundingPayment[]>([]);
-  const [spotState, setSpotState] = useState<SpotClearinghouseState | null>(null);
+  const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [historyTab, setHistoryTab] = useState<"positions" | "fills" | "spot">("positions");
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("pnl");
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("allTime");
   const [lbSearch, setLbSearch] = useState("");
-  const [mainTab, setMainTab] = useState<"coincess" | "leaderboard" | "scanner">("coincess");
+  const [mainTab, setMainTab] = useState<"starred" | "coincess" | "leaderboard" | "scanner">(
+    "coincess"
+  );
 
   const [coincessStats, setCoincessStats] = useState<CoincessTraderStats[]>([]);
   const [coincessLoading, setCoincessLoading] = useState(true);
@@ -164,18 +140,6 @@ export default function TradersPage() {
       return next;
     });
   }, [myAddress]);
-
-  // Entry times for positions on trader profile (derived from fills)
-  const positionEntryTimes = useMemo(() => {
-    const map = new Map<string, number>();
-    if (!fills.length) return map;
-    const sorted = [...fills].sort((a, b) => a.time - b.time);
-    for (const f of sorted) {
-      const coin = stripPrefix(f.coin).toUpperCase();
-      if (!map.has(coin)) map.set(coin, f.time);
-    }
-    return map;
-  }, [fills]);
 
   useEffect(() => {
     fetchLeaderboard()
@@ -330,119 +294,21 @@ export default function TradersPage() {
     setScanning(false);
   }, [leaderboard, allMarkets]);
 
-  const loadTrader = useCallback(async (addr: string) => {
-    if (!addr || !addr.startsWith("0x")) return;
-    setLoading(true);
-    try {
-      const [chData, ordersData, marketsData, fillsData, fundingData, spotData] = await Promise.all([
-        fetchCombinedClearinghouseState(addr),
-        fetchOpenOrders(addr),
-        fetchAllMarkets(),
-        fetchUserFills(addr),
-        fetchUserFunding(addr),
-        fetchSpotClearinghouseState(addr).catch(() => null),
-      ]);
-      setCh(chData);
-      setOrders(ordersData);
-      setMarkets(marketsData);
-      setFills(fillsData);
-      setFunding(fundingData);
-      setSpotState(spotData);
-    } catch (err) {
-      console.error("Failed to load trader data:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const handleSearch = () => {
     const addr = searchInput.trim();
     if (!addr.startsWith("0x") || addr.length < 10) return;
-    setActiveAddress(addr);
-    router.push(`/traders?address=${addr}`, { scroll: false });
-    loadTrader(addr);
+    router.push(`/trader/${addr}`);
   };
 
   const selectTrader = (addr: string) => {
-    setSearchInput(addr);
-    setActiveAddress(addr);
-    router.push(`/traders?address=${addr}`, { scroll: false });
-    loadTrader(addr);
-  };
-
-  const goBack = () => {
-    setActiveAddress("");
-    setSearchInput("");
-    setCh(null);
-    setSpotState(null);
-    setFills([]);
-    setFunding([]);
-    router.push("/traders", { scroll: false });
+    router.push(`/trader/${addr}`);
   };
 
   useEffect(() => {
     if (addrParam && addrParam.startsWith("0x")) {
-      setActiveAddress(addrParam);
-      setSearchInput(addrParam);
-      loadTrader(addrParam);
+      router.replace(`/trader/${addrParam}`);
     }
-  }, [addrParam, loadTrader]);
-
-  const positions = ch?.assetPositions?.filter(
-    (ap) => Math.abs(parseFloat(ap.position.szi)) > 0
-  ) ?? [];
-
-  const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
-  const totalMargin = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
-  const withdrawable = parseFloat(ch?.withdrawable ?? "0");
-  const totalUnrealizedPnl = positions.reduce(
-    (s, ap) => s + parseFloat(ap.position.unrealizedPnl), 0
-  );
-
-  const spotTotalUsd = useMemo(() => {
-    if (!spotState?.balances) return 0;
-    return spotState.balances.reduce((sum, b) => {
-      const total = parseFloat(b.total);
-      if (b.coin === "USDC" || b.coin === "USDT") return sum + total;
-      return sum + parseFloat(b.entryNtl || "0");
-    }, 0);
-  }, [spotState]);
-
-  const totalAccountValue = accountValue + spotTotalUsd;
-
-  const realizedPnl = useMemo(() => {
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-    let total = 0, d1 = 0, d2 = 0, d7 = 0, d30 = 0;
-    for (const f of fills) {
-      const pnl = parseFloat(f.closedPnl);
-      if (pnl === 0) continue;
-      total += pnl;
-      const age = now - f.time;
-      if (age <= day) d1 += pnl;
-      if (age <= 2 * day) d2 += pnl;
-      if (age <= 7 * day) d7 += pnl;
-      if (age <= 30 * day) d30 += pnl;
-    }
-    return { total, d1, d2, d7, d30 };
-  }, [fills]);
-
-  const totalPnl = realizedPnl.total + totalUnrealizedPnl;
-
-  const copyAddress = () => {
-    navigator.clipboard.writeText(activeAddress);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const lbMatch = leaderboard.find(
-    (e) => e.ethAddress.toLowerCase() === activeAddress.toLowerCase()
-  );
-
-  const sortedFills = useMemo(
-    () => [...fills].sort((a, b) => b.time - a.time).slice(0, 100),
-    [fills]
-  );
+  }, [addrParam, router]);
 
   return (
     <div className="min-h-screen bg-[#0b0e11] text-white pb-20 md:pb-6">
@@ -451,19 +317,11 @@ export default function TradersPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
-              {activeAddress ? (
-                <button onClick={goBack} className="text-[#848e9c] hover:text-white transition-colors mr-1">
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-              ) : (
-                <Users className="h-5 w-5 text-brand" />
-              )}
-              {activeAddress ? "Trader Profile" : "Trader Lookup"}
+              <Users className="h-5 w-5 text-brand" />
+              Trader Lookup
             </h1>
             <p className="text-xs text-[#848e9c] mt-1">
-              {activeAddress
-                ? "Live positions and trade history from Hyperliquid"
-                : `Search any wallet or browse the top ${leaderboard.length.toLocaleString()} traders on Hyperliquid`}
+              {`Search any wallet or browse the top ${leaderboard.length.toLocaleString()} traders on Hyperliquid`}
             </p>
           </div>
         </div>
@@ -491,10 +349,19 @@ export default function TradersPage() {
           </button>
         </div>
 
-        {/* ── Tab Switch (when no address selected) ── */}
-        {!activeAddress && (
+        {/* ── Tab Switch ── */}
           <div className="space-y-3">
             <div className="flex items-center gap-1 bg-[#141620] rounded-lg p-0.5 w-fit">
+              {starred.size > 0 && (
+                <button
+                  onClick={() => setMainTab("starred")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    mainTab === "starred" ? "bg-amber-400/20 text-amber-400" : "text-[#848e9c] hover:text-white"
+                  }`}
+                >
+                  <Star className="h-3.5 w-3.5 fill-current" /> Starred ({starred.size})
+                </button>
+              )}
               <button
                 onClick={() => setMainTab("coincess")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
@@ -520,6 +387,60 @@ export default function TradersPage() {
                 <Crosshair className="h-3.5 w-3.5" /> Scanner
               </button>
             </div>
+
+            {/* ── Starred Traders ── */}
+            {mainTab === "starred" && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                  Starred Traders
+                  <span className="text-[10px] text-[#848e9c] font-normal ml-1">{starred.size} trader{starred.size !== 1 ? "s" : ""}</span>
+                </h2>
+                <div className="bg-[#141620] rounded-xl overflow-hidden">
+                  <div className="hidden sm:grid grid-cols-12 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+                    <span className="col-span-1"></span>
+                    <span className="col-span-5">Address</span>
+                    <span className="col-span-3 text-right">Account Value</span>
+                    <span className="col-span-3 text-right">Actions</span>
+                  </div>
+                  {[...starred].map((addr, i) => {
+                    const lbEntry = leaderboard.find((e) => e.ethAddress.toLowerCase() === addr);
+                    const name = lbEntry?.displayName || shortAddr(addr);
+                    const av = lbEntry ? parseFloat(lbEntry.accountValue) : null;
+                    return (
+                      <div
+                        key={addr}
+                        className="grid grid-cols-12 items-center px-4 py-2.5 text-xs hover:bg-[#1a1d2e]/50 transition-colors border-b border-[#2a2e3e]/10 last:border-0"
+                      >
+                        <span className="col-span-1 text-[#848e9c]">{i + 1}</span>
+                        <button onClick={() => selectTrader(addr)} className="col-span-5 text-left">
+                          <span className="text-white font-medium text-xs truncate block">{name}</span>
+                          <span className="text-[9px] text-[#848e9c] font-mono">{shortAddr(addr)}</span>
+                        </button>
+                        <button onClick={() => selectTrader(addr)} className="col-span-3 text-right text-white font-medium">
+                          {av !== null ? formatUsd(av) : "–"}
+                        </button>
+                        <div className="col-span-3 flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => selectTrader(addr)}
+                            className="px-2.5 py-1 text-[10px] text-brand bg-brand/10 rounded-md hover:bg-brand/20 transition-colors"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => toggleStar(addr)}
+                            className="p-1 text-amber-400 hover:text-red-400 transition-colors"
+                            title="Unstar"
+                          >
+                            <Star className="h-3 w-3 fill-current" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* ── Coincess Traders ── */}
             {mainTab === "coincess" && (
@@ -916,340 +837,6 @@ export default function TradersPage() {
               </>
             )}
           </div>
-        )}
-
-        {/* ── Trader Profile (when address selected) ── */}
-        {activeAddress && (
-          <div className="space-y-4">
-            <div className="bg-[#141620] rounded-xl p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  {lbMatch?.displayName && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-base font-bold">{lbMatch.displayName}</span>
-                      {(() => {
-                        const atPerf = getPerf(lbMatch, "allTime");
-                        const atPnl = parseFloat(atPerf.pnl);
-                        if (atPnl > 10_000_000) return <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-medium">Whale</span>;
-                        if (atPnl > 1_000_000) return <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand/15 text-brand font-medium">Top Trader</span>;
-                        return null;
-                      })()}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-[#848e9c] break-all">{activeAddress}</span>
-                    <button onClick={copyAddress} className="text-[#848e9c] hover:text-white transition-colors shrink-0">
-                      {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                    </button>
-                    <a href={`https://app.hyperliquid.xyz/explorer/address/${activeAddress}`} target="_blank" rel="noopener noreferrer" className="text-[#848e9c] hover:text-white transition-colors shrink-0">
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => toggleStar(activeAddress)}
-                    className="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1"
-                    style={{
-                      borderColor: starred.has(activeAddress.toLowerCase()) ? "rgb(251 191 36 / 0.3)" : "#2a2e3e",
-                      color: starred.has(activeAddress.toLowerCase()) ? "rgb(251 191 36)" : "#848e9c",
-                    }}
-                  >
-                    <Star className={`h-3 w-3 ${starred.has(activeAddress.toLowerCase()) ? "fill-amber-400" : ""}`} />
-                    {starred.has(activeAddress.toLowerCase()) ? "Starred" : "Star"}
-                  </button>
-                  <button onClick={goBack} className="px-3 py-1.5 text-xs text-[#848e9c] rounded-lg hover:text-white transition-colors">
-                    Back
-                  </button>
-                  <button onClick={() => loadTrader(activeAddress)} disabled={loading} className="px-3 py-1.5 text-xs text-brand border border-brand/30 rounded-lg hover:bg-brand/10 transition-colors disabled:opacity-50 flex items-center gap-1">
-                    <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-                    Refresh
-                  </button>
-                </div>
-              </div>
-
-              {ch && (
-                <>
-                  {/* P&L Summary Row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5 border-l-2 border-brand">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Total P&L</p>
-                      <p className={`text-sm font-bold ${totalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {totalPnl >= 0 ? "+" : ""}{formatUsd(totalPnl)}
-                      </p>
-                    </div>
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">24h P&L</p>
-                      <p className={`text-sm font-bold ${realizedPnl.d1 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {realizedPnl.d1 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d1)}
-                      </p>
-                    </div>
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">48h P&L</p>
-                      <p className={`text-sm font-bold ${realizedPnl.d2 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {realizedPnl.d2 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d2)}
-                      </p>
-                    </div>
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">7d P&L</p>
-                      <p className={`text-sm font-bold ${realizedPnl.d7 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {realizedPnl.d7 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d7)}
-                      </p>
-                    </div>
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">30d P&L</p>
-                      <p className={`text-sm font-bold ${realizedPnl.d30 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {realizedPnl.d30 >= 0 ? "+" : ""}{formatUsd(realizedPnl.d30)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Account Overview Row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Perps Position Value</p>
-                      <p className="text-sm font-bold text-white">{formatUsd(accountValue)}</p>
-                      <div className="text-[10px] text-[#5a6070] mt-0.5 space-y-px">
-                        <p>Positions: {positions.length}</p>
-                        <p>Margin: {formatUsd(totalMargin)}</p>
-                      </div>
-                    </div>
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Account Total Value</p>
-                      <p className="text-sm font-bold text-white">{formatUsd(totalAccountValue)}</p>
-                      <div className="text-[10px] text-[#5a6070] mt-0.5 space-y-px">
-                        <p>Perpetual: {formatUsd(accountValue)}</p>
-                        <p>Spot: {formatUsd(spotTotalUsd)}</p>
-                      </div>
-                    </div>
-                    <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                      <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Free Margin Available</p>
-                      <p className="text-sm font-bold text-white">{formatUsd(withdrawable)}</p>
-                      <div className="text-[10px] text-[#5a6070] mt-0.5 space-y-px">
-                        <p>Withdrawable: {accountValue > 0 ? `${((withdrawable / accountValue) * 100).toFixed(1)}%` : "–"}</p>
-                        <p>Unrealized: <span className={totalUnrealizedPnl >= 0 ? "text-emerald-400/70" : "text-red-400/70"}>{totalUnrealizedPnl >= 0 ? "+" : ""}{formatUsd(totalUnrealizedPnl)}</span></p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Spot Balances (if any) */}
-                  {spotState && spotState.balances.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1.5">Spot Holdings</p>
-                      <div className="flex flex-wrap gap-2">
-                        {spotState.balances
-                          .filter((b) => parseFloat(b.total) > 0)
-                          .map((b) => (
-                          <div key={b.coin} className="bg-[#0b0e11] rounded-lg px-3 py-1.5 flex items-center gap-2">
-                            <span className="text-xs font-medium text-white">{b.coin}</span>
-                            <span className="text-xs text-[#848e9c]">{parseFloat(b.total).toLocaleString(undefined, { maximumFractionDigits: 6 })}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {lbMatch && (
-                <div className="mt-3">
-                  <p className="text-[10px] text-[#848e9c] uppercase tracking-wider mb-1.5">Leaderboard Stats</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {(["day", "week", "month", "allTime"] as TimeWindow[]).map((tw) => {
-                      const p = getPerf(lbMatch, tw);
-                      const pnl = parseFloat(p.pnl);
-                      const roi = parseFloat(p.roi) * 100;
-                      const label = tw === "allTime" ? "All-Time" : tw === "day" ? "24h" : tw === "week" ? "7d" : "30d";
-                      return (
-                        <div key={tw} className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
-                          <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">{label} P&L</p>
-                          <p className={`text-sm font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                            {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                          </p>
-                          <p className={`text-[10px] ${roi >= 0 ? "text-emerald-400/70" : "text-red-400/70"}`}>
-                            {roi >= 0 ? "+" : ""}{roi.toFixed(2)}% ROI
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {loading && !ch && (
-              <div className="flex items-center justify-center py-16">
-                <RefreshCw className="h-5 w-5 animate-spin text-[#848e9c]" />
-              </div>
-            )}
-
-            {ch && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-4 border-b border-[#2a2e3e]">
-                  {(["positions", "fills", "spot"] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setHistoryTab(tab)}
-                      className={`pb-2.5 text-xs font-medium border-b-2 transition-colors ${
-                        historyTab === tab ? "text-white border-brand" : "text-[#848e9c] border-transparent hover:text-white"
-                      }`}
-                    >
-                      {tab === "positions" ? `Positions (${positions.length})` : tab === "fills" ? `Recent Fills (${Math.min(fills.length, 100)})` : `Spot Holdings (${spotState?.balances.filter((b) => parseFloat(b.total) > 0).length ?? 0})`}
-                    </button>
-                  ))}
-                </div>
-
-                {historyTab === "positions" && (
-                  positions.length > 0 ? (
-                    <div className="bg-[#141620] rounded-xl overflow-x-auto">
-                      <table className="w-full text-[11px]">
-                        <thead>
-                          <tr className="text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50">
-                            <th className="text-left px-3 py-2 font-medium">Market</th>
-                            <th className="text-right px-2 py-2 font-medium">Size</th>
-                            <th className="text-right px-2 py-2 font-medium">Entry</th>
-                            <th className="text-right px-2 py-2 font-medium">Mark</th>
-                            <th className="text-right px-2 py-2 font-medium">PnL</th>
-                            <th className="text-right px-2 py-2 font-medium">Notional</th>
-                            <th className="text-right px-2 py-2 font-medium hidden sm:table-cell">Margin</th>
-                            <th className="text-right px-2 py-2 font-medium hidden sm:table-cell">Duration</th>
-                            <th className="text-center px-2 py-2 font-medium w-8"></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {positions.map((ap) => {
-                            const pos = ap.position;
-                            const size = parseFloat(pos.szi);
-                            const isLong = size > 0;
-                            const pnl = parseFloat(pos.unrealizedPnl);
-                            const roe = parseFloat(pos.returnOnEquity) * 100;
-                            const entry = parseFloat(pos.entryPx ?? "0");
-                            const bare = stripPrefix(pos.coin);
-                            const market = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === pos.coin);
-                            const markPx = market ? parseFloat(market.markPx) : 0;
-                            const notional = Math.abs(size) * markPx;
-                            const margin = parseFloat(pos.marginUsed);
-                            const displayCoin = market?.displayName ?? bare;
-                            const leverageType = pos.leverage.type === "cross" ? "Cross" : "Iso";
-                            const entryTime = positionEntryTimes.get(bare.toUpperCase());
-                            const durationStr = entryTime ? formatDuration(Date.now() - entryTime) : "–";
-
-                            return (
-                              <tr key={pos.coin} className="border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors">
-                                <td className="px-3 py-2">
-                                  <Link href={`/trade/${market?.name ?? pos.coin}`} className="flex items-center gap-1.5">
-                                    <span className={`text-[9px] px-1 py-0.5 rounded font-bold leading-none ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-                                      {isLong ? "L" : "S"}
-                                    </span>
-                                    <span className="text-white font-medium">{displayCoin}</span>
-                                    <span className="text-[9px] text-[#848e9c]">{pos.leverage.value}x {leverageType}</span>
-                                  </Link>
-                                </td>
-                                <td className="text-right px-2 py-2 text-white">{Math.abs(size).toFixed(size < 1 ? 5 : 2)}</td>
-                                <td className="text-right px-2 py-2 text-white">${entry.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
-                                <td className="text-right px-2 py-2 text-[#848e9c]">${markPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
-                                <td className="text-right px-2 py-2">
-                                  <span className={`font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                    {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                                  </span>
-                                  <span className={`ml-1 text-[9px] ${roe >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                                    ({roe >= 0 ? "+" : ""}{roe.toFixed(1)}%)
-                                  </span>
-                                </td>
-                                <td className="text-right px-2 py-2 text-[#848e9c]">{formatUsd(notional)}</td>
-                                <td className="text-right px-2 py-2 text-[#848e9c] hidden sm:table-cell">{formatUsd(margin)}</td>
-                                <td className="text-right px-2 py-2 text-[#f0b90b] hidden sm:table-cell">{durationStr}</td>
-                                <td className="text-center px-2 py-2">
-                                  <Link
-                                    href={`/trade/${market?.name ?? pos.coin}?side=${isLong ? "buy" : "sell"}&size=${Math.abs(size)}&price=${entry}`}
-                                    className="inline-flex items-center justify-center w-6 h-6 text-brand hover:bg-brand/10 rounded transition-colors"
-                                    title="Copy this trade"
-                                  >
-                                    <ArrowRightLeft className="h-3 w-3" />
-                                  </Link>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-[#848e9c] text-sm">No open positions</div>
-                  )
-                )}
-
-                {historyTab === "fills" && (
-                  sortedFills.length > 0 ? (
-                    <div className="bg-[#141620] rounded-xl overflow-hidden">
-                      <div className="hidden sm:grid grid-cols-7 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
-                        <span>Time</span>
-                        <span>Pair</span>
-                        <span>Side</span>
-                        <span>Direction</span>
-                        <span className="text-right">Price</span>
-                        <span className="text-right">Size</span>
-                        <span className="text-right">Closed P&L</span>
-                      </div>
-                      {sortedFills.map((f) => {
-                        const px = parseFloat(f.px);
-                        const sz = parseFloat(f.sz);
-                        const pnl = parseFloat(f.closedPnl);
-                        const isBuy = f.side === "B";
-                        return (
-                          <div key={f.tid} className="grid grid-cols-4 sm:grid-cols-7 items-center px-4 py-2 text-[11px] border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors gap-y-1">
-                            <span className="text-[#848e9c] col-span-2 sm:col-span-1">
-                              {new Date(f.time).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                            <span className="text-white font-medium">{stripPrefix(f.coin)}</span>
-                            <span className={`font-medium ${isBuy ? "text-emerald-400" : "text-red-400"}`}>
-                              {isBuy ? "Buy" : "Sell"}
-                            </span>
-                            <span className="text-[#848e9c] hidden sm:block">{f.dir}</span>
-                            <span className="text-right text-white">${px.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
-                            <span className="text-right text-white">{sz.toFixed(sz < 1 ? 5 : 2)}</span>
-                            <span className={`text-right font-medium ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                              {pnl !== 0 ? `${pnl >= 0 ? "+" : ""}${formatUsd(pnl)}` : "–"}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-[#848e9c] text-sm">No fills found</div>
-                  )
-                )}
-
-                {historyTab === "spot" && (
-                  spotState && spotState.balances.filter((b) => parseFloat(b.total) > 0).length > 0 ? (
-                    <div className="bg-[#141620] rounded-xl overflow-hidden">
-                      <div className="grid grid-cols-3 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
-                        <span>Token</span>
-                        <span className="text-right">Balance</span>
-                        <span className="text-right">On Hold</span>
-                      </div>
-                      {spotState.balances
-                        .filter((b) => parseFloat(b.total) > 0)
-                        .map((b) => {
-                          const total = parseFloat(b.total);
-                          const hold = parseFloat(b.hold);
-                          return (
-                            <div key={b.coin} className="grid grid-cols-3 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20">
-                              <span className="text-white font-medium">{b.coin}</span>
-                              <span className="text-right text-white">{total.toLocaleString(undefined, { maximumFractionDigits: 6 })}</span>
-                              <span className="text-right text-[#848e9c]">{hold > 0 ? hold.toLocaleString(undefined, { maximumFractionDigits: 6 }) : "–"}</span>
-                            </div>
-                          );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-[#848e9c] text-sm">No spot holdings</div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

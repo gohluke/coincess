@@ -863,6 +863,18 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {trade.isOpen && markPx > 0 && (
+              (() => {
+                const unrealized = trade.direction === "Long"
+                  ? (markPx - trade.entryPx) * trade.maxSize
+                  : (trade.entryPx - markPx) * trade.maxSize;
+                return (
+                  <span className={`text-sm font-bold ${unrealized >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {unrealized >= 0 ? "+" : ""}{formatUsd(unrealized)}
+                  </span>
+                );
+              })()
+            )}
             {!trade.isOpen && (
               <div className="flex items-center gap-2">
                 <span className={`text-sm font-bold ${isWin ? "text-emerald-400" : "text-red-400"}`}>
@@ -888,6 +900,9 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
           <span>Entry: <span className="text-white">${trade.entryPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
           {trade.exitPx != null && (
             <span>Exit: <span className="text-white">${trade.exitPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
+          )}
+          {trade.isOpen && markPx > 0 && (
+            <span>Now: <span className="text-brand font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
           )}
           {hasPhantom && (
             <span>Now: <span className="text-brand font-medium">${markPx.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
@@ -921,7 +936,33 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
                 {trade.netPnl >= 0 ? "+" : ""}{formatUsd(trade.netPnl)}
               </span>
             </div>
-            {trade.exitPx != null && trade.entryPx > 0 && (
+            {trade.isOpen && markPx > 0 && (
+              (() => {
+                const unrealized = trade.direction === "Long"
+                  ? (markPx - trade.entryPx) * trade.maxSize
+                  : (trade.entryPx - markPx) * trade.maxSize;
+                const ret = trade.direction === "Long"
+                  ? ((markPx - trade.entryPx) / trade.entryPx) * 100
+                  : ((trade.entryPx - markPx) / trade.entryPx) * 100;
+                return (
+                  <>
+                    <div>
+                      <span className="text-[#848e9c]">Unrealized: </span>
+                      <span className={`font-bold ${unrealized >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {unrealized >= 0 ? "+" : ""}{formatUsd(unrealized)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#848e9c]">Return: </span>
+                      <span className={`font-medium ${ret >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {ret >= 0 ? "+" : ""}{ret.toFixed(2)}%
+                      </span>
+                    </div>
+                  </>
+                );
+              })()
+            )}
+            {!trade.isOpen && trade.exitPx != null && trade.entryPx > 0 && (
               <div>
                 <span className="text-[#848e9c]">Return: </span>
                 {(() => {

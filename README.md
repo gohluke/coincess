@@ -10,7 +10,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **URL-driven navigation** — clicking a coin in the market selector dropdown or search modal updates the URL to `/trade/COIN`, enabling shareable links and proper browser history
 - **Search modal** — max leverage shown per market, category badges, real-time prices with flash animation
 - **Real-time order book** and recent trades via WebSocket
-- **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes
+- **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes, click-and-drag panning
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); chain switch is best-effort so activation works regardless of wallet network; order form reads spot clearinghouse balance for accurate "Available" display
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
 - **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position; TP/SL prices shown inline on positions; AUTO badge scoped to user's own quant strategies (wallet-filtered); accurate round-trip duration on dashboard; click position to navigate to coin
@@ -77,7 +77,7 @@ Strategy backtesting and performance analysis tools.
 - **Asset distribution donut** — equity breakdown: USDC (remainder after positions) + per-position value (margin + unrealized PnL); flat segment edges with gaps; center shows total equity
 - Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
 - PnL calendar — daily profit/loss heatmap
-- Trade history with round-trip grouping and per-trade P&L
+- Trade history with round-trip grouping and per-trade P&L; open trades show live unrealized PnL, current mark price, and return percentage; closed trades show net P&L with "Missed/Saved" phantom PnL
 - Open orders overview
 - Quick-access cards for Trade, Predict, Automate
 - Active automation strategies preview
@@ -151,8 +151,14 @@ Strategy backtesting and performance analysis tools.
 - **Coincess Leaderboard** — tracks all users who trade through Coincess, ranked by Coincess-only volume, P&L, or trade count
 - **Coincess-only volume tracking** — every trade records notional (size * price) in Supabase `coincess_volume` column, so the leaderboard shows only volume from Coincess, not all Hyperliquid activity
 - **Hyperliquid Leaderboard** — browse the top global Hyperliquid traders by performance
-- **Trader profiles** — click any trader to view their open positions, account value, and trade history
-- **Star/Favorite traders** — bookmark traders to track them across sessions (persisted in Supabase)
+- **Starred Traders tab** — bookmark any trader via the star icon; starred traders are stored in Supabase (`coincess_starred_traders` table, keyed by `user_address` + `trader_address`) with localStorage fallback; the "Starred" tab appears automatically when you have starred traders, showing name, account value, View, and Unstar actions
+- **Contract Scanner** — pick a coin, scan the top 100 traders to find who holds positions in that market with entry time, size, leverage, and unrealized PnL
+- **Trader profiles (`/trader/[address]`)** — dedicated profile page per wallet with Hyperbot-inspired UI:
+  - **Top cards** — Account Total Value (donut: Perp vs Spot), Free Margin, Total Position Value (gross leveraged notional with leverage ratio donut), Trading Performance (win rate, max drawdown, trades, closed positions)
+  - **Perp Breakdown** — Perp Total Value (sum of all position notionals), margin used ratio bar, direction bias (Bullish/Bearish/Neutral) with long/short exposure bars, position distribution (long value vs short value stacked bar), ROE, unrealized PnL
+  - **PnL Chart** — SVG cumulative P&L area chart with 1D/1W/1M/ALL range selection, zero line, color-coded positive/negative areas
+  - **P&L metrics row** — Total P&L, 24h/7d/30d breakdown, unrealized P&L, realized P&L, funding income
+  - **Tabbed detail view** — Perp Positions (with mark price, leverage, entry time, duration, uPnL, ROE), Open Orders, Recent Fills, Spot Holdings, Funding History
 - **Copy Trade** — one-click copy from any trader's open position, pre-fills your order form with side, size, and entry price
 - **Position timing** — shows when each position was opened and how long it's been held
 - **Empty state** — motivating "Leaderboard Awaits" design with unclaimed award slots when no traders yet
@@ -268,7 +274,8 @@ npm run dev
 | [localhost:3000/quant](http://localhost:3000/quant) | Quant trading dashboard |
 | [localhost:3000/journal](http://localhost:3000/journal) | Trade journal |
 | [localhost:3000/chat](http://localhost:3000/chat) | AI trading coach |
-| [localhost:3000/traders](http://localhost:3000/traders) | Coincess leaderboard, Hyperliquid leaderboard, trader profiles, copy trade |
+| [localhost:3000/traders](http://localhost:3000/traders) | Coincess leaderboard, Hyperliquid leaderboard, starred traders, contract scanner |
+| [localhost:3000/trader/0x...](http://localhost:3000/trader/0x) | Trader profile page (dynamic: `/trader/{ADDRESS}`) |
 | [localhost:3000/scanner](http://localhost:3000/scanner) | Contract scanner |
 | [localhost:3000/admin](http://localhost:3000/admin) | Admin dashboard (wallet-gated) |
 | [localhost:3000/join](http://localhost:3000/join) | Referral redirect → Hyperliquid |
@@ -427,7 +434,8 @@ coincess/
 │   ├── journal/page.tsx                # Trade journal
 │   ├── chat/page.tsx                   # AI trading coach
 │   ├── quant/page.tsx                  # Quant trading dashboard
-│   ├── traders/page.tsx                # Trader lookup & leaderboard
+│   ├── traders/page.tsx                # Trader lookup & leaderboard & starred
+│   ├── trader/[address]/page.tsx      # Individual trader profile (Hyperbot-style)
 │   ├── scanner/page.tsx                # Contract scanner
 │   ├── api/
 │   │   ├── journal/route.ts            # Journal CRUD API
