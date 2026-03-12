@@ -168,9 +168,14 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     if (!overlay || !f || f.length === 0) return;
 
     const coin = marketRef.current.replace(/^.*:/, "").toUpperCase();
-    const relevant = f.filter(
-      (fi) => fi.coin.replace(/^.*:/, "").toUpperCase() === coin && fi.time >= oldestLoadedRef.current,
-    );
+    const seen = new Set<number>();
+    const relevant = f.filter((fi) => {
+      if (fi.coin.replace(/^.*:/, "").toUpperCase() !== coin) return false;
+      if (fi.time < oldestLoadedRef.current) return false;
+      if (seen.has(fi.tid)) return false;
+      seen.add(fi.tid);
+      return true;
+    });
 
     const candles = candleDataRef.current;
     for (const fi of relevant) {
@@ -205,13 +210,35 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         fontSize: "8px",
         fontWeight: "700",
         color: "#fff",
-        pointerEvents: "none",
-        cursor: "default",
+        pointerEvents: "auto",
+        cursor: "pointer",
         zIndex: "5",
         lineHeight: "1",
         userSelect: "none",
         boxShadow: `0 0 4px ${color}88`,
         transition: "width 0.1s, height 0.1s, font-size 0.1s",
+      });
+
+      el.addEventListener("mouseenter", () => {
+        const tip = tooltipRef.current;
+        if (!tip) return;
+        const entries = fillTooltipMapRef.current.get(key);
+        if (!entries || entries.length === 0) return;
+        tip.innerHTML = entries.map((e) => e.html).join("<hr style='border:none;border-top:1px solid #2a2e39;margin:4px 0'/>");
+        tip.style.display = "block";
+        const rect = el.getBoundingClientRect();
+        const cRect = containerRef.current?.getBoundingClientRect();
+        if (!cRect) return;
+        let left = rect.right - cRect.left + 8;
+        let top = rect.top - cRect.top - 4;
+        if (left + 200 > cRect.width) left = rect.left - cRect.left - 210;
+        if (top < 0) top = 4;
+        tip.style.left = `${left}px`;
+        tip.style.top = `${top}px`;
+      });
+      el.addEventListener("mouseleave", () => {
+        const tip = tooltipRef.current;
+        if (tip) tip.style.display = "none";
       });
 
       overlay.appendChild(el);
