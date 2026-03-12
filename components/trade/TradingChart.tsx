@@ -43,32 +43,71 @@ const INTERVAL_MS: Record<string, number> = {
 const BATCH_SIZE = 1500;
 const SCROLL_TRIGGER = 20;
 
-// Shift UTC epoch seconds → local epoch seconds so the chart axis shows local time
 const TZ_OFFSET_SEC = -(new Date().getTimezoneOffset() * 60);
 function toLocal(utcMs: number): UTCTimestamp {
   return (utcMs / 1000 + TZ_OFFSET_SEC) as UTCTimestamp;
+}
+
+interface FillMeta {
+  time: Time;
+  label: string;
+  side: "B" | "A";
+  px: string;
+  sz: string;
+  dir: string;
+}
+
+function formatFillLabel(f: Fill): string {
+  const dir = f.dir.toLowerCase();
+  const px = parseFloat(f.px);
+  if (dir.includes("open") && dir.includes("long")) return `Open Long at ${px}`;
+  if (dir.includes("open") && dir.includes("short")) return `Open Short at ${px}`;
+  if (dir.includes("close") && dir.includes("long")) return `Close Long at ${px}`;
+  if (dir.includes("close") && dir.includes("short")) return `Close Short at ${px}`;
+  if (f.side === "B") return `Buy at ${px}`;
+  return `Sell at ${px}`;
 }
 
 function buildFillMarkers(
   fills: Fill[],
   market: string,
   oldestMs: number,
-): SeriesMarker<Time>[] {
+): { markers: SeriesMarker<Time>[]; meta: Map<string, FillMeta[]> } {
   const coin = market.replace(/^.*:/, "").toUpperCase();
-  return fills
+  const relevant = fills
     .filter((f) => f.coin.replace(/^.*:/, "").toUpperCase() === coin && f.time >= oldestMs)
-    .sort((a, b) => a.time - b.time)
-    .map((f) => ({
-      time: toLocal(f.time) as Time,
+    .sort((a, b) => a.time - b.time);
+
+  const meta = new Map<string, FillMeta[]>();
+  const markers: SeriesMarker<Time>[] = relevant.map((f) => {
+    const time = toLocal(f.time) as Time;
+    const key = String(time);
+    const entry: FillMeta = {
+      time,
+      label: formatFillLabel(f),
+      side: f.side,
+      px: f.px,
+      sz: f.sz,
+      dir: f.dir,
+    };
+    const arr = meta.get(key);
+    if (arr) arr.push(entry); else meta.set(key, [entry]);
+
+    return {
+      time,
       position: f.side === "B" ? ("belowBar" as const) : ("aboveBar" as const),
       color: f.side === "B" ? "#0ecb81" : "#f6465d",
-      shape: f.side === "B" ? ("arrowUp" as const) : ("arrowDown" as const),
+      shape: "circle" as const,
       text: f.side === "B" ? "B" : "S",
-    }));
+    };
+  });
+
+  return { markers, meta };
 }
 
 export function TradingChart({ fills }: { fills?: Fill[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
@@ -76,6 +115,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   const volumeRef = useRef<ISeriesApi<any> | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any>(null);
+  const fillMetaRef = useRef<Map<string, FillMeta[]>>(new Map());
 
   // Accumulated data for infinite scroll
   const candleDataRef = useRef<CandlestickData[]>([]);
@@ -104,9 +144,11 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       try { markersRef.current.detach(); } catch {}
       markersRef.current = null;
     }
+    fillMetaRef.current = new Map();
     const f = fillsRef.current;
     if (f && f.length > 0) {
-      const markers = buildFillMarkers(f, marketRef.current, oldestLoadedRef.current);
+      const { markers, meta } = buildFillMarkers(f, marketRef.current, oldestLoadedRef.current);
+      fillMetaRef.current = meta;
       if (markers.length > 0) {
         markersRef.current = createSeriesMarkers(series, markers);
       }
@@ -226,6 +268,38 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       }
     });
 
+    // Tooltip on crosshair hover near fill markers
+    chart.subscribeCrosshairMove((param) => {
+      const tip = tooltipRef.current;
+      if (!tip) return;
+      if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
+        tip.style.display = "none";
+        return;
+      }
+      const key = String(param.time);
+      const entries = fillMetaRef.current.get(key);
+      if (!entries || entries.length === 0) {
+        tip.style.display = "none";
+        return;
+      }
+
+      const lines = entries.map((e) => {
+        const color = e.side === "B" ? "#0ecb81" : "#f6465d";
+        const icon = e.side === "B" ? "B" : "S";
+        return `<div style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${icon}</span><span>${e.label}</span></div>`;
+      });
+      tip.innerHTML = lines.join("");
+      tip.style.display = "block";
+
+      const cRect = containerRef.current!.getBoundingClientRect();
+      let left = param.point.x + 16;
+      let top = param.point.y - 12;
+      if (left + 200 > cRect.width) left = param.point.x - 210;
+      if (top < 0) top = 4;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    });
+
     const resizeObserver = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
       chart.applyOptions({ width, height });
@@ -340,7 +414,27 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
           </button>
         ))}
       </div>
-      <div ref={containerRef} className="flex-1 min-h-0" />
+      <div className="flex-1 min-h-0 relative">
+        <div ref={containerRef} className="absolute inset-0" />
+        <div
+          ref={tooltipRef}
+          style={{
+            display: "none",
+            position: "absolute",
+            zIndex: 10,
+            pointerEvents: "none",
+            background: "rgba(19,21,28,0.95)",
+            border: "1px solid #2a2e39",
+            borderRadius: 6,
+            padding: "6px 10px",
+            fontSize: 11,
+            color: "#e0e0e0",
+            whiteSpace: "nowrap",
+            lineHeight: "20px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+          }}
+        />
+      </div>
     </div>
   );
 }
