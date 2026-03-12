@@ -30,7 +30,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Market status** — visual indicators for closed/ended markets, urgency badges
 
 ### Automation Suite
-- **Wallet Positions (source of truth)** — the Server 24/7 tab now shows real positions from the Hyperliquid clearinghouse API (not the quant engine's internal records), so positions are always in sync with the actual wallet; includes account equity, margin used, open order count, leverage, liquidation price, funding rate; positions tagged AUTO when they match a quant strategy; click any position to navigate to its trade page; **UI aligned with /dashboard** — same color palette (`bg-[#141620]` cards, `border-[#2a2e3e]`, `text-emerald-400` greens, `rounded-xl`) for a cohesive experience across the app
+- **Wallet Positions (source of truth)** — the Server 24/7 tab now shows real positions from the Hyperliquid clearinghouse API (not the quant engine's internal records), so positions are always in sync with the actual wallet; includes account equity, margin used, open order count, leverage, liquidation price, funding rate; positions tagged AUTO when they match a quant strategy; click any position to navigate to its trade page; **UI aligned with /dashboard** — borderless cards (`bg-[#141620] rounded-xl`, no outline borders), system font for numbers, `gap-2` metric grids, subtle `/30` opacity internal dividers for a cohesive experience across the app
 - **DCA** — dollar-cost average into any Hyperliquid market on a schedule
 - **Grid Trading** — set a price range, auto-place buy/sell limit orders across grid levels
 - **Trailing Stop** — track peak/trough, auto-exit when price reverses by a percentage
@@ -138,15 +138,17 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
   - **Grid Bot** — places buy/sell limit orders at fixed intervals around current price for BTC and ETH, auto-rebalances
   - **Mean Reversion** — monitors 15m RSI across top 20 coins, enters contrarian positions on RSI extremes (<25 or >75)
   - **Market Maker** — provides two-sided liquidity with dynamic spread adjustment
-- **Risk management** — max 50% exposure, 10% per position, daily loss limit (-5% pauses), kill switch at -15% drawdown
-- **Kelly-inspired sizing** — position sizes scale down as drawdown increases
-- **Live dashboard** — strategy cards with play/pause/delete, P&L stats, open positions, trade log, risk gauges
+- **Risk management** — max 80% total exposure, 50% per position, daily loss limit (-8% pauses), kill switch at -20% drawdown, $100 reserve
+- **Kelly-inspired sizing** — position sizes scale down as drawdown increases (4x drawdown multiplier)
+- **Engine reset** — "Reset Engine" button clears stale drawdown, resets peak equity to current NAV, and clears error state; available inline in the risk alert banner and in the header when engine is in error
+- **Live dashboard** — strategy cards with play/pause/delete, P&L stats, open positions, trade log, risk gauges; **borderless card design** matching `/dashboard` aesthetic (no outline borders, `gap-2` metric grids, system font for numbers)
+- **Accurate PnL** — total P&L computed from actual closed trade records (not stale engine state); fills deduplicated by `tid` to prevent double-counting from main+xyz dex overlap
 - **Server-side execution** — runs via `scripts/quant-server.ts` on Contabo VPS using pm2, no browser wallet popups
 - **API Wallet** — uses Hyperliquid API wallet key (separate from main wallet) for programmatic order signing
 - **Coincess volume attribution** — bot orders include the Coincess builder field and record notional volume, so all automated trades count toward platform volume and appear on the Coincess leaderboard
 - **Server-side Supabase tracking** — after each successful order, the executor calls `upsert_coincess_trader` with trade notional to increment both order count and Coincess-specific volume (non-blocking, won't fail trades if Supabase is down)
 - **Supabase persistence** — `quant_strategies`, `quant_trades`, `quant_state` tables track all activity
-- **API routes** — `/api/quant/strategies` (CRUD), `/api/quant/trades` (history), `/api/quant/status` (engine health)
+- **API routes** — `/api/quant/strategies` (CRUD), `/api/quant/trades` (history + PnL summary), `/api/quant/status` (engine health + PATCH supports `engine_status`, `max_drawdown`, `peak_equity`, `error_message`)
 
 ### Multi-Account Fleet Management
 - **100-account generation** — `scripts/generate-accounts.ts` creates wallets, stores private keys securely in Supabase `coincess_accounts` table (service-role access only)
