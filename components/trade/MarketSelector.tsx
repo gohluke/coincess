@@ -311,15 +311,15 @@ export function MarketSelector() {
                       }`}
                       onClick={(e) => toggleFavorite(m.name, e)}
                     />
-                    <span className="text-left flex items-center gap-1.5">
+                    <span className="text-left flex items-center gap-1.5 min-w-0 overflow-hidden whitespace-nowrap">
                       <CoinLogo symbol={m.name} size={20} />
-                      <span className="text-white font-medium">{m.displayName}</span>
+                      <span className="text-white font-medium truncate">{m.displayName}</span>
                       {mBadge && (
-                        <span className="text-[8px] px-1 py-0.5 rounded font-medium" style={{ background: `${mBadge.color}22`, color: mBadge.color }}>
+                        <span className="text-[8px] px-1 py-0.5 rounded font-medium shrink-0" style={{ background: `${mBadge.color}22`, color: mBadge.color }}>
                           {mBadge.label}
                         </span>
                       )}
-                      <span className="text-[#4a4e59]">/USD</span>
+                      <span className="text-[#4a4e59] shrink-0">/USD</span>
                     </span>
                     <span className="text-right text-[#555a66] tabular-nums">
                       {m.maxLeverage > 0 ? `${m.maxLeverage}x` : "—"}

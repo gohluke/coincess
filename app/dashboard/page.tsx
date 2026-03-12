@@ -849,8 +849,14 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
             <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${trade.direction === "Long" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
               {trade.direction.toUpperCase()}{leverage ? ` ${leverage}` : ""}
             </span>
-            <div>
-              <span className="text-sm font-semibold">{bare}</span>
+            <div className="flex items-center">
+              <Link
+                href={`/trade/${bare}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-sm font-semibold hover:text-brand transition-colors"
+              >
+                {bare}
+              </Link>
               {trade.isOpen && (
                 <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium">OPEN</span>
               )}
@@ -1043,7 +1049,10 @@ function PositionRow({ ap, markets, fills, trades }: { ap: AssetPosition; market
   const roe = parseFloat(pos.returnOnEquity) * 100;
   const notional = Math.abs(size) * markPx;
   const displayCoin = market?.displayName ?? bare;
-  const tradeCoin = market?.name ?? pos.coin;
+  const tradeCoin = (() => {
+    const raw = market?.name ?? pos.coin;
+    return raw.includes(":") ? raw.split(":")[1] : raw;
+  })();
   const isLong = size > 0;
 
   const entryTime = useMemo(() => {

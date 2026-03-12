@@ -109,11 +109,19 @@ export async function fetchCombinedClearinghouseState(user: string): Promise<Cle
 }
 
 export async function fetchOpenOrders(user: string): Promise<OpenOrder[]> {
-  return post<OpenOrder[]>("/info", { type: "frontendOpenOrders", user });
+  const [main, xyz] = await Promise.all([
+    post<OpenOrder[]>("/info", { type: "frontendOpenOrders", user }).catch(() => []),
+    post<OpenOrder[]>("/info", { type: "frontendOpenOrders", user, dex: "xyz" }).catch(() => []),
+  ]);
+  return [...main, ...xyz];
 }
 
 export async function fetchUserFills(user: string): Promise<Fill[]> {
-  return post<Fill[]>("/info", { type: "userFills", user });
+  const [main, xyz] = await Promise.all([
+    post<Fill[]>("/info", { type: "userFills", user }).catch(() => []),
+    post<Fill[]>("/info", { type: "userFills", user, dex: "xyz" }).catch(() => []),
+  ]);
+  return [...main, ...xyz];
 }
 
 export interface LedgerUpdate {

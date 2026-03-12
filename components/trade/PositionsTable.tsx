@@ -332,7 +332,7 @@ export function PositionsTable() {
     const market = markets.find((m) => m.name === pos.coin);
     const markPx = market ? parseFloat(market.markPx).toFixed(2) : "0";
     setSharePosition({
-      coin: pos.coin,
+      coin: pos.coin.includes(":") ? pos.coin.split(":")[1] : pos.coin,
       side: isLong ? "LONG" : "SHORT",
       leverage: `${pos.leverage.value}x`,
       roe: parseFloat(pos.returnOnEquity) * 100,
@@ -472,7 +472,7 @@ export function PositionsTable() {
                             }}
                           >
                             <div className="flex items-center gap-1.5">
-                              <span className="text-white font-medium hover:text-brand transition-colors">{pos.coin}</span>
+                              <span className="text-white font-medium hover:text-brand transition-colors">{pos.coin.includes(":") ? pos.coin.split(":")[1] : pos.coin}</span>
                               <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
                                 isLong ? "bg-[#0ecb81]/10 text-[#0ecb81]" : "bg-[#f6465d]/10 text-[#f6465d]"
                               }`}>
@@ -811,7 +811,7 @@ export function PositionsTable() {
                           </span>
                           {o.reduceOnly && <span className="text-[9px] px-1 py-0.5 rounded bg-[#f0b90b]/10 text-[#f0b90b] font-medium">RO</span>}
                           {o.isPositionTpsl && <span className="text-[9px] px-1 py-0.5 rounded bg-brand/15 text-brand font-medium">{o.triggerCondition?.includes("gt") ? "TP" : "SL"}</span>}
-                          <span className="text-white font-medium">{o.coin}</span>
+                          <span className="text-white font-medium">{o.coin.includes(":") ? o.coin.split(":")[1] : o.coin}</span>
                         </div>
                       </td>
                       <td className="text-right px-2 py-2">

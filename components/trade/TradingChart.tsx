@@ -38,7 +38,8 @@ const INTERVAL_MS: Record<string, number> = {
 
 const BATCH_SIZE = 1500;
 const SCROLL_TRIGGER = 20;
-const MARKER_SIZE = 10;
+const MARKER_MIN = 14;
+const MARKER_MAX = 28;
 
 const TZ_OFFSET_SEC = -(new Date().getTimezoneOffset() * 60);
 function toLocal(utcMs: number): UTCTimestamp {
@@ -137,7 +138,11 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     if (!chart || !series) return;
 
     const ts = chart.timeScale();
-    const half = MARKER_SIZE / 2;
+    const bw = ts.options().barSpacing ?? 6;
+    const sz = Math.round(Math.min(MARKER_MAX, Math.max(MARKER_MIN, bw * 0.85)));
+    const half = sz / 2;
+    const fontSize = `${Math.max(7, Math.round(sz * 0.5))}px`;
+
     for (const fo of fillOverlaysRef.current) {
       const x = ts.timeToCoordinate(fo.snappedTime as Time);
       const y = series.priceToCoordinate(fo.price);
@@ -145,6 +150,9 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         fo.el.style.display = "none";
       } else {
         fo.el.style.display = "flex";
+        fo.el.style.width = `${sz}px`;
+        fo.el.style.height = `${sz}px`;
+        fo.el.style.fontSize = fontSize;
         fo.el.style.transform = `translate(${x - half}px, ${y - half}px)`;
       }
     }
@@ -187,14 +195,14 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         position: "absolute",
         top: "0",
         left: "0",
-        width: `${MARKER_SIZE}px`,
-        height: `${MARKER_SIZE}px`,
+        width: `${MARKER_MIN}px`,
+        height: `${MARKER_MIN}px`,
         borderRadius: "50%",
         background: color,
         display: "none",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "6px",
+        fontSize: "8px",
         fontWeight: "700",
         color: "#fff",
         pointerEvents: "none",
@@ -202,6 +210,8 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         zIndex: "5",
         lineHeight: "1",
         userSelect: "none",
+        boxShadow: `0 0 4px ${color}88`,
+        transition: "width 0.1s, height 0.1s, font-size 0.1s",
       });
 
       overlay.appendChild(el);
