@@ -38,7 +38,7 @@ const INTERVAL_MS: Record<string, number> = {
 
 const BATCH_SIZE = 1500;
 const SCROLL_TRIGGER = 20;
-const MARKER_SIZE = 20;
+const MARKER_SIZE = 10;
 
 const TZ_OFFSET_SEC = -(new Date().getTimezoneOffset() * 60);
 function toLocal(utcMs: number): UTCTimestamp {
@@ -170,7 +170,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         display: "none",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "9px",
+        fontSize: "6px",
         fontWeight: "700",
         color: "#fff",
         pointerEvents: "auto",
@@ -184,9 +184,8 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       el.addEventListener("mouseenter", () => {
         const tip = tooltipRef.current;
         if (!tip || !overlay) return;
-        el.style.boxShadow = `0 0 0 3px ${color}44`;
-        const dot = `<span style="width:16px;height:16px;border-radius:50%;background:${color};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${letter}</span>`;
-        tip.innerHTML = `<div style="display:flex;align-items:center;gap:6px">${dot}<span>${label}</span></div>`;
+        el.style.boxShadow = `0 0 0 2px ${color}44`;
+        tip.innerHTML = `<span>${label}</span>`;
         tip.style.display = "block";
 
         const eRect = el.getBoundingClientRect();
