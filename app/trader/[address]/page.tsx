@@ -401,16 +401,22 @@ export default function TraderProfilePage() {
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
     let total = 0, d1 = 0, d7 = 0, d30 = 0;
+    let feesAll = 0, fees1 = 0, fees7 = 0, fees30 = 0;
     for (const f of fills) {
       const pnl = parseFloat(f.closedPnl);
+      const fee = parseFloat(f.fee);
+      const age = now - f.time;
+      feesAll += fee;
+      if (age <= day) fees1 += fee;
+      if (age <= 7 * day) fees7 += fee;
+      if (age <= 30 * day) fees30 += fee;
       if (pnl === 0) continue;
       total += pnl;
-      const age = now - f.time;
       if (age <= day) d1 += pnl;
       if (age <= 7 * day) d7 += pnl;
       if (age <= 30 * day) d30 += pnl;
     }
-    return { total, d1, d7, d30 };
+    return { total, d1, d7, d30, feesAll, fees1, fees7, fees30 };
   }, [fills]);
 
   const tradingStats = useMemo(() => {
@@ -430,8 +436,6 @@ export default function TraderProfilePage() {
     const winRate = closedPositions > 0 ? (wins / closedPositions) * 100 : 0;
     return { winRate, maxDrawdown, trades: fills.length, closedPositions };
   }, [fills]);
-
-  const totalPnl = realizedPnl.total + totalUnrealizedPnl;
 
   const positionEntryTimes = useMemo(() => {
     const map = new Map<string, number>();
@@ -453,9 +457,22 @@ export default function TraderProfilePage() {
 
   const directionBias = longPct > 60 ? "Bullish" : shortPct > 60 ? "Bearish" : "Neutral";
 
-  const totalFundingIncome = useMemo(() => {
-    return funding.reduce((s, f) => s + parseFloat(f.delta.usdc), 0);
+  const fundingPnl = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    let total = 0, d1 = 0, d7 = 0, d30 = 0;
+    for (const fp of funding) {
+      const amt = parseFloat(fp.delta.usdc);
+      total += amt;
+      const age = now - fp.time;
+      if (age <= day) d1 += amt;
+      if (age <= 7 * day) d7 += amt;
+      if (age <= 30 * day) d30 += amt;
+    }
+    return { total, d1, d7, d30 };
   }, [funding]);
+
+  const totalPnl = realizedPnl.total - realizedPnl.feesAll + fundingPnl.total + totalUnrealizedPnl;
 
   const copyAddress = () => {
     navigator.clipboard.writeText(address);
@@ -750,9 +767,9 @@ export default function TraderProfilePage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {([
                     { label: "Total P&L", value: totalPnl, highlight: true },
-                    { label: "24h P&L", value: realizedPnl.d1, highlight: false },
-                    { label: "7d P&L", value: realizedPnl.d7, highlight: false },
-                    { label: "30d P&L", value: realizedPnl.d30, highlight: false },
+                    { label: "24h P&L", value: realizedPnl.d1 - realizedPnl.fees1 + fundingPnl.d1, highlight: false },
+                    { label: "7d P&L", value: realizedPnl.d7 - realizedPnl.fees7 + fundingPnl.d7, highlight: false },
+                    { label: "30d P&L", value: realizedPnl.d30 - realizedPnl.fees30 + fundingPnl.d30, highlight: false },
                   ]).map((item) => (
                     <div key={item.label} className={`rounded-lg px-3 py-2.5 ${item.highlight ? "bg-brand/5 border border-brand/20" : "bg-[#0b0e11]"}`}>
                       <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">{item.label}</p>
@@ -772,14 +789,16 @@ export default function TraderProfilePage() {
                   </div>
                   <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
                     <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Realized P&L</p>
-                    <p className={`text-sm font-bold mt-0.5 ${realizedPnl.total >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                      {realizedPnl.total >= 0 ? "+" : ""}{formatUsd(realizedPnl.total)}
+                    {(() => { const net = realizedPnl.total - realizedPnl.feesAll; return (
+                    <p className={`text-sm font-bold mt-0.5 ${net >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {net >= 0 ? "+" : ""}{formatUsd(net)}
                     </p>
+                    ); })()}
                   </div>
                   <div className="bg-[#0b0e11] rounded-lg px-3 py-2.5">
                     <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Funding Income</p>
-                    <p className={`text-sm font-bold mt-0.5 ${totalFundingIncome >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                      {totalFundingIncome >= 0 ? "+" : ""}{formatUsd(totalFundingIncome)}
+                    <p className={`text-sm font-bold mt-0.5 ${fundingPnl.total >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {fundingPnl.total >= 0 ? "+" : ""}{formatUsd(fundingPnl.total)}
                     </p>
                   </div>
                 </div>
