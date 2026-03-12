@@ -6,15 +6,11 @@ import {
   CandlestickSeries,
   HistogramSeries,
   ColorType,
-  createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type CandlestickData,
   type HistogramData,
   type UTCTimestamp,
-  type CandlestickSeriesOptions,
-  type HistogramSeriesOptions,
-  type SeriesMarker,
   type Time,
 } from "lightweight-charts";
 import { BRAND } from "@/lib/brand";
@@ -42,19 +38,11 @@ const INTERVAL_MS: Record<string, number> = {
 
 const BATCH_SIZE = 1500;
 const SCROLL_TRIGGER = 20;
+const MARKER_SIZE = 20;
 
 const TZ_OFFSET_SEC = -(new Date().getTimezoneOffset() * 60);
 function toLocal(utcMs: number): UTCTimestamp {
   return (utcMs / 1000 + TZ_OFFSET_SEC) as UTCTimestamp;
-}
-
-interface FillMeta {
-  time: Time;
-  label: string;
-  side: "B" | "A";
-  px: string;
-  sz: string;
-  dir: string;
 }
 
 function formatFillLabel(f: Fill): string {
@@ -68,56 +56,25 @@ function formatFillLabel(f: Fill): string {
   return `Sell at ${px}`;
 }
 
-function buildFillMarkers(
-  fills: Fill[],
-  market: string,
-  oldestMs: number,
-): { markers: SeriesMarker<Time>[]; meta: Map<string, FillMeta[]> } {
-  const coin = market.replace(/^.*:/, "").toUpperCase();
-  const relevant = fills
-    .filter((f) => f.coin.replace(/^.*:/, "").toUpperCase() === coin && f.time >= oldestMs)
-    .sort((a, b) => a.time - b.time);
-
-  const meta = new Map<string, FillMeta[]>();
-  const markers: SeriesMarker<Time>[] = relevant.map((f) => {
-    const time = toLocal(f.time) as Time;
-    const key = String(time);
-    const entry: FillMeta = {
-      time,
-      label: formatFillLabel(f),
-      side: f.side,
-      px: f.px,
-      sz: f.sz,
-      dir: f.dir,
-    };
-    const arr = meta.get(key);
-    if (arr) arr.push(entry); else meta.set(key, [entry]);
-
-    return {
-      time,
-      position: f.side === "B" ? ("belowBar" as const) : ("aboveBar" as const),
-      color: f.side === "B" ? "#0ecb81" : "#f6465d",
-      shape: "circle" as const,
-      text: f.side === "B" ? "B" : "S",
-    };
-  });
-
-  return { markers, meta };
+interface FillOverlayItem {
+  localTime: UTCTimestamp;
+  price: number;
+  side: "B" | "A";
+  label: string;
+  el: HTMLDivElement;
 }
 
 export function TradingChart({ fills }: { fills?: Fill[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const volumeRef = useRef<ISeriesApi<any> | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const markersRef = useRef<any>(null);
-  const fillMetaRef = useRef<Map<string, FillMeta[]>>(new Map());
+  const fillOverlaysRef = useRef<FillOverlayItem[]>([]);
 
-  // Accumulated data for infinite scroll
   const candleDataRef = useRef<CandlestickData[]>([]);
   const volumeDataRef = useRef<HistogramData[]>([]);
   const oldestLoadedRef = useRef<number>(0);
@@ -126,7 +83,6 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   const fillsRef = useRef(fills);
   fillsRef.current = fills;
 
-  // Keep stable refs to market/interval for the scroll handler
   const marketRef = useRef(useTradingStore.getState().selectedMarket);
   const intervalRef = useRef(useTradingStore.getState().selectedInterval);
 
@@ -137,23 +93,107 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   marketRef.current = selectedMarket;
   intervalRef.current = selectedInterval;
 
-  const refreshMarkers = useCallback(() => {
+  /* ── Overlay marker positioning ─────────────────────────── */
+
+  const repositionOverlays = useCallback(() => {
+    const chart = chartRef.current;
     const series = seriesRef.current;
-    if (!series) return;
-    if (markersRef.current) {
-      try { markersRef.current.detach(); } catch {}
-      markersRef.current = null;
-    }
-    fillMetaRef.current = new Map();
-    const f = fillsRef.current;
-    if (f && f.length > 0) {
-      const { markers, meta } = buildFillMarkers(f, marketRef.current, oldestLoadedRef.current);
-      fillMetaRef.current = meta;
-      if (markers.length > 0) {
-        markersRef.current = createSeriesMarkers(series, markers);
+    if (!chart || !series) return;
+
+    const ts = chart.timeScale();
+    const half = MARKER_SIZE / 2;
+    for (const fo of fillOverlaysRef.current) {
+      const x = ts.timeToCoordinate(fo.localTime as Time);
+      const y = series.priceToCoordinate(fo.price);
+      if (x === null || y === null) {
+        fo.el.style.display = "none";
+      } else {
+        fo.el.style.display = "flex";
+        fo.el.style.transform = `translate(${x - half}px, ${y - half}px)`;
       }
     }
   }, []);
+
+  const refreshOverlays = useCallback(() => {
+    for (const fo of fillOverlaysRef.current) fo.el.remove();
+    fillOverlaysRef.current = [];
+
+    const overlay = overlayRef.current;
+    const f = fillsRef.current;
+    if (!overlay || !f || f.length === 0) return;
+
+    const coin = marketRef.current.replace(/^.*:/, "").toUpperCase();
+    const relevant = f.filter(
+      (fi) => fi.coin.replace(/^.*:/, "").toUpperCase() === coin && fi.time >= oldestLoadedRef.current,
+    );
+
+    for (const fi of relevant) {
+      const isBuy = fi.side === "B";
+      const color = isBuy ? "#0ecb81" : "#f6465d";
+      const letter = isBuy ? "B" : "S";
+      const label = formatFillLabel(fi);
+
+      const el = document.createElement("div");
+      el.textContent = letter;
+      Object.assign(el.style, {
+        position: "absolute",
+        top: "0",
+        left: "0",
+        width: `${MARKER_SIZE}px`,
+        height: `${MARKER_SIZE}px`,
+        borderRadius: "50%",
+        background: color,
+        display: "none",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "9px",
+        fontWeight: "700",
+        color: "#fff",
+        pointerEvents: "auto",
+        cursor: "default",
+        zIndex: "5",
+        lineHeight: "1",
+        userSelect: "none",
+        transition: "box-shadow 0.15s",
+      });
+
+      el.addEventListener("mouseenter", () => {
+        const tip = tooltipRef.current;
+        if (!tip || !overlay) return;
+        el.style.boxShadow = `0 0 0 3px ${color}44`;
+        const dot = `<span style="width:16px;height:16px;border-radius:50%;background:${color};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${letter}</span>`;
+        tip.innerHTML = `<div style="display:flex;align-items:center;gap:6px">${dot}<span>${label}</span></div>`;
+        tip.style.display = "block";
+
+        const eRect = el.getBoundingClientRect();
+        const oRect = overlay.getBoundingClientRect();
+        let left = eRect.right - oRect.left + 8;
+        const top = eRect.top - oRect.top + eRect.height / 2 - 12;
+        if (left + 180 > oRect.width) left = eRect.left - oRect.left - 190;
+        tip.style.left = `${left}px`;
+        tip.style.top = `${Math.max(4, top)}px`;
+      });
+
+      el.addEventListener("mouseleave", () => {
+        el.style.boxShadow = "none";
+        const tip = tooltipRef.current;
+        if (tip) tip.style.display = "none";
+      });
+
+      overlay.appendChild(el);
+      fillOverlaysRef.current.push({
+        localTime: toLocal(fi.time),
+        price: parseFloat(fi.px),
+        side: fi.side,
+        label,
+        el,
+      });
+    }
+
+    repositionOverlays();
+  }, [repositionOverlays]);
+
+  /* ── Infinite scroll ────────────────────────────────────── */
 
   const loadOlderCandles = useCallback(async () => {
     if (fetchingRef.current || noMoreDataRef.current) return;
@@ -186,7 +226,6 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         color: parseFloat(c.c) >= parseFloat(c.o) ? "#0ecb8133" : "#f6465d33",
       }));
 
-      // Deduplicate by time and merge
       const existingTimes = new Set(candleDataRef.current.map((d) => d.time));
       const uniqueCandles = newCandle.filter((d) => !existingTimes.has(d.time));
       const uniqueVol = newVol.filter((d) => !existingTimes.has(d.time));
@@ -197,13 +236,15 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
 
       series.setData(candleDataRef.current);
       volume.setData(volumeDataRef.current);
-      refreshMarkers();
+      refreshOverlays();
     } catch {
       // network error — will retry next scroll
     } finally {
       fetchingRef.current = false;
     }
-  }, [refreshMarkers]);
+  }, [refreshOverlays]);
+
+  /* ── Chart init ─────────────────────────────────────────── */
 
   const initChart = useCallback(() => {
     if (!containerRef.current) return;
@@ -260,68 +301,43 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     seriesRef.current = candleSeries;
     volumeRef.current = volumeSeries;
 
-    // Infinite scroll: fetch older candles when user scrolls near left edge
+    // Infinite scroll + reposition overlays on range change
     chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+      repositionOverlays();
       if (!range || fetchingRef.current || noMoreDataRef.current) return;
       if (range.from < SCROLL_TRIGGER) {
         loadOlderCandles();
       }
     });
 
-    // Tooltip on crosshair hover near fill markers
-    chart.subscribeCrosshairMove((param) => {
-      const tip = tooltipRef.current;
-      if (!tip) return;
-      if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
-        tip.style.display = "none";
-        return;
-      }
-      const key = String(param.time);
-      const entries = fillMetaRef.current.get(key);
-      if (!entries || entries.length === 0) {
-        tip.style.display = "none";
-        return;
-      }
-
-      const lines = entries.map((e) => {
-        const color = e.side === "B" ? "#0ecb81" : "#f6465d";
-        const icon = e.side === "B" ? "B" : "S";
-        return `<div style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${icon}</span><span>${e.label}</span></div>`;
-      });
-      tip.innerHTML = lines.join("");
-      tip.style.display = "block";
-
-      const cRect = containerRef.current!.getBoundingClientRect();
-      let left = param.point.x + 16;
-      let top = param.point.y - 12;
-      if (left + 200 > cRect.width) left = param.point.x - 210;
-      if (top < 0) top = 4;
-      tip.style.left = `${left}px`;
-      tip.style.top = `${top}px`;
+    // Reposition overlays when crosshair moves (covers price-scale auto-fit)
+    chart.subscribeCrosshairMove(() => {
+      repositionOverlays();
     });
 
     const resizeObserver = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
       chart.applyOptions({ width, height });
+      repositionOverlays();
     });
     resizeObserver.observe(containerRef.current);
 
     return () => resizeObserver.disconnect();
-  }, [loadOlderCandles]);
+  }, [loadOlderCandles, repositionOverlays]);
 
   useEffect(() => {
     const cleanup = initChart();
     return () => cleanup?.();
   }, [initChart]);
 
-  // Initial load + WebSocket subscription
+  /* ── Initial load + WebSocket subscription ──────────────── */
+
   useEffect(() => {
     if (!seriesRef.current || !volumeRef.current) return;
 
     const series = seriesRef.current;
     const volume = volumeRef.current;
 
-    // Reset scroll state
     candleDataRef.current = [];
     volumeDataRef.current = [];
     fetchingRef.current = false;
@@ -353,7 +369,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
 
         series.setData(candleData);
         volume.setData(volumeData);
-        refreshMarkers();
+        refreshOverlays();
         chartRef.current?.timeScale().fitContent();
       })
       .catch(console.error);
@@ -377,7 +393,6 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         series.update(cd);
         volume.update(vd);
 
-        // Keep refs in sync for future prepend merges
         const last = candleDataRef.current[candleDataRef.current.length - 1];
         if (last && last.time === cd.time) {
           candleDataRef.current[candleDataRef.current.length - 1] = cd;
@@ -387,15 +402,25 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
           volumeDataRef.current.push(vd);
         }
       }
+      repositionOverlays();
     });
 
     return unsub;
-  }, [selectedMarket, selectedInterval, fills, refreshMarkers]);
+  }, [selectedMarket, selectedInterval, fills, refreshOverlays, repositionOverlays]);
 
-  // Re-apply markers when fills change (without re-fetching candles)
+  // Re-create overlay markers when fills change
   useEffect(() => {
-    refreshMarkers();
-  }, [fills, refreshMarkers]);
+    refreshOverlays();
+  }, [fills, refreshOverlays]);
+
+  /* ── Cleanup overlay DOM on unmount ─────────────────────── */
+
+  useEffect(() => {
+    return () => {
+      for (const fo of fillOverlaysRef.current) fo.el.remove();
+      fillOverlaysRef.current = [];
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -416,6 +441,16 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       </div>
       <div className="flex-1 min-h-0 relative">
         <div ref={containerRef} className="absolute inset-0" />
+        <div
+          ref={overlayRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            overflow: "hidden",
+            zIndex: 4,
+          }}
+        />
         <div
           ref={tooltipRef}
           style={{
