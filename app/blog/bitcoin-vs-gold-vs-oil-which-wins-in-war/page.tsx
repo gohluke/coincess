@@ -69,7 +69,7 @@ export default function BitcoinVsGoldVsOilArticle() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-xs font-bold text-slate-900">
+                  <span className="w-6 h-6 rounded-full bg-amber-950/500 flex items-center justify-center text-xs font-bold text-slate-900">
                     1
                   </span>
                   <span className="font-bold">Oil (Brent)</span>
@@ -93,7 +93,7 @@ export default function BitcoinVsGoldVsOilArticle() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-slate-500 flex items-center justify-center text-xs font-bold">
+                  <span className="w-6 h-6 rounded-full bg-[#1a1d26]0 flex items-center justify-center text-xs font-bold">
                     2
                   </span>
                   <span className="font-bold">Gold (XAU)</span>
@@ -194,7 +194,7 @@ export default function BitcoinVsGoldVsOilArticle() {
       <h2>Head-to-Head Comparison</h2>
 
       <div className="not-prose my-8">
-        <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="border border-[#2a2e39] rounded-2xl overflow-hidden ">
           <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4">
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-amber-400" />
@@ -210,13 +210,13 @@ export default function BitcoinVsGoldVsOilArticle() {
                 <th className="text-left px-6 py-4 font-semibold text-gray-300">
                     Factor
                   </th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-700">
+                  <th className="text-left px-6 py-4 font-semibold text-gray-300">
                     Oil
                   </th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-700">
+                  <th className="text-left px-6 py-4 font-semibold text-gray-300">
                     Gold
                   </th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-700">
+                  <th className="text-left px-6 py-4 font-semibold text-gray-300">
                     Bitcoin
                   </th>
                 </tr>
@@ -237,12 +237,12 @@ export default function BitcoinVsGoldVsOilArticle() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-[#1a1d26] text-gray-300 rounded text-xs font-medium">
                       Moderate
                     </span>
                   </td>
                 </tr>
-                <tr className="border-t border-[#2a2e39] bg-gray-50/30">
+                <tr className="border-t border-[#2a2e39] bg-[#1a1d26]/30">
                   <td className="px-6 py-4 font-medium text-white">
                     Volatility
                   </td>
@@ -274,7 +274,7 @@ export default function BitcoinVsGoldVsOilArticle() {
                     <span className="text-amber-600 font-medium">Debatable</span>
                   </td>
                 </tr>
-                <tr className="border-t border-[#2a2e39] bg-gray-50/30">
+                <tr className="border-t border-[#2a2e39] bg-[#1a1d26]/30">
                   <td className="px-6 py-4 font-medium text-white">
                     24/7 trading
                   </td>
@@ -298,7 +298,7 @@ export default function BitcoinVsGoldVsOilArticle() {
                   <td className="px-6 py-4 text-gray-400">Up to 50x</td>
                   <td className="px-6 py-4 text-gray-400">Up to 50x</td>
                 </tr>
-                <tr className="border-t border-[#2a2e39] bg-gray-50/30">
+                <tr className="border-t border-[#2a2e39] bg-[#1a1d26]/30">
                   <td className="px-6 py-4 font-medium text-white">
                     Liquidation risk
                   </td>
@@ -357,7 +357,7 @@ export default function BitcoinVsGoldVsOilArticle() {
         <div className="grid md:grid-cols-3 gap-4">
           <Link
             href="/trade/BTC"
-            className="flex items-center gap-4 p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+            className="flex items-center gap-4 p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
           >
             <div className="w-12 h-12 rounded-xl bg-orange-900/30 flex items-center justify-center">
               <Bitcoin className="h-6 w-6 text-orange-600" />
@@ -372,9 +372,9 @@ export default function BitcoinVsGoldVsOilArticle() {
           </Link>
           <Link
             href="/trade/XAU"
-            className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+            className="flex items-center gap-4 p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
           >
-            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-amber-900/30 flex items-center justify-center">
               <Coins className="h-6 w-6 text-amber-600" />
             </div>
             <div>
@@ -387,9 +387,9 @@ export default function BitcoinVsGoldVsOilArticle() {
           </Link>
           <Link
             href="/trade/CL"
-            className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+            className="flex items-center gap-4 p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
           >
-            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-red-900/30 flex items-center justify-center">
               <Flame className="h-6 w-6 text-red-600" />
             </div>
             <div>
@@ -404,8 +404,8 @@ export default function BitcoinVsGoldVsOilArticle() {
       </div>
 
       {/* Risk Disclosure */}
-      <div className="not-prose my-10 bg-amber-50 border border-amber-200 rounded-xl p-6">
-        <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+      <div className="not-prose my-10 bg-amber-950/50mber-800/30 rounded-xl p-6">
+        <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Risk Disclosure
         </h4>
@@ -431,21 +431,21 @@ export default function BitcoinVsGoldVsOilArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-400 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-orange-950/500 text-white font-semibold rounded-lg hover:bg-orange-400 transition-colors"
             >
               Trade Bitcoin
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/XAU"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-400 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-lg hover:bg-amber-400 transition-colors"
             >
               Trade Gold
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/CL"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/20"
             >
               Trade Oil
               <ArrowRight className="h-4 w-4" />
@@ -460,13 +460,13 @@ export default function BitcoinVsGoldVsOilArticle() {
 
         <Link
           href="/blog/oil-prices-iran-war-how-to-trade-crude-oil-2026"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How the Iran War Is Driving Crude to $120
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Full breakdown of why oil is spiking and how to trade it
             </p>
           </div>
@@ -475,10 +475,10 @@ export default function BitcoinVsGoldVsOilArticle() {
 
         <Link
           href="/blog/trade-gold-oil-commodities-on-chain-2026"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               How to Trade Gold, Oil, and Commodities On-Chain
             </h4>
             <p className="text-gray-400 text-sm">

@@ -154,7 +154,7 @@ export default function OilWhalesArticle() {
 
       {/* Whale #2 */}
       <div className="not-prose my-8">
-        <div className="bg-emerald-950 border border-emerald-800 rounded-2xl p-6 text-white">
+        <div className="bg-emerald-950merald-800 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-emerald-800 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-emerald-300" />
@@ -320,7 +320,7 @@ export default function OilWhalesArticle() {
 
       {/* Whale #6 - Suspected insiders */}
       <div className="not-prose my-8">
-        <div className="bg-amber-950 border border-amber-700 rounded-2xl p-6 text-white">
+        <div className="bg-amber-950mber-700 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-amber-800 flex items-center justify-center">
               <AlertTriangle className="h-5 w-5 text-amber-300" />
@@ -404,9 +404,9 @@ export default function OilWhalesArticle() {
               <div className="flex-shrink-0 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                 {item.step}
               </div>
-              <div className="flex-1 border-l-2 border-red-200 pl-4 pb-2">
-                <div className="font-bold text-gray-900">{item.title}</div>
-                <div className="text-sm text-gray-600">{item.desc}</div>
+              <div className="flex-1 border-l-2 border-red-800/30 pl-4 pb-2">
+                <div className="font-bold text-white">{item.title}</div>
+                <div className="text-sm text-gray-400">{item.desc}</div>
               </div>
             </div>
           ))}
@@ -425,12 +425,12 @@ export default function OilWhalesArticle() {
 
       <div className="not-prose my-8">
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6">
+          <div className="bg-emerald-950/50merald-200 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-5 w-5 text-emerald-600" />
-              <h3 className="text-lg font-bold text-gray-900">Bull Signals</h3>
+              <h3 className="text-lg font-bold text-white">Bull Signals</h3>
             </div>
-            <ul className="space-y-2 text-sm text-gray-700">
+            <ul className="space-y-2 text-sm text-gray-300">
               <li className="flex gap-2">
                 <span className="text-emerald-600 font-bold">&bull;</span>
                 <span>
@@ -531,12 +531,12 @@ export default function OilWhalesArticle() {
       </ul>
 
       {/* Risk callout */}
-      <div className="not-prose my-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
-        <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+      <div className="not-prose my-8 bg-amber-950/50mber-800/30 rounded-xl p-6">
+        <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Trading Risk Disclosure
         </h4>
-        <p className="text-amber-800 text-sm">
+        <p className="text-amber-400 text-sm">
           The whale positions described in this article can change at any time.
           On-chain data provides transparency but not certainty. Leveraged
           trading amplifies both gains and losses. Never trade with more than you
@@ -557,13 +557,13 @@ export default function OilWhalesArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/CL"
-              className="inline-block px-8 py-3 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-400 transition-colors"
+              className="inline-block px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-lg hover:bg-amber-400 transition-colors"
             >
               Trade Crude Oil (CL)
             </Link>
             <Link
               href="/trade/BRENTOIL"
-              className="inline-block px-8 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+              className="inline-block px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/20"
             >
               Trade Brent Oil
             </Link>
@@ -573,17 +573,17 @@ export default function OilWhalesArticle() {
 
       {/* Related articles */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Related Intelligence</h3>
+        <h3 className="font-bold text-white">Related Intelligence</h3>
 
         <Link
           href="/blog/oil-prices-iran-war-how-to-trade-crude-oil-2026"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How the Iran War Is Driving Crude to $120
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Full breakdown of why oil is spiking and how to trade it
             </p>
           </div>
@@ -592,13 +592,13 @@ export default function OilWhalesArticle() {
 
         <Link
           href="/blog/crypto-101-first-coin-5-minutes"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Crypto 101: Get Your First Coin in 5 Minutes
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               New to crypto? Get set up to start trading
             </p>
           </div>

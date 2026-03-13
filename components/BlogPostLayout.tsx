@@ -30,7 +30,7 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
     <div className="flex min-h-screen flex-col bg-[#0b0e11]">
       <main className="flex-1">
         {/* Hero */}
-        <div className="bg-gradient-to-b from-[#0f1219] to-[#0b0e11] py-12 md:py-20 border-b border-[#2a2e39]/50">
+        <div className="bg-gradient-to-b from-[#0f1219] to-[#0b0e11] py-12 md:py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-8">
@@ -85,13 +85,13 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
             </div>
 
             {/* Tags */}
-            <div className="mt-12 pt-8 border-t border-[#2a2e39]">
+            <div className="mt-12 pt-8">
               <div className="flex items-center gap-2 flex-wrap">
                 <Tag className="h-4 w-4 text-gray-500" />
                 {post.keywords.map((keyword) => (
                   <span
                     key={keyword}
-                    className="px-3 py-1 bg-[#1a1d26] text-gray-400 rounded-full text-sm border border-[#2a2e39]"
+                    className="px-3 py-1 bg-[#1a1d26] text-gray-400 rounded-full text-sm"
                   >
                     {keyword}
                   </span>

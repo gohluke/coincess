@@ -55,8 +55,8 @@ export default function BestNoKycExchanges2026() {
       <h2>Why Trade Without KYC?</h2>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mb-3">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-red-900/30 flex items-center justify-center mb-3">
             <Shield className="h-5 w-5 text-red-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Privacy from Data Breaches</h4>
@@ -65,27 +65,27 @@ export default function BestNoKycExchanges2026() {
             address, and selfie. No KYC = nothing to leak.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
             <Zap className="h-5 w-5 text-emerald-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Instant Access</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-bold text-white mb-2">Instant Access</h4>
+          <p className="text-sm text-gray-400">
             No 3-day verification wait. Connect your wallet and trade in under 60
             seconds.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center mb-3">
             <Eye className="h-5 w-5 text-blue-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Financial Freedom</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-bold text-white mb-2">Financial Freedom</h4>
+          <p className="text-sm text-gray-400">
             No geographic restrictions. Trade from anywhere—no &quot;not available
             in your region&quot; nonsense.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
             <Lock className="h-5 w-5 text-amber-600" />
           </div>
@@ -101,7 +101,7 @@ export default function BestNoKycExchanges2026() {
 
       <div className="not-prose my-8 space-y-6">
         {/* #1 Coincess */}
-        <div className="border-2 border-brand rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10 shadow-lg">
+        <div className="border-2 border-brand rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10 ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold">
               1
@@ -113,7 +113,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-700 mb-4">
+          <p className="text-gray-300 mb-4">
             Built on Hyperliquid, Coincess is the only platform that combines a
             swap aggregator with perpetual futures and 24/7 commodity trading.
             Trade BTC, ETH, oil, gold—up to 50x leverage—with a beautiful UI
@@ -155,7 +155,7 @@ export default function BestNoKycExchanges2026() {
         </div>
 
         {/* #2 Hyperliquid */}
-        <div className="border-2 border-emerald-300 rounded-2xl p-6 bg-emerald-50/50">
+        <div className="border-2 border-emerald-300 rounded-2xl p-6 bg-emerald-950/50/50">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold">
               2
@@ -167,7 +167,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-700 mb-4">
+          <p className="text-gray-300 mb-4">
             The underlying L1 that powers Coincess. Massive volume, deep
             liquidity, and true decentralization. The UI is powerful but complex;
             no swap aggregator—you trade directly on the order book.
@@ -269,7 +269,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-700 mb-4">
+          <p className="text-gray-300 mb-4">
             Privacy-focused swap service. Great for one-off conversions, but
             that&apos;s it—no trading, no leverage, no perpetuals. Use when you
             need a quick swap; use Coincess when you need the full toolkit.
@@ -297,7 +297,7 @@ export default function BestNoKycExchanges2026() {
               6
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Bisq</h3>
+              <h3 className="text-xl font-bold text-white">Bisq</h3>
               <span className="text-sm text-slate-600 font-medium">
                 P2P • No KYC • Desktop Only
               </span>
@@ -334,29 +334,29 @@ export default function BestNoKycExchanges2026() {
               <th className="text-left p-3 font-semibold text-white border-b">
                 Platform
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 KYC Required
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 Leverage
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 Assets
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 Commodities
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 Fees
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 Speed
               </th>
             </tr>
           </thead>
           <tbody>
             <tr className="bg-brand/5">
-              <td className="p-3 border-b font-semibold text-gray-900">
+              <td className="p-3 border-b font-semibold text-white">
                 Coincess
               </td>
               <td className="p-3 border-b text-emerald-600">No</td>
@@ -419,7 +419,7 @@ export default function BestNoKycExchanges2026() {
 
       <div className="not-prose my-8">
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="border-2 border-brand/30 rounded-xl p-6 bg-white text-center">
+          <div className="border-2 border-brand/30 rounded-xl p-6 bg-[#141620] text-center">
             <div className="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4">
               <Wallet className="h-7 w-7 text-brand" />
             </div>
@@ -428,7 +428,7 @@ export default function BestNoKycExchanges2026() {
               Connect MetaMask, Rabby, or any Web3 wallet. No signup, no email.
             </p>
           </div>
-          <div className="border-2 border-brand/30 rounded-xl p-6 bg-white text-center">
+          <div className="border-2 border-brand/30 rounded-xl p-6 bg-[#141620] text-center">
             <div className="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4">
               <BarChart3 className="h-7 w-7 text-brand" />
             </div>
@@ -437,7 +437,7 @@ export default function BestNoKycExchanges2026() {
               Choose BTC, ETH, oil, gold—or use the swap guide for best rates.
             </p>
           </div>
-          <div className="border-2 border-brand/30 rounded-xl p-6 bg-white text-center">
+          <div className="border-2 border-brand/30 rounded-xl p-6 bg-[#141620] text-center">
             <div className="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4">
               <Coins className="h-7 w-7 text-brand" />
             </div>
@@ -461,14 +461,14 @@ export default function BestNoKycExchanges2026() {
         when in doubt, consult a professional.
       </p>
 
-      <div className="not-prose my-8 bg-amber-950/50 border border-amber-800/50 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50mber-800/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-amber-900 mb-2">
+            <h4 className="font-semibold text-amber-400 mb-2">
               Risk Disclosure
             </h4>
-            <p className="text-amber-800 text-sm">
+            <p className="text-amber-400 text-sm">
               Trading crypto and derivatives involves significant risk. Leverage
               amplifies both gains and losses. Past performance does not
               guarantee future results. Never trade with more than you can afford
@@ -492,14 +492,14 @@ export default function BestNoKycExchanges2026() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
             >
               Trade BTC
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/swap-guide"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/30"
             >
               Swap Guide
             </Link>
@@ -509,14 +509,14 @@ export default function BestNoKycExchanges2026() {
 
       {/* Related articles */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Related Articles</h3>
+        <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link
           href="/blog/why-privacy-matters-anonymous-crypto"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Why Privacy Matters: A Beginner&apos;s Guide to Anonymous Crypto
             </h4>
             <p className="text-gray-400 text-sm">
@@ -528,7 +528,7 @@ export default function BestNoKycExchanges2026() {
 
         <Link
           href="/blog/how-to-swap-bitcoin-for-monero"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">

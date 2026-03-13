@@ -26,7 +26,7 @@ export default function HowToSwapBitcoinForMonero() {
         </p>
         <Link
           href="/swap-guide"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
         >
           Open Swap Widget
           <ArrowRight className="h-4 w-4" />
@@ -59,12 +59,12 @@ export default function HowToSwapBitcoinForMonero() {
         At Coincess, we believe in <strong>Coin Access</strong>—immediate, barrier-free access to your financial privacy. You shouldn't need permission from a corporation to hold private money.
       </p>
 
-      <div className="not-prose my-8 bg-emerald-950/50 border border-[#2a2e39] rounded-xl p-6">
+      <div className="not-prose my-8 bg-emerald-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-green-900 mb-1">Our Promise</h4>
-            <p className="text-green-800">
+            <h4 className="font-semibold text-emerald-400 mb-1">Our Promise</h4>
+            <p className="text-emerald-400">
               By the end of this guide, you will have Monero in your wallet in <strong>less than 15 minutes</strong>. No signup, no ID upload, no waiting for approval.
             </p>
           </div>
@@ -96,7 +96,7 @@ export default function HowToSwapBitcoinForMonero() {
             <Shield className="h-5 w-5 text-brand" />
             <h4 className="font-bold text-white">Best Option: Hardware Wallet (Cold Storage)</h4>
           </div>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-gray-400 text-sm mb-4">
             For maximum security, store your Monero on a hardware wallet that never connects to the internet. This protects you from hackers and malware.
           </p>
           <div className="flex flex-wrap gap-3">
@@ -113,7 +113,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://trezor.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-[#2a2e39] text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Get Trezor
               <ExternalLink className="h-4 w-4" />
@@ -126,7 +126,7 @@ export default function HowToSwapBitcoinForMonero() {
             <Wallet className="h-5 w-5 text-brand" />
             <h4 className="font-bold text-white">Free Option: Software Wallet</h4>
           </div>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-gray-400 text-sm mb-4">
             If you're just getting started, these free wallets are excellent and beginner-friendly.
           </p>
           <div className="flex flex-wrap gap-3">
@@ -134,7 +134,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://cakewallet.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-[#2a2e39] text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Cake Wallet (Mobile)
               <ExternalLink className="h-4 w-4" />
@@ -143,7 +143,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://featherwallet.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-[#2a2e39] text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Feather Wallet (Desktop)
               <ExternalLink className="h-4 w-4" />
@@ -171,7 +171,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white mb-2">Select Your Trading Pair</h3>
-            <p className="text-gray-600 mb-3">
+            <p className="text-gray-400 mb-3">
               Go to <a href="https://trocador.app/?ref=2dzDcvfQJY" target="_blank" rel="noopener noreferrer" className="text-brand font-medium hover:underline">Trocador.app</a> (our recommended aggregator).
             </p>
             <ul className="space-y-1 text-gray-400 text-sm">
@@ -188,7 +188,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white mb-2">Enter the Amount</h3>
-            <p className="text-gray-600 mb-3">
+            <p className="text-gray-400 mb-3">
               Type in how much BTC you want to swap (e.g., 0.01 BTC).
             </p>
             <p className="text-gray-400 text-sm">
@@ -204,10 +204,10 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white mb-2">Paste Your Monero Address</h3>
-            <p className="text-gray-600 mb-3">
+            <p className="text-gray-400 mb-3">
               Open your Monero wallet (Ledger, Cake Wallet, or Feather), copy your receive address, and paste it into the "Recipient Wallet" box.
             </p>
-            <div className="bg-amber-950/50 border border-[#2a2e39] rounded-lg p-3">
+            <div className="bg-amber-950/50 rounded-lg p-3">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <p className="text-amber-400 text-sm">
@@ -225,7 +225,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white mb-2">Send the Bitcoin</h3>
-            <p className="text-gray-600 mb-3">
+            <p className="text-gray-400 mb-3">
               The swap service will generate a <strong>one-time BTC deposit address</strong>. Send your Bitcoin to this address from your wallet or exchange.
             </p>
             <p className="text-gray-400 text-sm">
@@ -241,7 +241,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white mb-2">Wait for Confirmation</h3>
-            <p className="text-gray-600 mb-3">
+            <p className="text-gray-400 mb-3">
               The swap typically takes <strong>10-20 minutes</strong> depending on Bitcoin network congestion.
             </p>
             <div className="bg-[#1a1d26] rounded-lg p-3">
@@ -315,7 +315,7 @@ export default function HowToSwapBitcoinForMonero() {
           <Shield className="h-6 w-6 text-brand flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-white mb-2">The Safest Option: Hardware Wallet</h4>
-            <p className="text-gray-700 text-sm mb-4">
+            <p className="text-gray-300 text-sm mb-4">
               The safest place for your Monero is a hardware wallet that never touches the internet. Your private keys stay on the device, isolated from hackers and malware.
             </p>
             <a
@@ -429,7 +429,7 @@ export default function HowToSwapBitcoinForMonero() {
         <div className="flex flex-wrap justify-center gap-4">
           <Link
             href="/swap-guide"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
           >
             View Swap Guide
             <ArrowRight className="h-4 w-4" />
@@ -438,7 +438,7 @@ export default function HowToSwapBitcoinForMonero() {
             href="https://trocador.app/?ref=2dzDcvfQJY"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-[#141620]/10 transition-colors"
           >
             Open Trocador
             <ExternalLink className="h-4 w-4" />
@@ -452,7 +452,7 @@ export default function HowToSwapBitcoinForMonero() {
         
         <Link
           href="/blog/why-privacy-matters-anonymous-crypto"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Why Privacy Matters</h4>
@@ -463,7 +463,7 @@ export default function HowToSwapBitcoinForMonero() {
 
         <Link
           href="/blog/hot-wallets-vs-cold-wallets"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Hot Wallets vs Cold Wallets</h4>

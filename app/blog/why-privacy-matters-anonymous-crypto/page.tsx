@@ -37,7 +37,7 @@ export default function WhyPrivacyMatters() {
         <li>When and how much</li>
       </ul>
 
-      <div className="not-prose my-8 bg-red-950/50 border border-[#2a2e39] rounded-xl p-6">
+      <div className="not-prose my-8 bg-red-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <Eye className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -161,40 +161,40 @@ export default function WhyPrivacyMatters() {
       <div className="not-prose my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left p-4 font-semibold text-gray-900 border-b">Feature</th>
-              <th className="text-left p-4 font-semibold text-gray-900 border-b">Bitcoin (BTC)</th>
-              <th className="text-left p-4 font-semibold text-gray-900 border-b">Monero (XMR)</th>
+            <tr className="bg-[#1a1d26]">
+              <th className="text-left p-4 font-semibold text-white border-b">Feature</th>
+              <th className="text-left p-4 font-semibold text-white border-b">Bitcoin (BTC)</th>
+              <th className="text-left p-4 font-semibold text-white border-b">Monero (XMR)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="p-4 border-b text-gray-700 font-medium">Transaction visibility</td>
+              <td className="p-4 border-b text-gray-300 font-medium">Transaction visibility</td>
               <td className="p-4 border-b text-red-600">Fully public</td>
               <td className="p-4 border-b text-green-600">Hidden by default</td>
             </tr>
-            <tr className="bg-gray-50">
-              <td className="p-4 border-b text-gray-700 font-medium">Sender identity</td>
+            <tr className="bg-[#1a1d26]">
+              <td className="p-4 border-b text-gray-300 font-medium">Sender identity</td>
               <td className="p-4 border-b text-red-600">Traceable to address</td>
               <td className="p-4 border-b text-green-600">Hidden (ring signatures)</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-700 font-medium">Receiver identity</td>
+              <td className="p-4 border-b text-gray-300 font-medium">Receiver identity</td>
               <td className="p-4 border-b text-red-600">Visible address</td>
               <td className="p-4 border-b text-green-600">Hidden (stealth addresses)</td>
             </tr>
-            <tr className="bg-gray-50">
-              <td className="p-4 border-b text-gray-700 font-medium">Amount</td>
+            <tr className="bg-[#1a1d26]">
+              <td className="p-4 border-b text-gray-300 font-medium">Amount</td>
               <td className="p-4 border-b text-red-600">Publicly visible</td>
               <td className="p-4 border-b text-green-600">Hidden (RingCT)</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-700 font-medium">Balance</td>
+              <td className="p-4 border-b text-gray-300 font-medium">Balance</td>
               <td className="p-4 border-b text-red-600">Anyone can check</td>
               <td className="p-4 border-b text-green-600">Only you know</td>
             </tr>
-            <tr className="bg-gray-50">
-              <td className="p-4 text-gray-700 font-medium">Fungibility</td>
+            <tr className="bg-[#1a1d26]">
+              <td className="p-4 text-gray-300 font-medium">Fungibility</td>
               <td className="p-4 text-orange-600">Tainted coins can be blacklisted</td>
               <td className="p-4 text-green-600">All XMR is equal (fungible)</td>
             </tr>
@@ -255,12 +255,12 @@ export default function WhyPrivacyMatters() {
       </ol>
 
       {/* Warning Box */}
-      <div className="not-prose my-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50mber-800/30 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-amber-900 mb-2">Important Note</h4>
-            <p className="text-amber-800 text-sm">
+            <h4 className="font-semibold text-amber-400 mb-2">Important Note</h4>
+            <p className="text-amber-400 text-sm">
               Privacy is a right, not a crime. However, always comply with your local laws regarding cryptocurrency use and taxation. Using privacy tools for illegal activities is both unethical and punishable by law.
             </p>
           </div>
@@ -307,7 +307,7 @@ export default function WhyPrivacyMatters() {
       <div className="not-prose mt-12">
         <Link
           href="/blog/how-to-swap-bitcoin-for-monero"
-          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl border border-brand/20 hover:border-brand/50 transition-colors group"
+          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl border border-brand/20 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Ready to Try Monero?</h4>

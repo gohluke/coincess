@@ -63,7 +63,7 @@ export default function OilPricesWarArticle() {
 
       {/* Key stats banner */}
       <div className="not-prose my-10">
-        <div className="bg-gradient-to-r from-amber-950/50 to-orange-950/50 border border-amber-800/50 rounded-2xl p-6">
+        <div className="bg-gradient-to-r from-amber-950/50 to-orange-950/50mber-800/50 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="h-5 w-5 text-amber-600" />
             <span className="text-sm font-bold text-amber-400 uppercase tracking-wider">
@@ -72,8 +72,8 @@ export default function OilPricesWarArticle() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <div className="text-2xl font-bold text-gray-900">$98.96</div>
-              <div className="text-sm text-gray-600">Brent Crude (bbl)</div>
+              <div className="text-2xl font-bold text-white">$98.96</div>
+              <div className="text-sm text-gray-400">Brent Crude (bbl)</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-white">$94.77</div>
@@ -102,14 +102,14 @@ export default function OilPricesWarArticle() {
       {/* Supply/Demand explainer cards */}
       <div className="not-prose my-8">
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+          <div className="bg-red-950/50 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-5 w-5 text-red-600" />
               <h3 className="text-lg font-bold text-white">
                 Supply Shocks (Prices Rise)
               </h3>
             </div>
-            <ul className="space-y-2 text-sm text-gray-700">
+            <ul className="space-y-2 text-sm text-gray-300">
               <li className="flex gap-2">
                 <span className="text-red-500 font-bold">1.</span>
                 <span>
@@ -150,10 +150,10 @@ export default function OilPricesWarArticle() {
             </ul>
           </div>
 
-          <div className="bg-emerald-950/50 border border-emerald-800/50 rounded-xl p-6">
+          <div className="bg-emerald-950/50merald-800/50 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="h-5 w-5 text-green-600" />
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-white">
                 Demand Surges (Prices Rise)
               </h3>
             </div>
@@ -289,7 +289,7 @@ export default function OilPricesWarArticle() {
           ].map((item) => (
             <div key={item.date} className="flex gap-4 items-start">
               <div className="flex-shrink-0 w-16 text-right">
-                <span className="text-sm font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                <span className="text-sm font-bold text-amber-600 bg-amber-950/50 px-2 py-1 rounded">
                   {item.date}
                 </span>
               </div>
@@ -364,12 +364,12 @@ export default function OilPricesWarArticle() {
       </ul>
 
       {/* Risk callout */}
-      <div className="not-prose my-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
-        <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+      <div className="not-prose my-8 bg-amber-950/50mber-800/30 rounded-xl p-6">
+        <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Trading Risk Disclosure
         </h4>
-        <p className="text-amber-800 text-sm">
+        <p className="text-amber-400 text-sm">
           Oil is one of the most volatile commodities in the world. Leveraged
           trading amplifies both gains and losses. Never trade with more than
           you can afford to lose. Past performance and geopolitical analysis do
@@ -391,7 +391,7 @@ export default function OilPricesWarArticle() {
       <div className="not-prose my-10">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-amber-950/500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Shield className="h-8 w-8 text-white" />
             </div>
             <div className="text-3xl font-bold text-amber-600 mb-2">
@@ -406,22 +406,22 @@ export default function OilPricesWarArticle() {
             </p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-amber-950/500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Target className="h-8 w-8 text-white" />
             </div>
             <div className="text-3xl font-bold text-amber-600 mb-2">
               Step 2
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 className="text-lg font-semibold text-white mb-1">
               Pick Your Oil Market
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Search for <strong>Crude Oil (CL)</strong> or{" "}
               <strong>Brent Oil (BRENTOIL)</strong> in the trading interface.
             </p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-amber-950/500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <DollarSign className="h-8 w-8 text-white" />
             </div>
             <div className="text-3xl font-bold text-amber-600 mb-2">
@@ -441,40 +441,40 @@ export default function OilPricesWarArticle() {
       <h3>Available Oil Markets on Coincess</h3>
 
       <div className="not-prose my-8">
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="border border-[#2a2e39] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-[#1a1d26]">
               <tr>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                <th className="text-left px-4 py-3 font-semibold text-gray-300">
                   Market
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                <th className="text-left px-4 py-3 font-semibold text-gray-300">
                   Symbol
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                <th className="text-left px-4 py-3 font-semibold text-gray-300">
                   Type
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                <th className="text-left px-4 py-3 font-semibold text-gray-300">
                   Max Leverage
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-gray-100">
-                <td className="px-4 py-3 font-medium text-gray-900">
+              <tr className="border-t border-[#2a2e39]">
+                <td className="px-4 py-3 font-medium text-white">
                   WTI Crude Oil
                 </td>
-                <td className="px-4 py-3 text-gray-600">CL</td>
-                <td className="px-4 py-3 text-gray-600">Perpetual</td>
-                <td className="px-4 py-3 text-gray-600">50x</td>
+                <td className="px-4 py-3 text-gray-400">CL</td>
+                <td className="px-4 py-3 text-gray-400">Perpetual</td>
+                <td className="px-4 py-3 text-gray-400">50x</td>
               </tr>
-              <tr className="border-t border-gray-100 bg-gray-50/50">
-                <td className="px-4 py-3 font-medium text-gray-900">
+              <tr className="border-t border-[#2a2e39] bg-[#141620]/50">
+                <td className="px-4 py-3 font-medium text-white">
                   Brent Crude Oil
                 </td>
-                <td className="px-4 py-3 text-gray-600">BRENTOIL</td>
-                <td className="px-4 py-3 text-gray-600">Perpetual</td>
-                <td className="px-4 py-3 text-gray-600">50x</td>
+                <td className="px-4 py-3 text-gray-400">BRENTOIL</td>
+                <td className="px-4 py-3 text-gray-400">Perpetual</td>
+                <td className="px-4 py-3 text-gray-400">50x</td>
               </tr>
             </tbody>
           </table>
@@ -520,14 +520,14 @@ export default function OilPricesWarArticle() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+        <div className="bg-emerald-950/50merald-800/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-5 w-5 text-green-600" />
-            <h4 className="font-bold text-gray-900">
+            <h4 className="font-bold text-white">
               Conservative: Funding Rate Harvest
             </h4>
           </div>
-          <p className="text-sm text-gray-700 mb-3">
+          <p className="text-sm text-gray-300 mb-3">
             When oil is in high demand, the funding rate on perpetual contracts
             often turns highly positive—meaning <strong>long holders pay</strong>{" "}
             short holders every hour. By going long on physical oil exposure
@@ -539,14 +539,14 @@ export default function OilPricesWarArticle() {
           </p>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+        <div className="bg-amber-950/50mber-800/30 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-5 w-5 text-amber-600" />
-            <h4 className="font-bold text-gray-900">
+            <h4 className="font-bold text-white">
               Moderate: Momentum Long
             </h4>
           </div>
-          <p className="text-sm text-gray-700 mb-3">
+          <p className="text-sm text-gray-300 mb-3">
             The trend is clearly bullish. Going long with a trailing stop-loss
             lets you ride the momentum while protecting against sudden
             reversals. Set your stop below the last significant support level
@@ -557,14 +557,14 @@ export default function OilPricesWarArticle() {
           </p>
         </div>
 
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+        <div className="bg-red-950/50 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="h-5 w-5 text-red-600" />
-            <h4 className="font-bold text-gray-900">
+            <h4 className="font-bold text-white">
               Aggressive: Breakout Play to $120+
             </h4>
           </div>
-          <p className="text-sm text-gray-700 mb-3">
+          <p className="text-sm text-gray-300 mb-3">
             If you believe the Hormuz closure will persist and no ceasefire is
             imminent, oil could retest the $119 intraday high and push toward
             $150. This is a high-conviction, high-risk play with tight risk
@@ -615,13 +615,13 @@ export default function OilPricesWarArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/CL"
-              className="inline-block px-8 py-3 bg-white text-amber-700 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+              className="inline-block px-8 py-3 bg-[#141620] text-amber-400 font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
             >
               Trade Crude Oil (CL)
             </Link>
             <Link
               href="/trade/BRENTOIL"
-              className="inline-block px-8 py-3 bg-white/20 text-white font-semibold rounded-lg hover:bg-white/30 transition-colors border border-white/30"
+              className="inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-lg hover:bg-[#141620]/30 transition-colors border border-white/30"
             >
               Trade Brent Oil
             </Link>
@@ -631,17 +631,17 @@ export default function OilPricesWarArticle() {
 
       {/* Related articles */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Keep Learning</h3>
+        <h3 className="font-bold text-white">Keep Learning</h3>
 
         <Link
           href="/blog/crypto-101-first-coin-5-minutes"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Crypto 101: Get Your First Coin
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               New to crypto? Get set up in under 5 minutes
             </p>
           </div>
@@ -650,13 +650,13 @@ export default function OilPricesWarArticle() {
 
         <Link
           href="/blog/exchange-vs-swap-aggregator"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Exchange vs. Swap Aggregator
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Find the cheapest way to fund your trading account
             </p>
           </div>

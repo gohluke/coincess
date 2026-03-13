@@ -64,12 +64,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const categoryColors: Record<string, string> = {
-  Tutorial: "bg-blue-500/15 text-blue-400",
-  Security: "bg-red-500/15 text-red-400",
-  Guide: "bg-emerald-500/15 text-emerald-400",
-  Privacy: "bg-rose-500/15 text-rose-400",
-  Beginner: "bg-orange-500/15 text-orange-400",
-  Intelligence: "bg-amber-500/15 text-amber-400",
+  Tutorial: "bg-blue-950/500/15 text-blue-400",
+  Security: "bg-red-950/500/15 text-red-400",
+  Guide: "bg-emerald-950/500/15 text-emerald-400",
+  Privacy: "bg-rose-950/500/15 text-rose-400",
+  Beginner: "bg-orange-950/500/15 text-orange-400",
+  Intelligence: "bg-amber-950/500/15 text-amber-400",
 };
 
 function formatDate(dateString: string) {
@@ -114,7 +114,7 @@ export default async function BlogPostPage({ params }: Props) {
 
       <main className="flex-1">
         {/* Hero */}
-        <div className="bg-gradient-to-b from-[#0f1219] to-[#0b0e11] py-12 md:py-20 border-b border-[#2a2e39]/50">
+        <div className="bg-gradient-to-b from-[#0f1219] to-[#0b0e11] py-12 md:py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-8">
@@ -174,13 +174,13 @@ export default async function BlogPostPage({ params }: Props) {
 
             {/* Tags */}
             {post.keywords.length > 0 && (
-              <div className="mt-12 pt-8 border-t border-[#2a2e39]">
+              <div className="mt-12 pt-8">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Tag className="h-4 w-4 text-gray-500" />
                   {post.keywords.map((kw) => (
                     <span
                       key={kw}
-                      className="px-3 py-1 bg-[#1a1d26] text-gray-400 rounded-full text-sm border border-[#2a2e39]"
+                      className="px-3 py-1 bg-[#1a1d26] text-gray-400 rounded-full text-sm"
                     >
                       {kw}
                     </span>
@@ -200,8 +200,8 @@ export default async function BlogPostPage({ params }: Props) {
                     href={btn.href}
                     className={
                       i === 0
-                        ? "inline-block px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-gray-100 transition-colors"
-                        : "inline-block px-8 py-3 bg-white/20 text-white font-semibold rounded-lg hover:bg-white/30 transition-colors border border-white/30"
+                        ? "inline-block px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+                        : "inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-lg hover:bg-[#141620]/30 transition-colors border border-white/30"
                     }
                   >
                     {btn.label}

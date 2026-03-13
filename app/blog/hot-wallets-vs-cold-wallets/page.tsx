@@ -46,29 +46,29 @@ export default function HotWalletsVsColdWallets() {
           </thead>
           <tbody>
             <tr>
-              <td className="p-4 border-b text-gray-700">Internet Connection</td>
-              <td className="p-4 border-b text-gray-700">Always connected</td>
-              <td className="p-4 border-b text-gray-700">Offline (air-gapped)</td>
+              <td className="p-4 border-b text-gray-300">Internet Connection</td>
+              <td className="p-4 border-b text-gray-300">Always connected</td>
+              <td className="p-4 border-b text-gray-300">Offline (air-gapped)</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-700">Security Level</td>
+              <td className="p-4 border-b text-gray-300">Security Level</td>
               <td className="p-4 border-b text-orange-600 font-medium">Medium</td>
               <td className="p-4 border-b text-green-600 font-medium">Very High</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-700">Convenience</td>
+              <td className="p-4 border-b text-gray-300">Convenience</td>
               <td className="p-4 border-b text-green-600 font-medium">Very High</td>
               <td className="p-4 border-b text-orange-600 font-medium">Lower</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-700">Cost</td>
-              <td className="p-4 border-b text-gray-700">Free</td>
-              <td className="p-4 border-b text-gray-700">$50-$200+</td>
+              <td className="p-4 border-b text-gray-300">Cost</td>
+              <td className="p-4 border-b text-gray-300">Free</td>
+              <td className="p-4 border-b text-gray-300">$50-$200+</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-700">Best For</td>
-              <td className="p-4 border-b text-gray-700">Daily transactions, small amounts</td>
-              <td className="p-4 border-b text-gray-700">Long-term storage, large amounts</td>
+              <td className="p-4 border-b text-gray-300">Best For</td>
+              <td className="p-4 border-b text-gray-300">Daily transactions, small amounts</td>
+              <td className="p-4 border-b text-gray-300">Long-term storage, large amounts</td>
             </tr>
             <tr className="bg-[#1a1d26]">
               <td className="p-4 text-gray-300">Hack Risk</td>
@@ -93,8 +93,8 @@ export default function HotWalletsVsColdWallets() {
       </ul>
 
       <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-green-50 rounded-xl p-5">
-          <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+        <div className="bg-emerald-950/50 rounded-xl p-5">
+          <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Hot Wallet Pros
           </h4>
@@ -106,8 +106,8 @@ export default function HotWalletsVsColdWallets() {
             <li>• Works on any device</li>
           </ul>
         </div>
-        <div className="bg-red-50 rounded-xl p-5">
-          <h4 className="font-semibold text-red-900 mb-3 flex items-center gap-2">
+        <div className="bg-red-950/50 rounded-xl p-5">
+          <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Hot Wallet Cons
           </h4>
@@ -140,8 +140,8 @@ export default function HotWalletsVsColdWallets() {
       </p>
 
       <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-green-50 rounded-xl p-5">
-          <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+        <div className="bg-emerald-950/50 rounded-xl p-5">
+          <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Cold Wallet Pros
           </h4>
@@ -153,8 +153,8 @@ export default function HotWalletsVsColdWallets() {
             <li>• Ideal for long-term holdings</li>
           </ul>
         </div>
-        <div className="bg-red-50 rounded-xl p-5">
-          <h4 className="font-semibold text-red-900 mb-3 flex items-center gap-2">
+        <div className="bg-red-950/50 rounded-xl p-5">
+          <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Cold Wallet Cons
           </h4>
@@ -175,11 +175,11 @@ export default function HotWalletsVsColdWallets() {
           href="https://shop.ledger.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Ledger Nano X / Nano S Plus</h4>
-            <p className="text-gray-600 text-sm">Most popular choice. Supports 5,500+ coins including Bitcoin, Ethereum, and Monero.</p>
+            <p className="text-gray-400 text-sm">Most popular choice. Supports 5,500+ coins including Bitcoin, Ethereum, and Monero.</p>
             <p className="text-brand text-sm font-medium mt-1">From $79</p>
           </div>
           <ExternalLink className="h-5 w-5 text-gray-400 group-hover:text-brand" />
@@ -189,11 +189,11 @@ export default function HotWalletsVsColdWallets() {
           href="https://trezor.io"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Trezor Model T / Safe 3</h4>
-            <p className="text-gray-600 text-sm">Open-source firmware. Touchscreen interface. Great for Bitcoin maximalists.</p>
+            <p className="text-gray-400 text-sm">Open-source firmware. Touchscreen interface. Great for Bitcoin maximalists.</p>
             <p className="text-brand text-sm font-medium mt-1">From $69</p>
           </div>
           <ExternalLink className="h-5 w-5 text-gray-400 group-hover:text-brand" />
@@ -214,7 +214,7 @@ export default function HotWalletsVsColdWallets() {
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <h4 className="font-semibold text-white mb-2">Hot Wallet (Daily Use)</h4>
-            <ul className="space-y-1 text-gray-700 text-sm">
+            <ul className="space-y-1 text-gray-300 text-sm">
               <li>• Keep small amounts for trading/swapping</li>
               <li>• Use for DeFi interactions</li>
               <li>• Maximum: What you'd carry in a physical wallet</li>
@@ -223,7 +223,7 @@ export default function HotWalletsVsColdWallets() {
           </div>
           <div>
             <h4 className="font-semibold text-white mb-2">Cold Wallet (Savings)</h4>
-            <ul className="space-y-1 text-gray-700 text-sm">
+            <ul className="space-y-1 text-gray-300 text-sm">
               <li>• Store long-term investments</li>
               <li>• Keep majority of holdings offline</li>
               <li>• Only connect when necessary</li>
@@ -259,7 +259,7 @@ export default function HotWalletsVsColdWallets() {
       </ol>
 
       {/* Warning Box */}
-      <div className="not-prose my-8 bg-amber-950/50 border border-[#2a2e39] rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>

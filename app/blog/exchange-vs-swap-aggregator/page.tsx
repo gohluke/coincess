@@ -93,8 +93,8 @@ export default function ExchangeVsSwapAggregator() {
       </ol>
 
       <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-green-50 rounded-xl p-5">
-          <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+        <div className="bg-emerald-950/50 rounded-xl p-5">
+          <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Exchange Pros
           </h4>
@@ -162,8 +162,8 @@ export default function ExchangeVsSwapAggregator() {
       </div>
 
       <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-green-50 rounded-xl p-5">
-          <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+        <div className="bg-emerald-950/50 rounded-xl p-5">
+          <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Aggregator Pros
           </h4>
@@ -291,7 +291,7 @@ export default function ExchangeVsSwapAggregator() {
           href="https://trocador.app/?ref=2dzDcvfQJY"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Trocador</h4>
@@ -304,7 +304,7 @@ export default function ExchangeVsSwapAggregator() {
           href="https://orangefren.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">OrangeFren</h4>
@@ -339,7 +339,7 @@ export default function ExchangeVsSwapAggregator() {
       <div className="not-prose mt-12">
         <Link
           href="/swap-guide"
-          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl border border-brand/20 hover:border-brand/50 transition-colors group"
+          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl border border-brand/20 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Compare Swap Methods</h4>

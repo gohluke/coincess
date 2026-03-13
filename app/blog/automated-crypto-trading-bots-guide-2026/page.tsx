@@ -60,7 +60,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 gap-4">
-        <div className="bg-emerald-950/50 border border-emerald-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-emerald-950/50merald-200 rounded-xl p-6 ">
           <div className="w-12 h-12 rounded-xl bg-emerald-900/30 flex items-center justify-center mb-4">
             <Clock className="h-6 w-6 text-emerald-600" />
           </div>
@@ -71,17 +71,17 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
             live your life.
           </p>
         </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
+        <div className="bg-blue-950/50 rounded-xl p-6 ">
+          <div className="w-12 h-12 rounded-xl bg-blue-900/30 flex items-center justify-center mb-4">
             <Brain className="h-6 w-6 text-blue-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">No Emotions</h4>
-          <p className="text-sm text-gray-700">
+          <h4 className="font-bold text-white mb-2">No Emotions</h4>
+          <p className="text-sm text-gray-300">
             Fear and greed are eliminated. The bot follows the strategy every
             time—no panic selling, no FOMO buying, no revenge trading.
           </p>
         </div>
-        <div className="bg-amber-950/50 border border-amber-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-amber-950/50mber-800/30 rounded-xl p-6 ">
           <div className="w-12 h-12 rounded-xl bg-amber-900/30 flex items-center justify-center mb-4">
             <Zap className="h-6 w-6 text-amber-600" />
           </div>
@@ -91,7 +91,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
             grid level, the bot reacts instantly. Humans can&apos;t compete.
           </p>
         </div>
-        <div className="bg-purple-950/50 border border-violet-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-purple-950/50 border border-violet-200 rounded-xl p-6 ">
           <div className="w-12 h-12 rounded-xl bg-purple-900/30 flex items-center justify-center mb-4">
             <Target className="h-6 w-6 text-violet-600" />
           </div>
@@ -112,7 +112,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
               <Grid3X3 className="h-5 w-5 text-brand" />
@@ -130,9 +130,9 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-emerald-900/30 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-emerald-600" />
             </div>
             <h3 className="text-lg font-bold text-white">DCA Bots</h3>
@@ -148,9 +148,9 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-amber-900/30 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-amber-600" />
             </div>
             <h3 className="text-lg font-bold text-white">Momentum Bots</h3>
@@ -166,9 +166,9 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-blue-900/30 flex items-center justify-center">
               <ArrowRightLeft className="h-5 w-5 text-blue-600" />
             </div>
             <h3 className="text-lg font-bold text-white">Arbitrage Bots</h3>
@@ -183,9 +183,9 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-950/50 to-amber-900/30 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-gradient-to-r from-amber-950/50 to-amber-900/30 border-2 border-amber-800/30 rounded-xl p-6 ">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-amber-950/500 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-lg font-bold text-white">
@@ -218,7 +218,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-[#141620] border-2 border-brand/20 rounded-xl p-6 shadow-md">
+        <div className="bg-[#141620] border-2 border-brand/20 rounded-xl p-6 ">
           <div className="flex items-center gap-3 mb-3">
             <Grid3X3 className="h-6 w-6 text-brand" />
             <h3 className="text-lg font-bold text-white">Grid Trading Bot</h3>
@@ -235,7 +235,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-[#141620] border-2 border-amber-200 rounded-xl p-6 shadow-md">
+        <div className="bg-[#141620] border-2 border-amber-800/30 rounded-xl p-6 ">
           <div className="flex items-center gap-3 mb-3">
             <Zap className="h-6 w-6 text-amber-600" />
             <h3 className="text-lg font-bold text-white">
@@ -254,7 +254,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6">
+        <div className="bg-[#1a1d26] rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
             <Bot className="h-6 w-6 text-slate-600" />
             <h3 className="text-lg font-bold text-white">Momentum Strategies</h3>
@@ -431,39 +431,39 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border border-red-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
           <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-red-900">Market crashes blow through ranges</h4>
-            <p className="text-sm text-red-800">
+            <h4 className="font-bold text-red-400">Market crashes blow through ranges</h4>
+            <p className="text-sm text-red-400">
               A grid bot assumes price stays in range. A flash crash or sustained
               trend can blow through your lower bound—you&apos;re left holding
               bags. Set bounds wide enough for volatility.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50mber-800/30">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-amber-900">Funding rates can flip</h4>
-            <p className="text-sm text-amber-800">
+            <h4 className="font-bold text-amber-400">Funding rates can flip</h4>
+            <p className="text-sm text-amber-400">
               You might be collecting funding, then suddenly pay. If price rips
               against your position, you lose on both the move and the new
               funding direction. Monitor and use stop-losses.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50mber-800/30">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-amber-900">Bots are only as good as their config</h4>
-            <p className="text-sm text-amber-800">
+            <h4 className="font-bold text-amber-400">Bots are only as good as their config</h4>
+            <p className="text-sm text-amber-400">
               Wrong parameters = wrong results. A grid too tight gets stopped
               out. Too wide and you tie up capital. Test with small size first.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-slate-100 border border-slate-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26] border border-slate-200">
           <AlertTriangle className="h-6 w-6 text-slate-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-slate-900">Don&apos;t set and forget</h4>
@@ -482,53 +482,53 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 overflow-x-auto">
-        <table className="w-full border-collapse text-sm rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+        <table className="w-full border-collapse text-sm rounded-xl overflow-hidden ">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+            <tr className="bg-[#1a1d26]">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 Factor
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b">
+              <th className="text-left p-3 font-semibold text-white border-b">
                 DIY (Build Your Own)
               </th>
-              <th className="text-left p-3 font-semibold text-gray-900 border-b bg-brand/10">
+              <th className="text-left p-3 font-semibold text-white border-b bg-brand/10">
                 Coincess Bots
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-[#2a2e39]">
               <td className="p-3 font-medium">Coding</td>
-              <td className="p-3 text-gray-600">Required (Python, TypeScript, etc.)</td>
+              <td className="p-3 text-gray-400">Required (Python, TypeScript, etc.)</td>
               <td className="p-3 font-medium text-emerald-700 bg-brand/5">
                 None—point and click
               </td>
             </tr>
-            <tr className="border-b border-gray-100 bg-gray-50/50">
+            <tr className="border-b border-[#2a2e39] bg-[#141620]/50">
               <td className="p-3 font-medium">Infrastructure</td>
-              <td className="p-3 text-gray-600">Servers, APIs, monitoring</td>
+              <td className="p-3 text-gray-400">Servers, APIs, monitoring</td>
               <td className="p-3 font-medium text-emerald-700 bg-brand/5">
                 Handled—runs on Coincess
               </td>
             </tr>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-[#2a2e39]">
               <td className="p-3 font-medium">Testing</td>
-              <td className="p-3 text-gray-600">Backtest, paper trade, debug</td>
+              <td className="p-3 text-gray-400">Backtest, paper trade, debug</td>
               <td className="p-3 font-medium text-emerald-700 bg-brand/5">
                 Ready-made, tested strategies
               </td>
             </tr>
-            <tr className="border-b border-gray-100 bg-gray-50/50">
+            <tr className="border-b border-[#2a2e39] bg-[#141620]/50">
               <td className="p-3 font-medium">Setup time</td>
-              <td className="p-3 text-gray-600">Days to weeks</td>
+              <td className="p-3 text-gray-400">Days to weeks</td>
               <td className="p-3 font-medium text-emerald-700 bg-brand/5">
                 Minutes
               </td>
             </tr>
             <tr>
               <td className="p-3 font-medium">Flexibility</td>
-              <td className="p-3 text-gray-600">Full control, custom logic</td>
-              <td className="p-3 text-gray-600 bg-brand/5">
+              <td className="p-3 text-gray-400">Full control, custom logic</td>
+              <td className="p-3 text-gray-400 bg-brand/5">
                 Configurable parameters, proven strategies
               </td>
             </tr>
@@ -579,7 +579,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/automate"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
             >
               <Bot className="h-5 w-5" />
               Go to Automate
@@ -587,7 +587,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
             </Link>
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/30"
             >
               Trade BTC
               <ChevronRight className="h-5 w-5" />
@@ -602,7 +602,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
         <Link
           href="/blog/crypto-funding-rates-explained-earn-passive-income"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">
@@ -618,7 +618,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
         <Link
           href="/blog/what-are-perpetual-futures-complete-guide"
-          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl hover:bg-brand/5 transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">

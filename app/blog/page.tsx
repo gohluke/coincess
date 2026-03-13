@@ -33,7 +33,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className={`group block bg-[#141620] border border-[#2a2e39] rounded-xl overflow-hidden hover:border-brand/50 hover:bg-[#1a1d26] transition-all ${
+      className={`group block bg-[#141620] rounded-xl overflow-hidden hover:bg-[#1a1d26] transition-all ${
         featured ? "md:col-span-2 md:grid md:grid-cols-2" : ""
       }`}
     >
@@ -124,7 +124,7 @@ export default async function BlogPage() {
 
           {/* All Posts */}
           {nonFeaturedPosts.length > 0 && (
-            <div className="border-t border-[#2a2e39] pt-12">
+            <div className="pt-12">
               <div className="flex items-center gap-2 mb-6">
                 <Rss className="h-5 w-5 text-brand" />
                 <h2 className="text-2xl font-bold text-white">All Articles</h2>
