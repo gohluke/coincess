@@ -76,7 +76,7 @@ export default function HowToTradeHyperliquidGuide() {
       </p>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-[#1a1d26] border border-slate-200 rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-3">
             <LayoutDashboard className="h-5 w-5 text-brand" />
           </div>
@@ -86,7 +86,7 @@ export default function HowToTradeHyperliquidGuide() {
             panel exactly where you need them—without clutter.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-slate-200 rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
             <Zap className="h-5 w-5 text-emerald-600" />
           </div>
@@ -96,7 +96,7 @@ export default function HowToTradeHyperliquidGuide() {
             Best rates across DEXs, no extra steps.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-slate-200 rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
             <Coins className="h-5 w-5 text-amber-600" />
           </div>
@@ -106,7 +106,7 @@ export default function HowToTradeHyperliquidGuide() {
             silver (XAG)—24/7, up to 50x leverage.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-slate-200 rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center mb-3">
             <Calculator className="h-5 w-5 text-blue-600" />
           </div>
@@ -116,7 +116,7 @@ export default function HowToTradeHyperliquidGuide() {
             before you enter a trade.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-slate-200 rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-rose-900/30 flex items-center justify-center mb-3">
             <BookOpen className="h-5 w-5 text-rose-600" />
           </div>
@@ -126,7 +126,7 @@ export default function HowToTradeHyperliquidGuide() {
             inform your trades.
           </p>
         </div>
-        <div className="bg-[#1a1d26] border border-slate-200 rounded-xl p-5">
+        <div className="bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-violet-900/30 flex items-center justify-center mb-3">
             <CheckCircle className="h-5 w-5 text-violet-600" />
           </div>
@@ -171,13 +171,13 @@ export default function HowToTradeHyperliquidGuide() {
                 and hold your funds.
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-[#1a1d26] rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1a1d26] rounded-full text-sm font-medium">
                   MetaMask
                 </span>
-                <span className="px-3 py-1 bg-[#1a1d26] rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1a1d26] rounded-full text-sm font-medium">
                   Rabby
                 </span>
-                <span className="px-3 py-1 bg-[#1a1d26] rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1a1d26] rounded-full text-sm font-medium">
                   Phantom
                 </span>
               </div>
@@ -269,7 +269,7 @@ export default function HowToTradeHyperliquidGuide() {
 
       <div className="not-prose my-8 space-y-4">
         <div className="flex gap-4 p-4 bg-[#1a1d26] rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <BarChart3 className="h-5 w-5 text-gray-300" />
           </div>
           <div>
@@ -281,7 +281,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-[#1a1d26] rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <TrendingUp className="h-5 w-5 text-gray-300" />
           </div>
           <div>
@@ -293,7 +293,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-[#1a1d26] rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <Target className="h-5 w-5 text-gray-300" />
           </div>
           <div>
@@ -307,7 +307,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-[#1a1d26] rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <LayoutDashboard className="h-5 w-5 text-gray-300" />
           </div>
           <div>
@@ -319,7 +319,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-[#1a1d26] rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <SlidersHorizontal className="h-5 w-5 text-gray-300" />
           </div>
           <div>
@@ -499,7 +499,7 @@ export default function HowToTradeHyperliquidGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-blue-950/50 rounded-xl border border-blue-800/50">
+        <div className="flex gap-4 p-4 bg-blue-950/50 rounded-xl">
           <Eye className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-white">Monitor Funding Rates</h4>
@@ -519,7 +519,7 @@ export default function HowToTradeHyperliquidGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-rose-950/50 rounded-xl border border-rose-800/50">
+        <div className="flex gap-4 p-4 bg-rose-950/50 rounded-xl">
           <Shield className="h-6 w-6 text-rose-600 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-white">Use Isolated Margin</h4>
@@ -576,7 +576,7 @@ export default function HowToTradeHyperliquidGuide() {
           </p>
           <Link
             href="/trade/BTC"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
           >
             Trade BTC on Coincess
             <ArrowRight className="h-5 w-5" />

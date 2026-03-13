@@ -82,7 +82,7 @@ export default function WhatArePerpetualFuturesGuide() {
             high. You&apos;re betting the asset will appreciate.
           </p>
         </div>
-        <div className="bg-red-950/50 border border-red-800/50 rounded-xl p-5">
+        <div className="bg-red-950/50 rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-red-900/30 flex items-center justify-center mb-3">
             <TrendingDown className="h-5 w-5 text-red-600" />
           </div>
@@ -92,7 +92,7 @@ export default function WhatArePerpetualFuturesGuide() {
             low. You&apos;re betting the asset will depreciate.
           </p>
         </div>
-        <div className="bg-blue-950/50 border border-blue-800/50 rounded-xl p-5">
+        <div className="bg-blue-950/50 rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center mb-3">
             <Zap className="h-5 w-5 text-blue-600" />
           </div>
@@ -301,7 +301,7 @@ export default function WhatArePerpetualFuturesGuide() {
       <h2>Common Mistakes Beginners Make</h2>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border border-red-800/50">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
           <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">Using too much leverage</h4>
@@ -331,7 +331,7 @@ export default function WhatArePerpetualFuturesGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26] border border-slate-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26]">
           <AlertTriangle className="h-6 w-6 text-slate-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-white">Trading without a plan</h4>
@@ -341,7 +341,7 @@ export default function WhatArePerpetualFuturesGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border border-red-800/50">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
           <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">Revenge trading after a loss</h4>
@@ -469,14 +469,14 @@ export default function WhatArePerpetualFuturesGuide() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
             >
               Trade BTC
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/crypto-leverage-calculator"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/30"
             >
               <Calculator className="h-5 w-5" />
               Leverage Calculator

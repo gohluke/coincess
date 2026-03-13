@@ -293,7 +293,7 @@ export default function OilPricesWarArticle() {
                   {item.date}
                 </span>
               </div>
-              <div className="flex-1 text-sm text-gray-200 border-l-2 border-amber-800/50 pl-4">
+              <div className="flex-1 text-sm text-gray-200 pl-4">
                 {item.event}
               </div>
             </div>
@@ -615,13 +615,13 @@ export default function OilPricesWarArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/CL"
-              className="inline-block px-8 py-3 bg-[#141620] text-amber-400 font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+              className="inline-block px-8 py-3 bg-[#141620] text-amber-400 font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
             >
               Trade Crude Oil (CL)
             </Link>
             <Link
               href="/trade/BRENTOIL"
-              className="inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-lg hover:bg-[#141620]/30 transition-colors border border-white/30"
+              className="inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-full hover:bg-[#141620]/30 transition-colors border border-white/30"
             >
               Trade Brent Oil
             </Link>

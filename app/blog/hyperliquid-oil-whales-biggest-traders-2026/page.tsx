@@ -61,7 +61,7 @@ export default function OilWhalesArticle() {
 
       {/* Market stats banner */}
       <div className="not-prose my-10">
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-6 text-white">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-5 w-5 text-amber-400" />
             <span className="text-sm font-bold text-amber-400 uppercase tracking-wider">
@@ -111,7 +111,7 @@ export default function OilWhalesArticle() {
 
       {/* Whale #1 */}
       <div className="not-prose my-8">
-        <div className="bg-red-950 border border-red-800 rounded-2xl p-6 text-white">
+        <div className="bg-red-950 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-red-800 flex items-center justify-center">
               <Skull className="h-5 w-5 text-red-300" />
@@ -196,7 +196,7 @@ export default function OilWhalesArticle() {
 
       {/* Whale #3 */}
       <div className="not-prose my-8">
-        <div className="bg-blue-950 border border-blue-800 rounded-2xl p-6 text-white">
+        <div className="bg-blue-950 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center">
               <Users className="h-5 w-5 text-blue-300" />
@@ -279,7 +279,7 @@ export default function OilWhalesArticle() {
 
       {/* Whale #5 */}
       <div className="not-prose my-8">
-        <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 text-white">
+        <div className="bg-slate-800 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
               <Target className="h-5 w-5 text-slate-300" />
@@ -404,7 +404,7 @@ export default function OilWhalesArticle() {
               <div className="flex-shrink-0 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                 {item.step}
               </div>
-              <div className="flex-1 border-l-2 border-red-800/30 pl-4 pb-2">
+              <div className="flex-1 pl-4 pb-2">
                 <div className="font-bold text-white">{item.title}</div>
                 <div className="text-sm text-gray-300">{item.desc}</div>
               </div>
@@ -459,7 +459,7 @@ export default function OilWhalesArticle() {
             </ul>
           </div>
 
-          <div className="bg-red-950/50 border border-red-800/50 rounded-xl p-6">
+          <div className="bg-red-950/50 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <Flame className="h-5 w-5 text-red-600" />
               <h3 className="text-lg font-bold text-white">Bear Signals</h3>
@@ -557,13 +557,13 @@ export default function OilWhalesArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/CL"
-              className="inline-block px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-lg hover:bg-amber-400 transition-colors"
+              className="inline-block px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors"
             >
               Trade Crude Oil (CL)
             </Link>
             <Link
               href="/trade/BRENTOIL"
-              className="inline-block px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/20"
+              className="inline-block px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/20"
             >
               Trade Brent Oil
             </Link>

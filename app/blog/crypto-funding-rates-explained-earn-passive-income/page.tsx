@@ -76,7 +76,7 @@ export default function CryptoFundingRatesExplainedPage() {
         </li>
       </ul>
 
-      <div className="not-prose my-8 bg-slate-900 text-white rounded-2xl p-6 shadow-xl border border-slate-700">
+      <div className="not-prose my-8 bg-slate-900 text-white rounded-2xl p-6 shadow-xl">
         <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
           <Calculator className="h-5 w-5 text-amber-400" />
           Funding Rate Calculation Example
@@ -323,7 +323,7 @@ export default function CryptoFundingRatesExplainedPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26] border border-slate-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26]">
           <BarChart3 className="h-6 w-6 text-slate-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-slate-900">Opportunity cost</h4>
@@ -337,7 +337,7 @@ export default function CryptoFundingRatesExplainedPage() {
 
       <h2>Risk Disclosure</h2>
 
-      <div className="not-prose my-8 bg-amber-950/50 border-2 border-amber-300 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -371,14 +371,14 @@ export default function CryptoFundingRatesExplainedPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/CL"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
             >
               Trade Oil (CL)
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/automate"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/30"
             >
               <Zap className="h-5 w-5" />
               Funding Rate Harvester

@@ -26,7 +26,7 @@ export default function HowToSwapBitcoinForMonero() {
         </p>
         <Link
           href="/swap-guide"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
         >
           Open Swap Widget
           <ArrowRight className="h-4 w-4" />
@@ -104,7 +104,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://shop.ledger.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-full hover:bg-brand-hover transition-colors text-sm font-medium"
             >
               Get Ledger Nano X
               <ExternalLink className="h-4 w-4" />
@@ -113,7 +113,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://trezor.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 text-gray-200 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-200 rounded-full hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Get Trezor
               <ExternalLink className="h-4 w-4" />
@@ -134,7 +134,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://cakewallet.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 text-gray-200 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-200 rounded-full hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Cake Wallet (Mobile)
               <ExternalLink className="h-4 w-4" />
@@ -143,7 +143,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://featherwallet.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 text-gray-200 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 text-gray-200 rounded-full hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Feather Wallet (Desktop)
               <ExternalLink className="h-4 w-4" />
@@ -207,7 +207,7 @@ export default function HowToSwapBitcoinForMonero() {
             <p className="text-gray-300 mb-3">
               Open your Monero wallet (Ledger, Cake Wallet, or Feather), copy your receive address, and paste it into the "Recipient Wallet" box.
             </p>
-            <div className="bg-amber-950/50 rounded-lg p-3">
+            <div className="bg-amber-950/50 rounded-full p-3">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <p className="text-amber-400 text-sm">
@@ -244,7 +244,7 @@ export default function HowToSwapBitcoinForMonero() {
             <p className="text-gray-300 mb-3">
               The swap typically takes <strong>10-20 minutes</strong> depending on Bitcoin network congestion.
             </p>
-            <div className="bg-[#1a1d26] rounded-lg p-3">
+            <div className="bg-[#1a1d26] rounded-full p-3">
               <div className="flex items-start gap-2">
                 <Clock className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
                 <p className="text-gray-300 text-sm">
@@ -322,7 +322,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://shop.ledger.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand text-white rounded-full hover:bg-brand-hover transition-colors text-sm font-medium"
             >
               Get a Ledger Nano X to Secure Your XMR
               <ExternalLink className="h-4 w-4" />
@@ -429,7 +429,7 @@ export default function HowToSwapBitcoinForMonero() {
         <div className="flex flex-wrap justify-center gap-4">
           <Link
             href="/swap-guide"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
           >
             View Swap Guide
             <ArrowRight className="h-4 w-4" />
@@ -438,7 +438,7 @@ export default function HowToSwapBitcoinForMonero() {
             href="https://trocador.app/?ref=2dzDcvfQJY"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-[#141620]/10 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-white text-white font-semibold rounded-full hover:bg-[#141620]/10 transition-colors"
           >
             Open Trocador
             <ExternalLink className="h-4 w-4" />

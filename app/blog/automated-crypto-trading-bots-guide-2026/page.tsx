@@ -114,7 +114,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       <div className="not-prose my-8 space-y-4">
         <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
               <Grid3X3 className="h-5 w-5 text-brand" />
             </div>
             <h3 className="text-lg font-bold text-white">Grid Bots</h3>
@@ -132,7 +132,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
         <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-900/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-emerald-600" />
             </div>
             <h3 className="text-lg font-bold text-white">DCA Bots</h3>
@@ -150,7 +150,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
         <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-900/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-amber-600" />
             </div>
             <h3 className="text-lg font-bold text-white">Momentum Bots</h3>
@@ -168,7 +168,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
         <div className="bg-[#1a1d26] rounded-xl p-6  transition-colors">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-900/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center">
               <ArrowRightLeft className="h-5 w-5 text-blue-600" />
             </div>
             <h3 className="text-lg font-bold text-white">Arbitrage Bots</h3>
@@ -183,9 +183,9 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-950/50 to-amber-900/30 border-2 border-amber-800/30 rounded-xl p-6 ">
+        <div className="bg-gradient-to-r from-amber-950/50 to-amber-900/30 rounded-xl p-6 ">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-950/500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-amber-950/500 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-lg font-bold text-white">
@@ -235,7 +235,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-[#141620] border-2 border-amber-800/30 rounded-xl p-6 ">
+        <div className="bg-[#141620] rounded-xl p-6 ">
           <div className="flex items-center gap-3 mb-3">
             <Zap className="h-6 w-6 text-amber-600" />
             <h3 className="text-lg font-bold text-white">
@@ -401,11 +401,11 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           Typical Ranges (Not Guaranteed)
         </h4>
         <div className="space-y-4 text-sm">
-          <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+          <div className="flex justify-between items-center pb-3">
             <span className="text-gray-200">Grid bots (ranging markets)</span>
             <span className="text-emerald-400 font-semibold">1–5% monthly</span>
           </div>
-          <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+          <div className="flex justify-between items-center pb-3">
             <span className="text-gray-200">Funding rate harvesting</span>
             <span className="text-amber-400 font-semibold">
               Variable; 20–100%+ APY during high-funding periods
@@ -463,7 +463,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26] border border-slate-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26]">
           <AlertTriangle className="h-6 w-6 text-slate-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-slate-900">Don&apos;t set and forget</h4>
@@ -544,7 +544,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
       <h2>Risk Disclosure</h2>
 
-      <div className="not-prose my-8 bg-amber-950/50 border-2 border-amber-300 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -579,7 +579,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/automate"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
             >
               <Bot className="h-5 w-5" />
               Go to Automate
@@ -587,7 +587,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
             </Link>
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/30"
             >
               Trade BTC
               <ChevronRight className="h-5 w-5" />

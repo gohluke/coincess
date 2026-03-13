@@ -200,8 +200,8 @@ export default async function BlogPostPage({ params }: Props) {
                     href={btn.href}
                     className={
                       i === 0
-                        ? "inline-block px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
-                        : "inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-lg hover:bg-[#141620]/30 transition-colors border border-white/30"
+                        ? "inline-block px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
+                        : "inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-full hover:bg-[#141620]/30 transition-colors border border-white/30"
                     }
                   >
                     {btn.label}

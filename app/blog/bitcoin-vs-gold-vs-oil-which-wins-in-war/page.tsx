@@ -55,8 +55,8 @@ export default function BitcoinVsGoldVsOilArticle() {
       <h2>Performance Scoreboard: March 2026</h2>
 
       <div className="not-prose my-10">
-        <div className="bg-slate-900 text-white rounded-2xl overflow-hidden border border-slate-700">
-          <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4 border-b border-slate-700">
+        <div className="bg-slate-900 text-white rounded-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-amber-400" />
               <span className="text-sm font-bold text-amber-400 uppercase tracking-wider">
@@ -431,21 +431,21 @@ export default function BitcoinVsGoldVsOilArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-orange-950/500 text-white font-semibold rounded-lg hover:bg-orange-400 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-orange-950/500 text-white font-semibold rounded-full hover:bg-orange-400 transition-colors"
             >
               Trade Bitcoin
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/XAU"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-lg hover:bg-amber-400 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors"
             >
               Trade Gold
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/CL"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/20"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/20"
             >
               Trade Oil
               <ArrowRight className="h-4 w-4" />

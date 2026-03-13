@@ -90,7 +90,7 @@ export default function Crypto101() {
             href="https://apps.apple.com/app/cake-wallet/id1334702542"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-medium"
           >
             Download for iPhone
             <ExternalLink className="h-4 w-4" />
@@ -99,7 +99,7 @@ export default function Crypto101() {
             href="https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-medium"
           >
             Download for Android
             <ExternalLink className="h-4 w-4" />

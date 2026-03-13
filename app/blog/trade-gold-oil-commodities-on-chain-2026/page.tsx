@@ -200,7 +200,7 @@ export default function TradeGoldOilCommoditiesArticle() {
               </tr>
             </tbody>
           </table>
-          <div className="bg-[#1a1d26] px-6 py-3 text-xs text-gray-500 border-t border-[#2a2e39]">
+          <div className="bg-[#1a1d26] px-6 py-3 text-xs text-gray-500">
             Traditional CME/ICE: Mon–Fri, limited hours. Coincess: 24/7, 365 days.
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </p>
         </div>
 
-        <div className="bg-yellow-950/50 border border-yellow-200 rounded-xl p-6">
+        <div className="bg-yellow-950/50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center">
               <Coins className="h-5 w-5 text-white" />
@@ -303,7 +303,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </p>
         </div>
 
-        <div className="bg-[#1a1d26] border border-slate-200 rounded-xl p-6">
+        <div className="bg-[#1a1d26] rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-slate-600 flex items-center justify-center">
               <Activity className="h-5 w-5 text-white" />
@@ -408,7 +408,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </div>
 
           <div className="relative">
-            <div className="bg-[#141620] border-2 border-[#2a2e39] rounded-2xl p-6 h-full transition-colors">
+            <div className="bg-[#141620] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
                 <Compass className="h-7 w-7 text-gray-300" />
               </div>
@@ -438,7 +438,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </div>
 
           <div className="relative">
-            <div className="bg-[#141620] border-2 border-[#2a2e39] rounded-2xl p-6 h-full transition-colors">
+            <div className="bg-[#141620] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
                 <Target className="h-7 w-7 text-gray-300" />
               </div>
@@ -457,7 +457,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </div>
 
           <div>
-            <div className="bg-[#141620] border-2 border-[#2a2e39] rounded-2xl p-6 h-full transition-colors">
+            <div className="bg-[#141620] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
                 <Zap className="h-7 w-7 text-gray-300" />
               </div>
@@ -556,21 +556,21 @@ export default function TradeGoldOilCommoditiesArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
             <Link
               href="/trade/CL"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-lg hover:bg-amber-400 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors"
             >
               Trade Oil
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/XAU"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-950/500 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-600 text-white font-semibold rounded-full hover:bg-amber-950/500 transition-colors"
             >
               Trade Gold
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/XAG"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/20"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/20"
             >
               Trade Silver
               <ArrowRight className="h-4 w-4" />

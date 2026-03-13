@@ -140,14 +140,14 @@ export default function BestNoKycExchanges2026() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand text-white font-semibold rounded-lg hover:bg-brand-hover transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
             >
               Trade BTC
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/swap-guide"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#141620] border border-brand text-brand font-semibold rounded-lg hover:bg-brand/5 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#141620] border border-brand text-brand font-semibold rounded-full hover:bg-brand/5 transition-colors"
             >
               Swap Guide
             </Link>
@@ -155,7 +155,7 @@ export default function BestNoKycExchanges2026() {
         </div>
 
         {/* #2 Hyperliquid */}
-        <div className="border-2 border-emerald-300 rounded-2xl p-6 bg-emerald-950/50/50">
+        <div className="border-2 border-emerald-300 rounded-2xl p-6 bg-emerald-950/50">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold">
               2
@@ -492,14 +492,14 @@ export default function BestNoKycExchanges2026() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
             >
               Trade BTC
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/swap-guide"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-lg hover:bg-[#141620]/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/30"
             >
               Swap Guide
             </Link>

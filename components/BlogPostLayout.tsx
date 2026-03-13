@@ -108,13 +108,13 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
                   href="/trade/BTC"
-                  className="inline-block px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+                  className="inline-block px-8 py-3 bg-white text-brand font-semibold rounded-full hover:bg-gray-100 transition-colors"
                 >
                   Trade Now
                 </Link>
                 <Link
                   href="/blog"
-                  className="inline-block px-8 py-3 bg-white/20 text-white font-semibold rounded-lg hover:bg-white/30 transition-colors border border-white/30"
+                  className="inline-block px-8 py-3 bg-white/20 text-white font-semibold rounded-full hover:bg-white/30 transition-colors border border-white/30"
                 >
                   More Articles
                 </Link>
