@@ -14,7 +14,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); chain switch is best-effort so activation works regardless of wallet network; order form reads spot clearinghouse balance for accurate "Available" display; equity calculation correctly handles unified mode where spot USDC pool includes perp margin (avoids double-counting); funding payments fetched from both main and xyz dexes for accurate total PnL
 - **Order placement** — market & limit orders, long/short, configurable leverage, TP/SL
 - **Position management** — open positions, unrealized PnL, ROE; close at limit price, market close, reverse position; TP/SL prices shown inline on positions; AUTO badge scoped to user's own quant strategies (wallet-filtered); accurate round-trip duration on dashboard; click position to navigate to coin
-- **Chart** — infinite scroll (lazy-loads older candles as you scroll left); custom HTML circle markers with "B"/"S" text centered inside (Hyperliquid style), positioned at exact fill price via timeToCoordinate/priceToCoordinate; **hoverable markers** — each B/S circle is individually hoverable (pointer cursor, tooltip on mouseenter/mouseleave) in addition to crosshair-triggered display; **deduplicated fills** — fills fetched from both main and xyz dexes are deduplicated by `tid` to prevent duplicate tooltip entries; hover tooltip shows trade details (e.g. "Close Long at 94.214", size, PnL)
+- **Chart** — infinite scroll (lazy-loads older candles as you scroll left); custom HTML circle markers with "B"/"S" text centered inside (Hyperliquid style), positioned at exact fill price via timeToCoordinate/priceToCoordinate; **hoverable markers** — each B/S circle is individually hoverable (pointer cursor, tooltip on mouseenter/mouseleave) in addition to crosshair-triggered display; **deduplicated fills** — fills fetched from both main and xyz dexes are deduplicated by `tid` to prevent duplicate tooltip entries; hover tooltip shows trade details (e.g. "Close Long at 94.214", size, PnL); **position price lines** — horizontal lines drawn on the chart for active positions: Entry Price (gray dashed), Liquidation Price (red dashed), PNL at current mark (green/red dotted with dollar amount); **order price lines** — TP/SL trigger orders shown as green/red large-dashed lines, limit orders as solid lines, stop orders as red lines; all lines have axis labels on the price scale and auto-update on every position/order refresh
 - **TP/SL modal (Hyperliquid-style)** — clicking the pencil icon opens a centered modal with coin info, position size, entry/mark prices; **bidirectional inputs**: typing TP Price auto-calculates Gain in $, and typing Gain auto-calculates TP Price (same for SL Price ↔ Loss in $); pre-fills existing TP/SL values; TP/SL trigger orders are hidden from open orders and reflected directly on the position row
 - **Order management** — compact single-row open orders table with inline edit for size/price, placed date, duration with seconds, and cancel all (TP/SL orders excluded); fetches orders from both main and xyz (HIP-3) dexes so stock/commodity/forex limit orders appear
 - **Tabbed Order Book / Recent Trades** — order book and recent trades displayed as tabs side-by-side, only one visible at a time
@@ -218,16 +218,21 @@ Strategy backtesting and performance analysis tools.
 - **Math reference section** — explains every formula used in the calculator
 
 ### Compounding Calculator (`/compounding-calculator`)
-- **Monte Carlo account growth simulator** — see how consistent trading compounds your account over months and years
-- **Dark Coincess theme** — identical design system to the leverage calculator (dark navbar, dark cards, rounded pills, dark wave footer)
+- **Industry-grade Monte Carlo engine** — 500 simulations with seeded PRNG (Mulberry32); same inputs always produce the same output (no flickering on re-render); deterministic seed derived from all input values
+- **Probability cone chart** — P10-P90 outer shaded band, P25-P75 inner band, P50 (median) solid line, dashed linear comparison; milestone markers (2x, 5x, 10x, 25x, 50x, 100x) with axis labels
+- **Drawdown chart** — underwater plot showing drawdown % from peak over time (median run); red-filled area chart; the chart professional traders look at first
+- **Outcome distribution histogram** — 30-bucket histogram of final balances across all 500 runs; green bars for profitable outcomes, red for unprofitable; marks median and starting balance reference lines; shows % of runs profitable
+- **Professional risk metrics** — Kelly Criterion (full + half-Kelly), Profit Factor, Payoff Ratio, Sharpe Ratio (annualized), Sortino Ratio (downside-adjusted), Risk of Ruin (P(50% drawdown)), Expected Max Drawdown (median worst), Max Consecutive Losses (expected median)
+- **Streak analysis** — probability table for consecutive loss streaks (3, 5, 7, 10, 15, 20 in a row); color-coded by severity; psychologically important for traders to understand variance
+- **Trader presets** — one-click profiles: Scalper (70% WR, 20 trades/week), Day Trader (55% WR, 5/week), Swing (45% WR, 2/week), Position (40% WR, 1/week); auto-fills all trade parameters
+- **New inputs** — Trading Fees % (per trade, default 0.035% taker), Monthly Withdrawal ($), Reinvest % (0-100, partial compounding)
 - **Capital inputs** — starting balance, monthly deposits, risk per trade (% of account), trades per week
 - **Win/loss parameters** — win rate, average win %, average loss %; calculates true expectancy per trade
 - **Time horizon** — slider from 1 to 120 months with presets (3m, 6m, 1y, 2y, 3y, 5y); editable text input
-- **Interactive SVG growth chart** — brand-colored compounding curve with gradient area fill, dashed linear comparison line, milestone markers (2x, 5x, 10x, 25x, 50x, 100x), Y-axis dollar labels, month X-axis, glowing endpoint dot
-- **Key stats dashboard** — final balance, total profit, expectancy per trade, max drawdown, avg monthly return, total trades, compound effect vs linear
-- **Milestone tracking** — time to 2x, 5x, 10x your capital (or "not in Nm" if not reached)
-- **Monthly breakdown table** — scrollable table with each month's balance, P&L, deposits, and cumulative profit; color-coded green/red
-- **Net result banner** — final balance summary with trade count and parameter recap
+- **Key stats dashboard** — final balance (median), total profit, expectancy, profit factor, Kelly, Sharpe, Sortino, risk of ruin, expected max drawdown, milestones, total trades, avg monthly return, max losing streak
+- **Monthly breakdown table** — scrollable table with balance, P&L, fees paid, deposits, withdrawals, drawdown %; color-coded green/red with severity-based drawdown highlighting
+- **Net result banner** — median outcome summary with trade count, Sharpe ratio, and first 2x milestone
+- **Dark Coincess theme** — identical design system to the leverage calculator (dark navbar, dark cards, borderless, dark wave footer)
 - **Common scenarios section** — conservative, balanced, and aggressive trader profiles with expected outcomes
 - **Educational content** — "The Power of Compounding", risk management principles, keys to compounding success
 - **Listed on Tools page** — appears alongside Leverage Calculator with emerald accent card
@@ -485,7 +490,7 @@ coincess/
 ├── components/
 │   ├── AppShell.tsx                    # Client shell (Privy + MobileNav + AlertBanner)
 │   ├── MobileNav.tsx                   # Bottom navigation bar
-│   ├── CompoundingCalculator.tsx        # Compounding growth calculator with SVG chart
+│   ├── CompoundingCalculator.tsx        # Industry-grade Monte Carlo compounding simulator (500 runs, percentile bands, risk metrics, drawdown/histogram charts)
 │   ├── DarkWaveFooter.tsx              # Dark-mode animated wave footer (screen blending)
 │   ├── ConnectButton.tsx               # Unified wallet connect button
 │   ├── WalletProvider.tsx              # Privy embedded wallet provider

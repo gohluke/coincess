@@ -6,12 +6,14 @@ import {
   CandlestickSeries,
   HistogramSeries,
   ColorType,
+  LineStyle,
   type IChartApi,
   type ISeriesApi,
   type CandlestickData,
   type HistogramData,
   type UTCTimestamp,
   type Time,
+  type IPriceLine,
 } from "lightweight-charts";
 import { BRAND } from "@/lib/brand";
 import { fetchCandles } from "@/lib/hyperliquid/api";
@@ -111,6 +113,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   const volumeRef = useRef<ISeriesApi<any> | null>(null);
   const fillOverlaysRef = useRef<FillOverlayItem[]>([]);
   const fillTooltipMapRef = useRef<Map<string, FillTooltipEntry[]>>(new Map());
+  const priceLinesRef = useRef<IPriceLine[]>([]);
 
   const candleDataRef = useRef<CandlestickData[]>([]);
   const volumeDataRef = useRef<HistogramData[]>([]);
@@ -126,6 +129,9 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
   const selectedMarket = useTradingStore((s) => s.selectedMarket);
   const selectedInterval = useTradingStore((s) => s.selectedInterval);
   const setInterval = useTradingStore((s) => s.setInterval);
+
+  const clearinghouse = useTradingStore((s) => s.clearinghouse);
+  const openOrders = useTradingStore((s) => s.openOrders);
 
   marketRef.current = selectedMarket;
   intervalRef.current = selectedInterval;
@@ -252,6 +258,118 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
 
     requestAnimationFrame(() => repositionOverlays());
   }, [repositionOverlays]);
+
+  /* ── Position & order price lines ────────────────────────── */
+
+  const updatePriceLines = useCallback(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+
+    for (const line of priceLinesRef.current) {
+      try { series.removePriceLine(line); } catch { /* already removed */ }
+    }
+    priceLinesRef.current = [];
+
+    const coin = marketRef.current.replace(/^.*:/, "").toUpperCase();
+
+    const pos = clearinghouse?.assetPositions?.find((ap) => {
+      const pCoin = ap.position.coin.replace(/^.*:/, "").toUpperCase();
+      return pCoin === coin && parseFloat(ap.position.szi) !== 0;
+    })?.position;
+
+    if (pos) {
+      const entryPx = parseFloat(pos.entryPx ?? "0");
+      const liqPx = parseFloat(pos.liquidationPx ?? "0");
+      const pnl = parseFloat(pos.unrealizedPnl ?? "0");
+      const isLong = parseFloat(pos.szi) > 0;
+
+      if (entryPx > 0) {
+        priceLinesRef.current.push(
+          series.createPriceLine({
+            price: entryPx,
+            color: "#848e9c",
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: `Entry ${entryPx}`,
+          })
+        );
+      }
+
+      if (liqPx > 0) {
+        priceLinesRef.current.push(
+          series.createPriceLine({
+            price: liqPx,
+            color: "#f6465d",
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: "Liq. Price",
+          })
+        );
+      }
+
+      if (pnl !== 0 && entryPx > 0) {
+        const sz = Math.abs(parseFloat(pos.szi));
+        const pnlPrice = isLong ? entryPx + pnl / sz : entryPx - pnl / sz;
+        if (pnlPrice > 0 && isFinite(pnlPrice)) {
+          const sign = pnl >= 0 ? "+" : "";
+          priceLinesRef.current.push(
+            series.createPriceLine({
+              price: pnlPrice,
+              color: pnl >= 0 ? "#0ecb81" : "#f6465d",
+              lineWidth: 1,
+              lineStyle: LineStyle.Dotted,
+              axisLabelVisible: true,
+              title: `PNL ${sign}$${pnl.toFixed(2)}`,
+            })
+          );
+        }
+      }
+    }
+
+    const orders = openOrders?.filter((o) => {
+      const oCoin = o.coin.replace(/^.*:/, "").toUpperCase();
+      return oCoin === coin;
+    }) ?? [];
+
+    for (const order of orders) {
+      const isTpSl = order.isPositionTpsl || order.isTrigger;
+      const price = isTpSl && order.triggerPx ? parseFloat(order.triggerPx) : parseFloat(order.limitPx);
+      if (!price || price <= 0) continue;
+
+      const isSell = order.side === "A";
+      let label: string;
+      if (order.isPositionTpsl) {
+        label = isSell ? "TP" : "SL";
+        if (order.triggerCondition === "lt") label = "SL";
+        else if (order.triggerCondition === "gt") label = "TP";
+      } else if (order.isTrigger) {
+        label = isSell ? "Stop Sell" : "Stop Buy";
+      } else {
+        label = isSell ? "Limit Sell" : "Limit Buy";
+      }
+
+      const color = label.startsWith("TP") ? "#0ecb81"
+        : label.startsWith("SL") || label.startsWith("Stop") ? "#f6465d"
+        : isSell ? "#f6465d" : "#0ecb81";
+
+      priceLinesRef.current.push(
+        series.createPriceLine({
+          price,
+          color,
+          lineWidth: 1,
+          lineStyle: isTpSl ? LineStyle.LargeDashed : LineStyle.Solid,
+          axisLabelVisible: true,
+          title: `${label} ${price}`,
+        })
+      );
+    }
+  }, [clearinghouse, openOrders]);
+
+  useEffect(() => {
+    updatePriceLines();
+  }, [updatePriceLines, selectedMarket]);
 
   /* ── Infinite scroll ────────────────────────────────────── */
 
