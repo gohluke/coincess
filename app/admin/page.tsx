@@ -28,6 +28,8 @@ import { BRAND_CONFIG } from "@/lib/brand.config";
 type AdminTab = "platform" | "analytics";
 
 interface AnalyticsData {
+  setup_required?: boolean;
+  error?: string;
   overview: {
     total_views: number;
     views_24h: number;
@@ -345,6 +347,20 @@ function AnalyticsView({ data, loading }: { data: AnalyticsData | null; loading:
     return (
       <div className="text-center py-20 text-[#848e9c] text-sm">
         No analytics data yet. Views will appear as users visit the site.
+      </div>
+    );
+  }
+
+  if (data.setup_required) {
+    return (
+      <div className="text-center py-20 space-y-4">
+        <ShieldAlert className="h-10 w-10 text-amber-400 mx-auto" />
+        <p className="text-white text-sm font-semibold">Analytics Setup Required</p>
+        <p className="text-[#848e9c] text-xs max-w-md mx-auto">
+          The analytics tables haven&apos;t been created in Supabase yet.
+          Run the SQL from <code className="text-brand">analytics-schema.sql</code> in your Supabase SQL Editor,
+          or run: <code className="text-brand">source .env.local &amp;&amp; npx tsx scripts/run-analytics-schema.ts</code>
+        </p>
       </div>
     );
   }

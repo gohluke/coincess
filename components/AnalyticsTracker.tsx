@@ -24,12 +24,14 @@ function getWalletAddress(): string | null {
 
 function sendBeacon(payload: Record<string, unknown>) {
   const url = "/api/analytics/track";
+  const body = JSON.stringify(payload);
   if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-    navigator.sendBeacon(url, JSON.stringify(payload));
+    const blob = new Blob([body], { type: "application/json" });
+    navigator.sendBeacon(url, blob);
   } else {
     fetch(url, {
       method: "POST",
-      body: JSON.stringify(payload),
+      body,
       headers: { "Content-Type": "application/json" },
       keepalive: true,
     }).catch(() => {});
