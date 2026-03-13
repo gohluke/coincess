@@ -12,6 +12,17 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "trump-meme-coin-surges-mar-a-lago-2026",
+    title: "Why Did $TRUMP Surge 48%? Mar-a-Lago Gala, Whale Mechanics, and How to Trade It",
+    description: "The official TRUMP meme coin exploded after the team announced an exclusive Mar-a-Lago dinner with President Trump for top holders. We break down the mechanics, whale positioning, and how to trade TRUMP perpetuals on Coincess.",
+    category: "Intelligence",
+    readTime: "8 min",
+    publishedAt: "2026-03-13",
+    author: "Coincess Team",
+    featured: true,
+    keywords: ["TRUMP meme coin", "TRUMP token price", "TRUMP Mar-a-Lago", "TRUMP pump", "trade TRUMP", "TRUMP perpetual futures", "meme coin trading", "TRUMP crypto 2026", "Trump dinner crypto", "political meme coins", "Coincess TRUMP", "Hyperliquid TRUMP"],
+  },
+  {
     slug: "automated-crypto-trading-bots-guide-2026",
     title: "Automated Crypto Trading Bots in 2026: How to Make Money While You Sleep",
     description: "The best traders build systems, not watch screens. Learn why automated trading bots are essential in 2026—and how Coincess makes it easy with Grid Bots, Funding Rate Harvesters, and momentum strategies on Hyperliquid.",
