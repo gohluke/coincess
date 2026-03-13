@@ -32,24 +32,24 @@ export default function Crypto101() {
               <Wallet className="h-8 w-8 text-white" />
             </div>
             <div className="text-3xl font-bold text-brand mb-2">Step 1</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Get a Wallet</h3>
-            <p className="text-sm text-gray-600">Download an app to store your crypto</p>
+            <h3 className="text-lg font-semibold text-white mb-1">Get a Wallet</h3>
+            <p className="text-sm text-gray-400">Download an app to store your crypto</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
               <ArrowRightLeft className="h-8 w-8 text-white" />
             </div>
             <div className="text-3xl font-bold text-brand mb-2">Step 2</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Get Crypto</h3>
-            <p className="text-sm text-gray-600">Buy, receive, or swap for your first coins</p>
+            <h3 className="text-lg font-semibold text-white mb-1">Get Crypto</h3>
+            <p className="text-sm text-gray-400">Buy, receive, or swap for your first coins</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
               <PartyPopper className="h-8 w-8 text-white" />
             </div>
             <div className="text-3xl font-bold text-brand mb-2">Step 3</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">You're Done!</h3>
-            <p className="text-sm text-gray-600">You now own cryptocurrency</p>
+            <h3 className="text-lg font-semibold text-white mb-1">You're Done!</h3>
+            <p className="text-sm text-gray-400">You now own cryptocurrency</p>
           </div>
         </div>
       </div>
@@ -78,11 +78,11 @@ export default function Crypto101() {
       </ul>
 
       <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-brand" />
           Our Recommendation: Cake Wallet
         </h3>
-        <p className="text-gray-700 mb-4">
+        <p className="text-gray-300 mb-4">
           Cake Wallet is free, beginner-friendly, and lets you hold multiple cryptocurrencies including Bitcoin and Monero. It also has built-in swapping.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -124,7 +124,7 @@ export default function Crypto101() {
         </li>
       </ol>
 
-      <div className="not-prose my-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 border border-[#2a2e39] rounded-xl p-6">
         <h4 className="font-semibold text-amber-900 mb-2">⚠️ IMPORTANT: Your Seed Phrase</h4>
         <p className="text-amber-800 text-sm mb-3">
           Your wallet will show you 12-25 random words. This is your "seed phrase"—it's the master key to your money.
@@ -241,31 +241,31 @@ export default function Crypto101() {
 
       <div className="not-prose my-8 space-y-3">
         <div className="border-b border-gray-200 pb-3">
-          <strong className="text-gray-900">Wallet</strong>
+          <strong className="text-white">Wallet</strong>
           <p className="text-sm text-gray-600">An app or device that stores your cryptocurrency</p>
         </div>
         <div className="border-b border-gray-200 pb-3">
-          <strong className="text-gray-900">Seed Phrase</strong>
+          <strong className="text-white">Seed Phrase</strong>
           <p className="text-sm text-gray-600">12-25 words that are the master key to your wallet</p>
         </div>
         <div className="border-b border-gray-200 pb-3">
-          <strong className="text-gray-900">Address</strong>
+          <strong className="text-white">Address</strong>
           <p className="text-sm text-gray-600">Your "account number" that people send crypto to</p>
         </div>
         <div className="border-b border-gray-200 pb-3">
-          <strong className="text-gray-900">HODL</strong>
+          <strong className="text-white">HODL</strong>
           <p className="text-sm text-gray-600">"Hold On for Dear Life" – slang for holding long-term</p>
         </div>
         <div className="border-b border-gray-200 pb-3">
-          <strong className="text-gray-900">Swap</strong>
+          <strong className="text-white">Swap</strong>
           <p className="text-sm text-gray-600">Exchanging one cryptocurrency for another</p>
         </div>
         <div className="border-b border-gray-200 pb-3">
-          <strong className="text-gray-900">KYC</strong>
+          <strong className="text-white">KYC</strong>
           <p className="text-sm text-gray-600">"Know Your Customer" – ID verification required by some services</p>
         </div>
         <div className="pb-3">
-          <strong className="text-gray-900">Gas Fee</strong>
+          <strong className="text-white">Gas Fee</strong>
           <p className="text-sm text-gray-600">A small fee paid to process transactions on the network</p>
         </div>
       </div>
@@ -293,14 +293,14 @@ export default function Crypto101() {
 
       {/* Related Articles CTA */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Keep Learning</h3>
+        <h3 className="font-bold text-white">Keep Learning</h3>
         
         <Link
           href="/blog/hot-wallets-vs-cold-wallets"
           className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">Hot vs Cold Wallets</h4>
+            <h4 className="font-bold text-white group-hover:text-brand">Hot vs Cold Wallets</h4>
             <p className="text-gray-600 text-sm">Learn about wallet security for when your holdings grow</p>
           </div>
           <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
@@ -311,7 +311,7 @@ export default function Crypto101() {
           className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">Why Privacy Matters</h4>
+            <h4 className="font-bold text-white group-hover:text-brand">Why Privacy Matters</h4>
             <p className="text-gray-600 text-sm">Understand why some people prefer private cryptocurrencies</p>
           </div>
           <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />

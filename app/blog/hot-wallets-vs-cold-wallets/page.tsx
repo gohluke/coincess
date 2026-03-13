@@ -28,15 +28,15 @@ export default function HotWalletsVsColdWallets() {
       <div className="not-prose my-8 overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left p-4 font-semibold text-gray-900 border-b">Feature</th>
-              <th className="text-left p-4 font-semibold text-gray-900 border-b">
+            <tr className="bg-[#1a1d26]">
+              <th className="text-left p-4 font-semibold text-white border-b">Feature</th>
+              <th className="text-left p-4 font-semibold text-white border-b">
                 <div className="flex items-center gap-2">
                   <Smartphone className="h-5 w-5 text-orange-500" />
                   Hot Wallet
                 </div>
               </th>
-              <th className="text-left p-4 font-semibold text-gray-900 border-b">
+              <th className="text-left p-4 font-semibold text-white border-b">
                 <div className="flex items-center gap-2">
                   <HardDrive className="h-5 w-5 text-blue-500" />
                   Cold Wallet
@@ -50,7 +50,7 @@ export default function HotWalletsVsColdWallets() {
               <td className="p-4 border-b text-gray-700">Always connected</td>
               <td className="p-4 border-b text-gray-700">Offline (air-gapped)</td>
             </tr>
-            <tr className="bg-gray-50">
+            <tr className="bg-[#1a1d26]">
               <td className="p-4 border-b text-gray-700">Security Level</td>
               <td className="p-4 border-b text-orange-600 font-medium">Medium</td>
               <td className="p-4 border-b text-green-600 font-medium">Very High</td>
@@ -60,7 +60,7 @@ export default function HotWalletsVsColdWallets() {
               <td className="p-4 border-b text-green-600 font-medium">Very High</td>
               <td className="p-4 border-b text-orange-600 font-medium">Lower</td>
             </tr>
-            <tr className="bg-gray-50">
+            <tr className="bg-[#1a1d26]">
               <td className="p-4 border-b text-gray-700">Cost</td>
               <td className="p-4 border-b text-gray-700">Free</td>
               <td className="p-4 border-b text-gray-700">$50-$200+</td>
@@ -70,8 +70,8 @@ export default function HotWalletsVsColdWallets() {
               <td className="p-4 border-b text-gray-700">Daily transactions, small amounts</td>
               <td className="p-4 border-b text-gray-700">Long-term storage, large amounts</td>
             </tr>
-            <tr className="bg-gray-50">
-              <td className="p-4 text-gray-700">Hack Risk</td>
+            <tr className="bg-[#1a1d26]">
+              <td className="p-4 text-gray-300">Hack Risk</td>
               <td className="p-4 text-red-600 font-medium">Vulnerable to online attacks</td>
               <td className="p-4 text-green-600 font-medium">Nearly impossible remotely</td>
             </tr>
@@ -98,7 +98,7 @@ export default function HotWalletsVsColdWallets() {
             <CheckCircle2 className="h-5 w-5" />
             Hot Wallet Pros
           </h4>
-          <ul className="space-y-2 text-green-800 text-sm">
+            <ul className="space-y-2 text-emerald-400 text-sm">
             <li>• Free to use</li>
             <li>• Instant access anytime</li>
             <li>• Easy to set up in minutes</li>
@@ -111,7 +111,7 @@ export default function HotWalletsVsColdWallets() {
             <XCircle className="h-5 w-5" />
             Hot Wallet Cons
           </h4>
-          <ul className="space-y-2 text-red-800 text-sm">
+            <ul className="space-y-2 text-red-400 text-sm">
             <li>• Vulnerable to malware/viruses</li>
             <li>• Can be hacked remotely</li>
             <li>• Phishing attacks target users</li>
@@ -145,7 +145,7 @@ export default function HotWalletsVsColdWallets() {
             <CheckCircle2 className="h-5 w-5" />
             Cold Wallet Pros
           </h4>
-          <ul className="space-y-2 text-green-800 text-sm">
+            <ul className="space-y-2 text-emerald-400 text-sm">
             <li>• Maximum security (offline storage)</li>
             <li>• Immune to remote hacking</li>
             <li>• Protected even if computer has malware</li>
@@ -158,7 +158,7 @@ export default function HotWalletsVsColdWallets() {
             <XCircle className="h-5 w-5" />
             Cold Wallet Cons
           </h4>
-          <ul className="space-y-2 text-red-800 text-sm">
+            <ul className="space-y-2 text-red-400 text-sm">
             <li>• Costs $50-$200+</li>
             <li>• Less convenient for frequent use</li>
             <li>• Can be lost or damaged</li>
@@ -175,10 +175,10 @@ export default function HotWalletsVsColdWallets() {
           href="https://shop.ledger.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">Ledger Nano X / Nano S Plus</h4>
+            <h4 className="font-bold text-white group-hover:text-brand">Ledger Nano X / Nano S Plus</h4>
             <p className="text-gray-600 text-sm">Most popular choice. Supports 5,500+ coins including Bitcoin, Ethereum, and Monero.</p>
             <p className="text-brand text-sm font-medium mt-1">From $79</p>
           </div>
@@ -189,10 +189,10 @@ export default function HotWalletsVsColdWallets() {
           href="https://trezor.io"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">Trezor Model T / Safe 3</h4>
+            <h4 className="font-bold text-white group-hover:text-brand">Trezor Model T / Safe 3</h4>
             <p className="text-gray-600 text-sm">Open-source firmware. Touchscreen interface. Great for Bitcoin maximalists.</p>
             <p className="text-brand text-sm font-medium mt-1">From $69</p>
           </div>
@@ -207,13 +207,13 @@ export default function HotWalletsVsColdWallets() {
       </p>
 
       <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Shield className="h-5 w-5 text-brand" />
           Recommended Setup
         </h3>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h4 className="font-semibold text-gray-900 mb-2">Hot Wallet (Daily Use)</h4>
+            <h4 className="font-semibold text-white mb-2">Hot Wallet (Daily Use)</h4>
             <ul className="space-y-1 text-gray-700 text-sm">
               <li>• Keep small amounts for trading/swapping</li>
               <li>• Use for DeFi interactions</li>
@@ -222,7 +222,7 @@ export default function HotWalletsVsColdWallets() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 mb-2">Cold Wallet (Savings)</h4>
+            <h4 className="font-semibold text-white mb-2">Cold Wallet (Savings)</h4>
             <ul className="space-y-1 text-gray-700 text-sm">
               <li>• Store long-term investments</li>
               <li>• Keep majority of holdings offline</li>
@@ -259,12 +259,12 @@ export default function HotWalletsVsColdWallets() {
       </ol>
 
       {/* Warning Box */}
-      <div className="not-prose my-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 border border-[#2a2e39] rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-amber-900 mb-2">Critical Security Rules</h4>
-            <ul className="space-y-1 text-amber-800 text-sm">
+            <h4 className="font-semibold text-amber-400 mb-2">Critical Security Rules</h4>
+            <ul className="space-y-1 text-amber-400 text-sm">
               <li>• <strong>NEVER share your seed phrase</strong> – No legitimate service will ever ask for it</li>
               <li>• <strong>Don't store crypto on exchanges</strong> – "Not your keys, not your coins"</li>
               <li>• <strong>Buy hardware wallets only from official sources</strong> – Never second-hand or Amazon</li>

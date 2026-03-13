@@ -80,28 +80,28 @@ export default function HowToTradeHyperliquidGuide() {
           <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-3">
             <LayoutDashboard className="h-5 w-5 text-brand" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Cleaner, Intuitive UI</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-bold text-white mb-2">Cleaner, Intuitive UI</h4>
+          <p className="text-sm text-gray-400">
             A streamlined interface that puts the chart, order book, and position
             panel exactly where you need them—without clutter.
           </p>
         </div>
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
             <Zap className="h-5 w-5 text-emerald-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Built-in Swap Aggregator</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-bold text-white mb-2">Built-in Swap Aggregator</h4>
+          <p className="text-sm text-gray-400">
             Get USDC from any token—ETH, BTC, stables—without leaving the app.
             Best rates across DEXs, no extra steps.
           </p>
         </div>
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-3">
+          <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
             <Coins className="h-5 w-5 text-amber-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Commodities (Oil, Gold)</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-bold text-white mb-2">Commodities (Oil, Gold)</h4>
+          <p className="text-sm text-gray-400">
             HIP-3 assets: trade crude oil (CL), Brent (BRENTOIL), gold (XAU),
             silver (XAG)—24/7, up to 50x leverage.
           </p>
@@ -117,17 +117,17 @@ export default function HowToTradeHyperliquidGuide() {
           </p>
         </div>
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center mb-3">
+          <div className="w-10 h-10 rounded-full bg-rose-900/30 flex items-center justify-center mb-3">
             <BookOpen className="h-5 w-5 text-rose-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Market Intelligence Blog</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-bold text-white mb-2">Market Intelligence Blog</h4>
+          <p className="text-sm text-gray-400">
             Whale tracking, funding analysis, and actionable market insights to
             inform your trades.
           </p>
         </div>
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center mb-3">
+          <div className="w-10 h-10 rounded-full bg-violet-900/30 flex items-center justify-center mb-3">
             <CheckCircle className="h-5 w-5 text-violet-600" />
           </div>
           <h4 className="font-bold text-gray-900 mb-2">No Additional Fees</h4>
@@ -161,23 +161,23 @@ export default function HowToTradeHyperliquidGuide() {
               1
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Get a Wallet
               </h3>
-              <p className="text-gray-700 mb-3">
+              <p className="text-gray-300 mb-3">
                 Install MetaMask, Rabby, or Phantom. These are the most
                 compatible with Coincess and Hyperliquid. Create a new wallet or
                 import an existing one—you&apos;ll need it to sign transactions
                 and hold your funds.
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-white/80 rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1a1d26] rounded-lg text-sm font-medium">
                   MetaMask
                 </span>
-                <span className="px-3 py-1 bg-white/80 rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1a1d26] rounded-lg text-sm font-medium">
                   Rabby
                 </span>
-                <span className="px-3 py-1 bg-white/80 rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1a1d26] rounded-lg text-sm font-medium">
                   Phantom
                 </span>
               </div>
@@ -191,10 +191,10 @@ export default function HowToTradeHyperliquidGuide() {
               2
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Get USDC on Arbitrum
               </h3>
-              <p className="text-gray-700 mb-3">
+              <p className="text-gray-300 mb-3">
                 Hyperliquid deposits use USDC bridged from Arbitrum. Buy USDC on
                 Arbitrum via a CEX withdrawal, or use Coincess&apos;s swap
                 aggregator to convert any token (ETH, BTC, etc.) into USDC
@@ -210,10 +210,10 @@ export default function HowToTradeHyperliquidGuide() {
               3
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Connect to Coincess
               </h3>
-              <p className="text-gray-700 mb-3">
+              <p className="text-gray-300 mb-3">
                 Go to coincess.com, click &quot;Connect Wallet,&quot; and approve the
                 connection. Your wallet stays in your control—Coincess never
                 custodies your funds.
@@ -228,10 +228,10 @@ export default function HowToTradeHyperliquidGuide() {
               4
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Deposit USDC to Hyperliquid
               </h3>
-              <p className="text-gray-700 mb-3">
+              <p className="text-gray-300 mb-3">
                 In the Coincess interface, open the deposit flow. Your USDC on
                 Arbitrum will be bridged to Hyperliquid&apos;s L1. The process
                 typically completes in under a minute. Once deposited, your
@@ -247,10 +247,10 @@ export default function HowToTradeHyperliquidGuide() {
               5
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Place Your First Trade
               </h3>
-              <p className="text-gray-700 mb-3">
+              <p className="text-gray-300 mb-3">
                 Select a market (e.g., BTC, ETH, CL, XAU), choose your leverage,
                 and enter a market or limit order. Start with low leverage (2–5x)
                 until you&apos;re comfortable with the interface and risk.
@@ -269,19 +269,19 @@ export default function HowToTradeHyperliquidGuide() {
 
       <div className="not-prose my-8 space-y-4">
         <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <BarChart3 className="h-5 w-5 text-gray-600" />
           </div>
           <div>
-            <h4 className="font-bold text-gray-900">Order Book</h4>
-            <p className="text-sm text-gray-600">
+            <h4 className="font-bold text-white">Order Book</h4>
+            <p className="text-sm text-gray-400">
               Live bids and asks. Green = buy side, red = sell side. Click a
               level to auto-fill your order price.
             </p>
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <TrendingUp className="h-5 w-5 text-gray-600" />
           </div>
           <div>
@@ -293,12 +293,12 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <Target className="h-5 w-5 text-gray-600" />
           </div>
           <div>
-            <h4 className="font-bold text-gray-900">Order Types</h4>
-            <p className="text-sm text-gray-600">
+            <h4 className="font-bold text-white">Order Types</h4>
+            <p className="text-sm text-gray-400">
               <strong>Market</strong> — instant fill at best available price.{" "}
               <strong>Limit</strong> — set your price, wait for fill (maker fee).{" "}
               <strong>Stop</strong> — trigger a market order when price hits a
@@ -307,7 +307,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <LayoutDashboard className="h-5 w-5 text-gray-600" />
           </div>
           <div>
@@ -319,12 +319,12 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
         <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <SlidersHorizontal className="h-5 w-5 text-gray-600" />
           </div>
           <div>
-            <h4 className="font-bold text-gray-900">Leverage Slider</h4>
-            <p className="text-sm text-gray-600">
+            <h4 className="font-bold text-white">Leverage Slider</h4>
+            <p className="text-sm text-gray-400">
               Adjust leverage from 1x to 50x. Higher leverage = higher risk and
               closer liquidation. Start low.
             </p>
@@ -342,7 +342,7 @@ export default function HowToTradeHyperliquidGuide() {
       <div className="not-prose my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-gray-100">
+            <tr className="bg-[#1a1d26]">
               <th className="text-left p-3 font-semibold text-gray-900 border-b">
                 Fee Type
               </th>
@@ -360,7 +360,7 @@ export default function HowToTradeHyperliquidGuide() {
               <td className="p-3 border-b text-emerald-600 font-semibold">
                 0.015%
               </td>
-              <td className="p-3 border-b text-gray-600">
+              <td className="p-3 border-b text-gray-400">
                 Add liquidity to the order book
               </td>
             </tr>
@@ -369,7 +369,7 @@ export default function HowToTradeHyperliquidGuide() {
               <td className="p-3 border-b text-amber-600 font-semibold">
                 0.045%
               </td>
-              <td className="p-3 border-b text-gray-600">
+              <td className="p-3 border-b text-gray-400">
                 Remove liquidity (market orders)
               </td>
             </tr>
@@ -378,14 +378,14 @@ export default function HowToTradeHyperliquidGuide() {
               <td className="p-3 border-b text-emerald-600 font-semibold">
                 $0
               </td>
-              <td className="p-3 border-b text-gray-600">
+              <td className="p-3 border-b text-gray-400">
                 Zero gas fees on Hyperliquid L1
               </td>
             </tr>
             <tr className="bg-gray-50/50">
               <td className="p-3 border-b font-medium">Referral</td>
-              <td className="p-3 border-b text-gray-600">Discount</td>
-              <td className="p-3 border-b text-gray-600">
+              <td className="p-3 border-b text-gray-400">Discount</td>
+              <td className="p-3 border-b text-gray-400">
                 Referral codes can reduce fees further
               </td>
             </tr>
@@ -430,7 +430,7 @@ export default function HowToTradeHyperliquidGuide() {
       <div className="not-prose my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-gray-100">
+            <tr className="bg-[#1a1d26]">
               <th className="text-left p-3 font-semibold text-gray-900 border-b">
                 Asset
               </th>
@@ -489,7 +489,7 @@ export default function HowToTradeHyperliquidGuide() {
       <h2>Pro Tips for Hyperliquid Trading</h2>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+        <div className="flex gap-4 p-4 bg-emerald-950/50 rounded-xl border border-emerald-800/50">
           <CheckCircle className="h-6 w-6 text-emerald-600 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-gray-900">Use Limit Orders</h4>
@@ -499,11 +499,11 @@ export default function HowToTradeHyperliquidGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+        <div className="flex gap-4 p-4 bg-blue-950/50 rounded-xl border border-blue-800/50">
           <Eye className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-bold text-gray-900">Monitor Funding Rates</h4>
-            <p className="text-sm text-gray-700">
+            <h4 className="font-bold text-white">Monitor Funding Rates</h4>
+            <p className="text-sm text-gray-300">
               High positive funding = longs pay shorts. High negative = shorts
               pay longs. Use this to inform your direction or harvest yield.
             </p>
@@ -512,18 +512,18 @@ export default function HowToTradeHyperliquidGuide() {
         <div className="flex gap-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
           <Shield className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-bold text-gray-900">Start with Low Leverage</h4>
-            <p className="text-sm text-gray-700">
+            <h4 className="font-bold text-white">Start with Low Leverage</h4>
+            <p className="text-sm text-gray-300">
               2–5x is plenty for learning. Higher leverage = faster liquidation
               and emotional stress. Scale up only when you&apos;re confident.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-rose-50 rounded-xl border border-rose-200">
+        <div className="flex gap-4 p-4 bg-rose-950/50 rounded-xl border border-rose-800/50">
           <Shield className="h-6 w-6 text-rose-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-bold text-gray-900">Use Isolated Margin</h4>
-            <p className="text-sm text-gray-700">
+            <h4 className="font-bold text-white">Use Isolated Margin</h4>
+            <p className="text-sm text-gray-300">
               Isolated margin limits your loss to the position&apos;s margin
               only. Cross margin can liquidate your entire account if one trade
               blows up.
@@ -533,8 +533,8 @@ export default function HowToTradeHyperliquidGuide() {
         <div className="flex gap-4 p-4 bg-violet-50 rounded-xl border border-violet-200">
           <BarChart3 className="h-6 w-6 text-violet-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-bold text-gray-900">Watch Whale Positions</h4>
-            <p className="text-sm text-gray-700">
+            <h4 className="font-bold text-white">Watch Whale Positions</h4>
+            <p className="text-sm text-gray-300">
               Hyperliquid is fully on-chain. Large positions and liquidation
               levels are visible. Use Coincess&apos;s whale intelligence to see
               who&apos;s positioned where.
@@ -544,14 +544,14 @@ export default function HowToTradeHyperliquidGuide() {
       </div>
 
       {/* Risk Disclosure */}
-      <div className="not-prose my-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 border border-amber-800/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-amber-900 mb-2">
+            <h4 className="font-semibold text-amber-400 mb-2">
               Risk Disclosure
             </h4>
-            <p className="text-amber-800 text-sm">
+            <p className="text-amber-400 text-sm">
               Trading perpetual futures and leveraged derivatives involves
               significant risk. Leverage amplifies both gains and losses. You can
               lose more than your initial margin. Past performance does not
@@ -576,7 +576,7 @@ export default function HowToTradeHyperliquidGuide() {
           </p>
           <Link
             href="/trade/BTC"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
           >
             Trade BTC on Coincess
             <ArrowRight className="h-5 w-5" />
@@ -586,17 +586,17 @@ export default function HowToTradeHyperliquidGuide() {
 
       {/* Related articles */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Related Articles</h3>
+        <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link
           href="/blog/what-are-perpetual-futures-complete-guide"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               What Are Perpetual Futures? The Complete Beginner&apos;s Guide
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Learn how perps work, funding rates, leverage, and how to trade
               them
             </p>
@@ -606,13 +606,13 @@ export default function HowToTradeHyperliquidGuide() {
 
         <Link
           href="/blog/hyperliquid-oil-whales-biggest-traders-2026"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               The Whales of Hyperliquid Oil: Who&apos;s Making Millions
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Meet the biggest traders in Hyperliquid&apos;s oil market
             </p>
           </div>
@@ -621,13 +621,13 @@ export default function HowToTradeHyperliquidGuide() {
 
         <Link
           href="/blog/best-no-kyc-crypto-exchanges-2026"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Best No-KYC Crypto Exchanges in 2026
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Trade privately without verification—Coincess leads the pack
             </p>
           </div>

@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import Link from "next/link"
 import { BlogPostLayout } from "@/components/BlogPostLayout"
+import { LiveTicker } from "@/components/blog/LiveTicker"
 import { getBlogPost } from "@/lib/blog-posts"
 import {
   Clock,
@@ -39,6 +40,10 @@ export const metadata: Metadata = {
 export default function AutomatedCryptoTradingBotsGuide2026Page() {
   return (
     <BlogPostLayout post={post}>
+      <div className="not-prose mb-8">
+        <LiveTicker coins={["BTC", "ETH", "HYPE"]} />
+      </div>
+
       {/* Lead */}
       <p className="text-xl leading-relaxed">
         The best traders don&apos;t sit at their screens 24/7. They build
@@ -55,12 +60,12 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 gap-4">
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+        <div className="bg-emerald-950/50 border border-emerald-200 rounded-xl p-6 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-emerald-900/30 flex items-center justify-center mb-4">
             <Clock className="h-6 w-6 text-emerald-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">24/7 Execution</h4>
-          <p className="text-sm text-gray-700">
+          <h4 className="font-bold text-white mb-2">24/7 Execution</h4>
+          <p className="text-sm text-gray-300">
             Crypto markets never close. Neither does your bot. It places orders,
             collects funding, and manages positions while you sleep, work, or
             live your life.
@@ -76,22 +81,22 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
             time—no panic selling, no FOMO buying, no revenge trading.
           </p>
         </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-4">
+        <div className="bg-amber-950/50 border border-amber-200 rounded-xl p-6 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-amber-900/30 flex items-center justify-center mb-4">
             <Zap className="h-6 w-6 text-amber-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Speed</h4>
-          <p className="text-sm text-gray-700">
+          <h4 className="font-bold text-white mb-2">Speed</h4>
+          <p className="text-sm text-gray-300">
             Execute in milliseconds. When funding rates spike or price hits your
             grid level, the bot reacts instantly. Humans can&apos;t compete.
           </p>
         </div>
-        <div className="bg-violet-50 border border-violet-200 rounded-xl p-6 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mb-4">
+        <div className="bg-purple-950/50 border border-violet-200 rounded-xl p-6 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-purple-900/30 flex items-center justify-center mb-4">
             <Target className="h-6 w-6 text-violet-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">Consistency</h4>
-          <p className="text-sm text-gray-700">
+          <h4 className="font-bold text-white mb-2">Consistency</h4>
+          <p className="text-sm text-gray-300">
             Follow the strategy every time. No drift, no fatigue, no &quot;I&apos;ll
             skip this one.&quot; The bot does exactly what you configured—nothing
             more, nothing less.
@@ -107,14 +112,14 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
               <Grid3X3 className="h-5 w-5 text-brand" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Grid Bots</h3>
+            <h3 className="text-lg font-bold text-white">Grid Bots</h3>
           </div>
-          <p className="text-sm text-gray-700 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Buy low, sell high in a range. The bot places a grid of buy and sell
             orders between upper and lower bounds. When price bounces within the
             range, it captures each oscillation as profit.
@@ -125,14 +130,14 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-emerald-600" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">DCA Bots</h3>
+            <h3 className="text-lg font-bold text-white">DCA Bots</h3>
           </div>
-          <p className="text-sm text-gray-700 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Dollar-cost average into positions over time. The bot buys at fixed
             intervals (e.g., daily or weekly) regardless of price. Smooths out
             volatility and removes timing bias.
@@ -143,14 +148,14 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-amber-600" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Momentum Bots</h3>
+            <h3 className="text-lg font-bold text-white">Momentum Bots</h3>
           </div>
-          <p className="text-sm text-gray-700 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Follow trends and ride breakouts. The bot enters when price breaks
             key levels or momentum indicators signal a move. Stays in until the
             trend reverses.
@@ -161,14 +166,14 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
+        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6 shadow-sm hover:border-brand/30 transition-colors">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
               <ArrowRightLeft className="h-5 w-5 text-blue-600" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Arbitrage Bots</h3>
+            <h3 className="text-lg font-bold text-white">Arbitrage Bots</h3>
           </div>
-          <p className="text-sm text-gray-700 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Exploit price differences between markets. Buy on one exchange, sell
             on another. Requires fast execution and low fees. Often needs
             significant capital to overcome spread and gas.
@@ -178,19 +183,19 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-gradient-to-r from-amber-950/50 to-amber-900/30 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-lg font-bold text-white">
               Funding Rate Harvesters
             </h3>
-            <span className="text-xs font-medium px-2 py-0.5 bg-amber-200 text-amber-800 rounded-full">
+            <span className="text-xs font-medium px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded-full">
               Coincess specialty
             </span>
           </div>
-          <p className="text-sm text-gray-700 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Collect hourly funding payments from perpetual futures. When funding
             is extremely positive, go short and get paid every hour. When it&apos;s
             negative, go long. No directional bet required—you&apos;re harvesting
@@ -213,48 +218,48 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-white border-2 border-brand/20 rounded-xl p-6 shadow-md">
+        <div className="bg-[#141620] border-2 border-brand/20 rounded-xl p-6 shadow-md">
           <div className="flex items-center gap-3 mb-3">
             <Grid3X3 className="h-6 w-6 text-brand" />
-            <h3 className="text-lg font-bold text-gray-900">Grid Trading Bot</h3>
+            <h3 className="text-lg font-bold text-white">Grid Trading Bot</h3>
           </div>
-          <p className="text-sm text-gray-700 mb-3">
+          <p className="text-sm text-gray-300 mb-3">
             Set your upper and lower bounds, choose the number of grid levels,
             and the bot places buy and sell orders automatically. As price moves
             within the range, it captures profits on each oscillation. Works
             directly with your Hyperliquid vault—real positions, real P&amp;L.
           </p>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-400">
             Ideal for BTC, ETH, SOL, or commodities like CL when they&apos;re
             ranging.
           </p>
         </div>
 
-        <div className="bg-white border-2 border-amber-200 rounded-xl p-6 shadow-md">
+        <div className="bg-[#141620] border-2 border-amber-200 rounded-xl p-6 shadow-md">
           <div className="flex items-center gap-3 mb-3">
             <Zap className="h-6 w-6 text-amber-600" />
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-lg font-bold text-white">
               Funding Rate Harvester
             </h3>
           </div>
-          <p className="text-sm text-gray-700 mb-3">
+          <p className="text-sm text-gray-300 mb-3">
             Automatically enters positions when funding rates are elevated.
             Collects payments every hour. When rates normalize, it can reduce
             or close the position. One of the most popular strategies on
             Coincess—especially during volatile periods like the oil crisis when
             funding spiked to 0.1%+ per hour.
           </p>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-400">
             Works across BTC, ETH, oil (CL), and other Hyperliquid markets.
           </p>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+        <div className="bg-[#1a1d26] border border-[#2a2e39] rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
             <Bot className="h-6 w-6 text-slate-600" />
-            <h3 className="text-lg font-bold text-gray-900">Momentum Strategies</h3>
+            <h3 className="text-lg font-bold text-white">Momentum Strategies</h3>
           </div>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-300">
             Follow trends and breakouts. Coincess offers momentum-based bots that
             ride directional moves. Configure your entry/exit rules and let the
             bot execute.
@@ -284,16 +289,16 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
               1
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Connect Wallet
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-300">
                 Connect MetaMask, Rabby, or Phantom to Coincess. Your wallet
                 stays in your control—Coincess never custodies funds.
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <Wallet className="h-4 w-4 text-brand" />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-400">
                   Ensure you have USDC on Arbitrum for Hyperliquid deposits
                 </span>
               </div>
@@ -307,10 +312,10 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
               2
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Go to /automate
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-300">
                 Navigate to the{" "}
                 <Link href="/automate" className="text-brand font-semibold hover:underline">
                   automate
@@ -328,10 +333,10 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
               3
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Choose a Strategy
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-300">
                 Pick based on market conditions. Grid for ranging markets.
                 Funding Harvester when rates are elevated. Momentum when you
                 expect a trend.
@@ -346,17 +351,17 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
               4
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Configure Parameters
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-300">
                 Set market (BTC, ETH, CL, etc.), position size, risk limits. For
                 Grid: upper/lower bounds, number of grids. For Funding
                 Harvester: funding threshold, size. Start conservative.
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <Settings className="h-4 w-4 text-brand" />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-400">
                   You can adjust anytime—bots are flexible
                 </span>
               </div>
@@ -370,10 +375,10 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
               5
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 Activate and Monitor
               </h3>
-              <p className="text-gray-700">
+              <p className="text-gray-300">
                 Hit activate. The bot starts trading. Check in weekly—review P&amp;L,
                 adjust parameters if market conditions change. Don&apos;t set and
                 forget entirely; bots need occasional oversight.
@@ -426,7 +431,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 rounded-xl bg-red-50 border border-red-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border border-red-200">
           <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-900">Market crashes blow through ranges</h4>
@@ -539,14 +544,14 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
       <h2>Risk Disclosure</h2>
 
-      <div className="not-prose my-8 bg-amber-50 border-2 border-amber-300 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 border-2 border-amber-300 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-amber-900 mb-2">
+            <h4 className="font-semibold text-amber-400 mb-2">
               Risk Disclosure
             </h4>
-            <p className="text-amber-800 text-sm">
+            <p className="text-amber-400 text-sm">
               Automated trading involves significant risk. Bots can lose money
               when market conditions change. Leverage amplifies both gains and
               losses—you can lose your entire margin or more. Funding rates can
@@ -574,7 +579,7 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/automate"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
             >
               <Bot className="h-5 w-5" />
               Go to Automate
@@ -593,17 +598,17 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
       {/* Related articles */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Related Articles</h3>
+        <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link
           href="/blog/crypto-funding-rates-explained-earn-passive-income"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Crypto Funding Rates Explained: Earn Passive Income from Perps
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               How funding rates work and when they spike—essential for Funding
               Rate Harvester users
             </p>
@@ -613,13 +618,13 @@ export default function AutomatedCryptoTradingBotsGuide2026Page() {
 
         <Link
           href="/blog/what-are-perpetual-futures-complete-guide"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               What Are Perpetual Futures? The Complete Beginner&apos;s Guide
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Understand perps, leverage, and funding before you automate
             </p>
           </div>

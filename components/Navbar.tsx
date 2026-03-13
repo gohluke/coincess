@@ -27,7 +27,7 @@ const MORE_LINKS = [
   { href: "/tools", label: "Tools", icon: Wrench },
 ];
 
-const MARKETING_ROUTES = ["/blog", "/swap-guide", "/crypto-leverage-calculator"];
+const MARKETING_ROUTES = ["/swap-guide", "/crypto-leverage-calculator"];
 
 function NavIcon({ href, label, icon: Icon, active }: {
   href: string; label: string; icon: LucideIcon; active: boolean;

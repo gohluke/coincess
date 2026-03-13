@@ -90,21 +90,21 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
       </p>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+        <div className="bg-emerald-950/50 border border-emerald-200 rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
             <Shield className="h-5 w-5 text-emerald-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">2–3x: Conservative</h4>
-          <p className="text-sm text-gray-600 mb-2">
+          <h4 className="font-bold text-white mb-2">2–3x: Conservative</h4>
+          <p className="text-sm text-gray-400 mb-2">
             For swing trades. Liquidation ~33–50% away.
           </p>
-          <p className="text-xs font-mono text-emerald-700">Safest tier</p>
+          <p className="text-xs font-mono text-emerald-400">Safest tier</p>
         </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+        <div className="bg-blue-950/50 border border-blue-200 rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center mb-3">
             <Target className="h-5 w-5 text-blue-600" />
           </div>
-          <h4 className="font-bold text-gray-900 mb-2">5–10x: Moderate</h4>
+          <h4 className="font-bold text-white mb-2">5–10x: Moderate</h4>
           <p className="text-sm text-gray-600 mb-2">
             Day trading. Liquidation ~10–20% away.
           </p>
@@ -162,7 +162,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             (fewer liquidations from a single bad trade), but one blow-up can
             wipe everything.
           </p>
-          <p className="text-amber-700 text-sm font-medium">
+          <p className="text-amber-400 text-sm font-medium">
             ⚠ More efficient but riskier. For experienced traders.
           </p>
         </div>
@@ -238,10 +238,10 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           <Calculator className="h-5 w-5 text-brand" />
           Position Sizing Formula
         </h4>
-        <p className="text-sm text-gray-700 mb-2">
+        <p className="text-sm text-gray-300 mb-2">
           Position size = (Portfolio × Risk %) ÷ (Stop-loss %)
         </p>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-400">
           Example: $1,000 portfolio, 1% risk ($10), 5% stop-loss. Position size =
           $10 ÷ 0.05 = <strong>$200 notional</strong>. With 10x leverage, that&apos;s
           $20 margin.
@@ -337,50 +337,50 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
       <h2>Leverage Trading Mistakes That Will Blow Your Account</h2>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 rounded-xl bg-red-50 border-2 border-red-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border-2 border-red-200">
           <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-red-900">Using 50x because it&apos;s available</h4>
+            <h4 className="font-bold text-red-400">Using 50x because it&apos;s available</h4>
             <p className="text-sm text-red-800">
               A 2% move wipes you out. Unless you&apos;re a scalper with a
               proven edge, stay under 10x.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-50 border-2 border-red-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border-2 border-red-200">
           <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-red-900">No stop-loss</h4>
+            <h4 className="font-bold text-red-400">No stop-loss</h4>
             <p className="text-sm text-red-800">
               &quot;It&apos;ll come back&quot; is how people get liquidated.
               Always set a stop before you enter.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-50 border-2 border-red-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border-2 border-red-200">
           <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-red-900">Revenge trading after a loss</h4>
+            <h4 className="font-bold text-red-400">Revenge trading after a loss</h4>
             <p className="text-sm text-red-800">
               One bad trade doesn&apos;t justify a bigger, riskier one. Step
               away. Come back with a clear head.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-50 border-2 border-red-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border-2 border-red-200">
           <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-red-900">Overleveraging on a &quot;sure thing&quot;</h4>
+            <h4 className="font-bold text-red-400">Overleveraging on a &quot;sure thing&quot;</h4>
             <p className="text-sm text-red-800">
               There are no sure things. Markets can gap, flash crash, or reverse
               in seconds.
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-50 border-2 border-red-200">
+        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50 border-2 border-red-200">
           <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-red-900">Trading with money you can&apos;t afford to lose</h4>
+            <h4 className="font-bold text-red-400">Trading with money you can&apos;t afford to lose</h4>
             <p className="text-sm text-red-800">
               Rent, bills, savings—never use them for leverage. Only risk
               capital you can lose without affecting your life.
@@ -391,7 +391,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
 
       <h2>Risk Disclosure</h2>
 
-      <div className="not-prose my-8 bg-amber-50 border-2 border-amber-300 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 border-2 border-amber-300 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -423,7 +423,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
             >
               Trade BTC
               <ArrowRight className="h-5 w-5" />
@@ -441,14 +441,14 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
 
       {/* Related articles */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Related Articles</h3>
+        <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link
           href="/blog/what-are-perpetual-futures-complete-guide"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               What Are Perpetual Futures? The Complete Beginner&apos;s Guide
             </h4>
             <p className="text-gray-600 text-sm">
@@ -466,7 +466,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             <h4 className="font-bold text-gray-900 group-hover:text-brand">
               Crypto Funding Rates Explained: Earn Passive Income from Perps
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               How funding rates work and how to harvest them on Coincess
             </p>
           </div>

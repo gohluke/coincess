@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import Link from "next/link"
 import { BlogPostLayout } from "@/components/BlogPostLayout"
+import { LiveTicker } from "@/components/blog/LiveTicker"
 import { getBlogPost } from "@/lib/blog-posts"
 import {
   TrendingUp,
@@ -34,6 +35,10 @@ export const metadata: Metadata = {
 export default function OilPricesWarArticle() {
   return (
     <BlogPostLayout post={post}>
+      <div className="not-prose mb-8">
+        <LiveTicker coins={["BRENTOIL", "CL", "XAU"]} />
+      </div>
+
       {/* SEO-optimized lead */}
       <p className="text-xl leading-relaxed">
         <strong>
@@ -58,10 +63,10 @@ export default function OilPricesWarArticle() {
 
       {/* Key stats banner */}
       <div className="not-prose my-10">
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6">
+        <div className="bg-gradient-to-r from-amber-950/50 to-orange-950/50 border border-amber-800/50 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="h-5 w-5 text-amber-600" />
-            <span className="text-sm font-bold text-amber-800 uppercase tracking-wider">
+            <span className="text-sm font-bold text-amber-400 uppercase tracking-wider">
               Live Market Snapshot — March 2026
             </span>
           </div>
@@ -71,16 +76,16 @@ export default function OilPricesWarArticle() {
               <div className="text-sm text-gray-600">Brent Crude (bbl)</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-900">$94.77</div>
-              <div className="text-sm text-gray-600">WTI Crude (bbl)</div>
+              <div className="text-2xl font-bold text-white">$94.77</div>
+              <div className="text-sm text-gray-400">WTI Crude (bbl)</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-red-600">+35.6%</div>
-              <div className="text-sm text-gray-600">WTI Weekly Gain</div>
+              <div className="text-sm text-gray-400">WTI Weekly Gain</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-red-600">16M bpd</div>
-              <div className="text-sm text-gray-600">Supply Disrupted</div>
+              <div className="text-sm text-gray-400">Supply Disrupted</div>
             </div>
           </div>
         </div>
@@ -100,7 +105,7 @@ export default function OilPricesWarArticle() {
           <div className="bg-red-50 border border-red-200 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-5 w-5 text-red-600" />
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-white">
                 Supply Shocks (Prices Rise)
               </h3>
             </div>
@@ -145,14 +150,14 @@ export default function OilPricesWarArticle() {
             </ul>
           </div>
 
-          <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+          <div className="bg-emerald-950/50 border border-emerald-800/50 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="h-5 w-5 text-green-600" />
               <h3 className="text-lg font-bold text-gray-900">
                 Demand Surges (Prices Rise)
               </h3>
             </div>
-            <ul className="space-y-2 text-sm text-gray-700">
+            <ul className="space-y-2 text-sm text-gray-300">
               <li className="flex gap-2">
                 <span className="text-green-600 font-bold">1.</span>
                 <span>
@@ -288,7 +293,7 @@ export default function OilPricesWarArticle() {
                   {item.date}
                 </span>
               </div>
-              <div className="flex-1 text-sm text-gray-700 border-l-2 border-amber-200 pl-4">
+              <div className="flex-1 text-sm text-gray-300 border-l-2 border-amber-800/50 pl-4">
                 {item.event}
               </div>
             </div>
@@ -392,10 +397,10 @@ export default function OilPricesWarArticle() {
             <div className="text-3xl font-bold text-amber-600 mb-2">
               Step 1
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 className="text-lg font-semibold text-white mb-1">
               Connect Wallet
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Connect your crypto wallet to Coincess. No account signup or KYC
               verification needed.
             </p>
@@ -422,10 +427,10 @@ export default function OilPricesWarArticle() {
             <div className="text-3xl font-bold text-amber-600 mb-2">
               Step 3
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 className="text-lg font-semibold text-white mb-1">
               Go Long or Short
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Open a position with up to 50x leverage. Profit whether oil goes
               up <em>or</em> down.
             </p>

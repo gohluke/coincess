@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import Link from "next/link"
 import { BlogPostLayout } from "@/components/BlogPostLayout"
+import { LiveTicker } from "@/components/blog/LiveTicker"
 import { getBlogPost } from "@/lib/blog-posts"
 import {
   TrendingUp,
@@ -36,6 +37,10 @@ export const metadata: Metadata = {
 export default function OilWhalesArticle() {
   return (
     <BlogPostLayout post={post}>
+      <div className="not-prose mb-8">
+        <LiveTicker coins={["BRENTOIL", "CL"]} />
+      </div>
+
       <p className="text-xl leading-relaxed">
         <strong>
           Over $1 billion in open interest. $720 million in single-day volume.
@@ -454,12 +459,12 @@ export default function OilWhalesArticle() {
             </ul>
           </div>
 
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+          <div className="bg-red-950/50 border border-red-800/50 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <Flame className="h-5 w-5 text-red-600" />
-              <h3 className="text-lg font-bold text-gray-900">Bear Signals</h3>
+              <h3 className="text-lg font-bold text-white">Bear Signals</h3>
             </div>
-            <ul className="space-y-2 text-sm text-gray-700">
+            <ul className="space-y-2 text-sm text-gray-300">
               <li className="flex gap-2">
                 <span className="text-red-600 font-bold">&bull;</span>
                 <span>

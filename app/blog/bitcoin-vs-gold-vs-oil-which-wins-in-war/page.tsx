@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import Link from "next/link"
 import { BlogPostLayout } from "@/components/BlogPostLayout"
+import { LiveTicker } from "@/components/blog/LiveTicker"
 import { getBlogPost } from "@/lib/blog-posts"
 import {
   Flame,
@@ -31,6 +32,10 @@ export const metadata: Metadata = {
 export default function BitcoinVsGoldVsOilArticle() {
   return (
     <BlogPostLayout post={post}>
+      <div className="not-prose mb-8">
+        <LiveTicker coins={["BTC", "XAU", "BRENTOIL"]} />
+      </div>
+
       {/* Lead */}
       <p className="text-xl leading-relaxed">
         With U.S.-Israeli strikes on Iran entering their third week, three assets
@@ -200,9 +205,9 @@ export default function BitcoinVsGoldVsOilArticle() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-700">
+            <thead className="bg-[#1a1d26]">
+              <tr>
+                <th className="text-left px-6 py-4 font-semibold text-gray-300">
                     Factor
                   </th>
                   <th className="text-left px-6 py-4 font-semibold text-gray-700">
@@ -217,17 +222,17 @@ export default function BitcoinVsGoldVsOilArticle() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-t border-gray-100">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr className="border-t border-[#2a2e39]">
+                  <td className="px-6 py-4 font-medium text-white">
                     War sensitivity
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs font-medium">
                       Extreme
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-amber-900/30 text-amber-400 rounded text-xs font-medium">
                       High
                     </span>
                   </td>
@@ -237,31 +242,31 @@ export default function BitcoinVsGoldVsOilArticle() {
                     </span>
                   </td>
                 </tr>
-                <tr className="border-t border-gray-100 bg-gray-50/30">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr className="border-t border-[#2a2e39] bg-gray-50/30">
+                  <td className="px-6 py-4 font-medium text-white">
                     Volatility
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs font-medium">
                       Very High
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
                       Low
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-amber-900/30 text-amber-400 rounded text-xs font-medium">
                       High
                     </span>
                   </td>
                 </tr>
-                <tr className="border-t border-gray-100">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr className="border-t border-[#2a2e39]">
+                  <td className="px-6 py-4 font-medium text-white">
                     Safe haven
                   </td>
-                  <td className="px-6 py-4 text-gray-600">No</td>
+                  <td className="px-6 py-4 text-gray-400">No</td>
                   <td className="px-6 py-4">
                     <span className="text-emerald-600 font-medium">Yes</span>
                   </td>
@@ -269,8 +274,8 @@ export default function BitcoinVsGoldVsOilArticle() {
                     <span className="text-amber-600 font-medium">Debatable</span>
                   </td>
                 </tr>
-                <tr className="border-t border-gray-100 bg-gray-50/30">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr className="border-t border-[#2a2e39] bg-gray-50/30">
+                  <td className="px-6 py-4 font-medium text-white">
                     24/7 trading
                   </td>
                   <td className="px-6 py-4">
@@ -285,16 +290,16 @@ export default function BitcoinVsGoldVsOilArticle() {
                     <span className="text-emerald-600 font-medium">Yes</span>
                   </td>
                 </tr>
-                <tr className="border-t border-gray-100">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr className="border-t border-[#2a2e39]">
+                  <td className="px-6 py-4 font-medium text-white">
                     Leverage available
                   </td>
-                  <td className="px-6 py-4 text-gray-600">Up to 50x</td>
-                  <td className="px-6 py-4 text-gray-600">Up to 50x</td>
-                  <td className="px-6 py-4 text-gray-600">Up to 50x</td>
+                  <td className="px-6 py-4 text-gray-400">Up to 50x</td>
+                  <td className="px-6 py-4 text-gray-400">Up to 50x</td>
+                  <td className="px-6 py-4 text-gray-400">Up to 50x</td>
                 </tr>
-                <tr className="border-t border-gray-100 bg-gray-50/30">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr className="border-t border-[#2a2e39] bg-gray-50/30">
+                  <td className="px-6 py-4 font-medium text-white">
                     Liquidation risk
                   </td>
                   <td className="px-6 py-4">
@@ -307,14 +312,14 @@ export default function BitcoinVsGoldVsOilArticle() {
                     <span className="text-amber-600 font-medium">Medium</span>
                   </td>
                 </tr>
-                <tr className="border-t border-gray-100">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr className="border-t border-[#2a2e39]">
+                  <td className="px-6 py-4 font-medium text-white">
                     Ceasefire risk
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-red-600 font-medium">Crashes</span>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">Dips</td>
+                  <td className="px-6 py-4 text-gray-400">Dips</td>
                   <td className="px-6 py-4">
                     <span className="text-emerald-600 font-medium">Pumps</span>
                   </td>
@@ -352,16 +357,16 @@ export default function BitcoinVsGoldVsOilArticle() {
         <div className="grid md:grid-cols-3 gap-4">
           <Link
             href="/trade/BTC"
-            className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+            className="flex items-center gap-4 p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
           >
-            <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-orange-900/30 flex items-center justify-center">
               <Bitcoin className="h-6 w-6 text-orange-600" />
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 group-hover:text-brand">
+              <h4 className="font-bold text-white group-hover:text-brand">
                 Trade Bitcoin
               </h4>
-              <p className="text-sm text-gray-600">/trade/BTC</p>
+              <p className="text-sm text-gray-400">/trade/BTC</p>
             </div>
             <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand ml-auto" />
           </Link>
@@ -373,10 +378,10 @@ export default function BitcoinVsGoldVsOilArticle() {
               <Coins className="h-6 w-6 text-amber-600" />
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 group-hover:text-brand">
+              <h4 className="font-bold text-white group-hover:text-brand">
                 Trade Gold
               </h4>
-              <p className="text-sm text-gray-600">/trade/XAU</p>
+              <p className="text-sm text-gray-400">/trade/XAU</p>
             </div>
             <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand ml-auto" />
           </Link>
@@ -388,10 +393,10 @@ export default function BitcoinVsGoldVsOilArticle() {
               <Flame className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 group-hover:text-brand">
+              <h4 className="font-bold text-white group-hover:text-brand">
                 Trade Oil
               </h4>
-              <p className="text-sm text-gray-600">/trade/CL</p>
+              <p className="text-sm text-gray-400">/trade/CL</p>
             </div>
             <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand ml-auto" />
           </Link>
@@ -404,7 +409,7 @@ export default function BitcoinVsGoldVsOilArticle() {
           <AlertTriangle className="h-5 w-5" />
           Risk Disclosure
         </h4>
-        <p className="text-amber-800 text-sm">
+        <p className="text-amber-400 text-sm">
           Leveraged trading amplifies both gains and losses. Oil, gold, and
           Bitcoin are volatile assets—geopolitical events can cause 10%+ moves
           in a single day. Never trade with more than you can afford to lose.
@@ -451,14 +456,14 @@ export default function BitcoinVsGoldVsOilArticle() {
 
       {/* Related articles */}
       <div className="not-prose mt-12 space-y-4">
-        <h3 className="font-bold text-gray-900">Related Articles</h3>
+        <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link
           href="/blog/oil-prices-iran-war-how-to-trade-crude-oil-2026"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">
+            <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How the Iran War Is Driving Crude to $120
             </h4>
             <p className="text-gray-600 text-sm">
@@ -476,7 +481,7 @@ export default function BitcoinVsGoldVsOilArticle() {
             <h4 className="font-bold text-gray-900 group-hover:text-brand">
               How to Trade Gold, Oil, and Commodities On-Chain
             </h4>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               The 2026 guide to DeFi commodity trading on Coincess
             </p>
           </div>

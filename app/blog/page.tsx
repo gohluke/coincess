@@ -1,6 +1,4 @@
 import { Metadata } from "next";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { BookOpen, Rss, Clock, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { getPublishedPosts, getFeaturedPosts, BlogPost } from "@/lib/blog";
@@ -23,19 +21,19 @@ export const metadata: Metadata = {
 };
 
 const categoryColors: Record<string, string> = {
-  Tutorial: "bg-blue-100 text-blue-800",
-  Security: "bg-red-100 text-red-800",
-  Guide: "bg-green-100 text-green-800",
-  Privacy: "bg-rose-100 text-rose-800",
-  Beginner: "bg-orange-100 text-orange-800",
-  Intelligence: "bg-amber-100 text-amber-800",
+  Tutorial: "bg-blue-500/15 text-blue-400",
+  Security: "bg-red-500/15 text-red-400",
+  Guide: "bg-emerald-500/15 text-emerald-400",
+  Privacy: "bg-rose-500/15 text-rose-400",
+  Beginner: "bg-orange-500/15 text-orange-400",
+  Intelligence: "bg-amber-500/15 text-amber-400",
 };
 
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className={`group block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-brand/50 hover:shadow-lg transition-all ${
+      className={`group block bg-[#141620] border border-[#2a2e39] rounded-xl overflow-hidden hover:border-brand/50 hover:bg-[#1a1d26] transition-all ${
         featured ? "md:col-span-2 md:grid md:grid-cols-2" : ""
       }`}
     >
@@ -44,13 +42,13 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           featured ? "h-full min-h-[200px]" : "h-40"
         } flex items-center justify-center`}
       >
-        <div className="text-brand/30 text-6xl font-bold">{post.category.charAt(0)}</div>
+        <div className="text-brand/20 text-6xl font-bold">{post.category.charAt(0)}</div>
       </div>
       <div className="p-6">
         <div className="flex items-center gap-3 mb-3">
           <span
             className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-              categoryColors[post.category] || "bg-gray-100 text-gray-800"
+              categoryColors[post.category] || "bg-gray-700/50 text-gray-300"
             }`}
           >
             {post.category}
@@ -61,13 +59,13 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           </span>
         </div>
         <h3
-          className={`font-bold text-gray-900 group-hover:text-brand transition-colors mb-2 ${
+          className={`font-bold text-white group-hover:text-brand transition-colors mb-2 ${
             featured ? "text-xl md:text-2xl" : "text-lg"
           }`}
         >
           {post.title}
         </h3>
-        <p className="text-gray-600 text-sm line-clamp-2 mb-4">{post.description}</p>
+        <p className="text-gray-400 text-sm line-clamp-2 mb-4">{post.description}</p>
         <span className="inline-flex items-center gap-2 text-brand font-medium text-sm group-hover:gap-3 transition-all">
           Read Article
           <ArrowRight className="h-4 w-4" />
@@ -90,8 +88,7 @@ export default async function BlogPage() {
   const [firstFeatured, ...restFeatured] = featuredPosts;
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <Header />
+    <div className="flex min-h-screen flex-col bg-[#0b0e11]">
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-12 md:py-20">
           {/* Hero Section */}
@@ -100,10 +97,10 @@ export default async function BlogPage() {
               <BookOpen className="h-4 w-4" />
               Coincess Intelligence
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Market Intelligence & Guides
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
               Expert market analysis, trading strategies, and crypto guides.
               From oil price movements to funding rate plays.
             </p>
@@ -114,7 +111,7 @@ export default async function BlogPage() {
             <div className="mb-16">
               <div className="flex items-center gap-2 mb-6">
                 <Sparkles className="h-5 w-5 text-brand" />
-                <h2 className="text-2xl font-bold text-gray-900">Featured</h2>
+                <h2 className="text-2xl font-bold text-white">Featured</h2>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 {firstFeatured && <PostCard post={firstFeatured} featured />}
@@ -127,10 +124,10 @@ export default async function BlogPage() {
 
           {/* All Posts */}
           {nonFeaturedPosts.length > 0 && (
-            <div className="border-t border-gray-200 pt-12">
+            <div className="border-t border-[#2a2e39] pt-12">
               <div className="flex items-center gap-2 mb-6">
                 <Rss className="h-5 w-5 text-brand" />
-                <h2 className="text-2xl font-bold text-gray-900">All Articles</h2>
+                <h2 className="text-2xl font-bold text-white">All Articles</h2>
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {nonFeaturedPosts.map((post) => (
@@ -147,7 +144,6 @@ export default async function BlogPage() {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

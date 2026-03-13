@@ -26,7 +26,7 @@ export default function HowToSwapBitcoinForMonero() {
         </p>
         <Link
           href="/swap-guide"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
         >
           Open Swap Widget
           <ArrowRight className="h-4 w-4" />
@@ -59,7 +59,7 @@ export default function HowToSwapBitcoinForMonero() {
         At Coincess, we believe in <strong>Coin Access</strong>—immediate, barrier-free access to your financial privacy. You shouldn't need permission from a corporation to hold private money.
       </p>
 
-      <div className="not-prose my-8 bg-green-50 border border-green-200 rounded-xl p-6">
+      <div className="not-prose my-8 bg-emerald-950/50 border border-[#2a2e39] rounded-xl p-6">
         <div className="flex items-start gap-3">
           <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -91,10 +91,10 @@ export default function HowToSwapBitcoinForMonero() {
       </p>
 
       <div className="not-prose my-6 space-y-4">
-        <div className="border border-gray-200 rounded-xl p-5">
+        <div className="border border-[#2a2e39] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Shield className="h-5 w-5 text-brand" />
-            <h4 className="font-bold text-gray-900">Best Option: Hardware Wallet (Cold Storage)</h4>
+            <h4 className="font-bold text-white">Best Option: Hardware Wallet (Cold Storage)</h4>
           </div>
           <p className="text-gray-600 text-sm mb-4">
             For maximum security, store your Monero on a hardware wallet that never connects to the internet. This protects you from hackers and malware.
@@ -113,7 +113,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://trezor.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-[#2a2e39] text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Get Trezor
               <ExternalLink className="h-4 w-4" />
@@ -121,10 +121,10 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
         </div>
 
-        <div className="border border-gray-200 rounded-xl p-5">
+        <div className="border border-[#2a2e39] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Wallet className="h-5 w-5 text-brand" />
-            <h4 className="font-bold text-gray-900">Free Option: Software Wallet</h4>
+            <h4 className="font-bold text-white">Free Option: Software Wallet</h4>
           </div>
           <p className="text-gray-600 text-sm mb-4">
             If you're just getting started, these free wallets are excellent and beginner-friendly.
@@ -134,7 +134,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://cakewallet.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-[#2a2e39] text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Cake Wallet (Mobile)
               <ExternalLink className="h-4 w-4" />
@@ -143,7 +143,7 @@ export default function HowToSwapBitcoinForMonero() {
               href="https://featherwallet.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-[#2a2e39] text-gray-300 rounded-lg hover:bg-[#1a1d26] transition-colors text-sm font-medium"
             >
               Feather Wallet (Desktop)
               <ExternalLink className="h-4 w-4" />
@@ -170,11 +170,11 @@ export default function HowToSwapBitcoinForMonero() {
             1
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Select Your Trading Pair</h3>
+            <h3 className="text-lg font-bold text-white mb-2">Select Your Trading Pair</h3>
             <p className="text-gray-600 mb-3">
               Go to <a href="https://trocador.app/?ref=2dzDcvfQJY" target="_blank" rel="noopener noreferrer" className="text-brand font-medium hover:underline">Trocador.app</a> (our recommended aggregator).
             </p>
-            <ul className="space-y-1 text-gray-600 text-sm">
+            <ul className="space-y-1 text-gray-400 text-sm">
               <li>• Set <strong>"You Send"</strong> to Bitcoin (BTC)</li>
               <li>• Set <strong>"You Get"</strong> to Monero (XMR)</li>
             </ul>
@@ -187,11 +187,11 @@ export default function HowToSwapBitcoinForMonero() {
             2
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Enter the Amount</h3>
+            <h3 className="text-lg font-bold text-white mb-2">Enter the Amount</h3>
             <p className="text-gray-600 mb-3">
               Type in how much BTC you want to swap (e.g., 0.01 BTC).
             </p>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               The widget will automatically calculate the estimated XMR you'll receive. Rates are pulled from multiple exchanges in real-time.
             </p>
           </div>
@@ -203,14 +203,14 @@ export default function HowToSwapBitcoinForMonero() {
             3
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Paste Your Monero Address</h3>
+            <h3 className="text-lg font-bold text-white mb-2">Paste Your Monero Address</h3>
             <p className="text-gray-600 mb-3">
               Open your Monero wallet (Ledger, Cake Wallet, or Feather), copy your receive address, and paste it into the "Recipient Wallet" box.
             </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <div className="bg-amber-950/50 border border-[#2a2e39] rounded-lg p-3">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <p className="text-amber-800 text-sm">
+                <p className="text-amber-400 text-sm">
                   <strong>Double-check the first and last 4 characters</strong> of the address to ensure it's correct. Crypto transactions cannot be reversed.
                 </p>
               </div>
@@ -224,11 +224,11 @@ export default function HowToSwapBitcoinForMonero() {
             4
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Send the Bitcoin</h3>
+            <h3 className="text-lg font-bold text-white mb-2">Send the Bitcoin</h3>
             <p className="text-gray-600 mb-3">
               The swap service will generate a <strong>one-time BTC deposit address</strong>. Send your Bitcoin to this address from your wallet or exchange.
             </p>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-400 text-sm">
               Make sure to send the exact amount shown (or slightly more to cover network fees).
             </p>
           </div>
@@ -240,14 +240,14 @@ export default function HowToSwapBitcoinForMonero() {
             5
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Wait for Confirmation</h3>
+            <h3 className="text-lg font-bold text-white mb-2">Wait for Confirmation</h3>
             <p className="text-gray-600 mb-3">
               The swap typically takes <strong>10-20 minutes</strong> depending on Bitcoin network congestion.
             </p>
-            <div className="bg-gray-50 rounded-lg p-3">
+            <div className="bg-[#1a1d26] rounded-lg p-3">
               <div className="flex items-start gap-2">
                 <Clock className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-400 text-sm">
                   You'll receive a tracking link. Once the BTC is confirmed, the Monero is sent automatically to your wallet. <strong>That's it—you're done!</strong>
                 </p>
               </div>
@@ -264,30 +264,30 @@ export default function HowToSwapBitcoinForMonero() {
       </p>
 
       <div className="not-prose my-8 grid md:grid-cols-3 gap-4">
-        <div className="border border-gray-200 rounded-xl p-5 text-center">
+        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Eye className="h-6 w-6 text-brand" />
           </div>
-          <h4 className="font-semibold text-gray-900 mb-2">Privacy</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-semibold text-white mb-2">Privacy</h4>
+          <p className="text-sm text-gray-400">
             Exchanges track your entire purchase history. Swapping keeps your XMR unconnected to your real identity.
           </p>
         </div>
-        <div className="border border-gray-200 rounded-xl p-5 text-center">
+        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Lock className="h-6 w-6 text-brand" />
           </div>
-          <h4 className="font-semibold text-gray-900 mb-2">Security</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-semibold text-white mb-2">Security</h4>
+          <p className="text-sm text-gray-400">
             "Not your keys, not your coins." Exchanges can freeze accounts. Swap services never hold your funds.
           </p>
         </div>
-        <div className="border border-gray-200 rounded-xl p-5 text-center">
+        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Clock className="h-6 w-6 text-brand" />
           </div>
-          <h4 className="font-semibold text-gray-900 mb-2">Speed</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="font-semibold text-white mb-2">Speed</h4>
+          <p className="text-sm text-gray-400">
             No verification delays. No waiting days for account approval. Swap in minutes, not weeks.
           </p>
         </div>
@@ -314,7 +314,7 @@ export default function HowToSwapBitcoinForMonero() {
         <div className="flex items-start gap-3">
           <Shield className="h-6 w-6 text-brand flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-gray-900 mb-2">The Safest Option: Hardware Wallet</h4>
+            <h4 className="font-semibold text-white mb-2">The Safest Option: Hardware Wallet</h4>
             <p className="text-gray-700 text-sm mb-4">
               The safest place for your Monero is a hardware wallet that never touches the internet. Your private keys stay on the device, isolated from hackers and malware.
             </p>
@@ -341,60 +341,60 @@ export default function HowToSwapBitcoinForMonero() {
       <h2>Frequently Asked Questions</h2>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="border border-gray-200 rounded-xl p-5">
+        <div className="border border-[#2a2e39] rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Is swapping Bitcoin for Monero legal?</h4>
-              <p className="text-gray-600 text-sm">
+              <h4 className="font-semibold text-white mb-1">Is swapping Bitcoin for Monero legal?</h4>
+              <p className="text-gray-400 text-sm">
                 Yes. In most jurisdictions, swapping cryptocurrency is a legal property exchange—similar to exchanging dollars for euros. Always check your local regulations.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border border-gray-200 rounded-xl p-5">
+        <div className="border border-[#2a2e39] rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Do I need to provide ID (KYC)?</h4>
-              <p className="text-gray-600 text-sm">
+              <h4 className="font-semibold text-white mb-1">Do I need to provide ID (KYC)?</h4>
+              <p className="text-gray-400 text-sm">
                 No. For standard amounts (typically under $10,000), the swap services on Trocador do not require identity verification. Just paste your wallet address and swap.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border border-gray-200 rounded-xl p-5">
+        <div className="border border-[#2a2e39] rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">What is the minimum amount I can swap?</h4>
-              <p className="text-gray-600 text-sm">
+              <h4 className="font-semibold text-white mb-1">What is the minimum amount I can swap?</h4>
+              <p className="text-gray-400 text-sm">
                 The minimum varies by service but is typically around <strong>$20-$50 worth of BTC</strong>. The widget will show you the exact minimum when you select the currencies.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border border-gray-200 rounded-xl p-5">
+        <div className="border border-[#2a2e39] rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Can I track my transaction?</h4>
-              <p className="text-gray-600 text-sm">
+              <h4 className="font-semibold text-white mb-1">Can I track my transaction?</h4>
+              <p className="text-gray-400 text-sm">
                 Yes. After you initiate the swap, you'll receive a transaction ID and tracking link. You can monitor the status in real-time until the Monero arrives in your wallet.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border border-gray-200 rounded-xl p-5">
+        <div className="border border-[#2a2e39] rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">What if my swap gets stuck?</h4>
-              <p className="text-gray-600 text-sm">
+              <h4 className="font-semibold text-white mb-1">What if my swap gets stuck?</h4>
+              <p className="text-gray-400 text-sm">
                 Keep your order ID. Each swap service has its own support team. If your swap doesn't complete within the expected timeframe, contact their support with your order ID.
               </p>
             </div>
@@ -429,7 +429,7 @@ export default function HowToSwapBitcoinForMonero() {
         <div className="flex flex-wrap justify-center gap-4">
           <Link
             href="/swap-guide"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand font-semibold rounded-lg hover:bg-[#1a1d26] transition-colors"
           >
             View Swap Guide
             <ArrowRight className="h-4 w-4" />
@@ -448,26 +448,26 @@ export default function HowToSwapBitcoinForMonero() {
 
       {/* Related Articles */}
       <div className="not-prose mt-8 space-y-4">
-        <h3 className="font-bold text-gray-900">Continue Reading</h3>
+        <h3 className="font-bold text-white">Continue Reading</h3>
         
         <Link
           href="/blog/why-privacy-matters-anonymous-crypto"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">Why Privacy Matters</h4>
-            <p className="text-gray-600 text-sm">Learn why Bitcoin isn't private and how Monero solves this</p>
+            <h4 className="font-bold text-white group-hover:text-brand">Why Privacy Matters</h4>
+            <p className="text-gray-400 text-sm">Learn why Bitcoin isn't private and how Monero solves this</p>
           </div>
           <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
         </Link>
 
         <Link
           href="/blog/hot-wallets-vs-cold-wallets"
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-brand/50 hover:bg-brand/5 transition-colors group"
+          className="flex items-center justify-between p-4 bg-[#1a1d26] rounded-xl border border-[#2a2e39] hover:border-brand/50 hover:bg-brand/5 transition-colors group"
         >
           <div>
-            <h4 className="font-bold text-gray-900 group-hover:text-brand">Hot Wallets vs Cold Wallets</h4>
-            <p className="text-gray-600 text-sm">How to keep your Monero safe with the right wallet</p>
+            <h4 className="font-bold text-white group-hover:text-brand">Hot Wallets vs Cold Wallets</h4>
+            <p className="text-gray-400 text-sm">How to keep your Monero safe with the right wallet</p>
           </div>
           <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
         </Link>
