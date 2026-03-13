@@ -30,6 +30,15 @@ const TRADING_TOOLS = [
     iconColor: "text-rose-400",
   },
   {
+    icon: TrendingUp,
+    title: "Compounding Calculator",
+    desc: "See how consistent trading with proper risk management compounds your account over time.",
+    href: "/compounding-calculator",
+    tags: ["Growth", "Risk Mgmt", "Monte Carlo"],
+    accent: "from-emerald-500/20 to-emerald-500/5",
+    iconColor: "text-emerald-400",
+  },
+  {
     icon: BarChart3,
     title: "Prediction Markets",
     desc: "Bet on real-world outcomes — elections, sports, crypto events — powered by Polymarket.",

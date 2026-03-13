@@ -203,15 +203,34 @@ Strategy backtesting and performance analysis tools.
 
 ### Leverage Calculator (`/crypto-leverage-calculator`)
 - **Industry-grade perpetual futures calculator** with interactive position planning
-- **Maker/taker fee toggle** — Hyperliquid defaults (0.01% maker, 0.035% taker), fully customizable entry & exit rates
-- **Hourly funding rate** — calculates total funding cost over configurable trade duration (hours)
+- **Dark Coincess theme** — matches dashboard design (`bg-[#0b0e11]`, `bg-[#141620]` cards, borderless), uses the dark Navbar (not the marketing Header)
+- **Up to 1000x leverage** — logarithmic slider for fine control at low values and quick access to extreme leverage; editable text input for exact values; presets: 1x, 2x, 5x, 10x, 25x, 50x, 100x, 500x, 1000x
+- **Margin-locked recalculation** — when you slide leverage, margin stays fixed and quantity adjusts (the way real traders think); typing into Quantity unlocks margin recalculation
+- **Exit price slider + % change** — drag slider from -50% to +100% of entry; preset buttons (-25% to +50%); live percentage change label (green/red) shows distance from entry price
+- **Maker/taker fee toggle** — Hyperliquid defaults (0.010% maker, 0.035% taker), fully customizable entry & exit rates
+- **Hourly funding rate** — realistic default 0.0031%/hr; calculates total funding cost over configurable trade duration
 - **Break-even price** — exact price needed to cover all fees + funding before you profit
 - **Liquidation price** — simplified liq estimate with margin ratio health indicator
-- **Position notional** — shows actual dollar exposure at your leverage
-- **Net PNL & Net ROE** — after subtracting trading fees + funding, not just gross numbers
+- **Full number display** — net PNL banner shows complete dollar amounts ($8,362.50) not shorthand ($8.36K); all fees and funding amounts also show full precision
 - **Interactive solver** — click into Margin (auto-sizes position), PNL (solves exit price), or ROE (solves exit price); all update live as you type
 - **Cost breakdown dashboard** — entry fee, exit fee, total fees, funding cost, gross vs net PNL at a glance
+- **Dark wave footer** — animated canvas waves using `screen` blending (indigo, emerald, purple glows on dark background)
 - **Math reference section** — explains every formula used in the calculator
+
+### Compounding Calculator (`/compounding-calculator`)
+- **Monte Carlo account growth simulator** — see how consistent trading compounds your account over months and years
+- **Dark Coincess theme** — identical design system to the leverage calculator (dark navbar, dark cards, rounded pills, dark wave footer)
+- **Capital inputs** — starting balance, monthly deposits, risk per trade (% of account), trades per week
+- **Win/loss parameters** — win rate, average win %, average loss %; calculates true expectancy per trade
+- **Time horizon** — slider from 1 to 120 months with presets (3m, 6m, 1y, 2y, 3y, 5y); editable text input
+- **Interactive SVG growth chart** — brand-colored compounding curve with gradient area fill, dashed linear comparison line, milestone markers (2x, 5x, 10x, 25x, 50x, 100x), Y-axis dollar labels, month X-axis, glowing endpoint dot
+- **Key stats dashboard** — final balance, total profit, expectancy per trade, max drawdown, avg monthly return, total trades, compound effect vs linear
+- **Milestone tracking** — time to 2x, 5x, 10x your capital (or "not in Nm" if not reached)
+- **Monthly breakdown table** — scrollable table with each month's balance, P&L, deposits, and cumulative profit; color-coded green/red
+- **Net result banner** — final balance summary with trade count and parameter recap
+- **Common scenarios section** — conservative, balanced, and aggressive trader profiles with expected outcomes
+- **Educational content** — "The Power of Compounding", risk management principles, keys to compounding success
+- **Listed on Tools page** — appears alongside Leverage Calculator with emerald accent card
 
 ### Referral System
 - **Referral code: `COINCESS`** — [coincess.com/join](https://coincess.com/join) (branded ghost link that redirects to Hyperliquid)
@@ -282,6 +301,7 @@ npm run dev
 | [localhost:3000/chat](http://localhost:3000/chat) | AI trading coach |
 | [localhost:3000/traders](http://localhost:3000/traders) | Coincess leaderboard, Hyperliquid leaderboard, starred traders, contract scanner |
 | [localhost:3000/trader/0x...](http://localhost:3000/trader/0x) | Trader profile page (dynamic: `/trader/{ADDRESS}`) |
+| [localhost:3000/compounding-calculator](http://localhost:3000/compounding-calculator) | Compounding growth simulator |
 | [localhost:3000/scanner](http://localhost:3000/scanner) | Contract scanner |
 | [localhost:3000/admin](http://localhost:3000/admin) | Admin dashboard (wallet-gated) |
 | [localhost:3000/join](http://localhost:3000/join) | Referral redirect → Hyperliquid |
@@ -455,6 +475,7 @@ coincess/
 │   │   ├── polymarket/search/          # Search proxy
 │   │   ├── polymarket/sign/            # Builder attribution signing
 │   │   └── news/                       # News API
+│   ├── compounding-calculator/page.tsx  # Compounding growth simulator
 │   ├── coins/page.tsx                  # Market overview
 │   ├── blog/
 │   │   ├── page.tsx                    # Blog listing (ISR, Supabase + fallback)
@@ -464,6 +485,8 @@ coincess/
 ├── components/
 │   ├── AppShell.tsx                    # Client shell (Privy + MobileNav + AlertBanner)
 │   ├── MobileNav.tsx                   # Bottom navigation bar
+│   ├── CompoundingCalculator.tsx        # Compounding growth calculator with SVG chart
+│   ├── DarkWaveFooter.tsx              # Dark-mode animated wave footer (screen blending)
 │   ├── ConnectButton.tsx               # Unified wallet connect button
 │   ├── WalletProvider.tsx              # Privy embedded wallet provider
 │   ├── trade/                          # Trading terminal components

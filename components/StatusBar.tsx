@@ -6,7 +6,7 @@ import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { fetchCombinedClearinghouseState, fetchOpenOrders } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder } from "@/lib/hyperliquid/types";
 
-const MARKETING_ROUTES = ["/blog", "/swap-guide", "/crypto-leverage-calculator"];
+const MARKETING_ROUTES = ["/blog", "/swap-guide"];
 
 function fmt(n: number, decimals = 2): string {
   return `$${Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;

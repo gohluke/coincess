@@ -1,7 +1,6 @@
 import { Metadata } from "next"
-import { Header } from "@/components/Header"
-import { Footer } from "@/components/Footer"
 import { LeverageCalculator } from "@/components/LeverageCalculator"
+import { DarkWaveFooter } from "@/components/DarkWaveFooter"
 import { Calculator, TrendingUp, Shield, Target, AlertTriangle, CheckCircle2, Zap, BarChart3, DollarSign, Clock } from "lucide-react"
 
 export const metadata: Metadata = {
@@ -17,40 +16,39 @@ export const metadata: Metadata = {
 
 export default function CryptoLeverageCalculatorPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-12 md:py-20">
+    <div className="min-h-screen bg-[#0b0e11]">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-10 md:py-16">
           {/* Hero */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 rounded-full text-brand text-sm font-medium mb-6">
-              <Calculator className="h-4 w-4" />
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand/10 rounded-full text-brand text-xs font-medium mb-5 tracking-wide uppercase">
+              <Calculator className="h-3.5 w-3.5" />
               Professional Trading Tools
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight">
               Crypto Leverage Calculator
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base text-[#848e9c] max-w-xl mx-auto leading-relaxed">
               The only calculator that factors in trading fees, hourly funding rates, and trade duration —
-              so you see your <strong>real</strong> profit, not just the headline number.
+              so you see your <strong className="text-white font-medium">real</strong> profit.
             </p>
           </div>
 
           {/* Feature Pills */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-12">
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
             {[
               { icon: Zap, label: "Real-Time" },
               { icon: TrendingUp, label: "Long & Short" },
-              { icon: DollarSign, label: "Maker/Taker Fees" },
+              { icon: DollarSign, label: "Maker / Taker" },
               { icon: Clock, label: "Funding Rates" },
-              { icon: Target, label: "Break-Even Price" },
-              { icon: Shield, label: "Liquidation Risk" },
+              { icon: Target, label: "Break-Even" },
+              { icon: Shield, label: "Liquidation" },
               { icon: BarChart3, label: "Net ROE" },
-              { icon: Calculator, label: "Interactive Solver" },
+              { icon: Calculator, label: "Solver" },
             ].map(({ icon: Icon, label }) => (
-              <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-                <Icon className="h-5 w-5 text-brand mx-auto mb-1.5" />
-                <p className="text-xs font-medium text-gray-900">{label}</p>
+              <div key={label} className="flex items-center gap-1.5 bg-[#141620] rounded-full px-3 py-1.5">
+                <Icon className="h-3.5 w-3.5 text-brand" />
+                <span className="text-xs font-medium text-[#c8ccd4]">{label}</span>
               </div>
             ))}
           </div>
@@ -61,172 +59,112 @@ export default function CryptoLeverageCalculatorPage() {
           </div>
 
           {/* What Makes This Different */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-12">
-            <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="p-2.5 rounded-xl bg-brand/10 text-brand">
-                  <DollarSign className="h-5 w-5" />
+          <div className="grid lg:grid-cols-3 gap-4 mb-14">
+            {[
+              {
+                icon: DollarSign,
+                title: "Real Fee Accounting",
+                desc: "Most calculators ignore fees. We include maker/taker rates on both entry and exit, so a \"profitable\" trade that loses money to fees is flagged before you execute.",
+                bullets: ["Hyperliquid default: 0.010% maker / 0.035% taker", "Separate entry & exit fee rates", "One-click maker/taker toggle"],
+              },
+              {
+                icon: Clock,
+                title: "Funding Rate Impact",
+                desc: "Perpetual futures charge funding every hour (Hyperliquid) or 8 hours (Binance/Bybit). Over days or weeks, funding can exceed your gross profit.",
+                bullets: ["Hourly funding rate input", "Adjustable trade duration (hours)", "Negative rates = shorts pay, longs earn"],
+              },
+              {
+                icon: Target,
+                title: "Interactive Solver",
+                desc: "Click any result field to reverse-solve. Type a target PNL to find the exit price. Set a budget (margin) to calculate your max position size.",
+                bullets: ["Type margin \u2192 auto-sizes position", "Type PNL \u2192 solves required exit price", "Type ROE \u2192 solves required exit price"],
+              },
+            ].map(({ icon: Icon, title, desc, bullets }) => (
+              <div key={title} className="rounded-2xl p-5 bg-[#141620]">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="p-2 rounded-lg bg-brand/10 text-brand shrink-0">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-white mb-1">{title}</h2>
+                    <p className="text-[#848e9c] text-xs leading-relaxed">{desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-1">Real Fee Accounting</h2>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Most calculators ignore fees. We include maker/taker rates on both entry and exit,
-                    so a &ldquo;profitable&rdquo; trade that loses money to fees is flagged before you execute.
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-2 mt-3">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Hyperliquid default: 0.01% maker / 0.035% taker</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Separate entry & exit fee rates</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">One-click maker/taker toggle</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="p-2.5 rounded-xl bg-brand/10 text-brand">
-                  <Clock className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-1">Funding Rate Impact</h2>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Perpetual futures charge funding every hour (Hyperliquid) or 8 hours (Binance/Bybit).
-                    Over days or weeks, funding can exceed your gross profit.
-                  </p>
+                <div className="space-y-1.5 mt-3 pl-11">
+                  {bullets.map((t) => (
+                    <div key={t} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-brand flex-shrink-0 mt-0.5" />
+                      <span className="text-[11px] text-[#848e9c]">{t}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="space-y-2 mt-3">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Hourly funding rate input</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Adjustable trade duration (hours)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Negative rates = shorts pay, longs earn</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="p-2.5 rounded-xl bg-brand/10 text-brand">
-                  <Target className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-1">Interactive Solver</h2>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Click any result field to reverse-solve. Type a target PNL to find the exit price.
-                    Set a budget (margin) to calculate your max position size. All updates live.
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-2 mt-3">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Type margin → auto-sizes position</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Type PNL → solves required exit price</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-gray-600">Type ROE → solves required exit price</span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* How It Works */}
-          <div className="bg-gray-50 rounded-2xl p-8 mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How the Math Works</h2>
-            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Position & Margin</h3>
-                <div className="space-y-1.5 text-sm text-gray-600">
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Notional = Quantity x Entry Price</code></p>
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Margin = Notional / Leverage</code></p>
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Liq. Price = Entry +/- Entry / Leverage</code></p>
+          <div className="bg-[#141620] rounded-2xl p-6 md:p-8 mb-14">
+            <h2 className="text-lg font-bold text-white mb-5 text-center">How the Math Works</h2>
+            <div className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+              {[
+                { title: "Position & Margin", formulas: ["Notional = Quantity \u00d7 Entry Price", "Margin = Notional / Leverage", "Liq. Price = Entry \u00b1 Entry / Leverage"] },
+                { title: "Costs", formulas: ["Entry Fee = Notional \u00d7 Fee Rate", "Exit Fee = Exit Notional \u00d7 Fee Rate", "Funding = Notional \u00d7 Rate \u00d7 Hours"] },
+                { title: "Profit & Loss", formulas: ["Gross PNL = (Exit \u2212 Entry) \u00d7 Qty", "Net PNL = Gross \u2212 Fees \u2212 Funding", "ROE = Net PNL / Margin \u00d7 100"] },
+                { title: "Break-Even", formulas: ["Total Costs = Fees + Funding", "Break-Even = Entry + Costs / Qty", "For shorts: Entry \u2212 Costs / Qty"] },
+              ].map(({ title, formulas }) => (
+                <div key={title}>
+                  <h3 className="font-semibold text-white text-sm mb-2">{title}</h3>
+                  <div className="space-y-1">
+                    {formulas.map((f, i) => (
+                      <p key={i} className="text-xs text-[#848e9c]">
+                        <code className="bg-[#0b0e11] px-2 py-0.5 rounded text-[11px] text-[#c8ccd4] font-mono">{f}</code>
+                      </p>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Costs</h3>
-                <div className="space-y-1.5 text-sm text-gray-600">
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Entry Fee = Notional x Fee Rate</code></p>
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Exit Fee = Exit Notional x Fee Rate</code></p>
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Funding = Notional x Rate x Hours</code></p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Profit & Loss</h3>
-                <div className="space-y-1.5 text-sm text-gray-600">
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Gross PNL = (Exit - Entry) x Qty</code></p>
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Net PNL = Gross - Fees - Funding</code></p>
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">ROE = Net PNL / Margin x 100</code></p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Break-Even</h3>
-                <div className="space-y-1.5 text-sm text-gray-600">
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Total Costs = Fees + Funding</code></p>
-                  <p><code className="bg-white px-1.5 py-0.5 rounded text-xs">Break-Even = Entry + Costs / Qty</code></p>
-                  <p className="text-xs text-gray-400">For shorts: Entry - Costs / Qty</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
           {/* Warning */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-12">
-            <div className="flex gap-4">
-              <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
+          <div className="bg-amber-500/5 rounded-2xl p-5 mb-14">
+            <div className="flex gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-amber-900 mb-2">Important Risk Warning</h3>
-                <ul className="space-y-2 text-sm text-amber-800">
-                  <li>&bull; <strong>Leverage amplifies both gains AND losses.</strong> You can lose more than your initial margin.</li>
-                  <li>&bull; <strong>Funding rates fluctuate.</strong> A position profitable today may bleed via funding tomorrow.</li>
-                  <li>&bull; <strong>Liquidation risk is real.</strong> Cross-margin and maintenance margin rules affect your actual liquidation price.</li>
-                  <li>&bull; <strong>Start with low leverage</strong> (2–5x) and always set stop-losses.</li>
+                <h3 className="font-semibold text-amber-400 text-sm mb-2">Risk Warning</h3>
+                <ul className="space-y-1.5 text-xs text-[#848e9c]">
+                  <li>&bull; <strong className="text-white">Leverage amplifies both gains AND losses.</strong> You can lose more than your initial margin.</li>
+                  <li>&bull; <strong className="text-white">Funding rates fluctuate.</strong> A position profitable today may bleed via funding tomorrow.</li>
+                  <li>&bull; <strong className="text-white">Liquidation risk is real.</strong> Cross-margin and maintenance margin rules affect your actual liquidation price.</li>
+                  <li>&bull; <strong className="text-white">Start with low leverage</strong> (2\u20135x) and always set stop-losses.</li>
                 </ul>
               </div>
             </div>
           </div>
 
           {/* Best Practices */}
-          <div className="bg-gradient-to-br from-brand to-brand-hover rounded-2xl p-8 text-white">
-            <h2 className="text-2xl font-bold mb-6 text-center">Trading Best Practices</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mb-8">
+            <h2 className="text-lg font-bold text-white mb-5 text-center">Trading Best Practices</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
               {[
-                "Start with 2–5x leverage to understand market dynamics before scaling up",
-                "Always set stop-loss orders — use the calculator to find your max acceptable loss",
+                "Start with 2\u20135x leverage to understand market dynamics before scaling up",
+                "Always set stop-loss orders \u2014 use the calculator to find your max acceptable loss",
                 "Factor in funding rates for any trade you plan to hold longer than a few hours",
                 "Check the break-even price to know the minimum move needed to cover costs",
                 "Use maker orders (limit) instead of taker (market) to reduce fees by 3.5x",
-                "Monitor your margin ratio — exit before it approaches the danger zone",
+                "Monitor your margin ratio \u2014 exit before it approaches the danger zone",
               ].map((tip, i) => (
-                <div key={i} className="bg-white/10 rounded-xl p-4">
-                  <span className="text-2xl font-bold text-white/60">{String(i + 1).padStart(2, "0")}</span>
-                  <p className="mt-2 text-white/90 text-sm">{tip}</p>
+                <div key={i} className="bg-[#141620] rounded-xl p-4 flex gap-3">
+                  <span className="text-xl font-bold text-[#2a2e3e] leading-none shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                  <p className="text-[#848e9c] text-xs leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </main>
-      <Footer />
+
+      <DarkWaveFooter />
     </div>
   )
 }

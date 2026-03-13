@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, ChangeEvent, KeyboardEvent } from "react"
 import {
   ArrowUp, ArrowDown, Calculator, TrendingUp, TrendingDown,
-  AlertCircle, DollarSign, Percent, Clock, Shield, BarChart3, Target,
+  AlertCircle,
 } from "lucide-react"
 
 type Direction = "long" | "short"
@@ -75,12 +75,12 @@ function CalculatorInput({
 
   return (
     <div className={compact ? "space-y-1" : "space-y-2"}>
-      <label htmlFor={id} className={`block font-medium text-gray-700 ${compact ? "text-xs" : "text-sm"}`}>
+      <label htmlFor={id} className={`block font-medium text-[#848e9c] ${compact ? "text-xs" : "text-sm"}`}>
         {label}
       </label>
       <div className="relative">
         {prefix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">{prefix}</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555a66] text-sm pointer-events-none">{prefix}</span>
         )}
         <input
           type="text" inputMode="decimal" id={id} value={value}
@@ -88,22 +88,22 @@ function CalculatorInput({
           onFocus={onFocus} onBlur={onBlur}
           readOnly={readOnly} autoComplete="off"
           className={`
-            w-full rounded-lg border bg-white text-gray-900 transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand
+            w-full rounded-lg border bg-[#1a1d26] text-white transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/50
             ${compact ? "h-10 text-sm" : "h-12"}
             ${prefix ? "pl-8" : "pl-4"}
             ${suffix ? "pr-16" : "pr-4"}
-            ${readOnly ? "bg-gray-50 text-gray-600 cursor-not-allowed" : ""}
-            ${error ? "border-red-300 focus:ring-red-200 focus:border-red-500" : "border-gray-200"}
+            ${readOnly ? "bg-[#141620] text-[#555a66] cursor-not-allowed" : ""}
+            ${error ? "border-red-500/50 focus:ring-red-500/20 focus:border-red-500" : "border-[#2a2e3e]"}
           `}
         />
         {suffix && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs pointer-events-none">{suffix}</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555a66] text-xs pointer-events-none">{suffix}</span>
         )}
       </div>
-      {hint && !error && <p className="text-[11px] text-gray-400">{hint}</p>}
+      {hint && !error && <p className="text-[11px] text-[#555a66]">{hint}</p>}
       {error && (
-        <p className="text-xs text-red-500 flex items-center gap-1">
+        <p className="text-xs text-red-400 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />{error}
         </p>
       )}
@@ -113,33 +113,90 @@ function CalculatorInput({
 
 function StatCard({ label, value, sub, color = "gray" }: { label: string; value: string; sub?: string; color?: "green" | "red" | "gray" | "brand" }) {
   const colors = {
-    green: "bg-green-50 border-green-200 text-green-700",
-    red: "bg-red-50 border-red-200 text-red-700",
-    gray: "bg-gray-50 border-gray-200 text-gray-700",
-    brand: "bg-brand/5 border-brand/20 text-brand",
+    green: "bg-emerald-500/10 text-emerald-400",
+    red: "bg-red-500/10 text-red-400",
+    gray: "bg-[#1a1d26] text-white",
+    brand: "bg-brand/10 text-brand",
   }
   return (
-    <div className={`p-3 rounded-lg border ${colors[color]}`}>
-      <p className="text-[11px] text-gray-500 mb-0.5">{label}</p>
+    <div className={`p-3 rounded-xl ${colors[color]}`}>
+      <p className="text-[11px] text-[#555a66] mb-0.5">{label}</p>
       <p className="text-sm font-semibold">{value}</p>
-      {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[10px] text-[#555a66] mt-0.5">{sub}</p>}
+    </div>
+  )
+}
+
+function ExitPriceSlider({ entryPrice, exitPrice, setExitPrice, parseNumber }: {
+  entryPrice: string; exitPrice: string; setExitPrice: (v: string) => void; parseNumber: (v: string) => number;
+}) {
+  const entry = parseNumber(entryPrice)
+  const exit = parseNumber(exitPrice)
+  if (entry <= 0) return null
+
+  const pctChange = ((exit - entry) / entry) * 100
+  const pctDisplay = pctChange >= 0 ? `+${pctChange.toFixed(2)}%` : `${pctChange.toFixed(2)}%`
+  const pctColor = pctChange > 0 ? "text-emerald-400" : pctChange < 0 ? "text-red-400" : "text-[#848e9c]"
+
+  const sliderMin = -50
+  const sliderMax = 100
+  const sliderVal = Math.max(sliderMin, Math.min(sliderMax, pctChange))
+
+  const handleSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const pct = parseFloat(e.target.value)
+    const newExit = entry * (1 + pct / 100)
+    setExitPrice(parseFloat(newExit.toFixed(4)).toString())
+  }
+
+  const presets = [-25, -10, -5, -1, 0, 1, 5, 10, 25, 50]
+
+  return (
+    <div className="mb-4 col-span-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] text-[#555a66]">Exit vs Entry</span>
+        <span className={`text-xs font-bold ${pctColor}`}>{pctDisplay}</span>
+      </div>
+      <input
+        type="range"
+        min={sliderMin} max={sliderMax} step="0.1"
+        value={sliderVal}
+        onChange={handleSlider}
+        className="w-full h-1.5 rounded-full appearance-none bg-[#2a2e3e] accent-brand cursor-pointer"
+      />
+      <div className="flex gap-1 mt-1.5">
+        {presets.map((p) => (
+          <button
+            key={p} type="button"
+            onClick={() => {
+              const newExit = entry * (1 + p / 100)
+              setExitPrice(parseFloat(newExit.toFixed(4)).toString())
+            }}
+            className={`flex-1 py-0.5 rounded text-[9px] font-medium transition-colors ${
+              Math.abs(pctChange - p) < 0.05
+                ? "bg-brand text-white"
+                : "bg-[#1a1d26] text-[#555a66] hover:text-[#848e9c]"
+            }`}
+          >
+            {p > 0 ? "+" : ""}{p}%
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
 
 export function LeverageCalculator() {
   const [leverage, setLeverage] = useState("10")
-  const [quantity, setQuantity] = useState("1000")
-  const [entryPrice, setEntryPrice] = useState("10")
-  const [exitPrice, setExitPrice] = useState("20")
+  const [quantity, setQuantity] = useState("1")
+  const [entryPrice, setEntryPrice] = useState("84250")
+  const [exitPrice, setExitPrice] = useState("86500")
   const [direction, setDirection] = useState<Direction>("long")
   const [feeType, setFeeType] = useState<FeeType>("taker")
   const [entryFeeRate, setEntryFeeRate] = useState("0.035")
   const [exitFeeRate, setExitFeeRate] = useState("0.035")
-  const [fundingRate, setFundingRate] = useState("0.01")
+  const [fundingRate, setFundingRate] = useState("0.0031")
   const [durationHours, setDurationHours] = useState("24")
 
-  // Derived state
   const [initialMargin, setInitialMargin] = useState("")
   const [pnl, setPnl] = useState("")
   const [roe, setRoe] = useState("")
@@ -156,6 +213,7 @@ export function LeverageCalculator() {
 
   const [activeField, setActiveField] = useState<"margin" | "pnl" | "roe" | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const marginLocked = useRef(false)
 
   const parseNumber = (value: string): number => {
     const num = parseFloat(value.replace(/[^\d.-]/g, ""))
@@ -167,25 +225,20 @@ export function LeverageCalculator() {
     return parseFloat(num.toFixed(decimals)).toString()
   }
 
-  const fmtUsd = (num: number): string => {
+  const fmtUsdFull = (num: number): string => {
     if (!isFinite(num) || isNaN(num)) return "$0.00"
     const abs = Math.abs(num)
-    const formatted = abs >= 1_000_000
-      ? (abs / 1_000_000).toFixed(2) + "M"
-      : abs >= 1_000
-      ? (abs / 1_000).toFixed(2) + "K"
-      : abs.toFixed(2)
+    const formatted = abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     return (num < 0 ? "-$" : "$") + formatted
   }
 
-  // Sync fee rates when fee type toggle changes
   const prevFeeType = useRef(feeType)
   useEffect(() => {
     if (prevFeeType.current !== feeType) {
       prevFeeType.current = feeType
       if (feeType === "maker") {
-        setEntryFeeRate("0.01")
-        setExitFeeRate("0.01")
+        setEntryFeeRate("0.010")
+        setExitFeeRate("0.010")
       } else {
         setEntryFeeRate("0.035")
         setExitFeeRate("0.035")
@@ -200,7 +253,7 @@ export function LeverageCalculator() {
     const exit = parseNumber(exitPrice)
     const qty = parseNumber(quantity)
     if (lev <= 0) newErrors.leverage = "Must be > 0"
-    if (lev > 200) newErrors.leverage = "Max 200x"
+    if (lev > 1000) newErrors.leverage = "Max 1000x"
     if (entry <= 0) newErrors.entryPrice = "Must be > 0"
     if (exit <= 0 && activeField !== "pnl" && activeField !== "roe") newErrors.exitPrice = "Must be > 0"
     if (qty <= 0 && activeField !== "margin") newErrors.quantity = "Must be > 0"
@@ -219,23 +272,22 @@ export function LeverageCalculator() {
     let calcQty = qty
     let calcExit = exit
 
-    // Margin ↔ Quantity
-    if (type === "margin") {
-      const margin = parseNumber(initialMargin)
-      if (margin <= 0) return
-      calcMargin = margin
-      calcQty = (margin * lev) / entry
+    const existingMargin = parseNumber(initialMargin)
+    if (type === "margin" || (marginLocked.current && existingMargin > 0 && type !== "pnl" && type !== "roe")) {
+      if (existingMargin <= 0) return
+      calcMargin = existingMargin
+      calcQty = (calcMargin * lev) / entry
       setQuantity(fmt(calcQty))
     } else {
       if (qty <= 0) return
       calcMargin = (qty * entry) / lev
       setInitialMargin(fmt(calcMargin, 2))
+      marginLocked.current = true
     }
 
     const notional = calcQty * entry
     setPositionNotional(fmt(notional, 2))
 
-    // Trading fees
     const entryFeeVal = notional * (parseNumber(entryFeeRate) / 100)
     const exitNotional = calcQty * (calcExit > 0 ? calcExit : entry)
     const exitFeeVal = exitNotional * (parseNumber(exitFeeRate) / 100)
@@ -244,7 +296,6 @@ export function LeverageCalculator() {
     setExitFee(fmt(exitFeeVal, 2))
     setTotalFees(fmt(totalFeesVal, 2))
 
-    // Gross PNL
     let calcPnl: number
     if (type === "pnl") {
       const pnlValue = parseNumber(pnl)
@@ -261,7 +312,6 @@ export function LeverageCalculator() {
       setPnl(fmt(calcPnl, 2))
     }
 
-    // Gross ROE
     if (type === "roe") {
       const roeValue = parseNumber(roe)
       calcPnl = (roeValue / 100) * calcMargin
@@ -275,31 +325,26 @@ export function LeverageCalculator() {
       setRoe(fmt(calcRoe, 2))
     }
 
-    // Liquidation price (simplified: entry ± entry/leverage)
     const liq = direction === "long"
       ? entry - entry / lev
       : entry + entry / lev
     setLiquidationPrice(fmt(Math.max(0, liq), 4))
 
-    // Margin ratio: how close current unrealized loss is to margin
     const unrealizedLoss = Math.max(0, -calcPnl)
     const mRatio = calcMargin > 0 ? (unrealizedLoss / calcMargin) * 100 : 0
     setMarginRatio(fmt(Math.min(mRatio, 100), 1))
 
-    // Funding
     const rate = parseNumber(fundingRate) / 100
     const hours = parseNumber(durationHours)
     const fundingCost = notional * rate * hours
     const directedFunding = direction === "long" ? fundingCost : -fundingCost
     setTotalFunding(fmt(directedFunding, 2))
 
-    // Net PNL = gross - fees - funding
     const net = calcPnl - totalFeesVal - directedFunding
     setNetPnl(fmt(net, 2))
     const netRoeVal = calcMargin > 0 ? (net / calcMargin) * 100 : 0
     setNetRoe(fmt(netRoeVal, 2))
 
-    // Break-even price: price where net PNL = 0 (after fees + funding)
     const totalCosts = totalFeesVal + directedFunding
     let be: number
     if (direction === "long") {
@@ -323,18 +368,20 @@ export function LeverageCalculator() {
   const totalFundingNum = parseNumber(totalFunding)
   const marginRatioNum = parseNumber(marginRatio)
 
+  const leveragePresets = [1, 2, 5, 10, 25, 50, 100, 500, 1000]
+
   return (
     <div className="w-full">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-[#141620] rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-brand to-brand-hover px-6 py-5">
+        <div className="px-6 py-5 border-b border-[#2a2e3e]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Calculator className="h-6 w-6 text-white" />
+            <div className="p-2 bg-brand/10 rounded-lg">
+              <Calculator className="h-5 w-5 text-brand" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Perpetual Futures Calculator</h2>
-              <p className="text-white/80 text-sm">Industry-grade position planner with fees, funding & break-even</p>
+              <h2 className="text-lg font-bold text-white">Perpetual Futures Calculator</h2>
+              <p className="text-[#555a66] text-xs">Position planner with fees, funding & break-even</p>
             </div>
           </div>
         </div>
@@ -343,34 +390,34 @@ export function LeverageCalculator() {
           {/* Direction + Fee Type */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Direction</label>
+              <label className="block text-xs font-medium text-[#848e9c] mb-2">Direction</label>
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => setDirection("long")}
-                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                    direction === "long" ? "bg-green-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-full font-medium text-sm transition-all ${
+                    direction === "long" ? "bg-emerald-500 text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
                   <ArrowUp className="h-4 w-4" /> Long
                 </button>
                 <button type="button" onClick={() => setDirection("short")}
-                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                    direction === "short" ? "bg-red-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-full font-medium text-sm transition-all ${
+                    direction === "short" ? "bg-red-500 text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
                   <ArrowDown className="h-4 w-4" /> Short
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Order Type</label>
+              <label className="block text-xs font-medium text-[#848e9c] mb-2">Order Type</label>
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => setFeeType("maker")}
-                  className={`py-2.5 rounded-lg font-medium text-sm transition-all ${
-                    feeType === "maker" ? "bg-gray-900 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`py-2.5 rounded-full font-medium text-sm transition-all ${
+                    feeType === "maker" ? "bg-brand text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
                   Maker
                 </button>
                 <button type="button" onClick={() => setFeeType("taker")}
-                  className={`py-2.5 rounded-lg font-medium text-sm transition-all ${
-                    feeType === "taker" ? "bg-gray-900 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`py-2.5 rounded-full font-medium text-sm transition-all ${
+                    feeType === "taker" ? "bg-brand text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
                   Taker
                 </button>
@@ -378,37 +425,79 @@ export function LeverageCalculator() {
             </div>
           </div>
 
+          {/* Leverage slider / presets */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-medium text-[#848e9c]">Leverage</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text" inputMode="decimal" value={leverage}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^\d]/g, "")
+                    const n = parseInt(v, 10)
+                    if (v === "" || (n >= 0 && n <= 1000)) setLeverage(v)
+                  }}
+                  className="w-16 text-right text-sm font-bold text-white bg-transparent border-b border-[#2a2e3e] focus:border-brand focus:outline-none transition-colors"
+                />
+                <span className="text-sm font-bold text-[#555a66]">x</span>
+              </div>
+            </div>
+            <input
+              type="range" min="0" max="100"
+              value={Math.round(Math.log(Math.max(1, parseNumber(leverage))) / Math.log(1000) * 100)}
+              onChange={(e) => {
+                const pct = parseInt(e.target.value, 10)
+                const val = Math.round(Math.pow(1000, pct / 100))
+                setLeverage(String(Math.max(1, Math.min(1000, val))))
+              }}
+              className="w-full h-1.5 rounded-full appearance-none bg-[#2a2e3e] accent-brand cursor-pointer"
+            />
+            <div className="flex gap-1 mt-2">
+              {leveragePresets.map((l) => (
+                <button key={l} type="button" onClick={() => setLeverage(String(l))}
+                  className={`flex-1 py-1 rounded text-[10px] font-medium transition-colors ${
+                    parseNumber(leverage) === l ? "bg-brand text-white" : "bg-[#1a1d26] text-[#555a66] hover:text-[#848e9c]"
+                  }`}>
+                  {l}x
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Core Inputs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <CalculatorInput id="leverage" label="Leverage" value={leverage} onChange={setLeverage}
-              suffix="x" hint="1–200x" error={errors.leverage} compact />
-            <CalculatorInput id="quantity" label="Quantity (contracts)" value={quantity} onChange={setQuantity}
-              hint="Position size" error={errors.quantity} compact />
+          <div className="grid grid-cols-3 gap-3 mb-2">
+            <CalculatorInput id="quantity" label="Quantity" value={quantity}
+              onChange={(v) => { marginLocked.current = false; setQuantity(v) }}
+              hint="Size in contracts" error={errors.quantity} compact />
             <CalculatorInput id="entryPrice" label="Entry Price" value={entryPrice} onChange={setEntryPrice}
               prefix="$" error={errors.entryPrice} compact />
             <CalculatorInput id="exitPrice" label="Exit Price" value={exitPrice} onChange={setExitPrice}
               prefix="$" error={errors.exitPrice} compact />
           </div>
 
+          {/* Exit Price slider + % change */}
+          <ExitPriceSlider entryPrice={entryPrice} exitPrice={exitPrice} setExitPrice={setExitPrice} parseNumber={parseNumber} />
+
           {/* Fee & Funding Inputs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <CalculatorInput id="entryFeeRate" label="Entry Fee" value={entryFeeRate} onChange={setEntryFeeRate}
-              suffix="%" hint={feeType === "maker" ? "Maker: 0.01%" : "Taker: 0.035%"} compact />
+              suffix="%" hint={feeType === "maker" ? "Maker 0.010%" : "Taker 0.035%"} compact />
             <CalculatorInput id="exitFeeRate" label="Exit Fee" value={exitFeeRate} onChange={setExitFeeRate}
               suffix="%" hint="Applied on close" compact />
             <CalculatorInput id="fundingRate" label="Funding Rate" value={fundingRate} onChange={setFundingRate}
-              suffix="%/hr" allowNegative hint="Hourly rate" compact />
+              suffix="%/hr" allowNegative hint="~0.003% typical" compact />
             <CalculatorInput id="durationHours" label="Duration" value={durationHours} onChange={setDurationHours}
               suffix="hours" hint="Hold time" compact />
           </div>
 
           {/* Divider */}
-          <div className="border-t border-gray-200 my-5" />
+          <div className="border-t border-[#2a2e3e] my-5" />
 
           {/* Interactive Results */}
           <div className="grid md:grid-cols-3 gap-3 mb-5">
             <CalculatorInput id="initialMargin" label="Initial Margin" value={initialMargin}
-              onChange={setInitialMargin} onFocus={() => setActiveField("margin")} onBlur={() => setActiveField(null)}
+              onChange={(v) => { marginLocked.current = true; setInitialMargin(v) }}
+              onFocus={() => setActiveField("margin")} onBlur={() => setActiveField(null)}
               suffix="USDC" hint="Type to set budget" compact />
             <CalculatorInput id="pnl" label="Target PNL" value={pnl}
               onChange={setPnl} onFocus={() => setActiveField("pnl")} onBlur={() => setActiveField(null)}
@@ -420,9 +509,9 @@ export function LeverageCalculator() {
 
           {/* Results Dashboard */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-            <StatCard label="Position Notional" value={fmtUsd(parseNumber(positionNotional))} sub={`${leverage}x leveraged`} color="brand" />
+            <StatCard label="Position Notional" value={fmtUsdFull(parseNumber(positionNotional))} sub={`${leverage}x leveraged`} color="brand" />
             <StatCard label="Liquidation Price" value={`$${liquidationPrice}`}
-              sub={`${fmt(100 - marginRatioNum, 1)}% margin remaining`}
+              sub={`${fmt(100 - marginRatioNum, 1)}% margin left`}
               color={marginRatioNum > 80 ? "red" : marginRatioNum > 50 ? "gray" : "green"} />
             <StatCard label="Break-Even Price" value={`$${breakEvenPrice}`} sub="After fees + funding" color="gray" />
             <StatCard label="Margin Ratio"
@@ -448,36 +537,36 @@ export function LeverageCalculator() {
 
           {/* Net Result Banner */}
           {netPnl && netRoe && (
-            <div className={`p-4 rounded-xl border-2 ${netPnlNum >= 0 ? "bg-green-50 border-green-300" : "bg-red-50 border-red-300"}`}>
+            <div className={`p-4 rounded-xl ${netPnlNum >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
               <div className="flex items-center gap-3">
                 {netPnlNum >= 0 ? (
-                  <div className="p-2 rounded-full bg-green-100">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
+                  <div className="p-2 rounded-full bg-emerald-500/20">
+                    <TrendingUp className="h-6 w-6 text-emerald-400" />
                   </div>
                 ) : (
-                  <div className="p-2 rounded-full bg-red-100">
-                    <TrendingDown className="h-6 w-6 text-red-600" />
+                  <div className="p-2 rounded-full bg-red-500/20">
+                    <TrendingDown className="h-6 w-6 text-red-400" />
                   </div>
                 )}
                 <div className="flex-1">
-                  <p className={`text-xl font-bold ${netPnlNum >= 0 ? "text-green-700" : "text-red-700"}`}>
-                    {netPnlNum >= 0 ? "+" : ""}{fmtUsd(netPnlNum)} ({netPnlNum >= 0 ? "+" : ""}{netRoe}%)
+                  <p className={`text-xl font-bold ${netPnlNum >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {netPnlNum >= 0 ? "+" : ""}{fmtUsdFull(netPnlNum)} ({netPnlNum >= 0 ? "+" : ""}{netRoe}%)
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-[#848e9c]">
                     Net {netPnlNum >= 0 ? "profit" : "loss"} at ${exitPrice} after {durationHours}h
-                    <span className="text-gray-400"> — fees: ${totalFees}, funding: ${Math.abs(totalFundingNum).toFixed(2)}</span>
+                    <span className="text-[#555a66]"> — fees: ${fmtUsdFull(parseNumber(totalFees))}, funding: {fmtUsdFull(Math.abs(totalFundingNum))}</span>
                   </p>
                 </div>
                 <div className="text-right hidden md:block">
-                  <p className="text-xs text-gray-500">Break-even</p>
-                  <p className="text-sm font-semibold text-gray-700">${breakEvenPrice}</p>
+                  <p className="text-xs text-[#555a66]">Break-even</p>
+                  <p className="text-sm font-semibold text-white">${breakEvenPrice}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Disclaimer */}
-          <p className="mt-5 text-[11px] text-gray-400 leading-relaxed">
+          <p className="mt-5 text-[11px] text-[#555a66] leading-relaxed">
             Calculations are estimates. Actual margin = initial margin + open loss (difference between order price and mark price).
             Liquidation price is simplified and may vary with cross-margin, insurance fund, and maintenance margin requirements.
             Fee rates shown are Hyperliquid defaults — adjust for your VIP tier. Funding rate compounds each hour and may fluctuate.
@@ -485,10 +574,10 @@ export function LeverageCalculator() {
         </div>
 
         {/* CTA */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <a href="https://dydx.exchange/r/SABZRJKF" target="_blank" rel="noopener noreferrer"
-            className="block w-full text-center py-3 px-6 bg-brand hover:bg-brand-hover text-white font-medium rounded-lg transition-colors">
-            Trade @ dYdX — Get 5% Off Fees
+        <div className="px-6 py-4 border-t border-[#2a2e3e]">
+          <a href="/trade/BTC" rel="noopener noreferrer"
+            className="block w-full text-center py-3 px-6 bg-brand hover:bg-brand-hover text-white font-medium rounded-full transition-colors">
+            Start Trading on Coincess
           </a>
         </div>
       </div>
