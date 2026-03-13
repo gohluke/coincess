@@ -72,12 +72,12 @@ export default function WhatArePerpetualFuturesGuide() {
       <h2>How Perpetual Futures Work</h2>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-emerald-950/50merald-200 rounded-xl p-5">
+        <div className="bg-emerald-950/50 rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
             <TrendingUp className="h-5 w-5 text-emerald-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Going Long</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             You profit when the price goes <strong>up</strong>. Buy low, sell
             high. You&apos;re betting the asset will appreciate.
           </p>
@@ -87,7 +87,7 @@ export default function WhatArePerpetualFuturesGuide() {
             <TrendingDown className="h-5 w-5 text-red-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Going Short</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             You profit when the price goes <strong>down</strong>. Sell high, buy
             low. You&apos;re betting the asset will depreciate.
           </p>
@@ -97,7 +97,7 @@ export default function WhatArePerpetualFuturesGuide() {
             <Zap className="h-5 w-5 text-blue-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Leverage</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Control a $10K position with just $100. Leverage amplifies both gains
             and losses—use responsibly.
           </p>
@@ -107,17 +107,17 @@ export default function WhatArePerpetualFuturesGuide() {
             <Wallet className="h-5 w-5 text-slate-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Margin</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Your collateral. The amount you deposit to open and maintain your
             position. More margin = more safety.
           </p>
         </div>
-        <div className="bg-amber-950/50mber-800/50 rounded-xl p-5">
+        <div className="bg-amber-950/50 rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Liquidation</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             When your losses exceed your margin, your position is force-closed.
             Higher leverage = closer liquidation.
           </p>
@@ -127,7 +127,7 @@ export default function WhatArePerpetualFuturesGuide() {
             <BarChart3 className="h-5 w-5 text-brand" />
           </div>
           <h4 className="font-bold text-white mb-2">No Expiry</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Hold as long as you want. No contract rollover, no settlement dates.
             Trade forever.
           </p>
@@ -156,16 +156,16 @@ export default function WhatArePerpetualFuturesGuide() {
           Funding Rate Example
         </h4>
         <div className="space-y-3 text-sm">
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             BTC perp: $100,000 | Spot: $99,500 | Funding: +0.01% (longs pay)
           </p>
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             Your position: $10,000 notional (0.1 BTC) | You&apos;re long
           </p>
           <p className="text-amber-400 font-mono">
             Payment = $10,000 × 0.0001 = $1 per funding period
           </p>
-          <p className="text-gray-400 text-xs">
+          <p className="text-gray-300 text-xs">
             If funding runs 3× per day: ~$3/day to hold. Shorts receive this.
           </p>
         </div>
@@ -197,32 +197,32 @@ export default function WhatArePerpetualFuturesGuide() {
           </thead>
           <tbody>
             <tr className="border-b border-[#2a2e39]">
-              <td className="p-3 font-medium text-gray-300">Leverage</td>
+              <td className="p-3 font-medium text-gray-200">Leverage</td>
               <td className="p-3 text-emerald-600">Up to 50x on Coincess</td>
               <td className="p-3 text-gray-500">1x only</td>
             </tr>
             <tr className="border-b border-[#2a2e39] bg-[#141620]/50">
-              <td className="p-3 font-medium text-gray-300">Short selling</td>
+              <td className="p-3 font-medium text-gray-200">Short selling</td>
               <td className="p-3 text-emerald-600">Yes—profit when price falls</td>
               <td className="p-3 text-gray-500">No (or complex)</td>
             </tr>
             <tr className="border-b border-[#2a2e39]">
-              <td className="p-3 font-medium text-gray-300">Asset custody</td>
+              <td className="p-3 font-medium text-gray-200">Asset custody</td>
               <td className="p-3 text-emerald-600">No—you never hold the asset</td>
               <td className="p-3 text-gray-500">Yes—you own the coins</td>
             </tr>
             <tr className="border-b border-[#2a2e39] bg-[#141620]/50">
-              <td className="p-3 font-medium text-gray-300">Trading hours</td>
+              <td className="p-3 font-medium text-gray-200">Trading hours</td>
               <td className="p-3 text-emerald-600">24/7</td>
               <td className="p-3 text-emerald-600">24/7 (crypto)</td>
             </tr>
             <tr className="border-b border-[#2a2e39]">
-              <td className="p-3 font-medium text-gray-300">Complexity</td>
+              <td className="p-3 font-medium text-gray-200">Complexity</td>
               <td className="p-3 text-amber-600">Higher—leverage, funding, liquidation</td>
               <td className="p-3 text-emerald-600">Simpler—buy and hold</td>
             </tr>
             <tr>
-              <td className="p-3 font-medium text-gray-300">Liquidation risk</td>
+              <td className="p-3 font-medium text-gray-200">Liquidation risk</td>
               <td className="p-3 text-amber-600">Yes—can lose entire margin</td>
               <td className="p-3 text-emerald-600">No—you own the asset</td>
             </tr>
@@ -285,7 +285,7 @@ export default function WhatArePerpetualFuturesGuide() {
             </div>
             <div>
               <h4 className="font-bold text-white mb-1">{title}</h4>
-              <p className="text-sm text-gray-400">{desc}</p>
+              <p className="text-sm text-gray-300">{desc}</p>
             </div>
             <Icon className="h-5 w-5 text-brand flex-shrink-0 mt-1" />
           </div>
@@ -311,7 +311,7 @@ export default function WhatArePerpetualFuturesGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50mber-800/30">
+        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-amber-400">No stop-loss</h4>
@@ -321,7 +321,7 @@ export default function WhatArePerpetualFuturesGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50mber-800/30">
+        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-amber-400">Ignoring funding rates</h4>
@@ -335,7 +335,7 @@ export default function WhatArePerpetualFuturesGuide() {
           <AlertTriangle className="h-6 w-6 text-slate-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-white">Trading without a plan</h4>
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-gray-200">
               Know your entry, target, and stop before you click. Random trades =
               random results.
             </p>
@@ -383,25 +383,25 @@ export default function WhatArePerpetualFuturesGuide() {
               <td className="p-3 font-semibold text-white">Bitcoin</td>
               <td className="p-3">BTC</td>
               <td className="p-3">50x</td>
-              <td className="p-3 text-gray-400">Crypto</td>
+              <td className="p-3 text-gray-300">Crypto</td>
             </tr>
             <tr className="border-b border-[#2a2e39]">
               <td className="p-3 font-medium">Ethereum</td>
               <td className="p-3">ETH</td>
               <td className="p-3">50x</td>
-              <td className="p-3 text-gray-400">Crypto</td>
+              <td className="p-3 text-gray-300">Crypto</td>
             </tr>
             <tr className="border-b border-[#2a2e39] bg-[#141620]/50">
               <td className="p-3 font-medium">Solana</td>
               <td className="p-3">SOL</td>
               <td className="p-3">50x</td>
-              <td className="p-3 text-gray-400">Crypto</td>
+              <td className="p-3 text-gray-300">Crypto</td>
             </tr>
             <tr className="border-b border-[#2a2e39]">
               <td className="p-3 font-medium">Hyperliquid</td>
               <td className="p-3">HYPE</td>
               <td className="p-3">50x</td>
-              <td className="p-3 text-gray-400">Crypto</td>
+              <td className="p-3 text-gray-300">Crypto</td>
             </tr>
             <tr className="border-b border-[#2a2e39] bg-amber-950/50/50">
               <td className="p-3 font-medium">Crude Oil (WTI)</td>
@@ -438,7 +438,7 @@ export default function WhatArePerpetualFuturesGuide() {
 
       <h2>Risk Disclosure</h2>
 
-      <div className="not-prose my-8 bg-amber-950/50mber-800/50 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -497,11 +497,11 @@ export default function WhatArePerpetualFuturesGuide() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Best No-KYC Crypto Exchanges in 2026
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Trade swaps, perpetuals, and commodities privately—no ID required
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -512,11 +512,11 @@ export default function WhatArePerpetualFuturesGuide() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How to Trade Crude Oil in 2026
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Geopolitics, supply shocks, and trading oil perps on Coincess
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -527,11 +527,11 @@ export default function WhatArePerpetualFuturesGuide() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Crypto 101: Get Your First Coin in Under 5 Minutes
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               New to crypto? Get set up before you trade perps
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

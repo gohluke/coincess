@@ -236,7 +236,7 @@ export default function OilWhalesArticle() {
 
       {/* Whale #4 */}
       <div className="not-prose my-8">
-        <div className="bg-purple-950 border border-purple-800 rounded-2xl p-6 text-white">
+        <div className="bg-purple-950 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-purple-800 flex items-center justify-center">
               <Eye className="h-5 w-5 text-purple-300" />
@@ -406,7 +406,7 @@ export default function OilWhalesArticle() {
               </div>
               <div className="flex-1 border-l-2 border-red-800/30 pl-4 pb-2">
                 <div className="font-bold text-white">{item.title}</div>
-                <div className="text-sm text-gray-400">{item.desc}</div>
+                <div className="text-sm text-gray-300">{item.desc}</div>
               </div>
             </div>
           ))}
@@ -425,12 +425,12 @@ export default function OilWhalesArticle() {
 
       <div className="not-prose my-8">
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-emerald-950/50merald-200 rounded-xl p-6">
+          <div className="bg-emerald-950/50 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-5 w-5 text-emerald-600" />
               <h3 className="text-lg font-bold text-white">Bull Signals</h3>
             </div>
-            <ul className="space-y-2 text-sm text-gray-300">
+            <ul className="space-y-2 text-sm text-gray-200">
               <li className="flex gap-2">
                 <span className="text-emerald-600 font-bold">&bull;</span>
                 <span>
@@ -464,7 +464,7 @@ export default function OilWhalesArticle() {
               <Flame className="h-5 w-5 text-red-600" />
               <h3 className="text-lg font-bold text-white">Bear Signals</h3>
             </div>
-            <ul className="space-y-2 text-sm text-gray-300">
+            <ul className="space-y-2 text-sm text-gray-200">
               <li className="flex gap-2">
                 <span className="text-red-600 font-bold">&bull;</span>
                 <span>
@@ -531,7 +531,7 @@ export default function OilWhalesArticle() {
       </ul>
 
       {/* Risk callout */}
-      <div className="not-prose my-8 bg-amber-950/50mber-800/30 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
         <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Trading Risk Disclosure
@@ -583,11 +583,11 @@ export default function OilWhalesArticle() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How the Iran War Is Driving Crude to $120
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Full breakdown of why oil is spiking and how to trade it
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -598,11 +598,11 @@ export default function OilWhalesArticle() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Crypto 101: Get Your First Coin in 5 Minutes
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               New to crypto? Get set up to start trading
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

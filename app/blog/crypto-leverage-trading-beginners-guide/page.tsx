@@ -57,24 +57,24 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         </h4>
         <div className="grid sm:grid-cols-2 gap-4 text-sm">
           <div className="bg-slate-800 rounded-lg p-4 space-y-2">
-            <p className="text-gray-400">Margin</p>
+            <p className="text-gray-300">Margin</p>
             <p className="text-2xl font-bold text-white">$100</p>
-            <p className="text-gray-400">Your collateral</p>
+            <p className="text-gray-300">Your collateral</p>
           </div>
           <div className="bg-slate-800 rounded-lg p-4 space-y-2">
-            <p className="text-gray-400">Leverage</p>
+            <p className="text-gray-300">Leverage</p>
             <p className="text-2xl font-bold text-amber-400">10x</p>
-            <p className="text-gray-400">Position multiplier</p>
+            <p className="text-gray-300">Position multiplier</p>
           </div>
           <div className="bg-slate-800 rounded-lg p-4 space-y-2">
-            <p className="text-gray-400">Position Size</p>
+            <p className="text-gray-300">Position Size</p>
             <p className="text-2xl font-bold text-white">$1,000</p>
-            <p className="text-gray-400">What you control</p>
+            <p className="text-gray-300">What you control</p>
           </div>
           <div className="bg-slate-800 rounded-lg p-4 space-y-2">
-            <p className="text-gray-400">5% Price Move</p>
+            <p className="text-gray-300">5% Price Move</p>
             <p className="text-2xl font-bold text-emerald-400">$50 profit</p>
-            <p className="text-gray-400">= 50% ROI on margin</p>
+            <p className="text-gray-300">= 50% ROI on margin</p>
           </div>
         </div>
         <p className="text-amber-400 text-xs mt-4">
@@ -90,12 +90,12 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
       </p>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-emerald-950/50merald-200 rounded-xl p-5">
+        <div className="bg-emerald-950/50 rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
             <Shield className="h-5 w-5 text-emerald-600" />
           </div>
           <h4 className="font-bold text-white mb-2">2–3x: Conservative</h4>
-          <p className="text-sm text-gray-400 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             For swing trades. Liquidation ~33–50% away.
           </p>
           <p className="text-xs font-mono text-emerald-400">Safest tier</p>
@@ -105,17 +105,17 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             <Target className="h-5 w-5 text-blue-600" />
           </div>
           <h4 className="font-bold text-white mb-2">5–10x: Moderate</h4>
-          <p className="text-sm text-gray-400 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Day trading. Liquidation ~10–20% away.
           </p>
           <p className="text-xs font-mono text-blue-400">Most common</p>
         </div>
-        <div className="bg-amber-950/50mber-800/30 rounded-xl p-5">
+        <div className="bg-amber-950/50 rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
             <Zap className="h-5 w-5 text-amber-600" />
           </div>
           <h4 className="font-bold text-white mb-2">10–25x: Aggressive</h4>
-          <p className="text-sm text-gray-400 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Experienced traders. Liquidation ~4–10% away.
           </p>
           <p className="text-xs font-mono text-amber-400">High risk</p>
@@ -125,7 +125,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             <AlertTriangle className="h-5 w-5 text-red-600" />
           </div>
           <h4 className="font-bold text-white mb-2">25–50x: Ultra-High Risk</h4>
-          <p className="text-sm text-gray-400 mb-2">
+          <p className="text-sm text-gray-300 mb-2">
             Scalpers only. Liquidation ~2–4% away.
           </p>
           <p className="text-xs font-mono text-red-400">Extreme danger</p>
@@ -139,12 +139,12 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
       </p>
 
       <div className="not-prose my-8 grid sm:grid-cols-2 gap-4">
-        <div className="bg-emerald-950/50 border-2 border-emerald-200 rounded-xl p-6">
+        <div className="bg-emerald-950/50 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
             <Shield className="h-5 w-5 text-emerald-600" />
             <h3 className="text-lg font-bold text-white">Isolated Margin</h3>
           </div>
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-sm text-gray-200 mb-2">
             Only the margin allocated to that position is at risk. If you get
             liquidated, you lose that margin—not your entire account.
           </p>
@@ -157,7 +157,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             <Wallet className="h-5 w-5 text-amber-600" />
             <h3 className="text-lg font-bold text-white">Cross Margin</h3>
           </div>
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-sm text-gray-200 mb-2">
             Your entire account balance acts as margin. More capital-efficient
             (fewer liquidations from a single bad trade), but one blow-up can
             wipe everything.
@@ -183,12 +183,12 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           Liquidation Distance (Long Position)
         </h4>
         <div className="space-y-3 text-sm">
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             At <span className="text-amber-400 font-mono">10x leverage</span>:
             a <span className="text-red-400 font-bold">~10%</span> adverse move
             = liquidation.
           </p>
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             At <span className="text-amber-400 font-mono">50x leverage</span>:
             a <span className="text-red-400 font-bold">~2%</span> adverse move
             = liquidation.
@@ -238,10 +238,10 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           <Calculator className="h-5 w-5 text-brand" />
           Position Sizing Formula
         </h4>
-        <p className="text-sm text-gray-300 mb-2">
+        <p className="text-sm text-gray-200 mb-2">
           Position size = (Portfolio × Risk %) ÷ (Stop-loss %)
         </p>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-300">
           Example: $1,000 portfolio, 1% risk ($10), 5% stop-loss. Position size =
           $10 ÷ 0.05 = <strong>$200 notional</strong>. With 10x leverage, that&apos;s
           $20 margin.
@@ -321,7 +321,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             </div>
             <div>
               <h4 className="font-bold text-white mb-1">{title}</h4>
-              <p className="text-sm text-gray-400">{desc}</p>
+              <p className="text-sm text-gray-300">{desc}</p>
             </div>
             <Icon className="h-5 w-5 text-brand flex-shrink-0 mt-1" />
           </div>
@@ -451,11 +451,11 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             <h4 className="font-bold text-white group-hover:text-brand">
               What Are Perpetual Futures? The Complete Beginner&apos;s Guide
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Learn how perps work, funding rates, and leverage—before you trade
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -466,11 +466,11 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Crypto Funding Rates Explained: Earn Passive Income from Perps
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               How funding rates work and how to harvest them on Coincess
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

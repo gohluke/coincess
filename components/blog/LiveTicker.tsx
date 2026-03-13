@@ -55,7 +55,7 @@ function Pill({ coin, data }: { coin: string; data: TickerData | null }) {
       href={href}
       className="inline-flex items-center gap-2 rounded-full border border-[#2a2e39] bg-[#141620] px-3 py-1.5 text-xs font-medium transition-colors hover:border-[#3a3e4e] hover:bg-[#1a1d26]"
     >
-      <span className="text-gray-400">{label}</span>
+      <span className="text-gray-300">{label}</span>
       {data ? (
         <>
           <span className="text-white font-mono">${formatPrice(data.price)}</span>

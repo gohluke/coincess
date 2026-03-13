@@ -60,7 +60,7 @@ export default function BestNoKycExchanges2026() {
             <Shield className="h-5 w-5 text-red-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Privacy from Data Breaches</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Mt. Gox. FTX. Celsius. Exchanges get hacked and leak your passport,
             address, and selfie. No KYC = nothing to leak.
           </p>
@@ -70,7 +70,7 @@ export default function BestNoKycExchanges2026() {
             <Zap className="h-5 w-5 text-emerald-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Instant Access</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             No 3-day verification wait. Connect your wallet and trade in under 60
             seconds.
           </p>
@@ -80,7 +80,7 @@ export default function BestNoKycExchanges2026() {
             <Eye className="h-5 w-5 text-blue-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Financial Freedom</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             No geographic restrictions. Trade from anywhere—no &quot;not available
             in your region&quot; nonsense.
           </p>
@@ -90,7 +90,7 @@ export default function BestNoKycExchanges2026() {
             <Lock className="h-5 w-5 text-amber-600" />
           </div>
           <h4 className="font-bold text-white mb-2">Censorship Resistance</h4>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Your account can&apos;t be frozen because you never had one. You
             control your keys; you control your funds.
           </p>
@@ -113,7 +113,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-200 mb-4">
             Built on Hyperliquid, Coincess is the only platform that combines a
             swap aggregator with perpetual futures and 24/7 commodity trading.
             Trade BTC, ETH, oil, gold—up to 50x leverage—with a beautiful UI
@@ -167,7 +167,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-200 mb-4">
             The underlying L1 that powers Coincess. Massive volume, deep
             liquidity, and true decentralization. The UI is powerful but complex;
             no swap aggregator—you trade directly on the order book.
@@ -201,7 +201,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-200 mb-4">
             Centralized exchange with generous no-KYC limits. Good for spot and
             futures, but you&apos;re trusting a company with your funds—same
             counterparty risk that took down FTX.
@@ -235,7 +235,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-200 mb-4">
             Solid decentralized perpetuals exchange. Lower volume than
             Hyperliquid, fewer assets, no commodities. Good if you want pure
             perps and don&apos;t need swaps or oil/gold.
@@ -269,7 +269,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-200 mb-4">
             Privacy-focused swap service. Great for one-off conversions, but
             that&apos;s it—no trading, no leverage, no perpetuals. Use when you
             need a quick swap; use Coincess when you need the full toolkit.
@@ -303,7 +303,7 @@ export default function BestNoKycExchanges2026() {
               </span>
             </div>
           </div>
-          <p className="text-gray-300 mb-4">
+          <p className="text-gray-200 mb-4">
             Fully decentralized P2P exchange. Maximum privacy and censorship
             resistance, but desktop-only, slow order matching, and not for
             beginners. The cypherpunk choice.
@@ -424,7 +424,7 @@ export default function BestNoKycExchanges2026() {
               <Wallet className="h-7 w-7 text-brand" />
             </div>
             <div className="text-2xl font-bold text-brand mb-2">1. Connect Wallet</div>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Connect MetaMask, Rabby, or any Web3 wallet. No signup, no email.
             </p>
           </div>
@@ -433,7 +433,7 @@ export default function BestNoKycExchanges2026() {
               <BarChart3 className="h-7 w-7 text-brand" />
             </div>
             <div className="text-2xl font-bold text-brand mb-2">2. Pick Market</div>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Choose BTC, ETH, oil, gold—or use the swap guide for best rates.
             </p>
           </div>
@@ -442,7 +442,7 @@ export default function BestNoKycExchanges2026() {
               <Coins className="h-7 w-7 text-brand" />
             </div>
             <div className="text-2xl font-bold text-brand mb-2">3. Trade</div>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Go long or short. Up to 50x leverage. Your keys, your funds.
             </p>
           </div>
@@ -461,7 +461,7 @@ export default function BestNoKycExchanges2026() {
         when in doubt, consult a professional.
       </p>
 
-      <div className="not-prose my-8 bg-amber-950/50mber-800/50 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -519,11 +519,11 @@ export default function BestNoKycExchanges2026() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Why Privacy Matters: A Beginner&apos;s Guide to Anonymous Crypto
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Why financial privacy matters and how privacy coins protect you
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -534,11 +534,11 @@ export default function BestNoKycExchanges2026() {
             <h4 className="font-bold text-white group-hover:text-brand">
               How to Swap Bitcoin for Monero Instantly
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Turn BTC into XMR without ID verification—done in 15 minutes
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

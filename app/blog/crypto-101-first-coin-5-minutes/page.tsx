@@ -33,7 +33,7 @@ export default function Crypto101() {
             </div>
             <div className="text-3xl font-bold text-brand mb-2">Step 1</div>
             <h3 className="text-lg font-semibold text-white mb-1">Get a Wallet</h3>
-            <p className="text-sm text-gray-400">Download an app to store your crypto</p>
+            <p className="text-sm text-gray-300">Download an app to store your crypto</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -41,7 +41,7 @@ export default function Crypto101() {
             </div>
             <div className="text-3xl font-bold text-brand mb-2">Step 2</div>
             <h3 className="text-lg font-semibold text-white mb-1">Get Crypto</h3>
-            <p className="text-sm text-gray-400">Buy, receive, or swap for your first coins</p>
+            <p className="text-sm text-gray-300">Buy, receive, or swap for your first coins</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -49,7 +49,7 @@ export default function Crypto101() {
             </div>
             <div className="text-3xl font-bold text-brand mb-2">Step 3</div>
             <h3 className="text-lg font-semibold text-white mb-1">You're Done!</h3>
-            <p className="text-sm text-gray-400">You now own cryptocurrency</p>
+            <p className="text-sm text-gray-300">You now own cryptocurrency</p>
           </div>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default function Crypto101() {
           <Sparkles className="h-5 w-5 text-brand" />
           Our Recommendation: Cake Wallet
         </h3>
-        <p className="text-gray-300 mb-4">
+        <p className="text-gray-200 mb-4">
           Cake Wallet is free, beginner-friendly, and lets you hold multiple cryptocurrencies including Bitcoin and Monero. It also has built-in swapping.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -191,7 +191,7 @@ export default function Crypto101() {
         Once your wallet shows a balance, congratulations—you officially own cryptocurrency! You're now part of a global financial system that works 24/7, has no borders, and doesn't require anyone's permission.
       </p>
 
-      <div className="not-prose my-8 bg-emerald-950/50merald-800/30 rounded-xl p-6">
+      <div className="not-prose my-8 bg-emerald-950/50 rounded-xl p-6">
         <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5" />
           What You Can Now Do
@@ -242,31 +242,31 @@ export default function Crypto101() {
       <div className="not-prose my-8 space-y-3">
         <div className="border-b border-[#2a2e39] pb-3">
           <strong className="text-white">Wallet</strong>
-          <p className="text-sm text-gray-400">An app or device that stores your cryptocurrency</p>
+          <p className="text-sm text-gray-300">An app or device that stores your cryptocurrency</p>
         </div>
         <div className="border-b border-[#2a2e39] pb-3">
           <strong className="text-white">Seed Phrase</strong>
-          <p className="text-sm text-gray-400">12-25 words that are the master key to your wallet</p>
+          <p className="text-sm text-gray-300">12-25 words that are the master key to your wallet</p>
         </div>
         <div className="border-b border-[#2a2e39] pb-3">
           <strong className="text-white">Address</strong>
-          <p className="text-sm text-gray-400">Your "account number" that people send crypto to</p>
+          <p className="text-sm text-gray-300">Your "account number" that people send crypto to</p>
         </div>
         <div className="border-b border-[#2a2e39] pb-3">
           <strong className="text-white">HODL</strong>
-          <p className="text-sm text-gray-400">"Hold On for Dear Life" – slang for holding long-term</p>
+          <p className="text-sm text-gray-300">"Hold On for Dear Life" – slang for holding long-term</p>
         </div>
         <div className="border-b border-[#2a2e39] pb-3">
           <strong className="text-white">Swap</strong>
-          <p className="text-sm text-gray-400">Exchanging one cryptocurrency for another</p>
+          <p className="text-sm text-gray-300">Exchanging one cryptocurrency for another</p>
         </div>
         <div className="border-b border-[#2a2e39] pb-3">
           <strong className="text-white">KYC</strong>
-          <p className="text-sm text-gray-400">"Know Your Customer" – ID verification required by some services</p>
+          <p className="text-sm text-gray-300">"Know Your Customer" – ID verification required by some services</p>
         </div>
         <div className="pb-3">
           <strong className="text-white">Gas Fee</strong>
-          <p className="text-sm text-gray-400">A small fee paid to process transactions on the network</p>
+          <p className="text-sm text-gray-300">A small fee paid to process transactions on the network</p>
         </div>
       </div>
 
@@ -301,9 +301,9 @@ export default function Crypto101() {
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Hot vs Cold Wallets</h4>
-            <p className="text-gray-400 text-sm">Learn about wallet security for when your holdings grow</p>
+            <p className="text-gray-300 text-sm">Learn about wallet security for when your holdings grow</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -312,9 +312,9 @@ export default function Crypto101() {
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Why Privacy Matters</h4>
-            <p className="text-gray-400 text-sm">Understand why some people prefer private cryptocurrencies</p>
+            <p className="text-gray-300 text-sm">Understand why some people prefer private cryptocurrencies</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

@@ -65,7 +65,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
         >
           {post.title}
         </h3>
-        <p className="text-gray-400 text-sm line-clamp-2 mb-4">{post.description}</p>
+        <p className="text-gray-300 text-sm line-clamp-2 mb-4">{post.description}</p>
         <span className="inline-flex items-center gap-2 text-brand font-medium text-sm group-hover:gap-3 transition-all">
           Read Article
           <ArrowRight className="h-4 w-4" />
@@ -100,7 +100,7 @@ export default async function BlogPage() {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Market Intelligence & Guides
             </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
               Expert market analysis, trading strategies, and crypto guides.
               From oil price movements to funding rate plays.
             </p>

@@ -36,39 +36,39 @@ export default function ExchangeVsSwapAggregator() {
           </thead>
           <tbody>
             <tr>
-              <td className="p-4 border-b text-gray-300 font-medium">Setup Time</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Setup Time</td>
               <td className="p-4 border-b text-red-600">1-7 days (KYC verification)</td>
               <td className="p-4 border-b text-green-600">0 minutes</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-300 font-medium">Account Required</td>
-              <td className="p-4 border-b text-gray-300">Yes + ID verification</td>
-              <td className="p-4 border-b text-gray-300">No</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Account Required</td>
+              <td className="p-4 border-b text-gray-200">Yes + ID verification</td>
+              <td className="p-4 border-b text-gray-200">No</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-300 font-medium">Trading Fees</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Trading Fees</td>
               <td className="p-4 border-b text-green-600">0.1% - 0.5%</td>
               <td className="p-4 border-b text-orange-600">0.5% - 2%</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-300 font-medium">Withdrawal Fees</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Withdrawal Fees</td>
               <td className="p-4 border-b text-orange-600">Often high + minimums</td>
               <td className="p-4 border-b text-green-600">Included in swap</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-300 font-medium">Privacy</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Privacy</td>
               <td className="p-4 border-b text-red-600">None (full KYC)</td>
               <td className="p-4 border-b text-green-600">High (no personal data)</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-300 font-medium">Coin Selection</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Coin Selection</td>
               <td className="p-4 border-b text-green-600">Wide variety</td>
               <td className="p-4 border-b text-green-600">Wide variety</td>
             </tr>
             <tr>
-              <td className="p-4 text-gray-300 font-medium">Best For</td>
-              <td className="p-4 text-gray-300">Frequent traders, fiat on-ramp</td>
-              <td className="p-4 text-gray-300">Quick swaps, privacy seekers</td>
+              <td className="p-4 text-gray-200 font-medium">Best For</td>
+              <td className="p-4 text-gray-200">Frequent traders, fiat on-ramp</td>
+              <td className="p-4 text-gray-200">Quick swaps, privacy seekers</td>
             </tr>
           </tbody>
         </table>
@@ -140,23 +140,23 @@ export default function ExchangeVsSwapAggregator() {
         <ol className="space-y-3">
           <li className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">1</span>
-            <span className="text-gray-300">You enter: "I want to swap 0.1 BTC for XMR"</span>
+            <span className="text-gray-200">You enter: "I want to swap 0.1 BTC for XMR"</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">2</span>
-            <span className="text-gray-300">Aggregator checks 10+ services (ChangeNow, StealthEX, etc.)</span>
+            <span className="text-gray-200">Aggregator checks 10+ services (ChangeNow, StealthEX, etc.)</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">3</span>
-            <span className="text-gray-300">Shows you a list sorted by best rate and privacy rating</span>
+            <span className="text-gray-200">Shows you a list sorted by best rate and privacy rating</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">4</span>
-            <span className="text-gray-300">You pick one, paste your wallet address, send your BTC</span>
+            <span className="text-gray-200">You pick one, paste your wallet address, send your BTC</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">5</span>
-            <span className="text-gray-300">XMR arrives in your wallet in 10-30 minutes</span>
+            <span className="text-gray-200">XMR arrives in your wallet in 10-30 minutes</span>
           </li>
         </ol>
       </div>
@@ -202,15 +202,15 @@ export default function ExchangeVsSwapAggregator() {
             <h4 className="font-bold text-white mb-4">Via Binance (Exchange)</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between">
-                <span className="text-gray-400">Trading fee (0.1%)</span>
+                <span className="text-gray-300">Trading fee (0.1%)</span>
                 <span className="font-medium">$0.50</span>
               </li>
               <li className="flex justify-between">
-                <span className="text-gray-400">BTC withdrawal fee</span>
+                <span className="text-gray-300">BTC withdrawal fee</span>
                 <span className="font-medium">~$5.00</span>
               </li>
               <li className="flex justify-between">
-                <span className="text-gray-400">XMR withdrawal fee</span>
+                <span className="text-gray-300">XMR withdrawal fee</span>
                 <span className="font-medium">~$0.50</span>
               </li>
               <li className="flex justify-between border-t pt-2 mt-2">
@@ -232,15 +232,15 @@ export default function ExchangeVsSwapAggregator() {
             <h4 className="font-bold text-white mb-4">Via Trocador (Aggregator)</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between">
-                <span className="text-gray-400">Exchange spread (~1%)</span>
+                <span className="text-gray-300">Exchange spread (~1%)</span>
                 <span className="font-medium">$5.00</span>
               </li>
               <li className="flex justify-between">
-                <span className="text-gray-400">Network fee (included)</span>
+                <span className="text-gray-300">Network fee (included)</span>
                 <span className="font-medium">$0.00</span>
               </li>
               <li className="flex justify-between">
-                <span className="text-gray-400">Withdrawal fee</span>
+                <span className="text-gray-300">Withdrawal fee</span>
                 <span className="font-medium">$0.00</span>
               </li>
               <li className="flex justify-between border-t pt-2 mt-2">
@@ -295,9 +295,9 @@ export default function ExchangeVsSwapAggregator() {
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Trocador</h4>
-            <p className="text-gray-400 text-sm">Privacy-focused. Shows privacy ratings for each exchange. Our top pick.</p>
+            <p className="text-gray-300 text-sm">Privacy-focused. Shows privacy ratings for each exchange. Our top pick.</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </a>
 
         <a
@@ -308,9 +308,9 @@ export default function ExchangeVsSwapAggregator() {
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">OrangeFren</h4>
-            <p className="text-gray-400 text-sm">Clean interface. Good alternative to Trocador.</p>
+            <p className="text-gray-300 text-sm">Clean interface. Good alternative to Trocador.</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </a>
       </div>
 
@@ -343,9 +343,9 @@ export default function ExchangeVsSwapAggregator() {
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Compare Swap Methods</h4>
-            <p className="text-gray-400 text-sm">See our complete guide to all swap options with privacy ratings</p>
+            <p className="text-gray-300 text-sm">See our complete guide to all swap options with privacy ratings</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

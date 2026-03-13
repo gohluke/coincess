@@ -34,16 +34,16 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-8">
-              <Link href="/" className="hover:text-gray-300 transition-colors">Coincess</Link>
+              <Link href="/" className="hover:text-gray-200 transition-colors">Coincess</Link>
               <ChevronRight className="h-3.5 w-3.5" />
-              <Link href="/blog" className="hover:text-gray-300 transition-colors">Blog</Link>
+              <Link href="/blog" className="hover:text-gray-200 transition-colors">Blog</Link>
               <ChevronRight className="h-3.5 w-3.5" />
-              <span className="text-gray-400 truncate max-w-[200px] sm:max-w-none">{post.title}</span>
+              <span className="text-gray-300 truncate max-w-[200px] sm:max-w-none">{post.title}</span>
             </nav>
 
             <span
               className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 ${
-                categoryColors[post.category] || "bg-gray-700/50 text-gray-300"
+                categoryColors[post.category] || "bg-gray-700/50 text-gray-200"
               }`}
             >
               {post.category}
@@ -53,7 +53,7 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
               {post.title}
             </h1>
 
-            <p className="text-xl text-gray-400 mb-8">{post.description}</p>
+            <p className="text-xl text-gray-300 mb-8">{post.description}</p>
 
             <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
         {/* Content */}
         <article className="py-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-            <div className="prose prose-lg prose-invert max-w-none prose-headings:text-white prose-p:text-gray-300 prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-ul:text-gray-300 prose-ol:text-gray-300 prose-blockquote:border-brand/50 prose-blockquote:text-gray-400 prose-code:text-emerald-400 prose-code:bg-[#141620] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-[#141620] prose-pre:border prose-pre:border-[#2a2e39] prose-hr:border-[#2a2e39] prose-th:text-gray-300 prose-td:text-gray-400">
+            <div className="prose prose-lg prose-invert max-w-none prose-headings:text-white prose-p:text-gray-200 prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-ul:text-gray-200 prose-ol:text-gray-200 prose-blockquote:border-brand/50 prose-blockquote:text-gray-300 prose-code:text-emerald-400 prose-code:bg-[#141620] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-[#141620] prose-pre:border prose-pre:border-[#2a2e39] prose-hr:border-[#2a2e39] prose-th:text-gray-200 prose-td:text-gray-300">
               {children}
             </div>
 
@@ -91,7 +91,7 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
                 {post.keywords.map((keyword) => (
                   <span
                     key={keyword}
-                    className="px-3 py-1 bg-[#1a1d26] text-gray-400 rounded-full text-sm"
+                    className="px-3 py-1 bg-[#1a1d26] text-gray-300 rounded-full text-sm"
                   >
                     {keyword}
                   </span>

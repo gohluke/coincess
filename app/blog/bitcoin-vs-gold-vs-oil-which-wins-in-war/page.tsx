@@ -207,16 +207,16 @@ export default function BitcoinVsGoldVsOilArticle() {
             <table className="w-full text-sm">
             <thead className="bg-[#1a1d26]">
               <tr>
-                <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                <th className="text-left px-6 py-4 font-semibold text-gray-200">
                     Factor
                   </th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                  <th className="text-left px-6 py-4 font-semibold text-gray-200">
                     Oil
                   </th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                  <th className="text-left px-6 py-4 font-semibold text-gray-200">
                     Gold
                   </th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                  <th className="text-left px-6 py-4 font-semibold text-gray-200">
                     Bitcoin
                   </th>
                 </tr>
@@ -237,7 +237,7 @@ export default function BitcoinVsGoldVsOilArticle() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-[#1a1d26] text-gray-300 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-[#1a1d26] text-gray-200 rounded text-xs font-medium">
                       Moderate
                     </span>
                   </td>
@@ -266,7 +266,7 @@ export default function BitcoinVsGoldVsOilArticle() {
                   <td className="px-6 py-4 font-medium text-white">
                     Safe haven
                   </td>
-                  <td className="px-6 py-4 text-gray-400">No</td>
+                  <td className="px-6 py-4 text-gray-300">No</td>
                   <td className="px-6 py-4">
                     <span className="text-emerald-600 font-medium">Yes</span>
                   </td>
@@ -294,9 +294,9 @@ export default function BitcoinVsGoldVsOilArticle() {
                   <td className="px-6 py-4 font-medium text-white">
                     Leverage available
                   </td>
-                  <td className="px-6 py-4 text-gray-400">Up to 50x</td>
-                  <td className="px-6 py-4 text-gray-400">Up to 50x</td>
-                  <td className="px-6 py-4 text-gray-400">Up to 50x</td>
+                  <td className="px-6 py-4 text-gray-300">Up to 50x</td>
+                  <td className="px-6 py-4 text-gray-300">Up to 50x</td>
+                  <td className="px-6 py-4 text-gray-300">Up to 50x</td>
                 </tr>
                 <tr className="border-t border-[#2a2e39] bg-[#1a1d26]/30">
                   <td className="px-6 py-4 font-medium text-white">
@@ -319,7 +319,7 @@ export default function BitcoinVsGoldVsOilArticle() {
                   <td className="px-6 py-4">
                     <span className="text-red-600 font-medium">Crashes</span>
                   </td>
-                  <td className="px-6 py-4 text-gray-400">Dips</td>
+                  <td className="px-6 py-4 text-gray-300">Dips</td>
                   <td className="px-6 py-4">
                     <span className="text-emerald-600 font-medium">Pumps</span>
                   </td>
@@ -366,9 +366,9 @@ export default function BitcoinVsGoldVsOilArticle() {
               <h4 className="font-bold text-white group-hover:text-brand">
                 Trade Bitcoin
               </h4>
-              <p className="text-sm text-gray-400">/trade/BTC</p>
+              <p className="text-sm text-gray-300">/trade/BTC</p>
             </div>
-            <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand ml-auto" />
+            <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand ml-auto" />
           </Link>
           <Link
             href="/trade/XAU"
@@ -381,9 +381,9 @@ export default function BitcoinVsGoldVsOilArticle() {
               <h4 className="font-bold text-white group-hover:text-brand">
                 Trade Gold
               </h4>
-              <p className="text-sm text-gray-400">/trade/XAU</p>
+              <p className="text-sm text-gray-300">/trade/XAU</p>
             </div>
-            <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand ml-auto" />
+            <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand ml-auto" />
           </Link>
           <Link
             href="/trade/CL"
@@ -396,15 +396,15 @@ export default function BitcoinVsGoldVsOilArticle() {
               <h4 className="font-bold text-white group-hover:text-brand">
                 Trade Oil
               </h4>
-              <p className="text-sm text-gray-400">/trade/CL</p>
+              <p className="text-sm text-gray-300">/trade/CL</p>
             </div>
-            <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand ml-auto" />
+            <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand ml-auto" />
           </Link>
         </div>
       </div>
 
       {/* Risk Disclosure */}
-      <div className="not-prose my-10 bg-amber-950/50mber-800/30 rounded-xl p-6">
+      <div className="not-prose my-10 bg-amber-950/50 rounded-xl p-6">
         <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Risk Disclosure
@@ -466,11 +466,11 @@ export default function BitcoinVsGoldVsOilArticle() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How the Iran War Is Driving Crude to $120
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Full breakdown of why oil is spiking and how to trade it
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -481,11 +481,11 @@ export default function BitcoinVsGoldVsOilArticle() {
             <h4 className="font-bold text-white group-hover:text-brand">
               How to Trade Gold, Oil, and Commodities On-Chain
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               The 2026 guide to DeFi commodity trading on Coincess
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

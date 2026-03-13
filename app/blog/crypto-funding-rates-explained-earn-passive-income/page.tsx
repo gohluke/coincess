@@ -82,20 +82,20 @@ export default function CryptoFundingRatesExplainedPage() {
           Funding Rate Calculation Example
         </h4>
         <div className="space-y-3 text-sm">
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             Rate: <span className="text-emerald-400 font-mono">+0.01%</span> per
             hour | Position: <span className="text-amber-400">$10,000</span>{" "}
             notional
           </p>
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             Payment per hour = $10,000 × 0.0001 ={" "}
             <span className="text-emerald-400 font-bold">$1/hour</span>
           </p>
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             Per day = $1 × 24 ={" "}
             <span className="text-emerald-400 font-bold">$24/day</span>
           </p>
-          <p className="text-gray-300">
+          <p className="text-gray-200">
             Per month = $24 × 30 ={" "}
             <span className="text-emerald-400 font-bold">$720/month</span>
           </p>
@@ -132,7 +132,7 @@ export default function CryptoFundingRatesExplainedPage() {
       <h2>Funding Rate Strategies</h2>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-emerald-950/50merald-200 rounded-xl p-6 ">
+        <div className="bg-emerald-950/50 rounded-xl p-6 ">
           <div className="flex items-center gap-2 mb-3">
             <Shield className="h-5 w-5 text-emerald-600" />
             <h3 className="text-lg font-bold text-white">
@@ -142,7 +142,7 @@ export default function CryptoFundingRatesExplainedPage() {
               Conservative
             </span>
           </div>
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-sm text-gray-200 mb-2">
             Long spot + Short perp = collect funding. You&apos;re hedged on
             price direction; your profit comes from the funding payments.{" "}
             <strong>Risk-free if executed properly</strong>—though execution and
@@ -153,7 +153,7 @@ export default function CryptoFundingRatesExplainedPage() {
           </p>
         </div>
 
-        <div className="bg-amber-950/50mber-800/30 rounded-xl p-6 ">
+        <div className="bg-amber-950/50 rounded-xl p-6 ">
           <div className="flex items-center gap-2 mb-3">
             <Zap className="h-5 w-5 text-amber-600" />
             <h3 className="text-lg font-bold text-white">
@@ -163,7 +163,7 @@ export default function CryptoFundingRatesExplainedPage() {
               Moderate
             </span>
           </div>
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-sm text-gray-200 mb-2">
             Go short when funding is extremely positive. Collect payments every
             hour. You accept some directional risk—if price rips up, you lose on
             the position—but the funding income can offset or exceed it.
@@ -181,7 +181,7 @@ export default function CryptoFundingRatesExplainedPage() {
               Active
             </span>
           </div>
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-sm text-gray-200 mb-2">
             Monitor multiple markets. Enter positions in markets with the
             highest funding rates. Exit when rates normalize. Requires active
             management and capital allocation across BTC, ETH, SOL, oil, and
@@ -249,19 +249,19 @@ export default function CryptoFundingRatesExplainedPage() {
               <td className="p-3 font-semibold text-white">Bitcoin</td>
               <td className="p-3 font-mono">BTC</td>
               <td className="p-3">-0.01% to +0.03%/hr</td>
-              <td className="p-3 text-gray-400">Spikes in bull runs</td>
+              <td className="p-3 text-gray-300">Spikes in bull runs</td>
             </tr>
             <tr className="border-b border-[#2a2e39]">
               <td className="p-3 font-medium">Ethereum</td>
               <td className="p-3 font-mono">ETH</td>
               <td className="p-3">-0.01% to +0.02%/hr</td>
-              <td className="p-3 text-gray-400">Tracks BTC</td>
+              <td className="p-3 text-gray-300">Tracks BTC</td>
             </tr>
             <tr className="border-b border-[#2a2e39] bg-[#1a1d26]">
               <td className="p-3 font-medium">Solana</td>
               <td className="p-3 font-mono">SOL</td>
               <td className="p-3">-0.02% to +0.05%/hr</td>
-              <td className="p-3 text-gray-400">More volatile</td>
+              <td className="p-3 text-gray-300">More volatile</td>
             </tr>
             <tr className="border-b border-[#2a2e39] bg-amber-950/50/50">
               <td className="p-3 font-medium">Crude Oil (WTI)</td>
@@ -275,13 +275,13 @@ export default function CryptoFundingRatesExplainedPage() {
               <td className="p-3 font-medium">Brent Crude Oil</td>
               <td className="p-3 font-mono">BRENTOIL</td>
               <td className="p-3">0.01% to 0.12%+/hr</td>
-              <td className="p-3 text-gray-400">Similar to CL</td>
+              <td className="p-3 text-gray-300">Similar to CL</td>
             </tr>
             <tr className="border-b border-[#2a2e39] bg-[#141620]/50">
               <td className="p-3 font-medium">Hyperliquid</td>
               <td className="p-3 font-mono">HYPE</td>
               <td className="p-3">-0.02% to +0.04%/hr</td>
-              <td className="p-3 text-gray-400">Native token</td>
+              <td className="p-3 text-gray-300">Native token</td>
             </tr>
           </tbody>
         </table>
@@ -301,7 +301,7 @@ export default function CryptoFundingRatesExplainedPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50mber-800/30">
+        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-amber-400">Liquidation risk</h4>
@@ -312,7 +312,7 @@ export default function CryptoFundingRatesExplainedPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50mber-800/30">
+        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-amber-400">Basis risk (cash &amp; carry)</h4>
@@ -399,11 +399,11 @@ export default function CryptoFundingRatesExplainedPage() {
             <h4 className="font-bold text-white group-hover:text-brand">
               What Are Perpetual Futures? The Complete Beginner&apos;s Guide
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Learn how perps work, leverage, and funding—before you trade
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -414,12 +414,12 @@ export default function CryptoFundingRatesExplainedPage() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How to Trade Crude Oil in 2026
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Geopolitics, supply shocks, and why oil funding spiked during the
               Iran crisis
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

@@ -102,7 +102,7 @@ export default function WhyPrivacyMatters() {
           <Shield className="h-5 w-5 text-brand" />
           The Privacy Analogy
         </h3>
-        <p className="text-gray-300">
+        <p className="text-gray-200">
           You close the bathroom door not because you're doing something wrong, but because some things are simply private. You use curtains on your windows. You don't publish your bank statements on social media. Financial privacy is the same principle applied to money.
         </p>
       </div>
@@ -127,21 +127,21 @@ export default function WhyPrivacyMatters() {
             <EyeOff className="h-6 w-6 text-brand" />
           </div>
           <h4 className="font-semibold text-white mb-2">Ring Signatures</h4>
-          <p className="text-sm text-gray-400">Hides the sender by mixing your transaction with others. Impossible to determine who actually sent the funds.</p>
+          <p className="text-sm text-gray-300">Hides the sender by mixing your transaction with others. Impossible to determine who actually sent the funds.</p>
         </div>
         <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Lock className="h-6 w-6 text-brand" />
           </div>
           <h4 className="font-semibold text-white mb-2">Stealth Addresses</h4>
-          <p className="text-sm text-gray-400">Hides the receiver. One-time addresses are created for each transaction, unlinkable to your main address.</p>
+          <p className="text-sm text-gray-300">Hides the receiver. One-time addresses are created for each transaction, unlinkable to your main address.</p>
         </div>
         <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Search className="h-6 w-6 text-brand" />
           </div>
           <h4 className="font-semibold text-white mb-2">RingCT</h4>
-          <p className="text-sm text-gray-400">Hides the amount. The transaction amount is cryptographically concealed while still being mathematically verifiable.</p>
+          <p className="text-sm text-gray-300">Hides the amount. The transaction amount is cryptographically concealed while still being mathematically verifiable.</p>
         </div>
       </div>
 
@@ -169,32 +169,32 @@ export default function WhyPrivacyMatters() {
           </thead>
           <tbody>
             <tr>
-              <td className="p-4 border-b text-gray-300 font-medium">Transaction visibility</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Transaction visibility</td>
               <td className="p-4 border-b text-red-600">Fully public</td>
               <td className="p-4 border-b text-green-600">Hidden by default</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-300 font-medium">Sender identity</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Sender identity</td>
               <td className="p-4 border-b text-red-600">Traceable to address</td>
               <td className="p-4 border-b text-green-600">Hidden (ring signatures)</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-300 font-medium">Receiver identity</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Receiver identity</td>
               <td className="p-4 border-b text-red-600">Visible address</td>
               <td className="p-4 border-b text-green-600">Hidden (stealth addresses)</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-300 font-medium">Amount</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Amount</td>
               <td className="p-4 border-b text-red-600">Publicly visible</td>
               <td className="p-4 border-b text-green-600">Hidden (RingCT)</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-300 font-medium">Balance</td>
+              <td className="p-4 border-b text-gray-200 font-medium">Balance</td>
               <td className="p-4 border-b text-red-600">Anyone can check</td>
               <td className="p-4 border-b text-green-600">Only you know</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 text-gray-300 font-medium">Fungibility</td>
+              <td className="p-4 text-gray-200 font-medium">Fungibility</td>
               <td className="p-4 text-orange-600">Tainted coins can be blacklisted</td>
               <td className="p-4 text-green-600">All XMR is equal (fungible)</td>
             </tr>
@@ -255,7 +255,7 @@ export default function WhyPrivacyMatters() {
       </ol>
 
       {/* Warning Box */}
-      <div className="not-prose my-8 bg-amber-950/50mber-800/30 rounded-xl p-6">
+      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -311,9 +311,9 @@ export default function WhyPrivacyMatters() {
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Ready to Try Monero?</h4>
-            <p className="text-gray-400 text-sm">Learn how to swap Bitcoin for Monero in under 30 minutes</p>
+            <p className="text-gray-300 text-sm">Learn how to swap Bitcoin for Monero in under 30 minutes</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>

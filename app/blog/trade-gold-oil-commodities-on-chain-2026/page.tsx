@@ -89,22 +89,22 @@ export default function TradeGoldOilCommoditiesArticle() {
           <table className="w-full text-sm">
             <thead className="bg-[#1a1d26]">
               <tr>
-                <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                <th className="text-left px-6 py-4 font-semibold text-gray-200">
                   Market
                 </th>
-                <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                <th className="text-left px-6 py-4 font-semibold text-gray-200">
                   Symbol
                 </th>
-                <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                <th className="text-left px-6 py-4 font-semibold text-gray-200">
                   24h Volume
                 </th>
-                <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                <th className="text-left px-6 py-4 font-semibold text-gray-200">
                   Type
                 </th>
-                <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                <th className="text-left px-6 py-4 font-semibold text-gray-200">
                   Max Leverage
                 </th>
-                <th className="text-left px-6 py-4 font-semibold text-gray-300">
+                <th className="text-left px-6 py-4 font-semibold text-gray-200">
                   Hours
                 </th>
               </tr>
@@ -122,13 +122,13 @@ export default function TradeGoldOilCommoditiesArticle() {
                     CL
                   </Link>
                 </td>
-                <td className="px-6 py-4 text-gray-400">$1B+</td>
+                <td className="px-6 py-4 text-gray-300">$1B+</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-400 font-medium">50x</td>
+                <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
                   <span className="text-emerald-600 font-medium">24/7</span>
                 </td>
@@ -145,13 +145,13 @@ export default function TradeGoldOilCommoditiesArticle() {
                     BRENTOIL
                   </Link>
                 </td>
-                <td className="px-6 py-4 text-gray-400">$200M+</td>
+                <td className="px-6 py-4 text-gray-300">$200M+</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-400 font-medium">50x</td>
+                <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
                   <span className="text-emerald-600 font-medium">24/7</span>
                 </td>
@@ -166,13 +166,13 @@ export default function TradeGoldOilCommoditiesArticle() {
                     XAU
                   </Link>
                 </td>
-                <td className="px-6 py-4 text-gray-400">$50M+</td>
+                <td className="px-6 py-4 text-gray-300">$50M+</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-400 font-medium">50x</td>
+                <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
                   <span className="text-emerald-600 font-medium">24/7</span>
                 </td>
@@ -187,13 +187,13 @@ export default function TradeGoldOilCommoditiesArticle() {
                     XAG
                   </Link>
                 </td>
-                <td className="px-6 py-4 text-gray-400">$20M+</td>
+                <td className="px-6 py-4 text-gray-300">$20M+</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-400 font-medium">50x</td>
+                <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
                   <span className="text-emerald-600 font-medium">24/7</span>
                 </td>
@@ -263,7 +263,7 @@ export default function TradeGoldOilCommoditiesArticle() {
       </p>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-amber-950/50mber-800/30 rounded-xl p-6">
+        <div className="bg-amber-950/50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-amber-950/500 flex items-center justify-center">
               <Flame className="h-5 w-5 text-white" />
@@ -275,7 +275,7 @@ export default function TradeGoldOilCommoditiesArticle() {
               </span>
             </div>
           </div>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-200">
             Crude oil surged 35%+ in a week as Iran threatened to close the
             Strait of Hormuz—20% of global supply flows through that chokepoint.
             Oil briefly touched $119/barrel. Supply disruption is the largest
@@ -295,7 +295,7 @@ export default function TradeGoldOilCommoditiesArticle() {
               </span>
             </div>
           </div>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-200">
             Gold hits new all-time highs as investors flee to safe havens during
             the Iran conflict and broader market uncertainty. When crypto dumps
             and stocks wobble, gold tends to rise. The 5,000-year store of value
@@ -315,7 +315,7 @@ export default function TradeGoldOilCommoditiesArticle() {
               </span>
             </div>
           </div>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-200">
             Silver benefits from both precious-metal safe-haven flows and
             industrial demand (solar, EVs, electronics). Often more volatile than
             gold—bigger moves in both directions.
@@ -350,21 +350,21 @@ export default function TradeGoldOilCommoditiesArticle() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="py-2 font-medium text-gray-300">BTC</td>
+                  <td className="py-2 font-medium text-gray-200">BTC</td>
                   <td className="py-2">1.0</td>
                   <td className="py-2">0.85</td>
                   <td className="py-2 text-emerald-600 font-medium">0.1</td>
                   <td className="py-2 text-emerald-600 font-medium">-0.2</td>
                 </tr>
                 <tr>
-                  <td className="py-2 font-medium text-gray-300">Gold</td>
+                  <td className="py-2 font-medium text-gray-200">Gold</td>
                   <td className="py-2 text-emerald-600 font-medium">0.1</td>
                   <td className="py-2 text-emerald-600 font-medium">0.15</td>
                   <td className="py-2">1.0</td>
                   <td className="py-2 text-amber-600 font-medium">0.4</td>
                 </tr>
                 <tr>
-                  <td className="py-2 font-medium text-gray-300">Oil</td>
+                  <td className="py-2 font-medium text-gray-200">Oil</td>
                   <td className="py-2 text-emerald-600 font-medium">-0.2</td>
                   <td className="py-2 text-emerald-600 font-medium">-0.15</td>
                   <td className="py-2 text-amber-600 font-medium">0.4</td>
@@ -397,26 +397,26 @@ export default function TradeGoldOilCommoditiesArticle() {
               <h3 className="text-lg font-bold text-white mb-2">
                 Connect Wallet
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 Connect your crypto wallet (MetaMask, Rabby, etc.) to Coincess.
                 No signup or verification.
               </p>
             </div>
             <div className="hidden lg:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
-              <ChevronRight className="h-6 w-6 text-gray-300" />
+              <ChevronRight className="h-6 w-6 text-gray-200" />
             </div>
           </div>
 
           <div className="relative">
             <div className="bg-[#141620] border-2 border-[#2a2e39] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
-                <Compass className="h-7 w-7 text-gray-400" />
+                <Compass className="h-7 w-7 text-gray-300" />
               </div>
               <div className="text-sm font-bold text-gray-500 mb-1">Step 2</div>
               <h3 className="text-lg font-bold text-white mb-2">
                 Navigate to Commodity
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 Go to{" "}
                 <Link href="/trade/CL" className="text-brand hover:underline">
                   /trade/CL
@@ -433,39 +433,39 @@ export default function TradeGoldOilCommoditiesArticle() {
               </p>
             </div>
             <div className="hidden lg:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
-              <ChevronRight className="h-6 w-6 text-gray-300" />
+              <ChevronRight className="h-6 w-6 text-gray-200" />
             </div>
           </div>
 
           <div className="relative">
             <div className="bg-[#141620] border-2 border-[#2a2e39] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
-                <Target className="h-7 w-7 text-gray-400" />
+                <Target className="h-7 w-7 text-gray-300" />
               </div>
               <div className="text-sm font-bold text-gray-500 mb-1">Step 3</div>
               <h3 className="text-lg font-bold text-white mb-2">
                 Choose Direction &amp; Leverage
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 Long or short. Select leverage (1x–50x). Set size and optional
                 stop-loss.
               </p>
             </div>
             <div className="hidden lg:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
-              <ChevronRight className="h-6 w-6 text-gray-300" />
+              <ChevronRight className="h-6 w-6 text-gray-200" />
             </div>
           </div>
 
           <div>
             <div className="bg-[#141620] border-2 border-[#2a2e39] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
-                <Zap className="h-7 w-7 text-gray-400" />
+                <Zap className="h-7 w-7 text-gray-300" />
               </div>
               <div className="text-sm font-bold text-gray-500 mb-1">Step 4</div>
               <h3 className="text-lg font-bold text-white mb-2">
                 Execute Trade
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 Confirm the order. Position opens instantly. Manage from your
                 portfolio.
               </p>
@@ -477,14 +477,14 @@ export default function TradeGoldOilCommoditiesArticle() {
       <h2>Trading Strategies for Commodities</h2>
 
       <div className="not-prose my-8 space-y-4">
-        <div className="bg-emerald-950/50merald-200 rounded-xl p-6">
+        <div className="bg-emerald-950/50 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Globe className="h-5 w-5 text-emerald-600" />
             <h4 className="font-bold text-white">
               Geopolitical News Trading
             </h4>
           </div>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-200">
             Trade oil on Iran headlines, OPEC meetings, and supply shocks. When
             the Strait of Hormuz is threatened, go long CL or BRENTOIL. When
             ceasefire talks emerge, consider taking profit or flipping short.
@@ -495,12 +495,12 @@ export default function TradeGoldOilCommoditiesArticle() {
           </p>
         </div>
 
-        <div className="bg-amber-950/50mber-800/30 rounded-xl p-6">
+        <div className="bg-amber-950/50 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-5 w-5 text-amber-600" />
             <h4 className="font-bold text-white">Gold as a Hedge</h4>
           </div>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-200">
             Long gold during market uncertainty. When crypto crashes or stocks
             sell off, gold often rallies. Use XAU as a portfolio hedge—allocate
             5–15% to gold perps when you expect volatility. Reduces drawdowns
@@ -516,7 +516,7 @@ export default function TradeGoldOilCommoditiesArticle() {
             <TrendingUp className="h-5 w-5 text-blue-600" />
             <h4 className="font-bold text-white">Funding Rate Farming</h4>
           </div>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-200">
             When commodity perps trade in contango (perp &gt; spot), shorts earn
             funding from longs every hour. During supply crises, oil funding can
             spike to 0.1%+ per 8 hours. Go short the perp and collect—or pair
@@ -529,7 +529,7 @@ export default function TradeGoldOilCommoditiesArticle() {
       </div>
 
       {/* Risk Disclosure */}
-      <div className="not-prose my-10 bg-amber-950/50mber-800/30 rounded-xl p-6">
+      <div className="not-prose my-10 bg-amber-950/50 rounded-xl p-6">
         <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Risk Disclosure
@@ -591,11 +591,11 @@ export default function TradeGoldOilCommoditiesArticle() {
             <h4 className="font-bold text-white group-hover:text-brand">
               Oil Prices Are Surging: How the Iran War Is Driving Crude to $120
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Full breakdown of why oil is spiking and how to trade it
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
 
         <Link
@@ -606,12 +606,12 @@ export default function TradeGoldOilCommoditiesArticle() {
             <h4 className="font-bold text-white group-hover:text-brand">
               The Whales of Hyperliquid Oil: Who&apos;s Making Millions
             </h4>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               Meet the biggest traders in the oil market—whale positions and
               liquidation levels
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-brand" />
+          <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-brand" />
         </Link>
       </div>
     </BlogPostLayout>
