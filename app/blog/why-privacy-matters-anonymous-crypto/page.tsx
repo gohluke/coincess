@@ -37,9 +37,9 @@ export default function WhyPrivacyMatters() {
         <li>When and how much</li>
       </ul>
 
-      <div className="not-prose my-8 bg-red-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <Eye className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <Eye className="h-6 w-6 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-red-400 mb-2">Bitcoin's Public Ledger</h4>
             <p className="text-red-400 text-sm">
@@ -97,7 +97,7 @@ export default function WhyPrivacyMatters() {
         <li>True ownership of your money</li>
       </ul>
 
-      <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-brand/5 rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Shield className="h-5 w-5 text-brand" />
           The Privacy Analogy
@@ -121,22 +121,22 @@ export default function WhyPrivacyMatters() {
 
       <h3>The Three Pillars of Monero Privacy</h3>
 
-      <div className="not-prose my-8 grid md:grid-cols-3 gap-4">
-        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
+      <div className="not-prose border-none my-8 grid md:grid-cols-3 gap-4">
+        <div className="border-none rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <EyeOff className="h-6 w-6 text-brand" />
           </div>
           <h4 className="font-semibold text-white mb-2">Ring Signatures</h4>
           <p className="text-sm text-gray-300">Hides the sender by mixing your transaction with others. Impossible to determine who actually sent the funds.</p>
         </div>
-        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
+        <div className="border-none rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Lock className="h-6 w-6 text-brand" />
           </div>
           <h4 className="font-semibold text-white mb-2">Stealth Addresses</h4>
           <p className="text-sm text-gray-300">Hides the receiver. One-time addresses are created for each transaction, unlinkable to your main address.</p>
         </div>
-        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
+        <div className="border-none rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Search className="h-6 w-6 text-brand" />
           </div>
@@ -158,40 +158,40 @@ export default function WhyPrivacyMatters() {
 
       <h2>Bitcoin vs. Monero: A Privacy Comparison</h2>
 
-      <div className="not-prose my-8 overflow-x-auto">
+      <div className="not-prose border-none my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#1a1d26]">
-              <th className="text-left p-4 font-semibold text-white border-b">Feature</th>
-              <th className="text-left p-4 font-semibold text-white border-b">Bitcoin (BTC)</th>
-              <th className="text-left p-4 font-semibold text-white border-b">Monero (XMR)</th>
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">Feature</th>
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">Bitcoin (BTC)</th>
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">Monero (XMR)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="p-4 border-b text-gray-200 font-medium">Transaction visibility</td>
-              <td className="p-4 border-b text-red-600">Fully public</td>
-              <td className="p-4 border-b text-green-600">Hidden by default</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Transaction visibility</td>
+              <td className="p-4 border-b border-[#1a1d26] text-red-400">Fully public</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Hidden by default</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-200 font-medium">Sender identity</td>
-              <td className="p-4 border-b text-red-600">Traceable to address</td>
-              <td className="p-4 border-b text-green-600">Hidden (ring signatures)</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Sender identity</td>
+              <td className="p-4 border-b border-[#1a1d26] text-red-400">Traceable to address</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Hidden (ring signatures)</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-200 font-medium">Receiver identity</td>
-              <td className="p-4 border-b text-red-600">Visible address</td>
-              <td className="p-4 border-b text-green-600">Hidden (stealth addresses)</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Receiver identity</td>
+              <td className="p-4 border-b border-[#1a1d26] text-red-400">Visible address</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Hidden (stealth addresses)</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-200 font-medium">Amount</td>
-              <td className="p-4 border-b text-red-600">Publicly visible</td>
-              <td className="p-4 border-b text-green-600">Hidden (RingCT)</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Amount</td>
+              <td className="p-4 border-b border-[#1a1d26] text-red-400">Publicly visible</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Hidden (RingCT)</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-200 font-medium">Balance</td>
-              <td className="p-4 border-b text-red-600">Anyone can check</td>
-              <td className="p-4 border-b text-green-600">Only you know</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Balance</td>
+              <td className="p-4 border-b border-[#1a1d26] text-red-400">Anyone can check</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Only you know</td>
             </tr>
             <tr className="bg-[#1a1d26]">
               <td className="p-4 text-gray-200 font-medium">Fungibility</td>
@@ -255,9 +255,9 @@ export default function WhyPrivacyMatters() {
       </ol>
 
       {/* Warning Box */}
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-amber-400 mb-2">Important Note</h4>
             <p className="text-amber-400 text-sm">
@@ -304,10 +304,10 @@ export default function WhyPrivacyMatters() {
       </p>
 
       {/* CTA */}
-      <div className="not-prose mt-12">
+      <div className="not-prose border-none mt-12">
         <Link
           href="/blog/how-to-swap-bitcoin-for-monero"
-          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl border border-brand/20 transition-colors group"
+          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Ready to Try Monero?</h4>

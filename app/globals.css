@@ -78,6 +78,18 @@
   }
 }
 
+/* Kill ALL borders on blog card elements inside prose */
+.prose .not-prose,
+.prose .not-prose *:not(th):not(td):not(tr) {
+  border-color: transparent !important;
+  outline: none !important;
+}
+.prose .not-prose th,
+.prose .not-prose td,
+.prose .not-prose tr {
+  border-color: #1a1d26 !important;
+}
+
 /* PWA safe area for notched devices */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);

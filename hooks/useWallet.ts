@@ -40,6 +40,7 @@ export function useWallet(): WalletState {
       setAddress(effectiveAddr);
       setSource("privy");
       setLoading(false);
+      try { localStorage.setItem("coincess:lastWallet", effectiveAddr); } catch {}
 
       if (preferredWallet) {
         preferredWallet.getEthereumProvider().then((provider) => {
@@ -58,6 +59,7 @@ export function useWallet(): WalletState {
         if (addr) {
           setAddress(addr);
           setSource("metamask");
+          try { localStorage.setItem("coincess:lastWallet", addr); } catch {}
         }
         setLoading(false);
       });
@@ -66,6 +68,7 @@ export function useWallet(): WalletState {
         if (addr) {
           setAddress(addr);
           setSource("metamask");
+          try { localStorage.setItem("coincess:lastWallet", addr); } catch {}
         }
         setLoading(false);
       });
@@ -81,6 +84,7 @@ export function useWallet(): WalletState {
     if (addr) {
       setAddress(addr);
       setSource("metamask");
+      try { localStorage.setItem("coincess:lastWallet", addr); } catch {}
     }
   }, [privyLogin]);
 

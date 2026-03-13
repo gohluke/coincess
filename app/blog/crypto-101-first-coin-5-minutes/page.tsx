@@ -25,7 +25,7 @@ export default function Crypto101() {
       </p>
 
       {/* Big 3 Steps Visual */}
-      <div className="not-prose my-10">
+      <div className="not-prose border-none my-10">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -77,7 +77,7 @@ export default function Crypto101() {
         <li>Swap between different cryptocurrencies</li>
       </ul>
 
-      <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-brand/5 rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-brand" />
           Our Recommendation: Cake Wallet
@@ -124,7 +124,7 @@ export default function Crypto101() {
         </li>
       </ol>
 
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <h4 className="font-semibold text-amber-400 mb-2">⚠️ IMPORTANT: Your Seed Phrase</h4>
         <p className="text-amber-400 text-sm mb-3">
           Your wallet will show you 12-25 random words. This is your "seed phrase"—it's the master key to your money.
@@ -191,7 +191,7 @@ export default function Crypto101() {
         Once your wallet shows a balance, congratulations—you officially own cryptocurrency! You're now part of a global financial system that works 24/7, has no borders, and doesn't require anyone's permission.
       </p>
 
-      <div className="not-prose my-8 bg-emerald-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5" />
           What You Can Now Do
@@ -239,28 +239,28 @@ export default function Crypto101() {
 
       <h2>Glossary for Beginners</h2>
 
-      <div className="not-prose my-8 space-y-3">
-        <div className="border-b border-[#2a2e39] pb-3">
+      <div className="not-prose border-none my-8 space-y-3">
+        <div className="border-b border-[#1a1d26] pb-3">
           <strong className="text-white">Wallet</strong>
           <p className="text-sm text-gray-300">An app or device that stores your cryptocurrency</p>
         </div>
-        <div className="border-b border-[#2a2e39] pb-3">
+        <div className="border-b border-[#1a1d26] pb-3">
           <strong className="text-white">Seed Phrase</strong>
           <p className="text-sm text-gray-300">12-25 words that are the master key to your wallet</p>
         </div>
-        <div className="border-b border-[#2a2e39] pb-3">
+        <div className="border-b border-[#1a1d26] pb-3">
           <strong className="text-white">Address</strong>
           <p className="text-sm text-gray-300">Your "account number" that people send crypto to</p>
         </div>
-        <div className="border-b border-[#2a2e39] pb-3">
+        <div className="border-b border-[#1a1d26] pb-3">
           <strong className="text-white">HODL</strong>
           <p className="text-sm text-gray-300">"Hold On for Dear Life" – slang for holding long-term</p>
         </div>
-        <div className="border-b border-[#2a2e39] pb-3">
+        <div className="border-b border-[#1a1d26] pb-3">
           <strong className="text-white">Swap</strong>
           <p className="text-sm text-gray-300">Exchanging one cryptocurrency for another</p>
         </div>
-        <div className="border-b border-[#2a2e39] pb-3">
+        <div className="border-b border-[#1a1d26] pb-3">
           <strong className="text-white">KYC</strong>
           <p className="text-sm text-gray-300">"Know Your Customer" – ID verification required by some services</p>
         </div>
@@ -292,7 +292,7 @@ export default function Crypto101() {
       </p>
 
       {/* Related Articles CTA */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Keep Learning</h3>
         
         <Link

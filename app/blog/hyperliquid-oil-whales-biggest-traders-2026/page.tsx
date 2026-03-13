@@ -21,7 +21,7 @@ import {
 const post = getBlogPost("hyperliquid-oil-whales-biggest-traders-2026")!
 
 export const metadata: Metadata = {
-  title: `${post.title} | Coincess Intelligence`,
+  title: `${post.title} | Coincess Team`,
   description: post.description,
   keywords: post.keywords.join(", "),
   openGraph: {
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     description: post.description,
     type: "article",
     publishedTime: post.publishedAt,
-    authors: ["Coincess Intelligence"],
+    authors: ["Coincess Team"],
     tags: post.keywords,
   },
 }
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 export default function OilWhalesArticle() {
   return (
     <BlogPostLayout post={post}>
-      <div className="not-prose mb-8">
+      <div className="not-prose border-none mb-8">
         <LiveTicker coins={["BRENTOIL", "CL"]} />
       </div>
 
@@ -53,15 +53,15 @@ export default function OilWhalesArticle() {
       </p>
 
       <p>
-        In this Coincess Intelligence deep dive, we identify{" "}
+        In this Coincess Team deep dive, we identify{" "}
         <strong>the biggest players</strong> in the Hyperliquid oil market, break
         down their positions, and analyze what their moves tell us about where
         crude is headed next.
       </p>
 
       {/* Market stats banner */}
-      <div className="not-prose my-10">
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white">
+      <div className="not-prose border-none my-10">
+        <div className="border-none bg-[#141620] rounded-2xl p-6 text-white">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-5 w-5 text-amber-400" />
             <span className="text-sm font-bold text-amber-400 uppercase tracking-wider">
@@ -110,7 +110,7 @@ export default function OilWhalesArticle() {
       <h2>The Whales: Who&apos;s Moving the Market</h2>
 
       {/* Whale #1 */}
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="bg-red-950 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-red-800 flex items-center justify-center">
@@ -153,7 +153,7 @@ export default function OilWhalesArticle() {
       </div>
 
       {/* Whale #2 */}
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="bg-emerald-950merald-800 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-emerald-800 flex items-center justify-center">
@@ -195,7 +195,7 @@ export default function OilWhalesArticle() {
       </div>
 
       {/* Whale #3 */}
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="bg-blue-950 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center">
@@ -235,7 +235,7 @@ export default function OilWhalesArticle() {
       </div>
 
       {/* Whale #4 */}
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="bg-purple-950 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-purple-800 flex items-center justify-center">
@@ -278,7 +278,7 @@ export default function OilWhalesArticle() {
       </div>
 
       {/* Whale #5 */}
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="bg-slate-800 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
@@ -319,7 +319,7 @@ export default function OilWhalesArticle() {
       </div>
 
       {/* Whale #6 - Suspected insiders */}
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="bg-amber-950mber-700 rounded-2xl p-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-amber-800 flex items-center justify-center">
@@ -371,7 +371,7 @@ export default function OilWhalesArticle() {
         nearly all from the CL-USDC contract. Here&apos;s how it works:
       </p>
 
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="space-y-3">
           {[
             {
@@ -423,35 +423,35 @@ export default function OilWhalesArticle() {
 
       <h2>What the Whales Tell Us About Market Direction</h2>
 
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-emerald-950/50 rounded-xl p-6">
+          <div className="border-none bg-[#141620] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
+              <TrendingUp className="h-5 w-5 text-emerald-400" />
               <h3 className="text-lg font-bold text-white">Bull Signals</h3>
             </div>
             <ul className="space-y-2 text-sm text-gray-200">
               <li className="flex gap-2">
-                <span className="text-emerald-600 font-bold">&bull;</span>
+                <span className="text-emerald-400 font-bold">&bull;</span>
                 <span>
                   DeFi blue-chip money (Rune) is long with real size ($6M+)
                 </span>
               </li>
               <li className="flex gap-2">
-                <span className="text-emerald-600 font-bold">&bull;</span>
+                <span className="text-emerald-400 font-bold">&bull;</span>
                 <span>
                   Copytraders are amplifying the long signal with $7.7M in mirror positions
                 </span>
               </li>
               <li className="flex gap-2">
-                <span className="text-emerald-600 font-bold">&bull;</span>
+                <span className="text-emerald-400 font-bold">&bull;</span>
                 <span>
                   Massive short (13.37M) sitting at $120 liq — if oil approaches
                   that level, forced buying could cascade price to $130+
                 </span>
               </li>
               <li className="flex gap-2">
-                <span className="text-emerald-600 font-bold">&bull;</span>
+                <span className="text-emerald-400 font-bold">&bull;</span>
                 <span>
                   Strait of Hormuz still effectively closed with no ceasefire in sight
                 </span>
@@ -459,33 +459,33 @@ export default function OilWhalesArticle() {
             </ul>
           </div>
 
-          <div className="bg-red-950/50 rounded-xl p-6">
+          <div className="border-none bg-[#141620] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
-              <Flame className="h-5 w-5 text-red-600" />
+              <Flame className="h-5 w-5 text-red-400" />
               <h3 className="text-lg font-bold text-white">Bear Signals</h3>
             </div>
             <ul className="space-y-2 text-sm text-gray-200">
               <li className="flex gap-2">
-                <span className="text-red-600 font-bold">&bull;</span>
+                <span className="text-red-400 font-bold">&bull;</span>
                 <span>
                   Smart money (0xab961) profited from shorting the $111 top — suggests a local ceiling
                 </span>
               </li>
               <li className="flex gap-2">
-                <span className="text-red-600 font-bold">&bull;</span>
+                <span className="text-red-400 font-bold">&bull;</span>
                 <span>
                   IEA releasing 400M barrels — largest emergency reserve release
                   in history
                 </span>
               </li>
               <li className="flex gap-2">
-                <span className="text-red-600 font-bold">&bull;</span>
+                <span className="text-red-400 font-bold">&bull;</span>
                 <span>
                   Suspected insiders closed early at $74 — didn&apos;t ride the full move to $100+
                 </span>
               </li>
               <li className="flex gap-2">
-                <span className="text-red-600 font-bold">&bull;</span>
+                <span className="text-red-400 font-bold">&bull;</span>
                 <span>
                   Demand destruction kicking in: airlines cutting routes, factories slowing
                 </span>
@@ -531,7 +531,7 @@ export default function OilWhalesArticle() {
       </ul>
 
       {/* Risk callout */}
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Trading Risk Disclosure
@@ -545,8 +545,8 @@ export default function OilWhalesArticle() {
       </div>
 
       {/* Primary CTA */}
-      <div className="not-prose mt-12">
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-8 text-white text-center">
+      <div className="not-prose border-none mt-12">
+        <div className="border-none bg-[#141620] rounded-2xl p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-3">
             Trade Oil on Coincess
           </h3>
@@ -557,13 +557,13 @@ export default function OilWhalesArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/CL"
-              className="inline-block px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors"
+              className="inline-block px-8 py-3 bg-[#141620] text-white font-semibold rounded-full hover:bg-amber-400 transition-colors"
             >
               Trade Crude Oil (CL)
             </Link>
             <Link
               href="/trade/BRENTOIL"
-              className="inline-block px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/20"
+              className="inline-block px-8 py-3 bg-[#1a1d26] text-gray-200 font-semibold rounded-full hover:bg-[#252830] transition-colors"
             >
               Trade Brent Oil
             </Link>
@@ -572,7 +572,7 @@ export default function OilWhalesArticle() {
       </div>
 
       {/* Related articles */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Related Intelligence</h3>
 
         <Link

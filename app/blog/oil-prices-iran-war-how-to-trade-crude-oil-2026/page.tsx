@@ -19,7 +19,7 @@ import {
 const post = getBlogPost("oil-prices-iran-war-how-to-trade-crude-oil-2026")!
 
 export const metadata: Metadata = {
-  title: `${post.title} | Coincess Intelligence`,
+  title: `${post.title} | Coincess Team`,
   description: post.description,
   keywords: post.keywords.join(", "),
   openGraph: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     description: post.description,
     type: "article",
     publishedTime: post.publishedAt,
-    authors: ["Coincess Intelligence"],
+    authors: ["Coincess Team"],
     tags: post.keywords,
   },
 }
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 export default function OilPricesWarArticle() {
   return (
     <BlogPostLayout post={post}>
-      <div className="not-prose mb-8">
+      <div className="not-prose border-none mb-8">
         <LiveTicker coins={["BRENTOIL", "CL", "XAU"]} />
       </div>
 
@@ -52,7 +52,7 @@ export default function OilPricesWarArticle() {
       </p>
 
       <p>
-        In this Coincess Intelligence report, we break down exactly{" "}
+        In this Coincess Team report, we break down exactly{" "}
         <strong>why oil prices are spiking</strong>, what drives crude oil
         markets, and{" "}
         <strong>
@@ -62,10 +62,10 @@ export default function OilPricesWarArticle() {
       </p>
 
       {/* Key stats banner */}
-      <div className="not-prose my-10">
-        <div className="bg-gradient-to-r from-amber-950/50 to-orange-950/50 rounded-2xl p-6">
+      <div className="not-prose border-none my-10">
+        <div className="border-none bg-[#141620] rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Zap className="h-5 w-5 text-amber-600" />
+            <Zap className="h-5 w-5 text-amber-400" />
             <span className="text-sm font-bold text-amber-400 uppercase tracking-wider">
               Live Market Snapshot — March 2026
             </span>
@@ -80,11 +80,11 @@ export default function OilPricesWarArticle() {
               <div className="text-sm text-gray-300">WTI Crude (bbl)</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-red-600">+35.6%</div>
+              <div className="text-2xl font-bold text-red-400">+35.6%</div>
               <div className="text-sm text-gray-300">WTI Weekly Gain</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-red-600">16M bpd</div>
+              <div className="text-2xl font-bold text-red-400">16M bpd</div>
               <div className="text-sm text-gray-300">Supply Disrupted</div>
             </div>
           </div>
@@ -100,11 +100,11 @@ export default function OilPricesWarArticle() {
       </p>
 
       {/* Supply/Demand explainer cards */}
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-red-950/50 rounded-xl p-6">
+          <div className="border-none bg-[#141620] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="h-5 w-5 text-red-600" />
+              <TrendingUp className="h-5 w-5 text-red-400" />
               <h3 className="text-lg font-bold text-white">
                 Supply Shocks (Prices Rise)
               </h3>
@@ -150,7 +150,7 @@ export default function OilPricesWarArticle() {
             </ul>
           </div>
 
-          <div className="bg-emerald-950/50 rounded-xl p-6">
+          <div className="border-none bg-[#141620] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="h-5 w-5 text-green-600" />
               <h3 className="text-lg font-bold text-white">
@@ -215,7 +215,7 @@ export default function OilPricesWarArticle() {
       </p>
 
       {/* Hormuz explainer */}
-      <div className="not-prose my-8 bg-gray-900 text-white rounded-2xl p-6">
+      <div className="not-prose border-none my-8 bg-gray-900 text-white rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Globe className="h-5 w-5 text-amber-400" />
           <h3 className="text-lg font-bold">
@@ -258,7 +258,7 @@ export default function OilPricesWarArticle() {
 
       <p>Here&apos;s the timeline of key events:</p>
 
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="space-y-4">
           {[
             {
@@ -289,7 +289,7 @@ export default function OilPricesWarArticle() {
           ].map((item) => (
             <div key={item.date} className="flex gap-4 items-start">
               <div className="flex-shrink-0 w-16 text-right">
-                <span className="text-sm font-bold text-amber-600 bg-amber-950/50 px-2 py-1 rounded">
+                <span className="text-sm font-bold text-amber-400 bg-[#141620] px-2 py-1 rounded">
                   {item.date}
                 </span>
               </div>
@@ -364,7 +364,7 @@ export default function OilPricesWarArticle() {
       </ul>
 
       {/* Risk callout */}
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Trading Risk Disclosure
@@ -388,13 +388,13 @@ export default function OilPricesWarArticle() {
       </p>
 
       {/* How it works */}
-      <div className="not-prose my-10">
+      <div className="not-prose border-none my-10">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-amber-950/500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#141620] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Shield className="h-8 w-8 text-white" />
             </div>
-            <div className="text-3xl font-bold text-amber-600 mb-2">
+            <div className="text-3xl font-bold text-amber-400 mb-2">
               Step 1
             </div>
             <h3 className="text-lg font-semibold text-white mb-1">
@@ -406,10 +406,10 @@ export default function OilPricesWarArticle() {
             </p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-amber-950/500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#141620] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Target className="h-8 w-8 text-white" />
             </div>
-            <div className="text-3xl font-bold text-amber-600 mb-2">
+            <div className="text-3xl font-bold text-amber-400 mb-2">
               Step 2
             </div>
             <h3 className="text-lg font-semibold text-white mb-1">
@@ -421,10 +421,10 @@ export default function OilPricesWarArticle() {
             </p>
           </div>
           <div className="text-center">
-            <div className="w-16 h-16 bg-amber-950/500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#141620] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <DollarSign className="h-8 w-8 text-white" />
             </div>
-            <div className="text-3xl font-bold text-amber-600 mb-2">
+            <div className="text-3xl font-bold text-amber-400 mb-2">
               Step 3
             </div>
             <h3 className="text-lg font-semibold text-white mb-1">
@@ -440,8 +440,8 @@ export default function OilPricesWarArticle() {
 
       <h3>Available Oil Markets on Coincess</h3>
 
-      <div className="not-prose my-8">
-        <div className="border border-[#2a2e39] rounded-xl overflow-hidden">
+      <div className="not-prose border-none my-8">
+        <div className=" rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-[#1a1d26]">
               <tr>
@@ -460,7 +460,7 @@ export default function OilPricesWarArticle() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-[#2a2e39]">
+              <tr className="border-t border-[#1a1d26]">
                 <td className="px-4 py-3 font-medium text-white">
                   WTI Crude Oil
                 </td>
@@ -468,7 +468,7 @@ export default function OilPricesWarArticle() {
                 <td className="px-4 py-3 text-gray-300">Perpetual</td>
                 <td className="px-4 py-3 text-gray-300">50x</td>
               </tr>
-              <tr className="border-t border-[#2a2e39] bg-[#141620]/50">
+              <tr className="border-t border-[#1a1d26] bg-[#141620]/50">
                 <td className="px-4 py-3 font-medium text-white">
                   Brent Crude Oil
                 </td>
@@ -519,8 +519,8 @@ export default function OilPricesWarArticle() {
         from conservative to aggressive:
       </p>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="bg-emerald-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-5 w-5 text-green-600" />
             <h4 className="font-bold text-white">
@@ -539,9 +539,9 @@ export default function OilPricesWarArticle() {
           </p>
         </div>
 
-        <div className="bg-amber-950/50 rounded-xl p-6">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-5 w-5 text-amber-600" />
+            <TrendingUp className="h-5 w-5 text-amber-400" />
             <h4 className="font-bold text-white">
               Moderate: Momentum Long
             </h4>
@@ -557,9 +557,9 @@ export default function OilPricesWarArticle() {
           </p>
         </div>
 
-        <div className="bg-red-950/50 rounded-xl p-6">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <Flame className="h-5 w-5 text-red-600" />
+            <Flame className="h-5 w-5 text-red-400" />
             <h4 className="font-bold text-white">
               Aggressive: Breakout Play to $120+
             </h4>
@@ -597,14 +597,14 @@ export default function OilPricesWarArticle() {
       </p>
 
       <p>
-        <strong>Coincess Intelligence</strong> will continue to cover the
+        <strong>Coincess Team</strong> will continue to cover the
         Iran-Oil crisis with real-time analysis and trading signals. Follow our
         blog and join the community to stay ahead of the market.
       </p>
 
       {/* Primary CTA */}
-      <div className="not-prose mt-12">
-        <div className="bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl p-8 text-white text-center">
+      <div className="not-prose border-none mt-12">
+        <div className="border-none bg-[#141620] rounded-2xl p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-3">
             Trade Oil Now on Coincess
           </h3>
@@ -621,7 +621,7 @@ export default function OilPricesWarArticle() {
             </Link>
             <Link
               href="/trade/BRENTOIL"
-              className="inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-full hover:bg-[#141620]/30 transition-colors border border-white/30"
+              className="inline-block px-8 py-3 bg-[#141620]/20 text-white font-semibold rounded-full hover:bg-[#141620]/30 transition-colors"
             >
               Trade Brent Oil
             </Link>
@@ -630,7 +630,7 @@ export default function OilPricesWarArticle() {
       </div>
 
       {/* Related articles */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Keep Learning</h3>
 
         <Link

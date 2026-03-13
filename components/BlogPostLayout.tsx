@@ -80,7 +80,7 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
         {/* Content */}
         <article className="py-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-            <div className="prose prose-lg prose-invert max-w-none prose-headings:text-white prose-p:text-gray-200 prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-ul:text-gray-200 prose-ol:text-gray-200 prose-blockquote:border-brand/50 prose-blockquote:text-gray-300 prose-code:text-emerald-400 prose-code:bg-[#141620] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-[#141620] prose-pre:border prose-pre:border-[#2a2e39] prose-hr:border-[#2a2e39] prose-th:text-gray-200 prose-td:text-gray-300">
+            <div className="prose prose-lg prose-invert max-w-none prose-headings:text-white prose-p:text-gray-200 prose-a:text-brand prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-ul:text-gray-200 prose-ol:text-gray-200 prose-blockquote:border-brand/50 prose-blockquote:text-gray-300 prose-code:text-emerald-400 prose-code:bg-[#141620] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-[#141620] prose-hr:border-[#1a1d26] prose-th:text-gray-200 prose-td:text-gray-300">
               {children}
             </div>
 
@@ -100,21 +100,21 @@ export function BlogPostLayout({ post, children, tickerCoins }: BlogPostLayoutPr
             </div>
 
             {/* CTA */}
-            <div className="mt-12 bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-white text-center">
-              <h3 className="text-2xl font-bold mb-3">Start Trading on Coincess</h3>
-              <p className="text-white/80 mb-6 max-w-lg mx-auto">
+            <div className="mt-12 bg-[#141620] rounded-2xl p-8 text-center">
+              <h3 className="text-2xl font-bold mb-3 text-white">Start Trading on Coincess</h3>
+              <p className="text-gray-300 mb-6 max-w-lg mx-auto">
                 Trade crypto, oil, and gold with up to 50x leverage. No KYC required.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
                   href="/trade/BTC"
-                  className="inline-block px-8 py-3 bg-white text-brand font-semibold rounded-full hover:bg-gray-100 transition-colors"
+                  className="inline-block px-8 py-3 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
                 >
                   Trade Now
                 </Link>
                 <Link
                   href="/blog"
-                  className="inline-block px-8 py-3 bg-white/20 text-white font-semibold rounded-full hover:bg-white/30 transition-colors border border-white/30"
+                  className="inline-block px-8 py-3 bg-[#1a1d26] text-gray-200 font-semibold rounded-full hover:bg-[#252830] transition-colors"
                 >
                   More Articles
                 </Link>

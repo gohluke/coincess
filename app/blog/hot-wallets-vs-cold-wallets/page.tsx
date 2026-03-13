@@ -25,18 +25,18 @@ export default function HotWalletsVsColdWallets() {
       </p>
 
       {/* Comparison Table */}
-      <div className="not-prose my-8 overflow-x-auto">
+      <div className="not-prose border-none my-8 overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-[#1a1d26]">
-              <th className="text-left p-4 font-semibold text-white border-b">Feature</th>
-              <th className="text-left p-4 font-semibold text-white border-b">
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">Feature</th>
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">
                 <div className="flex items-center gap-2">
                   <Smartphone className="h-5 w-5 text-orange-500" />
                   Hot Wallet
                 </div>
               </th>
-              <th className="text-left p-4 font-semibold text-white border-b">
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">
                 <div className="flex items-center gap-2">
                   <HardDrive className="h-5 w-5 text-blue-500" />
                   Cold Wallet
@@ -46,33 +46,33 @@ export default function HotWalletsVsColdWallets() {
           </thead>
           <tbody>
             <tr>
-              <td className="p-4 border-b text-gray-200">Internet Connection</td>
-              <td className="p-4 border-b text-gray-200">Always connected</td>
-              <td className="p-4 border-b text-gray-200">Offline (air-gapped)</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Internet Connection</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Always connected</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Offline (air-gapped)</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-200">Security Level</td>
-              <td className="p-4 border-b text-orange-600 font-medium">Medium</td>
-              <td className="p-4 border-b text-green-600 font-medium">Very High</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Security Level</td>
+              <td className="p-4 border-b border-[#1a1d26] text-orange-600 font-medium">Medium</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600 font-medium">Very High</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-200">Convenience</td>
-              <td className="p-4 border-b text-green-600 font-medium">Very High</td>
-              <td className="p-4 border-b text-orange-600 font-medium">Lower</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Convenience</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600 font-medium">Very High</td>
+              <td className="p-4 border-b border-[#1a1d26] text-orange-600 font-medium">Lower</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-200">Cost</td>
-              <td className="p-4 border-b text-gray-200">Free</td>
-              <td className="p-4 border-b text-gray-200">$50-$200+</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Cost</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Free</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">$50-$200+</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-200">Best For</td>
-              <td className="p-4 border-b text-gray-200">Daily transactions, small amounts</td>
-              <td className="p-4 border-b text-gray-200">Long-term storage, large amounts</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Best For</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Daily transactions, small amounts</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Long-term storage, large amounts</td>
             </tr>
             <tr className="bg-[#1a1d26]">
               <td className="p-4 text-gray-200">Hack Risk</td>
-              <td className="p-4 text-red-600 font-medium">Vulnerable to online attacks</td>
+              <td className="p-4 text-red-400 font-medium">Vulnerable to online attacks</td>
               <td className="p-4 text-green-600 font-medium">Nearly impossible remotely</td>
             </tr>
           </tbody>
@@ -92,8 +92,8 @@ export default function HotWalletsVsColdWallets() {
         <li><strong>Exchange wallets</strong> (Coinbase, Binance—though you don't own the keys)</li>
       </ul>
 
-      <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-emerald-950/50 rounded-xl p-5">
+      <div className="not-prose border-none my-8 grid md:grid-cols-2 gap-4">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Hot Wallet Pros
@@ -106,7 +106,7 @@ export default function HotWalletsVsColdWallets() {
             <li>• Works on any device</li>
           </ul>
         </div>
-        <div className="bg-red-950/50 rounded-xl p-5">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Hot Wallet Cons
@@ -139,8 +139,8 @@ export default function HotWalletsVsColdWallets() {
         Think of it like a super-secure USB drive that only signs transactions when you physically press a button.
       </p>
 
-      <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-emerald-950/50 rounded-xl p-5">
+      <div className="not-prose border-none my-8 grid md:grid-cols-2 gap-4">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Cold Wallet Pros
@@ -153,7 +153,7 @@ export default function HotWalletsVsColdWallets() {
             <li>• Ideal for long-term holdings</li>
           </ul>
         </div>
-        <div className="bg-red-950/50 rounded-xl p-5">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Cold Wallet Cons
@@ -170,7 +170,7 @@ export default function HotWalletsVsColdWallets() {
 
       <h3>Recommended Hardware Wallets</h3>
 
-      <div className="not-prose my-6 space-y-4">
+      <div className="not-prose border-none my-6 space-y-4">
         <a
           href="https://shop.ledger.com"
           target="_blank"
@@ -206,7 +206,7 @@ export default function HotWalletsVsColdWallets() {
         Most experienced crypto users follow this approach:
       </p>
 
-      <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-brand/5 rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Shield className="h-5 w-5 text-brand" />
           Recommended Setup
@@ -259,9 +259,9 @@ export default function HotWalletsVsColdWallets() {
       </ol>
 
       {/* Warning Box */}
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-amber-400 mb-2">Critical Security Rules</h4>
             <ul className="space-y-1 text-amber-400 text-sm">

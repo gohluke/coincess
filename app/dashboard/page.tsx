@@ -1289,6 +1289,8 @@ function PnlCalendar({
     }
   }
 
+  const maxAbsPnl = dayPnls.reduce<number>((mx, v) => Math.max(mx, Math.abs(v ?? 0)), 0);
+
   const totalBarWidth = Math.abs(profitAmt) + Math.abs(lossAmt);
   const profitPct = totalBarWidth > 0 ? (Math.abs(profitAmt) / totalBarWidth) * 100 : 50;
 
@@ -1364,25 +1366,31 @@ function PnlCalendar({
             const isProfit = hasData && pnl > 0;
             const isLoss = hasData && pnl < 0;
             const isSelected = selectedDay === key;
+            const intensity = hasData && maxAbsPnl > 0 ? Math.min(Math.abs(pnl!) / maxAbsPnl, 1) : 0;
+            const bgOpacity = hasData ? 0.08 + intensity * 0.35 : 0;
+            const bgColor = isProfit
+              ? `rgba(16, 185, 129, ${bgOpacity})`
+              : isLoss
+              ? `rgba(239, 68, 68, ${bgOpacity})`
+              : undefined;
             return (
               <button
                 key={day}
                 onClick={() => setSelectedDay(isSelected ? null : (hasData ? key : null))}
-                className={`aspect-square border-r border-b border-[#2a2e3e]/20 p-1 relative transition-colors text-left ${
+                style={isSelected ? undefined : bgColor ? { backgroundColor: bgColor } : undefined}
+                className={`aspect-square border-r border-b border-[#2a2e3e]/20 p-1 relative transition-colors flex flex-col ${
                   isSelected
                     ? "ring-2 ring-brand ring-inset bg-brand/10"
-                    : isProfit ? "bg-emerald-500/15 hover:bg-emerald-500/25" : isLoss ? "bg-red-500/15 hover:bg-red-500/25" : hasData ? "hover:bg-[#1a1d2e]" : ""
+                    : hasData ? "hover:brightness-125" : ""
                 } ${hasData ? "cursor-pointer" : "cursor-default"}`}
               >
-                <span className={`text-[10px] font-medium ${isToday(day) ? "text-brand font-bold" : "text-[#848e9c]"}`}>
+                <span className={`text-[10px] leading-none font-medium ${isToday(day) ? "text-brand font-bold" : "text-[#848e9c]"}`}>
                   {day}
                 </span>
                 {hasData && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-[10px] font-bold ${isProfit ? "text-emerald-400" : "text-red-400"}`}>
-                      {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
-                    </span>
-                  </div>
+                  <span className={`text-[10px] font-bold mt-auto self-center ${isProfit ? "text-emerald-400" : "text-red-400"}`}>
+                    {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+                  </span>
                 )}
               </button>
             );

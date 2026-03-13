@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import Script from "next/script"
 import { Plus_Jakarta_Sans } from "next/font/google"
 import { AppShell } from "@/components/AppShell"
+import { AnalyticsTracker } from "@/components/AnalyticsTracker"
 import { BRAND_CONFIG } from "@/lib/brand.config"
 import "./globals.css"
 
@@ -157,6 +158,7 @@ export default function RootLayout({
             navigator.serviceWorker.register('/sw.js').catch(() => {});
           }
         `}</Script>
+        <AnalyticsTracker />
         <AppShell>{children}</AppShell>
       </body>
     </html>

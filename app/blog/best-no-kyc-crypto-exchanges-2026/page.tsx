@@ -18,7 +18,7 @@ import {
 const post = getBlogPost("best-no-kyc-crypto-exchanges-2026")!
 
 export const metadata: Metadata = {
-  title: `${post.title} | Coincess Intelligence`,
+  title: `${post.title} | Coincess Team`,
   description: post.description,
   keywords: post.keywords.join(", "),
   openGraph: {
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     description: post.description,
     type: "article",
     publishedTime: post.publishedAt,
-    authors: ["Coincess Intelligence"],
+    authors: ["Coincess Team"],
     tags: post.keywords,
   },
 }
@@ -54,10 +54,10 @@ export default function BestNoKycExchanges2026() {
 
       <h2>Why Trade Without KYC?</h2>
 
-      <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#1a1d26] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-red-900/30 flex items-center justify-center mb-3">
-            <Shield className="h-5 w-5 text-red-600" />
+      <div className="not-prose border-none my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+            <Shield className="h-5 w-5 text-red-400" />
           </div>
           <h4 className="font-bold text-white mb-2">Privacy from Data Breaches</h4>
           <p className="text-sm text-gray-300">
@@ -65,9 +65,9 @@ export default function BestNoKycExchanges2026() {
             address, and selfie. No KYC = nothing to leak.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
-            <Zap className="h-5 w-5 text-emerald-600" />
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+            <Zap className="h-5 w-5 text-emerald-400" />
           </div>
           <h4 className="font-bold text-white mb-2">Instant Access</h4>
           <p className="text-sm text-gray-300">
@@ -75,9 +75,9 @@ export default function BestNoKycExchanges2026() {
             seconds.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center mb-3">
-            <Eye className="h-5 w-5 text-blue-600" />
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
+            <Eye className="h-5 w-5 text-blue-400" />
           </div>
           <h4 className="font-bold text-white mb-2">Financial Freedom</h4>
           <p className="text-sm text-gray-300">
@@ -85,9 +85,9 @@ export default function BestNoKycExchanges2026() {
             in your region&quot; nonsense.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
-            <Lock className="h-5 w-5 text-amber-600" />
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+            <Lock className="h-5 w-5 text-amber-400" />
           </div>
           <h4 className="font-bold text-white mb-2">Censorship Resistance</h4>
           <p className="text-sm text-gray-300">
@@ -99,9 +99,9 @@ export default function BestNoKycExchanges2026() {
 
       <h2>The Best No-KYC Exchanges Ranked</h2>
 
-      <div className="not-prose my-8 space-y-6">
+      <div className="not-prose border-none my-8 space-y-6">
         {/* #1 Coincess */}
-        <div className="border-2 border-brand rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10 ">
+        <div className="border-none rounded-2xl p-6 bg-[#141620] ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold">
               1
@@ -121,19 +121,19 @@ export default function BestNoKycExchanges2026() {
           </p>
           <div className="grid sm:grid-cols-2 gap-3 mb-4">
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <CheckCircle className="h-4 w-4 text-emerald-400" />
               Swap aggregation (best rates across DEXs)
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <CheckCircle className="h-4 w-4 text-emerald-400" />
               Perpetual futures up to 50x
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <CheckCircle className="h-4 w-4 text-emerald-400" />
               Oil &amp; gold 24/7
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <CheckCircle className="h-4 w-4 text-emerald-400" />
               No account needed
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function BestNoKycExchanges2026() {
             </Link>
             <Link
               href="/swap-guide"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#141620] border border-brand text-brand font-semibold rounded-full hover:bg-brand/5 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1a1d26] text-brand font-semibold rounded-full hover:bg-[#252830] transition-colors"
             >
               Swap Guide
             </Link>
@@ -155,7 +155,7 @@ export default function BestNoKycExchanges2026() {
         </div>
 
         {/* #2 Hyperliquid */}
-        <div className="border-2 border-emerald-300 rounded-2xl p-6 bg-emerald-950/50">
+        <div className="border-none rounded-2xl p-6 bg-[#141620]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold">
               2
@@ -189,14 +189,14 @@ export default function BestNoKycExchanges2026() {
         </div>
 
         {/* #3 MEXC */}
-        <div className="border border-slate-600 rounded-2xl p-6 bg-[#1a1d26]">
+        <div className="border-none rounded-2xl p-6 bg-[#1a1d26]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-slate-600 text-white flex items-center justify-center text-xl font-bold">
               3
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">MEXC</h3>
-              <span className="text-sm text-slate-600 font-medium">
+              <span className="text-sm text-gray-400 font-medium">
                 CEX • Optional KYC • High Limits Without Verification
               </span>
             </div>
@@ -223,14 +223,14 @@ export default function BestNoKycExchanges2026() {
         </div>
 
         {/* #4 dYdX */}
-        <div className="border border-slate-600 rounded-2xl p-6 bg-[#1a1d26]">
+        <div className="border-none rounded-2xl p-6 bg-[#1a1d26]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-slate-600 text-white flex items-center justify-center text-xl font-bold">
               4
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">dYdX</h3>
-              <span className="text-sm text-slate-600 font-medium">
+              <span className="text-sm text-gray-400 font-medium">
                 DEX • No KYC • Perpetuals Only
               </span>
             </div>
@@ -257,14 +257,14 @@ export default function BestNoKycExchanges2026() {
         </div>
 
         {/* #5 SideShift.ai */}
-        <div className="border border-slate-600 rounded-2xl p-6 bg-[#1a1d26]">
+        <div className="border-none rounded-2xl p-6 bg-[#1a1d26]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-slate-600 text-white flex items-center justify-center text-xl font-bold">
               5
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">SideShift.ai</h3>
-              <span className="text-sm text-slate-600 font-medium">
+              <span className="text-sm text-gray-400 font-medium">
                 Swap Only • No KYC • Atomic Swaps
               </span>
             </div>
@@ -291,14 +291,14 @@ export default function BestNoKycExchanges2026() {
         </div>
 
         {/* #6 Bisq */}
-        <div className="border border-slate-600 rounded-2xl p-6 bg-[#1a1d26]">
+        <div className="border-none rounded-2xl p-6 bg-[#1a1d26]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-slate-600 text-white flex items-center justify-center text-xl font-bold">
               6
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">Bisq</h3>
-              <span className="text-sm text-slate-600 font-medium">
+              <span className="text-sm text-gray-400 font-medium">
                 P2P • No KYC • Desktop Only
               </span>
             </div>
@@ -327,89 +327,89 @@ export default function BestNoKycExchanges2026() {
 
       <h2>Quick Comparison Table</h2>
 
-      <div className="not-prose my-8 overflow-x-auto">
+      <div className="not-prose border-none my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#1a1d26]">
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Platform
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 KYC Required
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Leverage
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Assets
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Commodities
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Fees
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Speed
               </th>
             </tr>
           </thead>
           <tbody>
             <tr className="bg-brand/5">
-              <td className="p-3 border-b font-semibold text-white">
+              <td className="p-3 border-b border-[#1a1d26] font-semibold text-white">
                 Coincess
               </td>
-              <td className="p-3 border-b text-emerald-600">No</td>
-              <td className="p-3 border-b">Up to 50x</td>
-              <td className="p-3 border-b">Crypto + swaps</td>
-              <td className="p-3 border-b text-emerald-600">Oil, Gold</td>
-              <td className="p-3 border-b">Competitive</td>
-              <td className="p-3 border-b text-emerald-600">Instant</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">No</td>
+              <td className="p-3 border-b border-[#1a1d26]">Up to 50x</td>
+              <td className="p-3 border-b border-[#1a1d26]">Crypto + swaps</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">Oil, Gold</td>
+              <td className="p-3 border-b border-[#1a1d26]">Competitive</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">Instant</td>
             </tr>
             <tr>
-              <td className="p-3 border-b font-medium">Hyperliquid</td>
-              <td className="p-3 border-b text-emerald-600">No</td>
-              <td className="p-3 border-b">Up to 50x</td>
-              <td className="p-3 border-b">Crypto</td>
-              <td className="p-3 border-b text-emerald-600">Oil, Gold</td>
-              <td className="p-3 border-b">Low</td>
-              <td className="p-3 border-b text-emerald-600">Instant</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Hyperliquid</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">No</td>
+              <td className="p-3 border-b border-[#1a1d26]">Up to 50x</td>
+              <td className="p-3 border-b border-[#1a1d26]">Crypto</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">Oil, Gold</td>
+              <td className="p-3 border-b border-[#1a1d26]">Low</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">Instant</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-3 border-b font-medium">MEXC</td>
-              <td className="p-3 border-b text-amber-600">Optional</td>
-              <td className="p-3 border-b">Up to 125x</td>
-              <td className="p-3 border-b">Wide</td>
-              <td className="p-3 border-b text-slate-400">—</td>
-              <td className="p-3 border-b">Low</td>
-              <td className="p-3 border-b text-emerald-600">Instant</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">MEXC</td>
+              <td className="p-3 border-b border-[#1a1d26] text-amber-400">Optional</td>
+              <td className="p-3 border-b border-[#1a1d26]">Up to 125x</td>
+              <td className="p-3 border-b border-[#1a1d26]">Wide</td>
+              <td className="p-3 border-b border-[#1a1d26] text-slate-400">—</td>
+              <td className="p-3 border-b border-[#1a1d26]">Low</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">Instant</td>
             </tr>
             <tr>
-              <td className="p-3 border-b font-medium">dYdX</td>
-              <td className="p-3 border-b text-emerald-600">No</td>
-              <td className="p-3 border-b">Up to 20x</td>
-              <td className="p-3 border-b">Limited</td>
-              <td className="p-3 border-b text-slate-400">—</td>
-              <td className="p-3 border-b">Low</td>
-              <td className="p-3 border-b text-emerald-600">Instant</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">dYdX</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">No</td>
+              <td className="p-3 border-b border-[#1a1d26]">Up to 20x</td>
+              <td className="p-3 border-b border-[#1a1d26]">Limited</td>
+              <td className="p-3 border-b border-[#1a1d26] text-slate-400">—</td>
+              <td className="p-3 border-b border-[#1a1d26]">Low</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">Instant</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-3 border-b font-medium">SideShift.ai</td>
-              <td className="p-3 border-b text-emerald-600">No</td>
-              <td className="p-3 border-b text-slate-400">—</td>
-              <td className="p-3 border-b">Swaps only</td>
-              <td className="p-3 border-b text-slate-400">—</td>
-              <td className="p-3 border-b">~1%</td>
-              <td className="p-3 border-b">10–30 min</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">SideShift.ai</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400">No</td>
+              <td className="p-3 border-b border-[#1a1d26] text-slate-400">—</td>
+              <td className="p-3 border-b border-[#1a1d26]">Swaps only</td>
+              <td className="p-3 border-b border-[#1a1d26] text-slate-400">—</td>
+              <td className="p-3 border-b border-[#1a1d26]">~1%</td>
+              <td className="p-3 border-b border-[#1a1d26]">10–30 min</td>
             </tr>
             <tr>
               <td className="p-3 font-medium">Bisq</td>
-              <td className="p-3 text-emerald-600">No</td>
+              <td className="p-3 text-emerald-400">No</td>
               <td className="p-3 text-slate-400">—</td>
               <td className="p-3">P2P</td>
               <td className="p-3 text-slate-400">—</td>
               <td className="p-3">Variable</td>
-              <td className="p-3 text-amber-600">Hours–days</td>
+              <td className="p-3 text-amber-400">Hours–days</td>
             </tr>
           </tbody>
         </table>
@@ -417,9 +417,9 @@ export default function BestNoKycExchanges2026() {
 
       <h2>How to Start Trading on Coincess in 60 Seconds</h2>
 
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="border-2 border-brand/30 rounded-xl p-6 bg-[#141620] text-center">
+          <div className="border-none rounded-xl p-6 bg-[#141620] text-center">
             <div className="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4">
               <Wallet className="h-7 w-7 text-brand" />
             </div>
@@ -428,7 +428,7 @@ export default function BestNoKycExchanges2026() {
               Connect MetaMask, Rabby, or any Web3 wallet. No signup, no email.
             </p>
           </div>
-          <div className="border-2 border-brand/30 rounded-xl p-6 bg-[#141620] text-center">
+          <div className="border-none rounded-xl p-6 bg-[#141620] text-center">
             <div className="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4">
               <BarChart3 className="h-7 w-7 text-brand" />
             </div>
@@ -437,7 +437,7 @@ export default function BestNoKycExchanges2026() {
               Choose BTC, ETH, oil, gold—or use the swap guide for best rates.
             </p>
           </div>
-          <div className="border-2 border-brand/30 rounded-xl p-6 bg-[#141620] text-center">
+          <div className="border-none rounded-xl p-6 bg-[#141620] text-center">
             <div className="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4">
               <Coins className="h-7 w-7 text-brand" />
             </div>
@@ -461,9 +461,9 @@ export default function BestNoKycExchanges2026() {
         when in doubt, consult a professional.
       </p>
 
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-amber-400 mb-2">
               Risk Disclosure
@@ -480,8 +480,8 @@ export default function BestNoKycExchanges2026() {
       </div>
 
       {/* CTA */}
-      <div className="not-prose mt-12">
-        <div className="bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-white text-center">
+      <div className="not-prose border-none mt-12">
+        <div className="border-none bg-[#141620] rounded-2xl p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-3">
             Trade Privately. Start Now.
           </h3>
@@ -492,14 +492,14 @@ export default function BestNoKycExchanges2026() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
             >
               Trade BTC
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/swap-guide"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#1a1d26] text-gray-200 font-semibold rounded-full hover:bg-[#252830] transition-colors"
             >
               Swap Guide
             </Link>
@@ -508,7 +508,7 @@ export default function BestNoKycExchanges2026() {
       </div>
 
       {/* Related articles */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link

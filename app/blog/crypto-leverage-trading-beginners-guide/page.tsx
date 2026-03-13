@@ -16,7 +16,7 @@ import {
 const post = getBlogPost("crypto-leverage-trading-beginners-guide")!
 
 export const metadata: Metadata = {
-  title: `${post.title} | Coincess Intelligence`,
+  title: `${post.title} | Coincess Team`,
   description: post.description,
   keywords: post.keywords.join(", "),
   openGraph: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     description: post.description,
     type: "article",
     publishedTime: post.publishedAt,
-    authors: ["Coincess Intelligence"],
+    authors: ["Coincess Team"],
     tags: post.keywords,
   },
 }
@@ -50,7 +50,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         favor becomes a 50% return on your margin.
       </p>
 
-      <div className="not-prose my-8 bg-slate-900 text-white rounded-2xl p-6 shadow-xl">
+      <div className="not-prose border-none my-8 bg-slate-900 text-white rounded-2xl p-6">
         <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
           <Calculator className="h-5 w-5 text-amber-400" />
           Visual Example: $100 Margin, 10x Leverage
@@ -89,10 +89,10 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         liquidation gets closer. Here&apos;s how the tiers break down:
       </p>
 
-      <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-emerald-950/50 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
-            <Shield className="h-5 w-5 text-emerald-600" />
+      <div className="not-prose border-none my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+            <Shield className="h-5 w-5 text-emerald-400" />
           </div>
           <h4 className="font-bold text-white mb-2">2–3x: Conservative</h4>
           <p className="text-sm text-gray-300 mb-2">
@@ -100,9 +100,9 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           </p>
           <p className="text-xs font-mono text-emerald-400">Safest tier</p>
         </div>
-        <div className="bg-blue-950/50 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center mb-3">
-            <Target className="h-5 w-5 text-blue-600" />
+        <div className="border-none bg-[#141620] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
+            <Target className="h-5 w-5 text-blue-400" />
           </div>
           <h4 className="font-bold text-white mb-2">5–10x: Moderate</h4>
           <p className="text-sm text-gray-300 mb-2">
@@ -110,9 +110,9 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           </p>
           <p className="text-xs font-mono text-blue-400">Most common</p>
         </div>
-        <div className="bg-amber-950/50 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
-            <Zap className="h-5 w-5 text-amber-600" />
+        <div className="border-none bg-[#141620] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+            <Zap className="h-5 w-5 text-amber-400" />
           </div>
           <h4 className="font-bold text-white mb-2">10–25x: Aggressive</h4>
           <p className="text-sm text-gray-300 mb-2">
@@ -120,9 +120,9 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           </p>
           <p className="text-xs font-mono text-amber-400">High risk</p>
         </div>
-        <div className="bg-red-950/50 rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-red-900/30 flex items-center justify-center mb-3">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
+        <div className="border-none bg-[#141620] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
           </div>
           <h4 className="font-bold text-white mb-2">25–50x: Ultra-High Risk</h4>
           <p className="text-sm text-gray-300 mb-2">
@@ -138,23 +138,23 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         Margin mode determines what&apos;s at risk when a trade goes against you.
       </p>
 
-      <div className="not-prose my-8 grid sm:grid-cols-2 gap-4">
-        <div className="bg-emerald-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 grid sm:grid-cols-2 gap-4">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
-            <Shield className="h-5 w-5 text-emerald-600" />
+            <Shield className="h-5 w-5 text-emerald-400" />
             <h3 className="text-lg font-bold text-white">Isolated Margin</h3>
           </div>
           <p className="text-sm text-gray-200 mb-2">
             Only the margin allocated to that position is at risk. If you get
             liquidated, you lose that margin—not your entire account.
           </p>
-          <p className="text-emerald-700 text-sm font-medium">
+          <p className="text-emerald-400 text-sm font-medium">
             ✓ Safer. Recommended for beginners.
           </p>
         </div>
-        <div className="bg-amber-950/50 rounded-xl p-6">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
-            <Wallet className="h-5 w-5 text-amber-600" />
+            <Wallet className="h-5 w-5 text-amber-400" />
             <h3 className="text-lg font-bold text-white">Cross Margin</h3>
           </div>
           <p className="text-sm text-gray-200 mb-2">
@@ -177,7 +177,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         adverse move needed to get liquidated.
       </p>
 
-      <div className="not-prose my-8 bg-slate-900 text-white rounded-2xl p-6">
+      <div className="not-prose border-none my-8 bg-slate-900 text-white rounded-2xl p-6">
         <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-red-400" />
           Liquidation Distance (Long Position)
@@ -233,7 +233,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         </li>
       </ul>
 
-      <div className="not-prose my-8 bg-brand/10 border border-brand/30 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-brand/10 rounded-xl p-6">
         <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
           <Calculator className="h-5 w-5 text-brand" />
           Position Sizing Formula
@@ -285,7 +285,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         leveraged trade on Coincess—no KYC, no account signup.
       </p>
 
-      <div className="not-prose my-8 space-y-4">
+      <div className="not-prose border-none my-8 space-y-4">
         {[
           {
             step: 1,
@@ -314,7 +314,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
         ].map(({ step, title, desc, icon: Icon }) => (
           <div
             key={step}
-            className="flex gap-4 items-start p-4 rounded-xl border-2 border-brand/20 bg-brand/5 hover:border-brand/40 transition-colors"
+            className="flex gap-4 items-start p-4 rounded-xl bg-brand/5 transition-colors"
           >
             <div className="w-12 h-12 rounded-full bg-brand text-white flex items-center justify-center flex-shrink-0 font-bold">
               {step}
@@ -336,9 +336,9 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
 
       <h2>Leverage Trading Mistakes That Will Blow Your Account</h2>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
-          <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <XCircle className="h-6 w-6 text-red-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">Using 50x because it&apos;s available</h4>
             <p className="text-sm text-red-400">
@@ -347,8 +347,8 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
-          <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <XCircle className="h-6 w-6 text-red-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">No stop-loss</h4>
             <p className="text-sm text-red-400">
@@ -357,8 +357,8 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
-          <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <XCircle className="h-6 w-6 text-red-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">Revenge trading after a loss</h4>
             <p className="text-sm text-red-400">
@@ -367,8 +367,8 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
-          <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <XCircle className="h-6 w-6 text-red-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">Overleveraging on a &quot;sure thing&quot;</h4>
             <p className="text-sm text-red-400">
@@ -377,8 +377,8 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
-          <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <XCircle className="h-6 w-6 text-red-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">Trading with money you can&apos;t afford to lose</h4>
             <p className="text-sm text-red-400">
@@ -391,9 +391,9 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
 
       <h2>Risk Disclosure</h2>
 
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-amber-400 mb-2">Risk Disclosure</h4>
             <p className="text-amber-400 text-sm">
@@ -411,8 +411,8 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
       </div>
 
       {/* CTA */}
-      <div className="not-prose mt-12">
-        <div className="bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-white text-center ">
+      <div className="not-prose border-none mt-12">
+        <div className="border-none bg-[#141620] rounded-2xl p-8 text-white text-center ">
           <h3 className="text-2xl font-bold mb-3">
             Ready to Trade with Leverage on Coincess?
           </h3>
@@ -423,14 +423,14 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/BTC"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
             >
               Trade BTC
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/crypto-leverage-calculator"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#1a1d26] text-gray-200 font-semibold rounded-full hover:bg-[#252830] transition-colors"
             >
               <Calculator className="h-5 w-5" />
               Leverage Calculator
@@ -440,7 +440,7 @@ export default function CryptoLeverageTradingBeginnersGuidePage() {
       </div>
 
       {/* Related articles */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link

@@ -23,7 +23,7 @@ import {
 const post = getBlogPost("trade-gold-oil-commodities-on-chain-2026")!
 
 export const metadata: Metadata = {
-  title: `${post.title} | Coincess Intelligence`,
+  title: `${post.title} | Coincess Team`,
   description: post.description,
   keywords: post.keywords.join(", "),
   openGraph: {
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     description: post.description,
     type: "article",
     publishedTime: post.publishedAt,
-    authors: ["Coincess Intelligence"],
+    authors: ["Coincess Team"],
     tags: post.keywords,
   },
 }
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export default function TradeGoldOilCommoditiesArticle() {
   return (
     <BlogPostLayout post={post}>
-      <div className="not-prose mb-8">
+      <div className="not-prose border-none mb-8">
         <LiveTicker coins={["XAU", "BRENTOIL", "CL", "XAG"]} />
       </div>
       {/* Lead */}
@@ -76,9 +76,9 @@ export default function TradeGoldOilCommoditiesArticle() {
 
       <h2>Available Commodity Markets on Coincess</h2>
 
-      <div className="not-prose my-8">
-        <div className="border border-[#2a2e39] rounded-2xl overflow-hidden ">
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4">
+      <div className="not-prose border-none my-8">
+        <div className=" rounded-2xl overflow-hidden ">
+          <div className="bg-[#141620] px-6 py-4">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-amber-400" />
               <span className="text-sm font-bold text-amber-400 uppercase tracking-wider">
@@ -110,7 +110,7 @@ export default function TradeGoldOilCommoditiesArticle() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-[#2a2e39] hover:bg-[#1a1d26] transition-colors">
+              <tr className="border-t border-[#1a1d26] hover:bg-[#1a1d26] transition-colors">
                 <td className="px-6 py-4 font-medium text-white">
                   WTI Crude Oil
                 </td>
@@ -124,16 +124,16 @@ export default function TradeGoldOilCommoditiesArticle() {
                 </td>
                 <td className="px-6 py-4 text-gray-300">$1B+</td>
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
-                  <span className="text-emerald-600 font-medium">24/7</span>
+                  <span className="text-emerald-400 font-medium">24/7</span>
                 </td>
               </tr>
-              <tr className="border-t border-[#2a2e39] bg-[#1a1d26] hover:bg-[#1a1d26] transition-colors">
+              <tr className="border-t border-[#1a1d26] bg-[#1a1d26] hover:bg-[#1a1d26] transition-colors">
                 <td className="px-6 py-4 font-medium text-white">
                   Brent Crude Oil
                 </td>
@@ -147,16 +147,16 @@ export default function TradeGoldOilCommoditiesArticle() {
                 </td>
                 <td className="px-6 py-4 text-gray-300">$200M+</td>
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
-                  <span className="text-emerald-600 font-medium">24/7</span>
+                  <span className="text-emerald-400 font-medium">24/7</span>
                 </td>
               </tr>
-              <tr className="border-t border-[#2a2e39] hover:bg-[#1a1d26] transition-colors">
+              <tr className="border-t border-[#1a1d26] hover:bg-[#1a1d26] transition-colors">
                 <td className="px-6 py-4 font-medium text-white">Gold</td>
                 <td className="px-6 py-4">
                   <Link
@@ -168,16 +168,16 @@ export default function TradeGoldOilCommoditiesArticle() {
                 </td>
                 <td className="px-6 py-4 text-gray-300">$50M+</td>
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
-                  <span className="text-emerald-600 font-medium">24/7</span>
+                  <span className="text-emerald-400 font-medium">24/7</span>
                 </td>
               </tr>
-              <tr className="border-t border-[#2a2e39] bg-[#1a1d26] hover:bg-[#1a1d26] transition-colors">
+              <tr className="border-t border-[#1a1d26] bg-[#1a1d26] hover:bg-[#1a1d26] transition-colors">
                 <td className="px-6 py-4 font-medium text-white">Silver</td>
                 <td className="px-6 py-4">
                   <Link
@@ -189,13 +189,13 @@ export default function TradeGoldOilCommoditiesArticle() {
                 </td>
                 <td className="px-6 py-4 text-gray-300">$20M+</td>
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs font-medium">
                     Perpetual
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-300 font-medium">50x</td>
                 <td className="px-6 py-4">
-                  <span className="text-emerald-600 font-medium">24/7</span>
+                  <span className="text-emerald-400 font-medium">24/7</span>
                 </td>
               </tr>
             </tbody>
@@ -215,7 +215,7 @@ export default function TradeGoldOilCommoditiesArticle() {
         real-world commodity prices.
       </p>
 
-      <div className="not-prose my-8 bg-slate-900 text-white rounded-2xl p-6">
+      <div className="not-prose border-none my-8 bg-slate-900 text-white rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Zap className="h-5 w-5 text-amber-400" />
           <h3 className="text-lg font-bold">HIP-3: Oracle-Priced Perpetuals</h3>
@@ -262,10 +262,10 @@ export default function TradeGoldOilCommoditiesArticle() {
         asset classes for traders. Here&apos;s the current context:
       </p>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-950/500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#141620] flex items-center justify-center">
               <Flame className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -283,7 +283,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </p>
         </div>
 
-        <div className="bg-yellow-950/50 rounded-xl p-6">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center">
               <Coins className="h-5 w-5 text-white" />
@@ -303,14 +303,14 @@ export default function TradeGoldOilCommoditiesArticle() {
           </p>
         </div>
 
-        <div className="bg-[#1a1d26] rounded-xl p-6">
+        <div className="border-none bg-[#1a1d26] rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-slate-600 flex items-center justify-center">
               <Activity className="h-5 w-5 text-white" />
             </div>
             <div>
               <h4 className="font-bold text-white">Silver: Dual Demand</h4>
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-gray-400">
                 Industrial + precious metal demand
               </span>
             </div>
@@ -331,8 +331,8 @@ export default function TradeGoldOilCommoditiesArticle() {
         OPEC, refinery capacity—so it doesn&apos;t move in lockstep with BTC.
       </p>
 
-      <div className="not-prose my-8">
-        <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-2xl p-6">
+      <div className="not-prose border-none my-8">
+        <div className="border-none bg-[#141620] rounded-2xl p-6">
           <h4 className="font-bold text-white mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-brand" />
             Correlation Snapshot (2026)
@@ -353,21 +353,21 @@ export default function TradeGoldOilCommoditiesArticle() {
                   <td className="py-2 font-medium text-gray-200">BTC</td>
                   <td className="py-2">1.0</td>
                   <td className="py-2">0.85</td>
-                  <td className="py-2 text-emerald-600 font-medium">0.1</td>
-                  <td className="py-2 text-emerald-600 font-medium">-0.2</td>
+                  <td className="py-2 text-emerald-400 font-medium">0.1</td>
+                  <td className="py-2 text-emerald-400 font-medium">-0.2</td>
                 </tr>
                 <tr>
                   <td className="py-2 font-medium text-gray-200">Gold</td>
-                  <td className="py-2 text-emerald-600 font-medium">0.1</td>
-                  <td className="py-2 text-emerald-600 font-medium">0.15</td>
+                  <td className="py-2 text-emerald-400 font-medium">0.1</td>
+                  <td className="py-2 text-emerald-400 font-medium">0.15</td>
                   <td className="py-2">1.0</td>
-                  <td className="py-2 text-amber-600 font-medium">0.4</td>
+                  <td className="py-2 text-amber-400 font-medium">0.4</td>
                 </tr>
                 <tr>
                   <td className="py-2 font-medium text-gray-200">Oil</td>
-                  <td className="py-2 text-emerald-600 font-medium">-0.2</td>
-                  <td className="py-2 text-emerald-600 font-medium">-0.15</td>
-                  <td className="py-2 text-amber-600 font-medium">0.4</td>
+                  <td className="py-2 text-emerald-400 font-medium">-0.2</td>
+                  <td className="py-2 text-emerald-400 font-medium">-0.15</td>
+                  <td className="py-2 text-amber-400 font-medium">0.4</td>
                   <td className="py-2">1.0</td>
                 </tr>
               </tbody>
@@ -386,10 +386,10 @@ export default function TradeGoldOilCommoditiesArticle() {
         Four steps. No account. No KYC. Start with as little as $10 in margin.
       </p>
 
-      <div className="not-prose my-10">
+      <div className="not-prose border-none my-10">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="relative">
-            <div className="bg-[#141620] border-2 border-brand/20 rounded-2xl p-6 h-full hover:border-brand/40 transition-colors">
+            <div className="border-none bg-[#141620] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-brand/10 rounded-xl flex items-center justify-center mb-4">
                 <Wallet className="h-7 w-7 text-brand" />
               </div>
@@ -408,7 +408,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </div>
 
           <div className="relative">
-            <div className="bg-[#141620] rounded-2xl p-6 h-full transition-colors">
+            <div className="border-none bg-[#141620] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
                 <Compass className="h-7 w-7 text-gray-300" />
               </div>
@@ -438,7 +438,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </div>
 
           <div className="relative">
-            <div className="bg-[#141620] rounded-2xl p-6 h-full transition-colors">
+            <div className="border-none bg-[#141620] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
                 <Target className="h-7 w-7 text-gray-300" />
               </div>
@@ -457,7 +457,7 @@ export default function TradeGoldOilCommoditiesArticle() {
           </div>
 
           <div>
-            <div className="bg-[#141620] rounded-2xl p-6 h-full transition-colors">
+            <div className="border-none bg-[#141620] rounded-2xl p-6 h-full transition-colors">
               <div className="w-14 h-14 bg-[#1a1d26] rounded-xl flex items-center justify-center mb-4">
                 <Zap className="h-7 w-7 text-gray-300" />
               </div>
@@ -476,10 +476,10 @@ export default function TradeGoldOilCommoditiesArticle() {
 
       <h2>Trading Strategies for Commodities</h2>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="bg-emerald-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <Globe className="h-5 w-5 text-emerald-600" />
+            <Globe className="h-5 w-5 text-emerald-400" />
             <h4 className="font-bold text-white">
               Geopolitical News Trading
             </h4>
@@ -495,9 +495,9 @@ export default function TradeGoldOilCommoditiesArticle() {
           </p>
         </div>
 
-        <div className="bg-amber-950/50 rounded-xl p-6">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="h-5 w-5 text-amber-600" />
+            <Shield className="h-5 w-5 text-amber-400" />
             <h4 className="font-bold text-white">Gold as a Hedge</h4>
           </div>
           <p className="text-sm text-gray-200">
@@ -511,9 +511,9 @@ export default function TradeGoldOilCommoditiesArticle() {
           </p>
         </div>
 
-        <div className="bg-blue-950/50 rounded-xl p-6">
+        <div className="border-none bg-[#141620] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <TrendingUp className="h-5 w-5 text-blue-400" />
             <h4 className="font-bold text-white">Funding Rate Farming</h4>
           </div>
           <p className="text-sm text-gray-200">
@@ -529,7 +529,7 @@ export default function TradeGoldOilCommoditiesArticle() {
       </div>
 
       {/* Risk Disclosure */}
-      <div className="not-prose my-10 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-10 bg-[#141620] rounded-xl p-6">
         <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           Risk Disclosure
@@ -544,8 +544,8 @@ export default function TradeGoldOilCommoditiesArticle() {
       </div>
 
       {/* CTA */}
-      <div className="not-prose mt-12">
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-amber-900 rounded-2xl p-8 text-white text-center">
+      <div className="not-prose border-none mt-12">
+        <div className="border-none bg-[#141620] rounded-2xl p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-3">
             Trade Commodities on Coincess
           </h3>
@@ -556,21 +556,21 @@ export default function TradeGoldOilCommoditiesArticle() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
             <Link
               href="/trade/CL"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-950/500 text-white font-semibold rounded-full hover:bg-amber-400 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[#141620] text-white font-semibold rounded-full hover:bg-amber-400 transition-colors"
             >
               Trade Oil
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/XAU"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-600 text-white font-semibold rounded-full hover:bg-amber-950/500 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-amber-600 text-white font-semibold rounded-full hover:bg-[#141620] transition-colors"
             >
               Trade Gold
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/trade/XAG"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/20"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[#1a1d26] text-gray-200 font-semibold rounded-full hover:bg-[#252830] transition-colors"
             >
               Trade Silver
               <ArrowRight className="h-4 w-4" />
@@ -580,7 +580,7 @@ export default function TradeGoldOilCommoditiesArticle() {
       </div>
 
       {/* Related articles */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link

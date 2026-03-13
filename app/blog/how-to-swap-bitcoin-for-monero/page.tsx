@@ -16,7 +16,7 @@ export default function HowToSwapBitcoinForMonero() {
   return (
     <BlogPostLayout post={post}>
       {/* TOP WIDGET CTA */}
-      <div className="not-prose my-8 bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-6 text-white">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-2xl p-6 text-white">
         <div className="flex items-center gap-3 mb-3">
           <ArrowRightLeft className="h-6 w-6" />
           <h3 className="text-xl font-bold">Start Your Swap Now</h3>
@@ -26,7 +26,7 @@ export default function HowToSwapBitcoinForMonero() {
         </p>
         <Link
           href="/swap-guide"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
         >
           Open Swap Widget
           <ArrowRight className="h-4 w-4" />
@@ -59,7 +59,7 @@ export default function HowToSwapBitcoinForMonero() {
         At Coincess, we believe in <strong>Coin Access</strong>—immediate, barrier-free access to your financial privacy. You shouldn't need permission from a corporation to hold private money.
       </p>
 
-      <div className="not-prose my-8 bg-emerald-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
           <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -90,8 +90,8 @@ export default function HowToSwapBitcoinForMonero() {
         <strong>Important:</strong> You cannot send Monero to a Bitcoin address. They're different blockchains. You need a dedicated Monero wallet to receive your XMR.
       </p>
 
-      <div className="not-prose my-6 space-y-4">
-        <div className="border border-[#2a2e39] rounded-xl p-5">
+      <div className="not-prose border-none my-6 space-y-4">
+        <div className="border-none rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Shield className="h-5 w-5 text-brand" />
             <h4 className="font-bold text-white">Best Option: Hardware Wallet (Cold Storage)</h4>
@@ -121,7 +121,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
         </div>
 
-        <div className="border border-[#2a2e39] rounded-xl p-5">
+        <div className="border-none rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Wallet className="h-5 w-5 text-brand" />
             <h4 className="font-bold text-white">Free Option: Software Wallet</h4>
@@ -163,7 +163,7 @@ export default function HowToSwapBitcoinForMonero() {
         Follow these 5 simple steps. The entire process takes about 15 minutes.
       </p>
 
-      <div className="not-prose my-8 space-y-6">
+      <div className="not-prose border-none my-8 space-y-6">
         {/* Step 1 */}
         <div className="flex gap-4">
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold">
@@ -207,9 +207,9 @@ export default function HowToSwapBitcoinForMonero() {
             <p className="text-gray-300 mb-3">
               Open your Monero wallet (Ledger, Cake Wallet, or Feather), copy your receive address, and paste it into the "Recipient Wallet" box.
             </p>
-            <div className="bg-amber-950/50 rounded-full p-3">
+            <div className="bg-[#141620] rounded-full p-3">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
                 <p className="text-amber-400 text-sm">
                   <strong>Double-check the first and last 4 characters</strong> of the address to ensure it's correct. Crypto transactions cannot be reversed.
                 </p>
@@ -263,8 +263,8 @@ export default function HowToSwapBitcoinForMonero() {
         You might be wondering: "Why not just use Binance or Kraken?" Here's why swapping is often the better choice:
       </p>
 
-      <div className="not-prose my-8 grid md:grid-cols-3 gap-4">
-        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
+      <div className="not-prose border-none my-8 grid md:grid-cols-3 gap-4">
+        <div className="border-none rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Eye className="h-6 w-6 text-brand" />
           </div>
@@ -273,7 +273,7 @@ export default function HowToSwapBitcoinForMonero() {
             Exchanges track your entire purchase history. Swapping keeps your XMR unconnected to your real identity.
           </p>
         </div>
-        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
+        <div className="border-none rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Lock className="h-6 w-6 text-brand" />
           </div>
@@ -282,7 +282,7 @@ export default function HowToSwapBitcoinForMonero() {
             "Not your keys, not your coins." Exchanges can freeze accounts. Swap services never hold your funds.
           </p>
         </div>
-        <div className="border border-[#2a2e39] rounded-xl p-5 text-center">
+        <div className="border-none rounded-xl p-5 text-center">
           <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Clock className="h-6 w-6 text-brand" />
           </div>
@@ -310,7 +310,7 @@ export default function HowToSwapBitcoinForMonero() {
         Your seed phrase is the master key to your funds. If someone gets it, they can steal everything. If you lose it and your device breaks, your funds are gone forever.
       </p>
 
-      <div className="not-prose my-6 bg-brand/5 border border-brand/20 rounded-xl p-6">
+      <div className="not-prose border-none my-6 bg-brand/5 rounded-xl p-6">
         <div className="flex items-start gap-3">
           <Shield className="h-6 w-6 text-brand flex-shrink-0 mt-0.5" />
           <div>
@@ -340,8 +340,8 @@ export default function HowToSwapBitcoinForMonero() {
       {/* 6. FAQ SECTION */}
       <h2>Frequently Asked Questions</h2>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="border border-[#2a2e39] rounded-xl p-5">
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="border-none rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
@@ -353,7 +353,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
         </div>
 
-        <div className="border border-[#2a2e39] rounded-xl p-5">
+        <div className="border-none rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
@@ -365,7 +365,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
         </div>
 
-        <div className="border border-[#2a2e39] rounded-xl p-5">
+        <div className="border-none rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
@@ -377,7 +377,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
         </div>
 
-        <div className="border border-[#2a2e39] rounded-xl p-5">
+        <div className="border-none rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
@@ -389,7 +389,7 @@ export default function HowToSwapBitcoinForMonero() {
           </div>
         </div>
 
-        <div className="border border-[#2a2e39] rounded-xl p-5">
+        <div className="border-none rounded-xl p-5">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-brand flex-shrink-0 mt-0.5" />
             <div>
@@ -421,7 +421,7 @@ export default function HowToSwapBitcoinForMonero() {
       </p>
 
       {/* BOTTOM WIDGET CTA */}
-      <div className="not-prose my-10 bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-white text-center">
+      <div className="not-prose border-none my-10 bg-[#141620] rounded-2xl p-8 text-white text-center">
         <h3 className="text-2xl font-bold mb-3">Ready to Go Private?</h3>
         <p className="text-white/80 mb-6 max-w-lg mx-auto">
           You now know everything you need. Scroll back to the top and start your swap—or click below to see all available swap methods.
@@ -429,7 +429,7 @@ export default function HowToSwapBitcoinForMonero() {
         <div className="flex flex-wrap justify-center gap-4">
           <Link
             href="/swap-guide"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
           >
             View Swap Guide
             <ArrowRight className="h-4 w-4" />
@@ -438,7 +438,7 @@ export default function HowToSwapBitcoinForMonero() {
             href="https://trocador.app/?ref=2dzDcvfQJY"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-white text-white font-semibold rounded-full hover:bg-[#141620]/10 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-full hover:bg-[#141620]/10 transition-colors"
           >
             Open Trocador
             <ExternalLink className="h-4 w-4" />
@@ -447,7 +447,7 @@ export default function HowToSwapBitcoinForMonero() {
       </div>
 
       {/* Related Articles */}
-      <div className="not-prose mt-8 space-y-4">
+      <div className="not-prose border-none mt-8 space-y-4">
         <h3 className="font-bold text-white">Continue Reading</h3>
         
         <Link

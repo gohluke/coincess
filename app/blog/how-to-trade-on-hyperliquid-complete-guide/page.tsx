@@ -24,7 +24,7 @@ import {
 const post = getBlogPost("how-to-trade-on-hyperliquid-complete-guide")!
 
 export const metadata: Metadata = {
-  title: `${post.title} | Coincess Intelligence`,
+  title: `${post.title} | Coincess Team`,
   description: post.description,
   keywords: post.keywords.join(", "),
   openGraph: {
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     description: post.description,
     type: "article",
     publishedTime: post.publishedAt,
-    authors: ["Coincess Intelligence"],
+    authors: ["Coincess Team"],
     tags: post.keywords,
   },
 }
@@ -75,8 +75,8 @@ export default function HowToTradeHyperliquidGuide() {
         makes Hyperliquid accessible—without sacrificing any of its power.
       </p>
 
-      <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-[#1a1d26] rounded-xl p-5">
+      <div className="not-prose border-none my-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-3">
             <LayoutDashboard className="h-5 w-5 text-brand" />
           </div>
@@ -86,9 +86,9 @@ export default function HowToTradeHyperliquidGuide() {
             panel exactly where you need them—without clutter.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center mb-3">
-            <Zap className="h-5 w-5 text-emerald-600" />
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+            <Zap className="h-5 w-5 text-emerald-400" />
           </div>
           <h4 className="font-bold text-white mb-2">Built-in Swap Aggregator</h4>
           <p className="text-sm text-gray-300">
@@ -96,9 +96,9 @@ export default function HowToTradeHyperliquidGuide() {
             Best rates across DEXs, no extra steps.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center mb-3">
-            <Coins className="h-5 w-5 text-amber-600" />
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+            <Coins className="h-5 w-5 text-amber-400" />
           </div>
           <h4 className="font-bold text-white mb-2">Commodities (Oil, Gold)</h4>
           <p className="text-sm text-gray-300">
@@ -106,9 +106,9 @@ export default function HowToTradeHyperliquidGuide() {
             silver (XAG)—24/7, up to 50x leverage.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
-          <div className="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center mb-3">
-            <Calculator className="h-5 w-5 text-blue-600" />
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
+          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
+            <Calculator className="h-5 w-5 text-blue-400" />
           </div>
           <h4 className="font-bold text-white mb-2">Leverage Calculator</h4>
           <p className="text-sm text-gray-300">
@@ -116,7 +116,7 @@ export default function HowToTradeHyperliquidGuide() {
             before you enter a trade.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-rose-900/30 flex items-center justify-center mb-3">
             <BookOpen className="h-5 w-5 text-rose-600" />
           </div>
@@ -126,7 +126,7 @@ export default function HowToTradeHyperliquidGuide() {
             inform your trades.
           </p>
         </div>
-        <div className="bg-[#1a1d26] rounded-xl p-5">
+        <div className="border-none bg-[#1a1d26] rounded-xl p-5">
           <div className="w-10 h-10 rounded-full bg-violet-900/30 flex items-center justify-center mb-3">
             <CheckCircle className="h-5 w-5 text-violet-600" />
           </div>
@@ -154,8 +154,8 @@ export default function HowToTradeHyperliquidGuide() {
 
       <h2>Getting Started: Step by Step</h2>
 
-      <div className="not-prose my-8 space-y-6">
-        <div className="border-2 border-brand/30 rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10">
+      <div className="not-prose border-none my-8 space-y-6">
+        <div className="border-none rounded-2xl p-6 bg-[#141620]">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
               1
@@ -185,7 +185,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
 
-        <div className="border-2 border-brand/30 rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10">
+        <div className="border-none rounded-2xl p-6 bg-[#141620]">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
               2
@@ -204,7 +204,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
 
-        <div className="border-2 border-brand/30 rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10">
+        <div className="border-none rounded-2xl p-6 bg-[#141620]">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
               3
@@ -222,7 +222,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
 
-        <div className="border-2 border-brand/30 rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10">
+        <div className="border-none rounded-2xl p-6 bg-[#141620]">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
               4
@@ -241,7 +241,7 @@ export default function HowToTradeHyperliquidGuide() {
           </div>
         </div>
 
-        <div className="border-2 border-brand/30 rounded-2xl p-6 bg-gradient-to-br from-brand/5 to-brand/10">
+        <div className="border-none rounded-2xl p-6 bg-[#141620]">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
               5
@@ -267,7 +267,7 @@ export default function HowToTradeHyperliquidGuide() {
         what each does:
       </p>
 
-      <div className="not-prose my-8 space-y-4">
+      <div className="not-prose border-none my-8 space-y-4">
         <div className="flex gap-4 p-4 bg-[#1a1d26] rounded-xl">
           <div className="w-10 h-10 rounded-full bg-[#2a2e39] flex items-center justify-center flex-shrink-0">
             <BarChart3 className="h-5 w-5 text-gray-300" />
@@ -339,53 +339,53 @@ export default function HowToTradeHyperliquidGuide() {
         fees, no hidden costs—just transparent maker/taker rates.
       </p>
 
-      <div className="not-prose my-8 overflow-x-auto">
+      <div className="not-prose border-none my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#1a1d26]">
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Fee Type
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Rate
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Notes
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="p-3 border-b font-medium">Maker</td>
-              <td className="p-3 border-b text-emerald-600 font-semibold">
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Maker</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400 font-semibold">
                 0.015%
               </td>
-              <td className="p-3 border-b text-gray-300">
+              <td className="p-3 border-b border-[#1a1d26] text-gray-300">
                 Add liquidity to the order book
               </td>
             </tr>
             <tr className="bg-[#141620]/50">
-              <td className="p-3 border-b font-medium">Taker</td>
-              <td className="p-3 border-b text-amber-600 font-semibold">
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Taker</td>
+              <td className="p-3 border-b border-[#1a1d26] text-amber-400 font-semibold">
                 0.045%
               </td>
-              <td className="p-3 border-b text-gray-300">
+              <td className="p-3 border-b border-[#1a1d26] text-gray-300">
                 Remove liquidity (market orders)
               </td>
             </tr>
             <tr>
-              <td className="p-3 border-b font-medium">Gas</td>
-              <td className="p-3 border-b text-emerald-600 font-semibold">
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Gas</td>
+              <td className="p-3 border-b border-[#1a1d26] text-emerald-400 font-semibold">
                 $0
               </td>
-              <td className="p-3 border-b text-gray-300">
+              <td className="p-3 border-b border-[#1a1d26] text-gray-300">
                 Zero gas fees on Hyperliquid L1
               </td>
             </tr>
             <tr className="bg-[#141620]/50">
-              <td className="p-3 border-b font-medium">Referral</td>
-              <td className="p-3 border-b text-gray-300">Discount</td>
-              <td className="p-3 border-b text-gray-300">
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Referral</td>
+              <td className="p-3 border-b border-[#1a1d26] text-gray-300">Discount</td>
+              <td className="p-3 border-b border-[#1a1d26] text-gray-300">
                 Referral codes can reduce fees further
               </td>
             </tr>
@@ -427,54 +427,54 @@ export default function HowToTradeHyperliquidGuide() {
         as crypto.
       </p>
 
-      <div className="not-prose my-8 overflow-x-auto">
+      <div className="not-prose border-none my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#1a1d26]">
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Asset
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Symbol
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Type
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Max Leverage
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="p-3 border-b font-medium">Bitcoin</td>
-              <td className="p-3 border-b">BTC</td>
-              <td className="p-3 border-b">Perpetual</td>
-              <td className="p-3 border-b">50x</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Bitcoin</td>
+              <td className="p-3 border-b border-[#1a1d26]">BTC</td>
+              <td className="p-3 border-b border-[#1a1d26]">Perpetual</td>
+              <td className="p-3 border-b border-[#1a1d26]">50x</td>
             </tr>
             <tr className="bg-[#141620]/50">
-              <td className="p-3 border-b font-medium">Ethereum</td>
-              <td className="p-3 border-b">ETH</td>
-              <td className="p-3 border-b">Perpetual</td>
-              <td className="p-3 border-b">50x</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Ethereum</td>
+              <td className="p-3 border-b border-[#1a1d26]">ETH</td>
+              <td className="p-3 border-b border-[#1a1d26]">Perpetual</td>
+              <td className="p-3 border-b border-[#1a1d26]">50x</td>
             </tr>
             <tr>
-              <td className="p-3 border-b font-medium">WTI Crude Oil</td>
-              <td className="p-3 border-b">CL</td>
-              <td className="p-3 border-b">Perpetual (HIP-3)</td>
-              <td className="p-3 border-b">50x</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">WTI Crude Oil</td>
+              <td className="p-3 border-b border-[#1a1d26]">CL</td>
+              <td className="p-3 border-b border-[#1a1d26]">Perpetual (HIP-3)</td>
+              <td className="p-3 border-b border-[#1a1d26]">50x</td>
             </tr>
             <tr className="bg-[#141620]/50">
-              <td className="p-3 border-b font-medium">Brent Crude Oil</td>
-              <td className="p-3 border-b">BRENTOIL</td>
-              <td className="p-3 border-b">Perpetual (HIP-3)</td>
-              <td className="p-3 border-b">50x</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Brent Crude Oil</td>
+              <td className="p-3 border-b border-[#1a1d26]">BRENTOIL</td>
+              <td className="p-3 border-b border-[#1a1d26]">Perpetual (HIP-3)</td>
+              <td className="p-3 border-b border-[#1a1d26]">50x</td>
             </tr>
             <tr>
-              <td className="p-3 border-b font-medium">Gold</td>
-              <td className="p-3 border-b">XAU</td>
-              <td className="p-3 border-b">Perpetual (HIP-3)</td>
-              <td className="p-3 border-b">50x</td>
+              <td className="p-3 border-b border-[#1a1d26] font-medium">Gold</td>
+              <td className="p-3 border-b border-[#1a1d26]">XAU</td>
+              <td className="p-3 border-b border-[#1a1d26]">Perpetual (HIP-3)</td>
+              <td className="p-3 border-b border-[#1a1d26]">50x</td>
             </tr>
             <tr className="bg-[#141620]/50">
               <td className="p-3 font-medium">Silver</td>
@@ -488,9 +488,9 @@ export default function HowToTradeHyperliquidGuide() {
 
       <h2>Pro Tips for Hyperliquid Trading</h2>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 bg-emerald-950/50 rounded-xlmerald-800/50">
-          <CheckCircle className="h-6 w-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="flex gap-4 p-4 border-none bg-[#141620] rounded-xl">
+          <CheckCircle className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-white">Use Limit Orders</h4>
             <p className="text-sm text-gray-200">
@@ -499,8 +499,8 @@ export default function HowToTradeHyperliquidGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-blue-950/50 rounded-xl">
-          <Eye className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="flex gap-4 p-4 border-none bg-[#141620] rounded-xl">
+          <Eye className="h-6 w-6 text-blue-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-white">Monitor Funding Rates</h4>
             <p className="text-sm text-gray-200">
@@ -509,8 +509,8 @@ export default function HowToTradeHyperliquidGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-amber-950/50 rounded-xlmber-800/30">
-          <Shield className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="flex gap-4 p-4 border-none bg-[#141620] rounded-xl">
+          <Shield className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-white">Start with Low Leverage</h4>
             <p className="text-sm text-gray-200">
@@ -519,7 +519,7 @@ export default function HowToTradeHyperliquidGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-rose-950/50 rounded-xl">
+        <div className="flex gap-4 p-4 border-none bg-[#141620] rounded-xl">
           <Shield className="h-6 w-6 text-rose-600 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-white">Use Isolated Margin</h4>
@@ -530,7 +530,7 @@ export default function HowToTradeHyperliquidGuide() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 bg-violet-950/50 rounded-xl">
+        <div className="flex gap-4 p-4 border-none bg-[#141620] rounded-xl">
           <BarChart3 className="h-6 w-6 text-violet-600 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-white">Watch Whale Positions</h4>
@@ -544,9 +544,9 @@ export default function HowToTradeHyperliquidGuide() {
       </div>
 
       {/* Risk Disclosure */}
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-amber-400 mb-2">
               Risk Disclosure
@@ -564,8 +564,8 @@ export default function HowToTradeHyperliquidGuide() {
       </div>
 
       {/* CTA */}
-      <div className="not-prose mt-12">
-        <div className="bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-white text-center">
+      <div className="not-prose border-none mt-12">
+        <div className="border-none bg-[#141620] rounded-2xl p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-3">
             Ready to Trade on Hyperliquid?
           </h3>
@@ -576,7 +576,7 @@ export default function HowToTradeHyperliquidGuide() {
           </p>
           <Link
             href="/trade/BTC"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
           >
             Trade BTC on Coincess
             <ArrowRight className="h-5 w-5" />
@@ -585,7 +585,7 @@ export default function HowToTradeHyperliquidGuide() {
       </div>
 
       {/* Related articles */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link

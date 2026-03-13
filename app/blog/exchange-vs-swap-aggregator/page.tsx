@@ -25,45 +25,45 @@ export default function ExchangeVsSwapAggregator() {
       </p>
 
       {/* Quick Comparison */}
-      <div className="not-prose my-8 overflow-x-auto">
+      <div className="not-prose border-none my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#1a1d26]">
-              <th className="text-left p-4 font-semibold text-white border-b">Factor</th>
-              <th className="text-left p-4 font-semibold text-white border-b">Exchange (Binance, Coinbase)</th>
-              <th className="text-left p-4 font-semibold text-white border-b">Swap Aggregator (Trocador)</th>
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">Factor</th>
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">Exchange (Binance, Coinbase)</th>
+              <th className="text-left p-4 font-semibold text-white border-b border-[#1a1d26]">Swap Aggregator (Trocador)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="p-4 border-b text-gray-200 font-medium">Setup Time</td>
-              <td className="p-4 border-b text-red-600">1-7 days (KYC verification)</td>
-              <td className="p-4 border-b text-green-600">0 minutes</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Setup Time</td>
+              <td className="p-4 border-b border-[#1a1d26] text-red-400">1-7 days (KYC verification)</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">0 minutes</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-200 font-medium">Account Required</td>
-              <td className="p-4 border-b text-gray-200">Yes + ID verification</td>
-              <td className="p-4 border-b text-gray-200">No</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Account Required</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">Yes + ID verification</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200">No</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-200 font-medium">Trading Fees</td>
-              <td className="p-4 border-b text-green-600">0.1% - 0.5%</td>
-              <td className="p-4 border-b text-orange-600">0.5% - 2%</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Trading Fees</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">0.1% - 0.5%</td>
+              <td className="p-4 border-b border-[#1a1d26] text-orange-600">0.5% - 2%</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-200 font-medium">Withdrawal Fees</td>
-              <td className="p-4 border-b text-orange-600">Often high + minimums</td>
-              <td className="p-4 border-b text-green-600">Included in swap</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Withdrawal Fees</td>
+              <td className="p-4 border-b border-[#1a1d26] text-orange-600">Often high + minimums</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Included in swap</td>
             </tr>
             <tr>
-              <td className="p-4 border-b text-gray-200 font-medium">Privacy</td>
-              <td className="p-4 border-b text-red-600">None (full KYC)</td>
-              <td className="p-4 border-b text-green-600">High (no personal data)</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Privacy</td>
+              <td className="p-4 border-b border-[#1a1d26] text-red-400">None (full KYC)</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">High (no personal data)</td>
             </tr>
             <tr className="bg-[#1a1d26]">
-              <td className="p-4 border-b text-gray-200 font-medium">Coin Selection</td>
-              <td className="p-4 border-b text-green-600">Wide variety</td>
-              <td className="p-4 border-b text-green-600">Wide variety</td>
+              <td className="p-4 border-b border-[#1a1d26] text-gray-200 font-medium">Coin Selection</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Wide variety</td>
+              <td className="p-4 border-b border-[#1a1d26] text-green-600">Wide variety</td>
             </tr>
             <tr>
               <td className="p-4 text-gray-200 font-medium">Best For</td>
@@ -92,8 +92,8 @@ export default function ExchangeVsSwapAggregator() {
         <li>Then you can deposit and trade</li>
       </ol>
 
-      <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-emerald-950/50 rounded-xl p-5">
+      <div className="not-prose border-none my-8 grid md:grid-cols-2 gap-4">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Exchange Pros
@@ -106,7 +106,7 @@ export default function ExchangeVsSwapAggregator() {
             <li>• Customer support</li>
           </ul>
         </div>
-        <div className="bg-red-950/50 rounded-xl p-5">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Exchange Cons
@@ -132,7 +132,7 @@ export default function ExchangeVsSwapAggregator() {
         Think of it like Google Flights for crypto: you search once, and it checks dozens of services for the best rate.
       </p>
 
-      <div className="not-prose my-8 bg-brand/5 border border-brand/20 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-brand/5 rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Zap className="h-5 w-5 text-brand" />
           How Aggregators Work
@@ -161,8 +161,8 @@ export default function ExchangeVsSwapAggregator() {
         </ol>
       </div>
 
-      <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
-        <div className="bg-emerald-950/50 rounded-xl p-5">
+      <div className="not-prose border-none my-8 grid md:grid-cols-2 gap-4">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5" />
             Aggregator Pros
@@ -176,7 +176,7 @@ export default function ExchangeVsSwapAggregator() {
             <li>• Works worldwide</li>
           </ul>
         </div>
-        <div className="bg-red-950/50 rounded-xl p-5">
+        <div className="border-none bg-[#141620] rounded-xl p-5">
           <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Aggregator Cons
@@ -196,9 +196,9 @@ export default function ExchangeVsSwapAggregator() {
         Let's compare the <strong>total cost</strong> of swapping $500 worth of Bitcoin to Monero using each method:
       </p>
 
-      <div className="not-prose my-8">
+      <div className="not-prose border-none my-8">
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="border border-[#2a2e39] rounded-xl p-6">
+          <div className="border-none rounded-xl p-6">
             <h4 className="font-bold text-white mb-4">Via Binance (Exchange)</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between">
@@ -213,22 +213,22 @@ export default function ExchangeVsSwapAggregator() {
                 <span className="text-gray-300">XMR withdrawal fee</span>
                 <span className="font-medium">~$0.50</span>
               </li>
-              <li className="flex justify-between border-t pt-2 mt-2">
+              <li className="flex justify-between pt-2 mt-2">
                 <span className="text-white font-medium">Total fees</span>
                 <span className="font-bold text-white">~$6.00</span>
               </li>
-              <li className="flex justify-between text-red-600">
+              <li className="flex justify-between text-red-400">
                 <span>Time investment</span>
                 <span className="font-medium">1-7 days (KYC)</span>
               </li>
-              <li className="flex justify-between text-red-600">
+              <li className="flex justify-between text-red-400">
                 <span>Privacy cost</span>
                 <span className="font-medium">Full ID submitted</span>
               </li>
             </ul>
           </div>
 
-          <div className="border border-brand rounded-xl p-6 bg-brand/5">
+          <div className="border-none rounded-xl p-6 bg-brand/5">
             <h4 className="font-bold text-white mb-4">Via Trocador (Aggregator)</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between">
@@ -243,7 +243,7 @@ export default function ExchangeVsSwapAggregator() {
                 <span className="text-gray-300">Withdrawal fee</span>
                 <span className="font-medium">$0.00</span>
               </li>
-              <li className="flex justify-between border-t pt-2 mt-2">
+              <li className="flex justify-between pt-2 mt-2">
                 <span className="text-white font-medium">Total fees</span>
                 <span className="font-bold text-white">~$5.00</span>
               </li>
@@ -286,7 +286,7 @@ export default function ExchangeVsSwapAggregator() {
 
       <h2>Popular Swap Aggregators</h2>
 
-      <div className="not-prose my-6 space-y-4">
+      <div className="not-prose border-none my-6 space-y-4">
         <a
           href="https://trocador.app/?ref=2dzDcvfQJY"
           target="_blank"
@@ -320,7 +320,7 @@ export default function ExchangeVsSwapAggregator() {
         For most people doing occasional crypto swaps:
       </p>
 
-      <div className="not-prose my-8 bg-[#1a1d26] rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#1a1d26] rounded-xl p-6">
         <p className="text-lg text-white font-medium text-center">
           <strong>Swap Aggregators win on:</strong> Speed, privacy, and simplicity<br />
           <strong>Exchanges win on:</strong> Fees (for high volume) and fiat access
@@ -336,10 +336,10 @@ export default function ExchangeVsSwapAggregator() {
       </p>
 
       {/* CTA */}
-      <div className="not-prose mt-12">
+      <div className="not-prose border-none mt-12">
         <Link
           href="/swap-guide"
-          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl border border-brand/20 transition-colors group"
+          className="flex items-center justify-between p-6 bg-brand/5 rounded-xl transition-colors group"
         >
           <div>
             <h4 className="font-bold text-white group-hover:text-brand">Compare Swap Methods</h4>

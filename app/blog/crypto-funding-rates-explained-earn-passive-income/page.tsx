@@ -16,7 +16,7 @@ import {
 const post = getBlogPost("crypto-funding-rates-explained-earn-passive-income")!
 
 export const metadata: Metadata = {
-  title: `${post.title} | Coincess Intelligence`,
+  title: `${post.title} | Coincess Team`,
   description: post.description,
   keywords: post.keywords.join(", "),
   openGraph: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     description: post.description,
     type: "article",
     publishedTime: post.publishedAt,
-    authors: ["Coincess Intelligence"],
+    authors: ["Coincess Team"],
     tags: post.keywords,
   },
 }
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function CryptoFundingRatesExplainedPage() {
   return (
     <BlogPostLayout post={post}>
-      <div className="not-prose mb-8">
+      <div className="not-prose border-none mb-8">
         <LiveTicker coins={["BTC", "ETH", "SOL", "HYPE"]} />
       </div>
 
@@ -76,7 +76,7 @@ export default function CryptoFundingRatesExplainedPage() {
         </li>
       </ul>
 
-      <div className="not-prose my-8 bg-slate-900 text-white rounded-2xl p-6 shadow-xl">
+      <div className="not-prose border-none my-8 bg-slate-900 text-white rounded-2xl p-6">
         <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
           <Calculator className="h-5 w-5 text-amber-400" />
           Funding Rate Calculation Example
@@ -131,10 +131,10 @@ export default function CryptoFundingRatesExplainedPage() {
 
       <h2>Funding Rate Strategies</h2>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="bg-emerald-950/50 rounded-xl p-6 ">
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="border-none bg-[#141620] rounded-xl p-6 ">
           <div className="flex items-center gap-2 mb-3">
-            <Shield className="h-5 w-5 text-emerald-600" />
+            <Shield className="h-5 w-5 text-emerald-400" />
             <h3 className="text-lg font-bold text-white">
               Cash &amp; Carry Arbitrage
             </h3>
@@ -153,13 +153,13 @@ export default function CryptoFundingRatesExplainedPage() {
           </p>
         </div>
 
-        <div className="bg-amber-950/50 rounded-xl p-6 ">
+        <div className="border-none bg-[#141620] rounded-xl p-6 ">
           <div className="flex items-center gap-2 mb-3">
-            <Zap className="h-5 w-5 text-amber-600" />
+            <Zap className="h-5 w-5 text-amber-400" />
             <h3 className="text-lg font-bold text-white">
               Funding Rate Harvesting
             </h3>
-            <span className="text-xs font-medium px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded-full">
+            <span className="text-xs font-medium px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded-full">
               Moderate
             </span>
           </div>
@@ -173,11 +173,11 @@ export default function CryptoFundingRatesExplainedPage() {
           </p>
         </div>
 
-        <div className="bg-blue-950/50 rounded-xl p-6 ">
+        <div className="border-none bg-[#141620] rounded-xl p-6 ">
           <div className="flex items-center gap-2 mb-3">
-            <Target className="h-5 w-5 text-blue-600" />
+            <Target className="h-5 w-5 text-blue-400" />
             <h3 className="text-lg font-bold text-white">Rate Hunting</h3>
-            <span className="text-xs font-medium px-2 py-0.5 bg-blue-900/30 text-blue-400 rounded-full">
+            <span className="text-xs font-medium px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full">
               Active
             </span>
           </div>
@@ -226,44 +226,44 @@ export default function CryptoFundingRatesExplainedPage() {
         popular markets on Coincess (built on Hyperliquid):
       </p>
 
-      <div className="not-prose my-8 overflow-x-auto">
+      <div className="not-prose border-none my-8 overflow-x-auto">
         <table className="w-full border-collapse text-sm rounded-xl overflow-hidden ">
           <thead>
             <tr className="bg-[#1a1d26]">
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Market
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Symbol
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Typical Funding Range
               </th>
-              <th className="text-left p-3 font-semibold text-white border-b">
+              <th className="text-left p-3 font-semibold text-white border-b border-[#1a1d26]">
                 Notes
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-[#2a2e39] bg-brand/5">
+            <tr className="border-b border-[#1a1d26] bg-brand/5">
               <td className="p-3 font-semibold text-white">Bitcoin</td>
               <td className="p-3 font-mono">BTC</td>
               <td className="p-3">-0.01% to +0.03%/hr</td>
               <td className="p-3 text-gray-300">Spikes in bull runs</td>
             </tr>
-            <tr className="border-b border-[#2a2e39]">
+            <tr className="border-b border-[#1a1d26]">
               <td className="p-3 font-medium">Ethereum</td>
               <td className="p-3 font-mono">ETH</td>
               <td className="p-3">-0.01% to +0.02%/hr</td>
               <td className="p-3 text-gray-300">Tracks BTC</td>
             </tr>
-            <tr className="border-b border-[#2a2e39] bg-[#1a1d26]">
+            <tr className="border-b border-[#1a1d26] bg-[#1a1d26]">
               <td className="p-3 font-medium">Solana</td>
               <td className="p-3 font-mono">SOL</td>
               <td className="p-3">-0.02% to +0.05%/hr</td>
               <td className="p-3 text-gray-300">More volatile</td>
             </tr>
-            <tr className="border-b border-[#2a2e39] bg-amber-950/50/50">
+            <tr className="border-b border-[#1a1d26] bg-[#141620]/50">
               <td className="p-3 font-medium">Crude Oil (WTI)</td>
               <td className="p-3 font-mono">CL</td>
               <td className="p-3">0.01% to 0.15%+/hr</td>
@@ -271,13 +271,13 @@ export default function CryptoFundingRatesExplainedPage() {
                 Spikes during supply crises
               </td>
             </tr>
-            <tr className="border-b border-[#2a2e39]">
+            <tr className="border-b border-[#1a1d26]">
               <td className="p-3 font-medium">Brent Crude Oil</td>
               <td className="p-3 font-mono">BRENTOIL</td>
               <td className="p-3">0.01% to 0.12%+/hr</td>
               <td className="p-3 text-gray-300">Similar to CL</td>
             </tr>
-            <tr className="border-b border-[#2a2e39] bg-[#141620]/50">
+            <tr className="border-b border-[#1a1d26] bg-[#141620]/50">
               <td className="p-3 font-medium">Hyperliquid</td>
               <td className="p-3 font-mono">HYPE</td>
               <td className="p-3">-0.02% to +0.04%/hr</td>
@@ -289,9 +289,9 @@ export default function CryptoFundingRatesExplainedPage() {
 
       <h2>Risks of Funding Rate Trading</h2>
 
-      <div className="not-prose my-8 space-y-4">
-        <div className="flex gap-4 p-4 rounded-xl bg-red-950/50">
-          <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
+      <div className="not-prose border-none my-8 space-y-4">
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <AlertTriangle className="h-6 w-6 text-red-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-red-400">Rate can flip</h4>
             <p className="text-sm text-red-400">
@@ -301,8 +301,8 @@ export default function CryptoFundingRatesExplainedPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-amber-400">Liquidation risk</h4>
             <p className="text-sm text-amber-400">
@@ -312,8 +312,8 @@ export default function CryptoFundingRatesExplainedPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 p-4 rounded-xl bg-amber-950/50">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
+        <div className="flex gap-4 p-4 rounded-xl bg-[#141620]">
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0" />
           <div>
             <h4 className="font-bold text-amber-400">Basis risk (cash &amp; carry)</h4>
             <p className="text-sm text-amber-400">
@@ -324,10 +324,10 @@ export default function CryptoFundingRatesExplainedPage() {
           </div>
         </div>
         <div className="flex gap-4 p-4 rounded-xl bg-[#1a1d26]">
-          <BarChart3 className="h-6 w-6 text-slate-600 flex-shrink-0" />
+          <BarChart3 className="h-6 w-6 text-gray-400 flex-shrink-0" />
           <div>
-            <h4 className="font-bold text-slate-900">Opportunity cost</h4>
-            <p className="text-sm text-slate-700">
+            <h4 className="font-bold text-white">Opportunity cost</h4>
+            <p className="text-sm text-gray-200">
               Capital tied up in funding strategies could be deployed elsewhere.
               Compare yields to other opportunities (staking, lending, etc.).
             </p>
@@ -337,9 +337,9 @@ export default function CryptoFundingRatesExplainedPage() {
 
       <h2>Risk Disclosure</h2>
 
-      <div className="not-prose my-8 bg-amber-950/50 rounded-xl p-6">
+      <div className="not-prose border-none my-8 bg-[#141620] rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="font-semibold text-amber-400 mb-2">
               Risk Disclosure
@@ -359,8 +359,8 @@ export default function CryptoFundingRatesExplainedPage() {
       </div>
 
       {/* CTA */}
-      <div className="not-prose mt-12">
-        <div className="bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-white text-center ">
+      <div className="not-prose border-none mt-12">
+        <div className="border-none bg-[#141620] rounded-2xl p-8 text-white text-center ">
           <h3 className="text-2xl font-bold mb-3">
             Start Harvesting Funding on Coincess
           </h3>
@@ -371,14 +371,14 @@ export default function CryptoFundingRatesExplainedPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/trade/CL"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620] text-brand font-semibold rounded-full hover:bg-[#1a1d26] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-brand text-white font-semibold rounded-full hover:bg-brand-hover transition-colors"
             >
               Trade Oil (CL)
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/automate"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#141620]/10 text-white font-semibold rounded-full hover:bg-[#141620]/20 transition-colors border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#1a1d26] text-gray-200 font-semibold rounded-full hover:bg-[#252830] transition-colors"
             >
               <Zap className="h-5 w-5" />
               Funding Rate Harvester
@@ -388,7 +388,7 @@ export default function CryptoFundingRatesExplainedPage() {
       </div>
 
       {/* Related articles */}
-      <div className="not-prose mt-12 space-y-4">
+      <div className="not-prose border-none mt-12 space-y-4">
         <h3 className="font-bold text-white">Related Articles</h3>
 
         <Link
