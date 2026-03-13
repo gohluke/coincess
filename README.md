@@ -76,8 +76,14 @@ Strategy backtesting and performance analysis tools.
 - **Portfolio chart** — Account Value and cumulative PNL over time (canvas-rendered with ResizeObserver, hover crosshair with date+time); toggle between "Account Value" and "PNL" pill tabs; reconstructs history from deposits/withdrawals (ledger API) + fills; crosshair snaps to nearest data point by time
 - **Asset distribution donut** — equity breakdown: USDC (remainder after positions) + per-position value (margin + unrealized PnL); flat segment edges with gaps; center shows total equity
 - Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
-- PnL calendar — daily profit/loss heatmap
+- PnL calendar — daily profit/loss heatmap with color-weighted intensity by P&L magnitude
 - Trade history with round-trip grouping and per-trade P&L; open trades show live unrealized PnL, current mark price, and return percentage; closed trades show net P&L with "Missed/Saved" phantom PnL
+- **Performance tab** — per-coin P&L breakdown with:
+  - Overview cards: Net P&L, Win Rate, Best/Worst coin
+  - Breakdown row: Gross P&L, Total Fees, Funding
+  - Visual P&L bar chart per asset (sorted by profitability)
+  - Sortable table: Coin, Net P&L, Trades, Win Rate, Fills, Volume, Best Trade, Worst Trade
+  - Click any coin to drill down: stats grid (Gross P&L, Fees, Funding, Win Rate, Avg Win, Avg Loss) + full list of round-trip trades with direction, entry/exit, duration, fees, and P&L
 - Open orders overview
 - Quick-access cards for Trade, Predict, Automate
 - Active automation strategies preview
@@ -450,7 +456,7 @@ pm2 start "npx tsx scripts/twitter-engine.ts" --name coincess-twitter
 ```
 coincess/
 ├── app/
-│   ├── dashboard/page.tsx               # Unified portfolio dashboard
+│   ├── dashboard/page.tsx               # Unified portfolio dashboard (Assets, History, Performance, PnL Calendar)
 │   ├── trade/
 │   │   ├── page.tsx                     # Redirects to last ticker or /trade/BTC
 │   │   ├── [coin]/page.tsx              # Perpetuals trading terminal

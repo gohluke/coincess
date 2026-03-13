@@ -17,6 +17,9 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
+  Trophy,
+  Target,
+  Flame,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding, fetchSpotClearinghouseState, fetchUserLedger } from "@/lib/hyperliquid/api";
@@ -187,7 +190,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [historyView, setHistoryView] = useState<"trades" | "fills" | "calendar">("trades");
-  const [portfolioTab, setPortfolioTab] = useState<"assets" | "history" | "calendar">("assets");
+  const [portfolioTab, setPortfolioTab] = useState<"assets" | "history" | "performance" | "calendar">("assets");
 
   const automationInit = useAutomationStore((s) => s.init);
   const browserStrategies = useAutomationStore((s) => s.strategies);
@@ -393,8 +396,9 @@ export default function DashboardPage() {
           {([
             ["assets", "Assets"],
             ["history", "Transaction History"],
+            ["performance", "Performance"],
             ["calendar", "PnL Calendar"],
-          ] as ["assets" | "history" | "calendar", string][]).map(([t, label]) => (
+          ] as ["assets" | "history" | "performance" | "calendar", string][]).map(([t, label]) => (
             <button
               key={t}
               onClick={() => setPortfolioTab(t)}
@@ -740,6 +744,11 @@ export default function DashboardPage() {
               )
             ) : null}
           </div>
+        )}
+
+        {/* ─── Performance Tab ─── */}
+        {portfolioTab === "performance" && (
+          <CoinPerformance fills={fills} trades={trades} funding={funding} />
         )}
 
         {/* ─── PnL Calendar Tab ─── */}
@@ -1477,6 +1486,440 @@ function PnlCalendar({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Coin Performance ─────────────────────────────────────
+
+interface CoinStats {
+  coin: string;
+  grossPnl: number;
+  fees: number;
+  funding: number;
+  netPnl: number;
+  fills: number;
+  trades: number;
+  wins: number;
+  losses: number;
+  bestTrade: number;
+  worstTrade: number;
+  avgWin: number;
+  avgLoss: number;
+  totalVolume: number;
+}
+
+function CoinPerformance({
+  fills,
+  trades,
+  funding,
+}: {
+  fills: Fill[];
+  trades: RoundTripTrade[];
+  funding: FundingPayment[];
+}) {
+  const [expandedCoin, setExpandedCoin] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<"netPnl" | "fills" | "trades" | "winRate" | "volume">("netPnl");
+  const [sortAsc, setSortAsc] = useState(false);
+
+  const coinStats = useMemo(() => {
+    const map = new Map<string, CoinStats>();
+
+    const getOrCreate = (coin: string): CoinStats => {
+      const bare = stripPrefix(coin);
+      if (!map.has(bare)) {
+        map.set(bare, {
+          coin: bare, grossPnl: 0, fees: 0, funding: 0, netPnl: 0,
+          fills: 0, trades: 0, wins: 0, losses: 0,
+          bestTrade: -Infinity, worstTrade: Infinity,
+          avgWin: 0, avgLoss: 0, totalVolume: 0,
+        });
+      }
+      return map.get(bare)!;
+    };
+
+    for (const f of fills) {
+      const s = getOrCreate(f.coin);
+      s.grossPnl += parseFloat(f.closedPnl);
+      s.fees += parseFloat(f.fee);
+      s.fills++;
+      s.totalVolume += parseFloat(f.px) * parseFloat(f.sz);
+    }
+
+    for (const fp of funding) {
+      const s = getOrCreate(fp.delta.coin);
+      s.funding += parseFloat(fp.delta.usdc);
+    }
+
+    for (const t of trades) {
+      if (t.isOpen) continue;
+      const bare = stripPrefix(t.coin);
+      const s = getOrCreate(t.coin);
+      s.trades++;
+      if (t.netPnl > 0) s.wins++;
+      else if (t.netPnl < 0) s.losses++;
+      if (t.netPnl > s.bestTrade) s.bestTrade = t.netPnl;
+      if (t.netPnl < s.worstTrade) s.worstTrade = t.netPnl;
+    }
+
+    for (const s of map.values()) {
+      s.netPnl = s.grossPnl - s.fees + s.funding;
+      s.avgWin = s.wins > 0 ? map.get(s.coin)!.grossPnl / s.wins : 0;
+      if (s.bestTrade === -Infinity) s.bestTrade = 0;
+      if (s.worstTrade === Infinity) s.worstTrade = 0;
+
+      const coinTrades = trades.filter((t) => !t.isOpen && stripPrefix(t.coin) === s.coin);
+      const winTrades = coinTrades.filter((t) => t.netPnl > 0);
+      const lossTrades = coinTrades.filter((t) => t.netPnl < 0);
+      s.avgWin = winTrades.length > 0 ? winTrades.reduce((sum, t) => sum + t.netPnl, 0) / winTrades.length : 0;
+      s.avgLoss = lossTrades.length > 0 ? lossTrades.reduce((sum, t) => sum + t.netPnl, 0) / lossTrades.length : 0;
+    }
+
+    return Array.from(map.values());
+  }, [fills, trades, funding]);
+
+  const sorted = useMemo(() => {
+    const arr = [...coinStats];
+    arr.sort((a, b) => {
+      let va: number, vb: number;
+      switch (sortKey) {
+        case "netPnl": va = a.netPnl; vb = b.netPnl; break;
+        case "fills": va = a.fills; vb = b.fills; break;
+        case "trades": va = a.trades; vb = b.trades; break;
+        case "winRate":
+          va = a.trades > 0 ? a.wins / a.trades : -1;
+          vb = b.trades > 0 ? b.wins / b.trades : -1;
+          break;
+        case "volume": va = a.totalVolume; vb = b.totalVolume; break;
+        default: va = a.netPnl; vb = b.netPnl;
+      }
+      return sortAsc ? va - vb : vb - va;
+    });
+    return arr;
+  }, [coinStats, sortKey, sortAsc]);
+
+  const totalNet = coinStats.reduce((s, c) => s + c.netPnl, 0);
+  const totalGross = coinStats.reduce((s, c) => s + c.grossPnl, 0);
+  const totalFees = coinStats.reduce((s, c) => s + c.fees, 0);
+  const totalFunding = coinStats.reduce((s, c) => s + c.funding, 0);
+  const totalTrades = coinStats.reduce((s, c) => s + c.trades, 0);
+  const totalWins = coinStats.reduce((s, c) => s + c.wins, 0);
+  const overallWinRate = totalTrades > 0 ? ((totalWins / totalTrades) * 100).toFixed(0) : "–";
+  const bestCoin = coinStats.length > 0 ? [...coinStats].sort((a, b) => b.netPnl - a.netPnl)[0] : null;
+  const worstCoin = coinStats.length > 0 ? [...coinStats].sort((a, b) => a.netPnl - b.netPnl)[0] : null;
+
+  const coinTrades = useMemo(() => {
+    if (!expandedCoin) return [];
+    return trades
+      .filter((t) => stripPrefix(t.coin) === expandedCoin)
+      .sort((a, b) => (b.closeTime ?? b.openTime) - (a.closeTime ?? a.openTime));
+  }, [expandedCoin, trades]);
+
+  const handleSort = (key: typeof sortKey) => {
+    if (sortKey === key) setSortAsc(!sortAsc);
+    else { setSortKey(key); setSortAsc(false); }
+  };
+
+  if (fills.length === 0) {
+    return (
+      <div className="text-center py-16 bg-[#141620] rounded-xl">
+        <BarChart3 className="h-8 w-8 text-[#848e9c] mx-auto mb-3" />
+        <p className="text-sm text-[#848e9c]">No trading data yet</p>
+        <Link href="/trade/BTC" className="inline-block mt-3 text-xs text-brand hover:underline">Start trading &rarr;</Link>
+      </div>
+    );
+  }
+
+  const maxAbsNet = Math.max(...coinStats.map((c) => Math.abs(c.netPnl)), 1);
+
+  return (
+    <div className="space-y-4">
+      {/* Overview cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Net P&L</p>
+          <p className={`text-lg font-bold ${totalNet >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {totalNet >= 0 ? "+" : ""}{formatUsd(totalNet)}
+          </p>
+        </div>
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Win Rate</p>
+          <p className="text-lg font-bold text-white">
+            {overallWinRate}%
+            <span className="text-[10px] text-[#848e9c] font-normal ml-1">({totalWins}/{totalTrades})</span>
+          </p>
+        </div>
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5 flex items-center gap-1">
+            <Trophy className="h-2.5 w-2.5" /> Best
+          </p>
+          {bestCoin && (
+            <p className="text-lg font-bold text-emerald-400">
+              {bestCoin.coin} <span className="text-xs font-medium">+{formatUsd(bestCoin.netPnl)}</span>
+            </p>
+          )}
+        </div>
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5 flex items-center gap-1">
+            <Flame className="h-2.5 w-2.5" /> Worst
+          </p>
+          {worstCoin && (
+            <p className="text-lg font-bold text-red-400">
+              {worstCoin.coin} <span className="text-xs font-medium">{formatUsd(worstCoin.netPnl)}</span>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Breakdown: fees + funding */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Gross P&L</p>
+          <p className={`text-sm font-bold ${totalGross >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {totalGross >= 0 ? "+" : ""}{formatUsd(totalGross)}
+          </p>
+        </div>
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Total Fees</p>
+          <p className="text-sm font-bold text-amber-400">-{formatUsd(totalFees)}</p>
+        </div>
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Funding</p>
+          <p className={`text-sm font-bold ${totalFunding >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {totalFunding >= 0 ? "+" : ""}{formatUsd(totalFunding)}
+          </p>
+        </div>
+      </div>
+
+      {/* P&L bar chart */}
+      <div className="bg-[#141620] rounded-xl p-4">
+        <p className="text-xs font-semibold text-white mb-3">P&L by Asset</p>
+        <div className="space-y-2">
+          {[...coinStats].sort((a, b) => b.netPnl - a.netPnl).map((c) => {
+            const pct = (Math.abs(c.netPnl) / maxAbsNet) * 100;
+            const isPositive = c.netPnl >= 0;
+            return (
+              <button
+                key={c.coin}
+                onClick={() => setExpandedCoin(expandedCoin === c.coin ? null : c.coin)}
+                className="w-full group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold text-white w-20 text-left shrink-0">{c.coin}</span>
+                  <div className="flex-1 h-6 bg-[#0b0e11] rounded-md overflow-hidden relative">
+                    <div
+                      className={`h-full rounded-md transition-all ${isPositive ? "bg-emerald-500/30" : "bg-red-500/30"}`}
+                      style={{ width: `${Math.max(pct, 2)}%` }}
+                    />
+                    <span className={`absolute inset-0 flex items-center px-2 text-[10px] font-bold ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
+                      {c.netPnl >= 0 ? "+" : ""}{formatUsd(c.netPnl)}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-[#848e9c] w-16 text-right shrink-0">{c.trades} trades</span>
+                  <ChevronDown className={`h-3 w-3 text-[#848e9c] transition-transform ${expandedCoin === c.coin ? "rotate-180" : ""}`} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Sortable table */}
+      <div className="bg-[#141620] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#2a2e3e]">
+          <p className="text-xs font-semibold text-white">Coin Breakdown</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="border-b border-[#2a2e3e]/50 text-[#848e9c] uppercase tracking-wider">
+                <th className="text-left px-4 py-2.5 font-medium">Coin</th>
+                <SortHeader label="Net P&L" sortKey="netPnl" currentKey={sortKey} asc={sortAsc} onSort={handleSort} />
+                <SortHeader label="Trades" sortKey="trades" currentKey={sortKey} asc={sortAsc} onSort={handleSort} />
+                <SortHeader label="Win Rate" sortKey="winRate" currentKey={sortKey} asc={sortAsc} onSort={handleSort} />
+                <SortHeader label="Fills" sortKey="fills" currentKey={sortKey} asc={sortAsc} onSort={handleSort} />
+                <SortHeader label="Volume" sortKey="volume" currentKey={sortKey} asc={sortAsc} onSort={handleSort} />
+                <th className="text-right px-4 py-2.5 font-medium">Best</th>
+                <th className="text-right px-4 py-2.5 font-medium">Worst</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((c) => {
+                const wr = c.trades > 0 ? ((c.wins / c.trades) * 100).toFixed(0) : "–";
+                const isExpanded = expandedCoin === c.coin;
+                return (
+                  <tr
+                    key={c.coin}
+                    onClick={() => setExpandedCoin(isExpanded ? null : c.coin)}
+                    className={`border-b border-[#2a2e3e]/20 cursor-pointer transition-colors ${isExpanded ? "bg-brand/5" : "hover:bg-[#1a1d2e]/50"}`}
+                  >
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/trade/${c.coin}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-semibold text-white hover:text-brand transition-colors"
+                        >
+                          {c.coin}
+                        </Link>
+                        {isExpanded && <ChevronUp className="h-3 w-3 text-brand" />}
+                      </div>
+                    </td>
+                    <td className={`text-right px-4 py-2.5 font-bold ${c.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {c.netPnl >= 0 ? "+" : ""}{formatUsd(c.netPnl)}
+                    </td>
+                    <td className="text-right px-4 py-2.5 text-white">{c.trades}</td>
+                    <td className="text-right px-4 py-2.5">
+                      <span className={`${c.trades > 0 && c.wins / c.trades >= 0.5 ? "text-emerald-400" : c.trades > 0 ? "text-red-400" : "text-[#848e9c]"}`}>
+                        {wr}%
+                      </span>
+                      <span className="text-[#848e9c] ml-1">({c.wins}/{c.trades})</span>
+                    </td>
+                    <td className="text-right px-4 py-2.5 text-[#848e9c]">{c.fills}</td>
+                    <td className="text-right px-4 py-2.5 text-[#848e9c]">{formatUsd(c.totalVolume)}</td>
+                    <td className={`text-right px-4 py-2.5 ${c.bestTrade >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {c.bestTrade !== 0 ? `${c.bestTrade >= 0 ? "+" : ""}${formatUsd(c.bestTrade)}` : "–"}
+                    </td>
+                    <td className={`text-right px-4 py-2.5 ${c.worstTrade >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {c.worstTrade !== 0 ? `${c.worstTrade >= 0 ? "+" : ""}${formatUsd(c.worstTrade)}` : "–"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Expanded coin detail */}
+      {expandedCoin && (
+        <CoinTradeDetail
+          coin={expandedCoin}
+          stats={coinStats.find((c) => c.coin === expandedCoin)!}
+          trades={coinTrades}
+          onClose={() => setExpandedCoin(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SortHeader({
+  label,
+  sortKey: key,
+  currentKey,
+  asc,
+  onSort,
+}: {
+  label: string;
+  sortKey: "netPnl" | "fills" | "trades" | "winRate" | "volume";
+  currentKey: string;
+  asc: boolean;
+  onSort: (k: "netPnl" | "fills" | "trades" | "winRate" | "volume") => void;
+}) {
+  const active = currentKey === key;
+  return (
+    <th
+      className="text-right px-4 py-2.5 font-medium cursor-pointer hover:text-white transition-colors select-none"
+      onClick={() => onSort(key)}
+    >
+      {label}
+      {active && (
+        <span className="ml-0.5 text-brand">{asc ? "↑" : "↓"}</span>
+      )}
+    </th>
+  );
+}
+
+function CoinTradeDetail({
+  coin,
+  stats,
+  trades,
+  onClose,
+}: {
+  coin: string;
+  stats: CoinStats;
+  trades: RoundTripTrade[];
+  onClose: () => void;
+}) {
+  const wr = stats.trades > 0 ? ((stats.wins / stats.trades) * 100).toFixed(0) : "–";
+  const profitFactor = Math.abs(stats.avgLoss) > 0 ? Math.abs(stats.avgWin / stats.avgLoss) : stats.avgWin > 0 ? Infinity : 0;
+
+  return (
+    <div className="bg-[#141620] rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
+        <div className="flex items-center gap-3">
+          <Link href={`/trade/${coin}`} className="text-sm font-bold text-white hover:text-brand transition-colors">
+            {coin}
+          </Link>
+          <span className={`text-sm font-bold ${stats.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {stats.netPnl >= 0 ? "+" : ""}{formatUsd(stats.netPnl)}
+          </span>
+        </div>
+        <button onClick={onClose} className="text-[#848e9c] hover:text-white text-xs px-2 py-1 rounded hover:bg-[#2a2e3e] transition-colors">
+          Close
+        </button>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#2a2e3e]/30">
+        {[
+          { label: "Gross P&L", value: formatUsd(stats.grossPnl), color: stats.grossPnl >= 0 ? "text-emerald-400" : "text-red-400" },
+          { label: "Fees", value: `-${formatUsd(stats.fees)}`, color: "text-amber-400" },
+          { label: "Funding", value: formatUsd(stats.funding), color: stats.funding >= 0 ? "text-emerald-400" : "text-red-400" },
+          { label: "Win Rate", value: `${wr}%`, color: "text-white" },
+          { label: "Avg Win", value: stats.avgWin > 0 ? `+${formatUsd(stats.avgWin)}` : "–", color: "text-emerald-400" },
+          { label: "Avg Loss", value: stats.avgLoss < 0 ? formatUsd(stats.avgLoss) : "–", color: "text-red-400" },
+        ].map((s) => (
+          <div key={s.label} className="bg-[#141620] px-3 py-2.5">
+            <p className="text-[9px] text-[#848e9c] uppercase">{s.label}</p>
+            <p className={`text-xs font-bold ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Trades list */}
+      <div className="px-4 py-3 border-t border-[#2a2e3e]">
+        <p className="text-[10px] text-[#848e9c] font-medium mb-2">{trades.length} round-trip trade{trades.length !== 1 ? "s" : ""}</p>
+      </div>
+      <div className="divide-y divide-[#2a2e3e]/30 max-h-[400px] overflow-y-auto">
+        {trades.map((t, i) => {
+          const duration = t.closeTime ? t.closeTime - t.openTime : Date.now() - t.openTime;
+          const isWin = t.netPnl > 0;
+          const fmtTime = (ts: number) =>
+            new Date(ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+          return (
+            <div key={`${t.coin}-${t.openTime}-${i}`} className="px-4 py-2.5 hover:bg-[#1a1d2e]/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${t.direction === "Long" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                    {t.direction.toUpperCase()}
+                  </span>
+                  <span className="text-[10px] text-[#848e9c]">
+                    {fmtTime(t.openTime)} → {t.closeTime ? fmtTime(t.closeTime) : "now"}
+                  </span>
+                  {t.isOpen && <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium">OPEN</span>}
+                </div>
+                <span className={`text-xs font-bold ${isWin ? "text-emerald-400" : "text-red-400"}`}>
+                  {t.netPnl >= 0 ? "+" : ""}{formatUsd(t.netPnl)}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-[10px] text-[#848e9c]">
+                <span>Size: <span className="text-white">{t.maxSize.toFixed(t.maxSize < 1 ? 5 : 2)}</span></span>
+                <span>Entry: <span className="text-white">${t.entryPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span></span>
+                {t.exitPx != null && <span>Exit: <span className="text-white">${t.exitPx.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span></span>}
+                <span>Duration: <span className="text-white">{formatDuration(duration)}</span></span>
+                <span>Fees: <span className="text-amber-400">-{formatUsd(t.totalFees)}</span></span>
+                <span>{t.fills.length} fill{t.fills.length > 1 ? "s" : ""}</span>
+              </div>
+            </div>
+          );
+        })}
+        {trades.length === 0 && (
+          <div className="px-4 py-6 text-center text-[10px] text-[#848e9c]">No completed round-trip trades for {coin}</div>
+        )}
+      </div>
     </div>
   );
 }
