@@ -55,10 +55,16 @@ export function PositionsTable() {
   }, [address]);
 
   const getPositionOpenTime = useCallback((coin: string) => {
+    // Find the most recent fill that opened a fresh position (startPosition was 0)
     const coinFills = fills
-      .filter((f) => f.coin === coin && f.dir.toLowerCase().includes("open"))
-      .sort((a, b) => a.time - b.time);
-    return coinFills.length > 0 ? coinFills[0].time : null;
+      .filter((f) => f.coin === coin)
+      .sort((a, b) => b.time - a.time); // newest first
+    for (const f of coinFills) {
+      if (parseFloat(f.startPosition) === 0 && f.dir.toLowerCase().includes("open")) {
+        return f.time;
+      }
+    }
+    return null;
   }, [fills]);
 
   const filteredOpenOrders = useMemo(
@@ -474,10 +480,10 @@ export function PositionsTable() {
                     const markPxStr = markPx > 0 ? markPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
                     const fundingRate = market ? parseFloat(market.funding) : 0;
                     const fundingPct = (fundingRate * 100).toFixed(4);
-                    // Positive funding: longs pay shorts. Negative: shorts pay longs.
                     const isPaying = isLong ? fundingRate > 0 : fundingRate < 0;
                     const notional = Math.abs(size) * markPx;
                     const fundingPerHr = Math.abs(fundingRate) * notional;
+                    const cumFundingSinceOpen = parseFloat(pos.cumFunding?.sinceOpen ?? "0");
                     const openTime = getPositionOpenTime(pos.coin);
                     const quantInfo = getQuantInfo(pos.coin);
                     const isBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
@@ -533,6 +539,9 @@ export function PositionsTable() {
                             </div>
                             <div className={`text-[9px] ${isPaying ? "text-[#f6465d]/70" : "text-[#0ecb81]/70"}`}>
                               {isPaying ? "Pay" : "Earn"} ${fundingPerHr.toFixed(2)}/1h
+                            </div>
+                            <div className={`text-[9px] font-medium ${cumFundingSinceOpen >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                              Total: {cumFundingSinceOpen >= 0 ? "+" : ""}${cumFundingSinceOpen.toFixed(2)}
                             </div>
                           </td>
                           <td className={`text-right px-2 py-2 font-medium ${pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
@@ -647,6 +656,7 @@ export function PositionsTable() {
                 const mIsPaying = isLong ? mFundRate > 0 : mFundRate < 0;
                 const mNotional = Math.abs(size) * mMarkPx;
                 const mFundPerHr = Math.abs(mFundRate) * mNotional;
+                const mCumFunding = parseFloat(pos.cumFunding?.sinceOpen ?? "0");
                 const mOpenTime = getPositionOpenTime(pos.coin);
                 const mQuantInfo = getQuantInfo(pos.coin);
                 const mBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
@@ -708,6 +718,9 @@ export function PositionsTable() {
                         </div>
                         <div className={`text-[9px] ${mIsPaying ? "text-[#f6465d]/70" : "text-[#0ecb81]/70"}`}>
                           {mIsPaying ? "-" : "+"}{mFundPct}%
+                        </div>
+                        <div className={`text-[9px] font-medium ${mCumFunding >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                          Total: {mCumFunding >= 0 ? "+" : ""}${mCumFunding.toFixed(2)}
                         </div>
                       </div>
                     </div>
