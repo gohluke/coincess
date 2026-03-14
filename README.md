@@ -22,6 +22,18 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Full-width positions panel** — positions/orders span the entire screen width below the chart (Based.app-style layout)
 - **Share PNL** — generate and share position cards as PNG images with leverage, ROE, entry/current price, and rocket illustration; portrait (9:16) and square (1:1) aspect ratios; supports Download, Copy to clipboard, and native Share (mobile)
 
+### Simple Spot Trading (`/buy`)
+- **Coinbase-style interface** — clean Buy / Sell / Convert UI for non-professional traders, mobile-first
+- **Market-cap-priority sorting** — tokens ordered BTC → ETH → SOL → HYPE → PURR → LINK first, then remaining tokens by 24h volume; coin picker dropdown follows the same order
+- **Accurate 24h price changes** — cross-references perp market `prevDayPx` for reliable 24h % (spot pairs with low volume often have stale data); falls back to spot data only when change is within ±50%; shows "—" when data is unreliable
+- **USDC-quoted pairs only** — filters Hyperliquid spot universe to only USDC-quoted pairs, avoiding duplicate base tokens
+- **Display name mapping** — wrapped tokens (UBTC, UETH, USOL) shown as familiar symbols (BTC, ETH, SOL)
+- **Convert mode** — swap between any two spot tokens via two sequential market orders routed through USDC
+- **Live price refresh** — prices update every 8 seconds via `refreshMarkets()`
+- **Simple fee tier** — 5bp (0.05%) per order, still 15-30x cheaper than Coinbase
+- **Quick presets** — 25% / 50% / 75% / 100% of available balance
+- **Pro mode link** — one click to switch to the advanced `/trade` terminal for the same coin
+
 ### Prediction Markets
 - **Browse trending events** — politics, sports, crypto, pop culture, business, science, technology
 - **Category filtering** — tabs including "Ending Soon" for markets about to close
@@ -460,7 +472,7 @@ pm2 start "npx tsx scripts/twitter-engine.ts" --name coincess-twitter
 coincess/
 ├── app/
 │   ├── dashboard/page.tsx               # Unified portfolio dashboard (Assets, History, Performance, PnL Calendar)
-│   ├── buy/page.tsx                       # Simple Buy/Sell/Convert (Coinbase-style, 5bp fee)
+│   ├── buy/page.tsx                       # Simple Buy/Sell/Convert (Coinbase-style, 5bp fee, sorted by market priority + volume, perp-cross-referenced 24h %)
 │   ├── trade/
 │   │   ├── page.tsx                     # Redirects to last ticker or /trade/BTC
 │   │   ├── [coin]/page.tsx              # Perpetuals trading terminal (1bp fee)

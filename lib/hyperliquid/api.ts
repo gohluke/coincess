@@ -358,15 +358,27 @@ async function fetchHip3SpotStocks(allMids: AllMids): Promise<MarketInfo[]> {
   }
 }
 
+// Hyperliquid uses wrapped token names internally; map to familiar symbols
+const SPOT_DISPLAY_NAME: Record<string, string> = {
+  UBTC: "BTC", UETH: "ETH", USOL: "SOL", USDH: "USDH",
+  USDT0: "USDT", USDE: "USDE", LINK0: "LINK", XAUT0: "XAUT",
+};
+
+function spotDisplayName(raw: string): string {
+  return SPOT_DISPLAY_NAME[raw] ?? raw;
+}
+
 async function fetchSpotMarkets(allMids: AllMids): Promise<MarketInfo[]> {
   try {
     const [spotMeta, spotCtxs] = await loadSpotMeta();
 
     const idxToName: Record<number, string> = {};
     const idxToDecimals: Record<number, number> = {};
+    let usdcTokenIdx = -1;
     for (const t of spotMeta.tokens) {
       idxToName[t.index] = t.name;
       idxToDecimals[t.index] = t.szDecimals;
+      if (t.name === "USDC") usdcTokenIdx = t.index;
     }
 
     const markets: MarketInfo[] = [];
@@ -376,6 +388,8 @@ async function fetchSpotMarkets(allMids: AllMids): Promise<MarketInfo[]> {
       const baseName = idxToName[pair.tokens[0]];
       if (!baseName) continue;
       if (HIP3_STOCK_NAMES.has(baseName)) continue;
+      // Only include USDC-quoted pairs to avoid duplicates (USDT0, USDH, USDE)
+      if (usdcTokenIdx >= 0 && pair.tokens[1] !== usdcTokenIdx) continue;
 
       const pairName = pair.name;
       const midPx = allMids[pairName] ?? "0";
@@ -386,7 +400,7 @@ async function fetchSpotMarkets(allMids: AllMids): Promise<MarketInfo[]> {
       spotPairNameMap.set(spotMarketName, pairName);
       markets.push({
         name: spotMarketName,
-        displayName: baseName,
+        displayName: spotDisplayName(baseName),
         assetIndex: 10000 + pair.index,
         szDecimals: idxToDecimals[pair.tokens[0]] ?? 4,
         maxLeverage: 1,
