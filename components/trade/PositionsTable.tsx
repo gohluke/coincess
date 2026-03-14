@@ -2,10 +2,12 @@
 
 import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil, ArrowLeftRight } from "lucide-react";
+import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil, ArrowLeftRight, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder, STALE_AGENT_ERROR } from "@/lib/hyperliquid/signing";
+import { fetchUserFills } from "@/lib/hyperliquid/api";
+import type { Fill } from "@/lib/hyperliquid/types";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { toast } from "sonner";
@@ -44,6 +46,20 @@ export function PositionsTable() {
   const [tpslModal, setTpslModal] = useState<{
     coin: string; szi: string; entryPx: string; markPx: string; posSize: string; leverage: string; isLong: boolean;
   } | null>(null);
+
+  const [fills, setFills] = useState<Fill[]>([]);
+
+  useEffect(() => {
+    if (!address) { setFills([]); return; }
+    fetchUserFills(address).then(setFills).catch(() => {});
+  }, [address]);
+
+  const getPositionOpenTime = useCallback((coin: string) => {
+    const coinFills = fills
+      .filter((f) => f.coin === coin && f.dir.toLowerCase().includes("open"))
+      .sort((a, b) => a.time - b.time);
+    return coinFills.length > 0 ? coinFills[0].time : null;
+  }, [fills]);
 
   const filteredOpenOrders = useMemo(
     () => openOrders.filter((o) => !o.isPositionTpsl),
@@ -439,9 +455,10 @@ export function PositionsTable() {
                     <th className="text-right px-2 py-2 font-medium">Mark</th>
                     <th className="text-right px-2 py-2 font-medium">Liq.</th>
                     <th className="text-right px-2 py-2 font-medium">Margin</th>
-                    <th className="text-right px-2 py-2 font-medium">Fund/8h</th>
+                    <th className="text-right px-2 py-2 font-medium">Fund/1h</th>
                     <th className="text-right px-2 py-2 font-medium">PnL</th>
                     <th className="text-right px-2 py-2 font-medium">ROE</th>
+                    <th className="text-right px-2 py-2 font-medium">Duration</th>
                     <th className="text-right px-3 py-2 font-medium">Action</th>
                   </tr>
                 </thead>
@@ -457,6 +474,11 @@ export function PositionsTable() {
                     const markPxStr = markPx > 0 ? markPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
                     const fundingRate = market ? parseFloat(market.funding) : 0;
                     const fundingPct = (fundingRate * 100).toFixed(4);
+                    // Positive funding: longs pay shorts. Negative: shorts pay longs.
+                    const isPaying = isLong ? fundingRate > 0 : fundingRate < 0;
+                    const notional = Math.abs(size) * markPx;
+                    const fundingPerHr = Math.abs(fundingRate) * notional;
+                    const openTime = getPositionOpenTime(pos.coin);
                     const quantInfo = getQuantInfo(pos.coin);
                     const isBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
                     const posTpsl = getTpslForCoin(pos.coin);
@@ -505,14 +527,22 @@ export function PositionsTable() {
                             {pos.liquidationPx ? parseFloat(pos.liquidationPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
                           </td>
                           <td className="text-right px-2 py-2 text-[#eaecef]">${parseFloat(pos.marginUsed).toFixed(2)}</td>
-                          <td className={`text-right px-2 py-2 ${fundingRate >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                            {fundingRate >= 0 ? "+" : ""}{fundingPct}%
+                          <td className="text-right px-2 py-2">
+                            <div className={`${isPaying ? "text-[#f6465d]" : "text-[#0ecb81]"}`}>
+                              {isPaying ? "-" : "+"}{fundingPct}%
+                            </div>
+                            <div className={`text-[9px] ${isPaying ? "text-[#f6465d]/70" : "text-[#0ecb81]/70"}`}>
+                              {isPaying ? "Pay" : "Earn"} ${fundingPerHr.toFixed(2)}/1h
+                            </div>
                           </td>
                           <td className={`text-right px-2 py-2 font-medium ${pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
                             {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
                           </td>
                           <td className={`text-right px-2 py-2 font-medium ${roe >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
                             {roe >= 0 ? "+" : ""}{roe.toFixed(2)}%
+                          </td>
+                          <td className="text-right px-2 py-2 text-[#f0b90b]">
+                            {openTime ? <PositionDuration since={openTime} /> : "—"}
                           </td>
                           <td className="text-right px-3 py-2">
                             <div className="flex items-center justify-end gap-1">
@@ -564,7 +594,7 @@ export function PositionsTable() {
                         {/* Expandable action form row */}
                         {actionForm?.coin === pos.coin && (
                           <tr className="bg-[#0f1118] border-b border-[#1a1d26]">
-                            <td colSpan={10} className="px-4 py-2">
+                            <td colSpan={11} className="px-4 py-2">
                               {actionForm.type === "limit" && (
                                 <div className="flex items-center gap-2 text-xs">
                                   <span className="text-[#848e9c] text-[10px]">Close at limit:</span>
@@ -614,6 +644,10 @@ export function PositionsTable() {
                 const markPxDisplay = mMarkPx > 0 ? mMarkPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
                 const mFundRate = mkt ? parseFloat(mkt.funding) : 0;
                 const mFundPct = (mFundRate * 100).toFixed(4);
+                const mIsPaying = isLong ? mFundRate > 0 : mFundRate < 0;
+                const mNotional = Math.abs(size) * mMarkPx;
+                const mFundPerHr = Math.abs(mFundRate) * mNotional;
+                const mOpenTime = getPositionOpenTime(pos.coin);
                 const mQuantInfo = getQuantInfo(pos.coin);
                 const mBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
                 const mTpsl = getTpslForCoin(pos.coin);
@@ -668,10 +702,21 @@ export function PositionsTable() {
                         <div className="text-[#eaecef]">{markPxDisplay}</div>
                       </div>
                       <div>
-                        <div className="text-[#848e9c]">Fund/8h</div>
-                        <div className={mFundRate >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}>{mFundRate >= 0 ? "+" : ""}{mFundPct}%</div>
+                        <div className="text-[#848e9c]">Fund/1h</div>
+                        <div className={mIsPaying ? "text-[#f6465d]" : "text-[#0ecb81]"}>
+                          {mIsPaying ? "Pay" : "Earn"} ${mFundPerHr.toFixed(2)}/1h
+                        </div>
+                        <div className={`text-[9px] ${mIsPaying ? "text-[#f6465d]/70" : "text-[#0ecb81]/70"}`}>
+                          {mIsPaying ? "-" : "+"}{mFundPct}%
+                        </div>
                       </div>
                     </div>
+                    {mOpenTime && (
+                      <div className="flex items-center gap-1 text-[10px] text-[#f0b90b] mb-2">
+                        <Clock className="h-3 w-3" />
+                        <PositionDuration since={mOpenTime} />
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-1.5 mb-2">
                       <button
@@ -1089,6 +1134,27 @@ export function PositionsTable() {
       )}
     </div>
   );
+}
+
+/* ---------- Position Duration (live ticking) ---------- */
+
+function PositionDuration({ since }: { since: number }) {
+  const [, tick] = useState(0);
+  const ref = useRef<ReturnType<typeof setInterval>>(undefined);
+  useEffect(() => {
+    ref.current = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(ref.current);
+  }, []);
+  const elapsed = Date.now() - since;
+  const s = Math.floor(elapsed / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return <span>{d}d {h}h {m}m</span>;
+  if (h > 0) return <span>{h}h {m}m {sec}s</span>;
+  if (m > 0) return <span>{m}m {sec}s</span>;
+  return <span>{sec}s</span>;
 }
 
 /* ---------- Share PNL Modal ---------- */
