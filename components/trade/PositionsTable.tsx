@@ -541,7 +541,7 @@ export function PositionsTable() {
                               {isPaying ? "Pay" : "Earn"} ${fundingPerHr.toFixed(2)}/1h
                             </div>
                             <div className={`text-[9px] font-medium ${cumFundingSinceOpen >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                              Total: {cumFundingSinceOpen >= 0 ? "+" : ""}${cumFundingSinceOpen.toFixed(2)}
+                              {cumFundingSinceOpen >= 0 ? "Earned" : "Paid"}: ${Math.abs(cumFundingSinceOpen).toFixed(2)}
                             </div>
                           </td>
                           <td className={`text-right px-2 py-2 font-medium ${pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
@@ -720,7 +720,7 @@ export function PositionsTable() {
                           {mIsPaying ? "-" : "+"}{mFundPct}%
                         </div>
                         <div className={`text-[9px] font-medium ${mCumFunding >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                          Total: {mCumFunding >= 0 ? "+" : ""}${mCumFunding.toFixed(2)}
+                          {mCumFunding >= 0 ? "Earned" : "Paid"}: ${Math.abs(mCumFunding).toFixed(2)}
                         </div>
                       </div>
                     </div>

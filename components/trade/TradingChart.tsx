@@ -132,6 +132,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
 
   const clearinghouse = useTradingStore((s) => s.clearinghouse);
   const openOrders = useTradingStore((s) => s.openOrders);
+  const markets = useTradingStore((s) => s.markets);
 
   marketRef.current = selectedMarket;
   intervalRef.current = selectedInterval;
@@ -319,7 +320,23 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         );
       }
 
-      // PNL line removed — it duplicates the chart's current price label
+      const pnl = parseFloat(pos.unrealizedPnl ?? "0");
+      const mkt = markets.find((m) => m.name === pos.coin);
+      const markPx = mkt ? parseFloat(mkt.markPx) : 0;
+      if (pnl !== 0 && markPx > 0) {
+        const sign = pnl >= 0 ? "+" : "";
+        priceLinesRef.current.push(
+          series.createPriceLine({
+            price: markPx,
+            color: pnl >= 0 ? "#0ecb81" : "#f6465d",
+            lineWidth: 1,
+            lineStyle: LineStyle.Solid,
+            lineVisible: false,
+            axisLabelVisible: true,
+            title: `PNL ${sign}$${pnl.toFixed(2)}`,
+          })
+        );
+      }
     }
 
     const orders = openOrders?.filter((o) => {
@@ -359,7 +376,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         })
       );
     }
-  }, [clearinghouse, openOrders]);
+  }, [clearinghouse, openOrders, markets]);
 
   useEffect(() => {
     updatePriceLines();
