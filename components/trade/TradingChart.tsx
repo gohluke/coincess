@@ -292,8 +292,6 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     if (pos) {
       const entryPx = parseFloat(pos.entryPx ?? "0");
       const liqPx = parseFloat(pos.liquidationPx ?? "0");
-      const pnl = parseFloat(pos.unrealizedPnl ?? "0");
-      const isLong = parseFloat(pos.szi) > 0;
 
       if (entryPx > 0) {
         priceLinesRef.current.push(
@@ -321,23 +319,7 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         );
       }
 
-      if (pnl !== 0 && entryPx > 0) {
-        const sz = Math.abs(parseFloat(pos.szi));
-        const pnlPrice = isLong ? entryPx + pnl / sz : entryPx - pnl / sz;
-        if (pnlPrice > 0 && isFinite(pnlPrice)) {
-          const sign = pnl >= 0 ? "+" : "";
-          priceLinesRef.current.push(
-            series.createPriceLine({
-              price: pnlPrice,
-              color: pnl >= 0 ? "#0ecb81" : "#f6465d",
-              lineWidth: 1,
-              lineStyle: LineStyle.Dotted,
-              axisLabelVisible: true,
-              title: `PNL ${sign}$${pnl.toFixed(2)}`,
-            })
-          );
-        }
-      }
+      // PNL line removed — it duplicates the chart's current price label
     }
 
     const orders = openOrders?.filter((o) => {
