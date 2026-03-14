@@ -225,7 +225,16 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         transition: "width 0.1s, height 0.1s, font-size 0.1s",
       });
 
+      const showCrosshair = () => {
+        const chart = chartRef.current;
+        const s = seriesRef.current;
+        if (chart && s) {
+          chart.setCrosshairPosition(parseFloat(fi.px), snapped as Time, s);
+        }
+      };
+
       el.addEventListener("mouseenter", () => {
+        showCrosshair();
         const tip = tooltipRef.current;
         if (!tip) return;
         const entries = fillTooltipMapRef.current.get(key);
@@ -242,7 +251,10 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
         tip.style.left = `${left}px`;
         tip.style.top = `${top}px`;
       });
+      el.addEventListener("mousemove", showCrosshair);
       el.addEventListener("mouseleave", () => {
+        const chart = chartRef.current;
+        if (chart) chart.clearCrosshairPosition();
         const tip = tooltipRef.current;
         if (tip) tip.style.display = "none";
       });
