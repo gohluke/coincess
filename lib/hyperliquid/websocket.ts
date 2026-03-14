@@ -116,6 +116,10 @@ export class HyperliquidWs {
     });
   }
 
+  subscribeActiveAssetCtx(coin: string, handler: (ctx: { coin: string; ctx: Record<string, string> }) => void) {
+    return this.subscribe({ type: "activeAssetCtx", coin }, "activeAssetCtx", handler as MessageHandler);
+  }
+
   disconnect() {
     this.cleanup();
     if (this.reconnectTimer) {

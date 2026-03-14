@@ -49,6 +49,7 @@ interface TradingState {
   loadMarkets: () => Promise<void>;
   refreshMarkets: () => Promise<void>;
   updateMids: (mids: Record<string, string>) => void;
+  updateAssetCtx: (coin: string, ctx: Record<string, string>) => void;
   selectMarket: (coin: string) => void;
   setInterval: (interval: CandleInterval) => void;
   setAddress: (addr: string | null) => void;
@@ -117,6 +118,26 @@ export const useTradingStore = create<TradingState>((set, get) => ({
         return { ...m, markPx: mid, midPx: mid };
       });
       return changed ? { markets: updated } : {};
+    });
+  },
+
+  updateAssetCtx: (coin, ctx) => {
+    set((s) => {
+      const idx = s.markets.findIndex((m) => m.name === coin);
+      if (idx === -1) return {};
+      const m = s.markets[idx];
+      const updated = { ...m };
+      if (ctx.funding !== undefined) updated.funding = ctx.funding;
+      if (ctx.openInterest !== undefined) updated.openInterest = ctx.openInterest;
+      if (ctx.oraclePx !== undefined) updated.oraclePx = ctx.oraclePx;
+      if (ctx.markPx !== undefined) updated.markPx = ctx.markPx;
+      if (ctx.midPx !== undefined) updated.midPx = ctx.midPx;
+      if (ctx.prevDayPx !== undefined) updated.prevDayPx = ctx.prevDayPx;
+      if (ctx.dayNtlVlm !== undefined) updated.dayNtlVlm = ctx.dayNtlVlm;
+      if (ctx.premium !== undefined) updated.premium = ctx.premium;
+      const markets = [...s.markets];
+      markets[idx] = updated;
+      return { markets };
     });
   },
 
@@ -191,10 +212,16 @@ export function subscribeToMarket(coin: string) {
     }),
   );
 
-  // Refresh funding, volume, OI every 10s via REST
+  wsCleanups.push(
+    ws.subscribeActiveAssetCtx(coin, (data) => {
+      store.updateAssetCtx(data.coin, data.ctx);
+    }),
+  );
+
+  // Refresh full market list periodically for non-active markets
   metaRefreshTimer = setInterval(() => {
     store.refreshMarkets();
-  }, 10_000);
+  }, 30_000);
 
   return () => {
     wsCleanups.forEach((fn) => fn());

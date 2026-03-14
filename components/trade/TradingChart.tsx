@@ -623,7 +623,9 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     });
 
     return unsub;
-  }, [selectedMarket, selectedInterval, fills, refreshOverlays, repositionOverlays]);
+  // fills is intentionally excluded — overlay refresh is handled by its own useEffect
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMarket, selectedInterval, refreshOverlays, repositionOverlays]);
 
   useEffect(() => {
     refreshOverlays();
@@ -652,6 +654,13 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
             {iv.label}
           </button>
         ))}
+        <button
+          onClick={() => chartRef.current?.timeScale().fitContent()}
+          className="ml-auto px-2.5 py-1 text-xs rounded text-[#848e9c] hover:text-white hover:bg-[#1a1d26] transition-colors"
+          title="Reset chart view"
+        >
+          ↺ Reset
+        </button>
       </div>
       <div className="flex-1 min-h-0 relative">
         <div ref={containerRef} className="absolute inset-0" />
