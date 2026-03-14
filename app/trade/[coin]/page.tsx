@@ -125,11 +125,14 @@ export default function TradePageDynamic() {
 
   useEffect(() => {
     if (!address) return;
-    const interval = setInterval(() => loadUserState(), 10000);
+    const interval = setInterval(() => {
+      loadUserState();
+      fetchUserFills(address).then(setUserFills).catch(() => {});
+    }, 10000);
     return () => clearInterval(interval);
   }, [address, loadUserState]);
 
-  // Fetch user fills for chart markers
+  // Fetch user fills for chart markers (initial + on address change)
   useEffect(() => {
     if (!address) { setUserFills([]); return; }
     fetchUserFills(address).then(setUserFills).catch(() => {});

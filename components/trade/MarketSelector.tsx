@@ -67,6 +67,22 @@ function CoinLogo({ symbol, size = 24 }: { symbol: string; size?: number }) {
   );
 }
 
+function FundingCountdown() {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const now = new Date();
+  const nextHour = new Date(now);
+  nextHour.setMinutes(0, 0, 0);
+  nextHour.setHours(nextHour.getHours() + 1);
+  const diff = Math.max(0, Math.floor((nextHour.getTime() - now.getTime()) / 1000));
+  const mm = String(Math.floor(diff / 60)).padStart(2, "0");
+  const ss = String(diff % 60).padStart(2, "0");
+  return <span className="text-[#848e9c] ml-1.5">{mm}:{ss}</span>;
+}
+
 function marketTypeBadge(name: string): { label: string; color: string } | null {
   if (!name.includes(":")) return null;
   return { label: "HIP-3", color: "#f0b90b" };
@@ -195,35 +211,36 @@ export function MarketSelector() {
             {markPx >= 1 ? markPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : markPx.toPrecision(5)}
           </span>
           <div className="flex flex-col">
+            <span className="text-[10px] text-[#848e9c]">Oracle</span>
+            <span className="text-xs text-white">
+              {parseFloat(currentMarket.oraclePx ?? currentMarket.markPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex flex-col">
             <span className="text-[10px] text-[#848e9c]">24h Change</span>
             <span className={`text-xs font-medium flex items-center gap-1 ${isPositive ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
               {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-              {isPositive ? "+" : ""}{change24h.toFixed(2)}%
+              {isPositive ? "+" : ""}{(markPx - prevPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 3 })} / {isPositive ? "+" : ""}{change24h.toFixed(2)}%
             </span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-[#848e9c]">24h Volume</span>
             <span className="text-xs text-white">
-              ${parseFloat(currentMarket.dayNtlVlm) >= 1e9
-                ? (parseFloat(currentMarket.dayNtlVlm) / 1e9).toFixed(2) + "B"
-                : (parseFloat(currentMarket.dayNtlVlm) / 1e6).toFixed(2) + "M"}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-[#848e9c]">Funding / 8h</span>
-            <span className={`text-xs ${parseFloat(currentMarket.funding) >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-              {(parseFloat(currentMarket.funding) * 100).toFixed(4)}%
+              ${parseFloat(currentMarket.dayNtlVlm).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-[#848e9c]">Open Interest</span>
             <span className="text-xs text-white">
-              ${(parseFloat(currentMarket.openInterest) * markPx / 1e6).toFixed(2)}M
+              ${(parseFloat(currentMarket.openInterest) * markPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#848e9c]">Max Leverage</span>
-            <span className="text-xs text-[#f0b90b]">{currentMarket.maxLeverage}x</span>
+            <span className="text-[10px] text-[#848e9c]">Funding / Countdown</span>
+            <span className={`text-xs ${parseFloat(currentMarket.funding) >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+              {(parseFloat(currentMarket.funding) * 100).toFixed(4)}%
+              <FundingCountdown />
+            </span>
           </div>
         </div>
       )}
