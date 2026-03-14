@@ -84,6 +84,7 @@ function FundingCountdown() {
 }
 
 function marketTypeBadge(name: string): { label: string; color: string } | null {
+  if (name.startsWith("spot:")) return { label: "SPOT", color: "#3b82f6" };
   if (!name.includes(":")) return null;
   return { label: "HIP-3", color: "#f0b90b" };
 }
@@ -201,7 +202,7 @@ export function MarketSelector() {
             {badge.label}
           </span>
         )}
-        <span className="text-[#848e9c] text-xs">/USD</span>
+        <span className="text-[#848e9c] text-xs">{currentMarket?.dex === "spot" ? "/USDC" : "/USD"}</span>
         <ChevronDown className={`h-4 w-4 text-[#848e9c] transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -229,19 +230,23 @@ export function MarketSelector() {
               ${parseFloat(currentMarket.dayNtlVlm).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-[#848e9c]">Open Interest</span>
-            <span className="text-xs text-white">
-              ${(parseFloat(currentMarket.openInterest) * markPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-[#848e9c]">Funding / Countdown</span>
-            <span className={`text-xs ${parseFloat(currentMarket.funding) >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-              {(parseFloat(currentMarket.funding) * 100).toFixed(4)}%
-              <FundingCountdown />
-            </span>
-          </div>
+          {currentMarket.dex !== "spot" && (
+            <div className="flex flex-col">
+              <span className="text-[10px] text-[#848e9c]">Open Interest</span>
+              <span className="text-xs text-white">
+                ${(parseFloat(currentMarket.openInterest) * markPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
+          {currentMarket.dex !== "spot" && (
+            <div className="flex flex-col">
+              <span className="text-[10px] text-[#848e9c]">Funding / Countdown</span>
+              <span className={`text-xs ${parseFloat(currentMarket.funding) >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                {(parseFloat(currentMarket.funding) * 100).toFixed(4)}%
+                <FundingCountdown />
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -313,7 +318,12 @@ export function MarketSelector() {
                   <button
                     key={m.name}
                     onClick={() => {
-                      const urlCoin = m.name.includes(":") ? m.name.split(":")[1] : m.name;
+                      let urlCoin: string;
+                      if (m.dex === "spot") {
+                        urlCoin = "spot-" + m.name.replace("spot:", "");
+                      } else {
+                        urlCoin = m.name.includes(":") ? m.name.split(":")[1] : m.name;
+                      }
                       router.push(`/trade/${urlCoin}`);
                       setOpen(false);
                       setSearch("");
@@ -336,7 +346,7 @@ export function MarketSelector() {
                           {mBadge.label}
                         </span>
                       )}
-                      <span className="text-[#4a4e59] shrink-0">/USD</span>
+                      <span className="text-[#4a4e59] shrink-0">{m.dex === "spot" ? "/USDC" : "/USD"}</span>
                     </span>
                     <span className="text-right text-[#555a66] tabular-nums">
                       {m.maxLeverage > 0 ? `${m.maxLeverage}x` : "—"}
@@ -363,7 +373,7 @@ export function MarketSelector() {
           </div>
 
           <div className="px-3 py-1.5 border-t border-[#2a2e39] text-[10px] text-[#4a4e59] text-center">
-            {filtered.length} of {totalCount} markets · Crypto, Stocks, Commodities, Forex on Hyperliquid
+            {filtered.length} of {totalCount} markets · Crypto, Spot, Stocks, Commodities, Forex on Hyperliquid
           </div>
         </div>
       )}

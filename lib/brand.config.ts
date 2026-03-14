@@ -60,6 +60,8 @@ export const BRAND_CONFIG = {
   builder: {
     address: "0x635b3B453De75e873A02B4898f615C5E8909070a" as const,
     fee: 10,
+    simpleFee: 50,
+    maxFeeApproval: "0.05%",
     enabled: true,
     feeWhitelist: [
       "0x635b3B453De75e873A02B4898f615C5E8909070a",

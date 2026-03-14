@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, BarChart3, Bot, LayoutDashboard, Search } from "lucide-react";
+import { TrendingUp, BarChart3, Bot, LayoutDashboard, ShoppingCart } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
+  { href: "/buy", label: "Buy", icon: ShoppingCart },
   { href: "/trade/BTC", label: "Trade", icon: TrendingUp },
-  { href: "/coins", label: "Discover", icon: Search },
   { href: "/predict", label: "Predict", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },
 ];

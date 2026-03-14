@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   TrendingUp, BarChart3, Bot, LayoutDashboard, Search,
-  Users, BookOpen, MessageSquare, Wrench, LayoutGrid,
+  Users, BookOpen, MessageSquare, Wrench, LayoutGrid, ShoppingCart,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
@@ -15,6 +15,7 @@ import { SearchModal } from "@/components/SearchModal";
 
 const NAV_ICONS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
+  { href: "/buy", label: "Buy", icon: ShoppingCart },
   { href: "/trade/BTC", label: "Trade", icon: TrendingUp },
   { href: "/predict", label: "Predict", icon: BarChart3 },
   { href: "/automate", label: "Automate", icon: Bot },

@@ -75,6 +75,7 @@ export function OrderForm() {
     address.toLowerCase() !== signingAddr.toLowerCase();
 
   const market = markets.find((m) => m.name === selectedMarket);
+  const isSpot = market?.dex === "spot";
   const displayName = market?.displayName || selectedMarket;
   const midPrice = (() => {
     let raw: string;
@@ -135,7 +136,8 @@ export function OrderForm() {
     if (!availableBalance || !midPrice) return;
     const price = orderType === "market" ? parseFloat(midPrice) : parseFloat(orderPrice || midPrice);
     if (price <= 0) return;
-    const maxNotional = availableBalance * orderLeverage * (pct / 100);
+    const effectiveLeverage = isSpot ? 1 : orderLeverage;
+    const maxNotional = availableBalance * effectiveLeverage * (pct / 100);
     const size = maxNotional / price;
     const decimals = market?.szDecimals ?? 4;
     setOrderSize(size.toFixed(decimals));
@@ -157,7 +159,9 @@ export function OrderForm() {
         ? getMarketOrderPrice(orderSide === "buy", numMid)
         : orderPrice;
 
-      const sideLabel = orderSide === "buy" ? "Long" : "Short";
+      const sideLabel = isSpot
+        ? (orderSide === "buy" ? "Buy" : "Sell")
+        : (orderSide === "buy" ? "Long" : "Short");
       const typeLabel = orderType === "market" ? "Market" : "Limit";
       toast.loading(`Submitting ${typeLabel} ${sideLabel} ${displayName}...`, { id: "order-submit" });
 
@@ -237,7 +241,7 @@ export function OrderForm() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-3 sm:p-3 px-4 space-y-3">
-        {/* Long / Short toggle */}
+        {/* Long / Short toggle (Buy / Sell for spot) */}
         <div className="grid grid-cols-2">
           <button
             onClick={() => setOrderSide("buy")}
@@ -247,7 +251,7 @@ export function OrderForm() {
                 : "text-[#848e9c] border-transparent hover:text-white"
             }`}
           >
-            Long
+            {isSpot ? "Buy" : "Long"}
           </button>
           <button
             onClick={() => setOrderSide("sell")}
@@ -257,7 +261,7 @@ export function OrderForm() {
                 : "text-[#848e9c] border-transparent hover:text-white"
             }`}
           >
-            Short
+            {isSpot ? "Sell" : "Short"}
           </button>
         </div>
 
@@ -327,83 +331,91 @@ export function OrderForm() {
           )}
         </div>
 
-        {/* Leverage */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-[10px] text-[#848e9c] uppercase tracking-wider">Leverage</label>
-            <span className="text-xs text-white font-medium">{orderLeverage}x</span>
+        {/* Leverage — hidden for spot markets */}
+        {!isSpot && (
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] text-[#848e9c] uppercase tracking-wider">Leverage</label>
+              <span className="text-xs text-white font-medium">{orderLeverage}x</span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={market?.maxLeverage ?? 50}
+              value={orderLeverage}
+              onChange={(e) => setOrderLeverage(parseInt(e.target.value))}
+              className="w-full accent-brand h-1 appearance-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:bg-[#2a2e39] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:-mt-1 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-1 [&::-moz-range-track]:bg-[#2a2e39] [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand outline-none"
+            />
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {LEVERAGE_PRESETS.filter((l) => l <= (market?.maxLeverage ?? 50)).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setOrderLeverage(l)}
+                  className={`px-2 py-1 text-[10px] rounded transition-colors ${
+                    orderLeverage === l
+                      ? "bg-brand text-white"
+                      : "bg-[#1a1d26] text-[#848e9c] hover:bg-[#2a2e39] hover:text-white"
+                  }`}
+                >
+                  {l}x
+                </button>
+              ))}
+            </div>
           </div>
-          <input
-            type="range"
-            min={1}
-            max={market?.maxLeverage ?? 50}
-            value={orderLeverage}
-            onChange={(e) => setOrderLeverage(parseInt(e.target.value))}
-            className="w-full accent-brand h-1 appearance-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:bg-[#2a2e39] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:-mt-1 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-1 [&::-moz-range-track]:bg-[#2a2e39] [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand outline-none"
-          />
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {LEVERAGE_PRESETS.filter((l) => l <= (market?.maxLeverage ?? 50)).map((l) => (
-              <button
-                key={l}
-                onClick={() => setOrderLeverage(l)}
-                className={`px-2 py-1 text-[10px] rounded transition-colors ${
-                  orderLeverage === l
-                    ? "bg-brand text-white"
-                    : "bg-[#1a1d26] text-[#848e9c] hover:bg-[#2a2e39] hover:text-white"
-                }`}
-              >
-                {l}x
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
 
-        {/* TP/SL */}
-        <button
-          onClick={() => setShowTpsl(!showTpsl)}
-          className="flex items-center gap-1 text-[11px] text-[#848e9c] hover:text-white transition-colors"
-        >
-          {showTpsl ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          Take Profit / Stop Loss
-        </button>
-        {showTpsl && (
-          <div className="space-y-2">
-            <div>
-              <label className="text-[10px] text-[#0ecb81] uppercase tracking-wider mb-1 block">Take Profit</label>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={tpPrice}
-                onChange={(e) => setTpPrice(e.target.value)}
-                placeholder="TP price"
-                className="w-full bg-[#1a1d26] border border-[#0ecb81]/30 rounded-lg px-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-[#0ecb81] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-[#f6465d] uppercase tracking-wider mb-1 block">Stop Loss</label>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={slPrice}
-                onChange={(e) => setSlPrice(e.target.value)}
-                placeholder="SL price"
-                className="w-full bg-[#1a1d26] border border-[#f6465d]/30 rounded-lg px-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-[#f6465d] transition-colors"
-              />
-            </div>
-          </div>
+        {/* TP/SL — hidden for spot markets */}
+        {!isSpot && (
+          <>
+            <button
+              onClick={() => setShowTpsl(!showTpsl)}
+              className="flex items-center gap-1 text-[11px] text-[#848e9c] hover:text-white transition-colors"
+            >
+              {showTpsl ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              Take Profit / Stop Loss
+            </button>
+            {showTpsl && (
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[10px] text-[#0ecb81] uppercase tracking-wider mb-1 block">Take Profit</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={tpPrice}
+                    onChange={(e) => setTpPrice(e.target.value)}
+                    placeholder="TP price"
+                    className="w-full bg-[#1a1d26] border border-[#0ecb81]/30 rounded-lg px-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-[#0ecb81] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#f6465d] uppercase tracking-wider mb-1 block">Stop Loss</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={slPrice}
+                    onChange={(e) => setSlPrice(e.target.value)}
+                    placeholder="SL price"
+                    className="w-full bg-[#1a1d26] border border-[#f6465d]/30 rounded-lg px-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none focus:border-[#f6465d] transition-colors"
+                  />
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Order summary */}
         <div className="space-y-1.5 text-xs border-t border-[#2a2e39] pt-2">
           <div className="flex justify-between">
-            <span className="text-[#848e9c]">Notional</span>
+            <span className="text-[#848e9c]">{isSpot ? "Total" : "Notional"}</span>
             <span className="text-white">${notional.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-[#848e9c]">Margin Required</span>
-            <span className="text-white">${margin.toFixed(2)}</span>
-          </div>
-          {market && (
+          {!isSpot && (
+            <div className="flex justify-between">
+              <span className="text-[#848e9c]">Margin Required</span>
+              <span className="text-white">${margin.toFixed(2)}</span>
+            </div>
+          )}
+          {!isSpot && market && (
             <div className="flex justify-between">
               <span className="text-[#848e9c]">Funding Rate</span>
               <span className={parseFloat(market.funding) >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}>
@@ -411,7 +423,7 @@ export function OrderForm() {
               </span>
             </div>
           )}
-          {estLiqPrice && estLiqPrice > 0 && (
+          {!isSpot && estLiqPrice && estLiqPrice > 0 && (
             <div className="flex justify-between">
               <span className="text-[#848e9c]">Est. Liq. Price</span>
               <span className="text-[#f0b90b]">${estLiqPrice.toFixed(2)}</span>
@@ -476,7 +488,10 @@ export function OrderForm() {
             }`}
           >
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {orderSide === "buy" ? "Long" : "Short"} {displayName}
+            {isSpot
+              ? (orderSide === "buy" ? "Buy" : "Sell")
+              : (orderSide === "buy" ? "Long" : "Short")
+            } {displayName}
           </button>
         ) : address ? (
           <div className="space-y-2">
@@ -495,7 +510,7 @@ export function OrderForm() {
                       toast.loading("Approving builder fee...", { id: "enable-trading" });
                       const builderResult = await signAndApproveBuilderFee(
                         BRAND_CONFIG.builder.address,
-                        "0.01%",
+                        BRAND_CONFIG.builder.maxFeeApproval,
                         address ?? undefined,
                       );
                       if (!builderResult.success) {

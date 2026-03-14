@@ -16,7 +16,7 @@ import {
   type IPriceLine,
 } from "lightweight-charts";
 import { BRAND } from "@/lib/brand";
-import { fetchCandles } from "@/lib/hyperliquid/api";
+import { fetchCandles, getSpotPairName } from "@/lib/hyperliquid/api";
 import { getWs } from "@/lib/hyperliquid/websocket";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import type { CandleInterval, Fill } from "@/lib/hyperliquid/types";
@@ -396,7 +396,8 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     const startTime = endTime - ivMs * BATCH_SIZE;
 
     try {
-      const candles = await fetchCandles(marketRef.current, intervalRef.current, startTime, endTime - 1);
+      const olderCandleCoin = getSpotPairName(marketRef.current) ?? marketRef.current;
+      const candles = await fetchCandles(olderCandleCoin, intervalRef.current, startTime, endTime - 1);
       if (candles.length === 0) {
         noMoreDataRef.current = true;
         return;
@@ -565,7 +566,8 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
     const lookback = ivMs * BATCH_SIZE;
     const startTime = now - lookback;
 
-    fetchCandles(selectedMarket, selectedInterval, startTime, now)
+    const candleCoin = getSpotPairName(selectedMarket) ?? selectedMarket;
+    fetchCandles(candleCoin, selectedInterval, startTime, now)
       .then((candles) => {
         const candleData: CandlestickData[] = candles.map((c) => ({
           time: toLocal(c.t),
@@ -592,7 +594,8 @@ export function TradingChart({ fills }: { fills?: Fill[] }) {
       .catch(console.error);
 
     const ws = getWs();
-    const unsub = ws.subscribeCandle(selectedMarket, selectedInterval, (data) => {
+    const wsCandleCoin = getSpotPairName(selectedMarket) ?? selectedMarket;
+    const unsub = ws.subscribeCandle(wsCandleCoin, selectedInterval, (data) => {
       const candles = Array.isArray(data) ? data : [data];
       for (const c of candles) {
         const cd: CandlestickData = {

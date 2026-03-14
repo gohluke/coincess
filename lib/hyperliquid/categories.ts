@@ -1,6 +1,6 @@
 export type MarketCategory =
   | "all" | "favorites" | "hot"
-  | "crypto" | "major" | "defi" | "meme" | "ai" | "l2" | "gaming"
+  | "crypto" | "spot" | "major" | "defi" | "meme" | "ai" | "l2" | "gaming"
   | "stocks" | "commodities" | "forex" | "indices"
   | "new";
 
@@ -15,6 +15,7 @@ export const CATEGORIES: CategoryDef[] = [
   { id: "favorites", label: "Favorites", emoji: "★" },
   { id: "hot", label: "Hot", emoji: "🔥" },
   { id: "crypto", label: "Crypto", emoji: "" },
+  { id: "spot", label: "Spot", emoji: "" },
   { id: "stocks", label: "Stocks", emoji: "" },
   { id: "commodities", label: "Commodities", emoji: "" },
   { id: "forex", label: "Forex", emoji: "" },
@@ -98,11 +99,17 @@ function isHip3(name: string): boolean {
   return name.includes(":");
 }
 
+function isSpot(name: string): boolean {
+  return name.startsWith("spot:");
+}
+
 export function getMarketCategory(name: string): MarketCategory[] {
   const cats: MarketCategory[] = [];
   const raw = stripPrefix(name);
 
-  if (isHip3(name)) {
+  if (isSpot(name)) {
+    cats.push("spot");
+  } else if (isHip3(name)) {
     if (STOCKS.has(raw) || ETFS.has(raw)) cats.push("stocks");
     if (COMMODITIES.has(raw)) cats.push("commodities");
     if (FOREX.has(raw)) cats.push("forex");
@@ -129,7 +136,8 @@ export function filterByCategory(
   if (category === "favorites") return names.filter((n) => favorites.has(n));
   if (category === "hot") return names;
 
-  if (category === "crypto") return names.filter((n) => !isHip3(n));
+  if (category === "crypto") return names.filter((n) => !isHip3(n) && !isSpot(n));
+  if (category === "spot") return names.filter((n) => isSpot(n));
 
   const hip3SetMap: Record<string, Set<string>> = {
     stocks: new Set([...STOCKS, ...ETFS]),

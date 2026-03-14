@@ -93,8 +93,11 @@ export async function GET(req: Request) {
   const fleetPnl = fleet.reduce((s, a) => s + Number(a.total_pnl ?? 0), 0);
   const fleetTrades = fleet.reduce((s, a) => s + (a.trade_count ?? 0), 0);
 
-  // Revenue estimate: builder fee is 1bp (0.01%) of volume
-  const estRevenue = totalVolume * 0.0001;
+  const advancedFeeRate = BRAND_CONFIG.builder.fee / 100000;
+  const simpleFeeRate = BRAND_CONFIG.builder.simpleFee / 100000;
+  const estRevenueAdvanced = totalVolume * advancedFeeRate;
+  const estRevenueSimple = totalVolume * simpleFeeRate;
+  const estRevenue = totalVolume * advancedFeeRate;
 
   // Top 20 traders by volume
   const topTraders = traders.slice(0, 20).map((t) => ({
@@ -116,6 +119,15 @@ export async function GET(req: Request) {
       new7d,
       builderAccountValue,
       estRevenue,
+    },
+    fees: {
+      advancedBps: BRAND_CONFIG.builder.fee / 10,
+      simpleBps: BRAND_CONFIG.builder.simpleFee / 10,
+      advancedPct: `${(BRAND_CONFIG.builder.fee / 100).toFixed(3)}%`,
+      simplePct: `${(BRAND_CONFIG.builder.simpleFee / 100).toFixed(3)}%`,
+      maxApproval: BRAND_CONFIG.builder.maxFeeApproval,
+      estRevenueAdvanced,
+      estRevenueSimple,
     },
     fleet: {
       total: fleet.length,

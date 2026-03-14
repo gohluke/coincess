@@ -54,6 +54,15 @@ interface Stats {
     builderAccountValue: number;
     estRevenue: number;
   };
+  fees: {
+    advancedBps: number;
+    simpleBps: number;
+    advancedPct: string;
+    simplePct: string;
+    maxApproval: string;
+    estRevenueAdvanced: number;
+    estRevenueSimple: number;
+  };
   fleet: {
     total: number;
     active: number;
@@ -191,7 +200,7 @@ export default function AdminPage() {
 
   if (!stats) return null;
 
-  const { overview, fleet, topTraders, referral } = stats;
+  const { overview, fees, fleet, topTraders, referral } = stats;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
@@ -245,12 +254,50 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* Fee Structure */}
+      {fees && (
+        <div>
+          <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-brand" /> Tiered Fee Structure
+          </h2>
+          <div className="bg-[#141620] rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2.5 border-b border-[#2a2e3e] text-[10px] text-[#555a66] uppercase tracking-wider font-medium">
+              <span>Tier</span>
+              <span className="text-right">Rate</span>
+              <span className="text-right">BPS</span>
+              <span className="text-right">Est. Revenue</span>
+            </div>
+            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 border-b border-[#2a2e3e]/50 items-center">
+              <div>
+                <span className="text-xs text-white font-medium">Advanced</span>
+                <span className="text-[10px] text-[#555a66] ml-2">/trade</span>
+              </div>
+              <span className="text-xs text-white tabular-nums text-right">{fees.advancedPct}</span>
+              <span className="text-xs text-[#848e9c] tabular-nums text-right">{fees.advancedBps} bps</span>
+              <span className="text-xs text-[#0ecb81] tabular-nums text-right">{formatUsd(fees.estRevenueAdvanced)}</span>
+            </div>
+            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-3 items-center">
+              <div>
+                <span className="text-xs text-white font-medium">Simple</span>
+                <span className="text-[10px] text-[#555a66] ml-2">/buy (Buy/Sell/Convert)</span>
+              </div>
+              <span className="text-xs text-white tabular-nums text-right">{fees.simplePct}</span>
+              <span className="text-xs text-[#848e9c] tabular-nums text-right">{fees.simpleBps} bps</span>
+              <span className="text-xs text-[#0ecb81] tabular-nums text-right">{formatUsd(fees.estRevenueSimple)}</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-[#555a66] mt-2">
+            Max approval: {fees.maxApproval} &middot; Convert = 2x fee (two orders) &middot; Revenue shown is based on total platform volume at each rate
+          </p>
+        </div>
+      )}
+
       {/* Overview Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <MetricCard icon={Users} label="Total Traders" value={overview.totalTraders.toString()} />
         <MetricCard icon={BarChart3} label="Total Orders" value={overview.totalOrders.toLocaleString()} />
         <MetricCard icon={TrendingUp} label="Total Volume" value={formatUsd(overview.totalVolume)} />
-        <MetricCard icon={DollarSign} label="Est. Revenue" value={formatUsd(overview.estRevenue)} sub="1bp of volume" />
+        <MetricCard icon={DollarSign} label="Est. Revenue" value={formatUsd(overview.estRevenue)} sub={`${fees?.advancedBps ?? 1}bp adv. rate`} />
         <MetricCard icon={DollarSign} label="Builder Balance" value={formatUsd(overview.builderAccountValue)} sub="Hyperliquid perps" />
       </div>
 

@@ -255,7 +255,8 @@ Strategy backtesting and performance analysis tools.
 
 ### Admin Dashboard (`/admin`)
 - **Wallet-gated access** — only addresses in `brand.config.ts` `admin.addresses` can view
-- **Overview metrics** — total traders, total orders, total volume, estimated revenue (1bp), builder wallet balance
+- **Tiered fee structure card** — shows Advanced (1bp, /trade) and Simple (5bp, /buy) rates side-by-side with estimated revenue at each tier; displays max approval rate and convert fee multiplier note
+- **Overview metrics** — total traders, total orders, total volume, estimated revenue, builder wallet balance
 - **Activity metrics** — active traders (24h / 7d), new traders (24h / 7d)
 - **Bot fleet stats** — total bots, active bots, fleet volume, fleet PnL, fleet trade count
 - **Top traders table** — top 20 traders by Coincess volume with address, volume, order count, last active time
@@ -302,6 +303,7 @@ npm run dev
 | Route | What it does |
 |-------|-------------|
 | [localhost:3000/dashboard](http://localhost:3000/dashboard) | Unified portfolio dashboard |
+| [localhost:3000/buy](http://localhost:3000/buy) | Simple Buy/Sell/Convert (Coinbase-style spot trading) |
 | [localhost:3000/trade/BTC](http://localhost:3000/trade/BTC) | Perpetuals trading terminal (dynamic: `/trade/{TICKER}`) |
 | [localhost:3000/predict](http://localhost:3000/predict) | Prediction markets browser |
 | [localhost:3000/automate](http://localhost:3000/automate) | Automation dashboard |
@@ -433,17 +435,17 @@ pm2 start "npx tsx scripts/twitter-engine.ts" --name coincess-twitter
 
 ### Optional / Future
 
-- [ ] **CNC token tiered builder fees** — Coincess's native token. Users who stake CNC get reduced trading fees:
+- [ ] **CNC token tiered builder fees** — Coincess's native token. Users who stake CNC get reduced trading fees (discount on both Simple and Advanced tiers):
 
-  | Tier | CNC Staked | Builder Fee |
-  |------|------------|-------------|
-  | Free | 0 | 1bp (0.01%) |
-  | Bronze | 1,000 CNC | 0.8bp |
-  | Silver | 10,000 CNC | 0.5bp |
-  | Gold | 100,000 CNC | 0.2bp |
-  | Diamond | 1,000,000 CNC | 0bp (fee-free) |
+  | Tier | CNC Staked | Simple Fee | Advanced Fee |
+  |------|------------|------------|--------------|
+  | Free | 0 | 5bp (0.05%) | 1bp (0.01%) |
+  | Bronze | 1,000 CNC | 4bp | 0.8bp |
+  | Silver | 10,000 CNC | 2.5bp | 0.5bp |
+  | Gold | 100,000 CNC | 1bp | 0.2bp |
+  | Diamond | 1,000,000 CNC | 0bp | 0bp |
 
-  Implementation: read user's staked CNC balance from on-chain contract (Solana SPL), pass dynamic `f` value to the builder field per order.
+  Implementation: read user's staked CNC balance from on-chain contract (Solana SPL), pass dynamic `f` value to the builder field per order via `builderFee` param.
 
 - [ ] **UI sounds** — audio feedback for order placed, order filled, order cancelled, position closed, errors (like Binance/HL trading terminal sounds). Toggle in Settings
 - [ ] **Visa debit card** — partner with a whitelabel card provider (e.g., Reap, Immersve) for crypto spend
@@ -458,9 +460,10 @@ pm2 start "npx tsx scripts/twitter-engine.ts" --name coincess-twitter
 coincess/
 ├── app/
 │   ├── dashboard/page.tsx               # Unified portfolio dashboard (Assets, History, Performance, PnL Calendar)
+│   ├── buy/page.tsx                       # Simple Buy/Sell/Convert (Coinbase-style, 5bp fee)
 │   ├── trade/
 │   │   ├── page.tsx                     # Redirects to last ticker or /trade/BTC
-│   │   ├── [coin]/page.tsx              # Perpetuals trading terminal
+│   │   ├── [coin]/page.tsx              # Perpetuals trading terminal (1bp fee)
 │   ├── predict/
 │   │   ├── page.tsx                     # Prediction markets browser
 │   │   └── [slug]/page.tsx             # Event detail + bet slips
@@ -572,17 +575,31 @@ coincess/
 
 ## Revenue Model
 
-### 1. Hyperliquid Builder Fees
+### 1. Hyperliquid Builder Fees (Tiered)
 
 Configure in `lib/brand.config.ts`:
 
 ```ts
 builder: {
   address: "0xYOUR_ADDRESS",
-  fee: 10,              // in tenths of a basis point (10 = 1bp = 0.01%)
-  enabled: true,        // flip to true once funded
+  fee: 10,              // Advanced tier: 10 = 1bp = 0.01% (/trade)
+  simpleFee: 50,        // Simple tier:   50 = 5bp = 0.05% (/buy)
+  maxFeeApproval: "0.05%", // Max approved upfront (covers both tiers)
+  enabled: true,
 }
 ```
+
+**Tiered fee structure:**
+
+| Tier | Route | Fee | Who |
+|------|-------|-----|-----|
+| **Simple** | `/buy` (Buy/Sell/Convert) | 5bp (0.05%) | Casual traders, Coinbase-style |
+| **Advanced** | `/trade` (perps + spot terminal) | 1bp (0.01%) | Pro traders |
+
+- Convert = 2 market orders = **2x the fee** (e.g. 10bp total for simple)
+- Still **15-30x cheaper than Coinbase** even at the simple rate
+- Users approve the max fee (0.05%) once; actual fee per order varies by route
+- Fee is passed as `builderFee` in `signAndPlaceOrder()` — defaults to advanced rate
 
 **How it works:**
 - Each order includes a `builder: { b: address, f: fee }` field

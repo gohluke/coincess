@@ -15,6 +15,7 @@ import {
   fetchSpotClearinghouseState,
   fetchOpenOrders,
   fetchUserAbstraction,
+  getSpotPairName,
 } from "./api";
 import { getWs } from "./websocket";
 
@@ -91,7 +92,8 @@ export const useTradingStore = create<TradingState>((set, get) => ({
       set({ markets, marketsLoading: false });
 
       const selected = get().selectedMarket;
-      const book = await fetchL2Book(selected);
+      const bookCoin = getSpotPairName(selected) ?? selected;
+      const book = await fetchL2Book(bookCoin);
       set({ orderbook: book });
     } catch (err) {
       console.error("Failed to load markets:", err);
@@ -112,7 +114,9 @@ export const useTradingStore = create<TradingState>((set, get) => ({
     set((s) => {
       let changed = false;
       const updated = s.markets.map((m) => {
-        const mid = mids[m.name];
+        // For spot markets, allMids keys are the pair name (e.g. "PURR/USDC" or "@1")
+        const key = getSpotPairName(m.name) ?? m.name;
+        const mid = mids[key];
         if (!mid || mid === m.markPx) return m;
         changed = true;
         return { ...m, markPx: mid, midPx: mid };
@@ -123,7 +127,9 @@ export const useTradingStore = create<TradingState>((set, get) => ({
 
   updateAssetCtx: (coin, ctx) => {
     set((s) => {
-      const idx = s.markets.findIndex((m) => m.name === coin);
+      let idx = s.markets.findIndex((m) => m.name === coin);
+      // Fall back to matching by spot pair name for spot markets
+      if (idx === -1) idx = s.markets.findIndex((m) => getSpotPairName(m.name) === coin);
       if (idx === -1) return {};
       const m = s.markets[idx];
       const updated = { ...m };
@@ -143,7 +149,8 @@ export const useTradingStore = create<TradingState>((set, get) => ({
 
   selectMarket: (coin) => {
     set({ selectedMarket: coin, orderbook: null, recentTrades: [] });
-    fetchL2Book(coin).then((book) => set({ orderbook: book })).catch(console.error);
+    const bookCoin = getSpotPairName(coin) ?? coin;
+    fetchL2Book(bookCoin).then((book) => set({ orderbook: book })).catch(console.error);
   },
 
   setInterval: (interval) => set({ selectedInterval: interval }),
@@ -194,14 +201,17 @@ export function subscribeToMarket(coin: string) {
   const ws = getWs();
   const store = useTradingStore.getState();
 
+  // Spot markets need the pair name (e.g. "@1") for WS subscriptions
+  const wsCoin = getSpotPairName(coin) ?? coin;
+
   wsCleanups.push(
-    ws.subscribeL2Book(coin, (book) => {
+    ws.subscribeL2Book(wsCoin, (book) => {
       store.setOrderbook(book);
     }),
   );
 
   wsCleanups.push(
-    ws.subscribeTrades(coin, (trades) => {
+    ws.subscribeTrades(wsCoin, (trades) => {
       store.addTrades(trades);
     }),
   );
@@ -213,7 +223,7 @@ export function subscribeToMarket(coin: string) {
   );
 
   wsCleanups.push(
-    ws.subscribeActiveAssetCtx(coin, (data) => {
+    ws.subscribeActiveAssetCtx(wsCoin, (data) => {
       store.updateAssetCtx(data.coin, data.ctx);
     }),
   );

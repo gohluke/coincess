@@ -23,12 +23,24 @@ const TradingChart = dynamic(
 type MobileTab = "chart" | "book" | "order" | "positions";
 type BookTab = "book" | "trades";
 
-function findMarketByCoin(markets: { name: string; displayName: string }[], coinParam: string) {
+function findMarketByCoin(markets: { name: string; displayName: string; dex?: string }[], coinParam: string) {
+  // URL format: "spot-PURR" → spot market, "BTC" → perp market
+  const isSpotUrl = coinParam.startsWith("SPOT-");
+  const baseCoin = isSpotUrl ? coinParam.slice(5) : coinParam;
+
+  if (isSpotUrl) {
+    return markets.find((m) => {
+      if (m.dex !== "spot") return false;
+      const spotBase = m.name.replace("spot:", "").toUpperCase();
+      return spotBase === baseCoin;
+    });
+  }
+
   return markets.find((m) => {
+    if (m.dex === "spot") return false;
     const upper = m.name.toUpperCase();
     if (upper === coinParam) return true;
     if (m.displayName.toUpperCase() === coinParam) return true;
-    // HIP-3 names like "@140:CL" — match the part after ":"
     const stripped = upper.includes(":") ? upper.split(":")[1] : upper;
     return stripped === coinParam;
   });
@@ -107,7 +119,13 @@ export default function TradePageDynamic() {
     if (!initialSynced.current) return;
     const sm = useTradingStore.getState().selectedMarket;
     if (!sm) return;
-    const urlCoin = sm.replace(/^.*:/, "").toUpperCase();
+    const market = useTradingStore.getState().markets.find((m) => m.name === sm);
+    let urlCoin: string;
+    if (market?.dex === "spot") {
+      urlCoin = "spot-" + sm.replace("spot:", "").toUpperCase();
+    } else {
+      urlCoin = sm.replace(/^.*:/, "").toUpperCase();
+    }
     const current = params.coin?.toUpperCase() ?? "BTC";
 
     try { localStorage.setItem("coincess:lastTicker", urlCoin); } catch {}

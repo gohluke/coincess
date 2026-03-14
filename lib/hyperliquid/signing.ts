@@ -43,6 +43,8 @@ function handleStaleAgent(error: string, userAddr: string): boolean {
 
 const BUILDER_ADDRESS = BRAND_CONFIG.builder.address;
 const BUILDER_FEE = BRAND_CONFIG.builder.fee;
+const BUILDER_FEE_SIMPLE = BRAND_CONFIG.builder.simpleFee;
+const BUILDER_FEE_MAX_APPROVAL = BRAND_CONFIG.builder.maxFeeApproval;
 const BUILDER_FEE_ENABLED = BRAND_CONFIG.builder.enabled;
 
 type EthProvider = {
@@ -351,6 +353,7 @@ interface PlaceOrderParams {
   reduceOnly?: boolean;
   tpsl?: { triggerPx: string; type: "tp" | "sl" };
   markets: MarketInfo[];
+  builderFee?: number;
 }
 
 function priceToWire(price: number): string {
@@ -550,8 +553,9 @@ export async function signAndPlaceOrder(
     const isWhitelisted = BRAND_CONFIG.builder.feeWhitelist.some(
       (a) => a.toLowerCase() === userAddr,
     );
+    const effectiveFee = params.builderFee ?? BUILDER_FEE;
     const builderOpt = BUILDER_FEE_ENABLED && !isWhitelisted
-      ? { b: BUILDER_ADDRESS, f: BUILDER_FEE }
+      ? { b: BUILDER_ADDRESS, f: effectiveFee }
       : undefined;
 
     const transport = new HttpTransport();
@@ -571,7 +575,7 @@ export async function signAndPlaceOrder(
       // Auto-approve builder fee and retry once if not yet approved
       if (!_isRetry && errMsg.toLowerCase().includes("builder fee") && errMsg.toLowerCase().includes("not been approved")) {
         pushSigningDebug("placeOrder.autoApproveBuilderFee", { errMsg });
-        const approval = await signAndApproveBuilderFee(BUILDER_ADDRESS, "0.01%", params.expectedAddress);
+        const approval = await signAndApproveBuilderFee(BUILDER_ADDRESS, BUILDER_FEE_MAX_APPROVAL, params.expectedAddress);
         if (approval.success) {
           return signAndPlaceOrder(params, true);
         }
@@ -595,11 +599,10 @@ export async function signAndPlaceOrder(
     const msg = (err as Error).message || String(err);
     pushSigningDebug("placeOrder.errorMsg", msg);
 
-    // Auto-approve builder fee on exception path too
     if (!_isRetry && msg.toLowerCase().includes("builder fee") && msg.toLowerCase().includes("not been approved")) {
       const userAddr = await resolveAddress(params.expectedAddress).catch(() => "");
       if (userAddr) {
-        const approval = await signAndApproveBuilderFee(BUILDER_ADDRESS, "0.01%", params.expectedAddress);
+        const approval = await signAndApproveBuilderFee(BUILDER_ADDRESS, BUILDER_FEE_MAX_APPROVAL, params.expectedAddress);
         if (approval.success) {
           return signAndPlaceOrder(params, true);
         }

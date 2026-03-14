@@ -289,13 +289,30 @@ const HIP3_STOCK_DISPLAY: Record<string, string> = {
   INTC: "Intel", NFLX: "Netflix",
 };
 
+interface SpotMetaResponse {
+  tokens: Array<{ index: number; name: string; szDecimals: number }>;
+  universe: Array<{ name: string; index: number; tokens: number[] }>;
+}
+type SpotCtxsResponse = Array<{ markPx?: string; dayNtlVlm?: string; prevDayPx?: string }>;
+
+let cachedSpotMeta: [SpotMetaResponse, SpotCtxsResponse] | null = null;
+
+async function loadSpotMeta(): Promise<[SpotMetaResponse, SpotCtxsResponse]> {
+  if (cachedSpotMeta) return cachedSpotMeta;
+  cachedSpotMeta = await post<[SpotMetaResponse, SpotCtxsResponse]>("/info", { type: "spotMetaAndAssetCtxs" });
+  return cachedSpotMeta;
+}
+
+// Spot pair name (e.g. "PURR/USDC", "@1") → coin identifier used by WS/API
+const spotPairNameMap = new Map<string, string>();
+
+export function getSpotPairName(marketName: string): string | undefined {
+  return spotPairNameMap.get(marketName);
+}
+
 async function fetchHip3SpotStocks(allMids: AllMids): Promise<MarketInfo[]> {
   try {
-    const [spotMeta, spotCtxs] = await post<[
-      { tokens: Array<{ index: number; name: string; szDecimals: number }>;
-        universe: Array<{ name: string; index: number; tokens: number[] }> },
-      Array<{ markPx?: string; dayNtlVlm?: string; prevDayPx?: string }>,
-    ]>("/info", { type: "spotMetaAndAssetCtxs" });
+    const [spotMeta, spotCtxs] = await loadSpotMeta();
 
     const idxToName: Record<number, string> = {};
     const idxToDecimals: Record<number, number> = {};
@@ -316,6 +333,7 @@ async function fetchHip3SpotStocks(allMids: AllMids): Promise<MarketInfo[]> {
       if (parseFloat(midPx) <= 0) continue;
 
       const ctx = spotCtxs[i];
+      spotPairNameMap.set(baseName, pairName);
       markets.push({
         name: baseName,
         displayName: HIP3_STOCK_DISPLAY[baseName] ?? baseName,
@@ -336,6 +354,56 @@ async function fetchHip3SpotStocks(allMids: AllMids): Promise<MarketInfo[]> {
     return markets;
   } catch (err) {
     console.error("[api] HIP-3 spot stock fetch failed:", err);
+    return [];
+  }
+}
+
+async function fetchSpotMarkets(allMids: AllMids): Promise<MarketInfo[]> {
+  try {
+    const [spotMeta, spotCtxs] = await loadSpotMeta();
+
+    const idxToName: Record<number, string> = {};
+    const idxToDecimals: Record<number, number> = {};
+    for (const t of spotMeta.tokens) {
+      idxToName[t.index] = t.name;
+      idxToDecimals[t.index] = t.szDecimals;
+    }
+
+    const markets: MarketInfo[] = [];
+    for (let i = 0; i < spotMeta.universe.length; i++) {
+      const pair = spotMeta.universe[i];
+      if (!pair.tokens || pair.tokens.length < 2) continue;
+      const baseName = idxToName[pair.tokens[0]];
+      if (!baseName) continue;
+      if (HIP3_STOCK_NAMES.has(baseName)) continue;
+
+      const pairName = pair.name;
+      const midPx = allMids[pairName] ?? "0";
+      if (parseFloat(midPx) <= 0) continue;
+
+      const ctx = spotCtxs[i];
+      const spotMarketName = `spot:${baseName}`;
+      spotPairNameMap.set(spotMarketName, pairName);
+      markets.push({
+        name: spotMarketName,
+        displayName: baseName,
+        assetIndex: 10000 + pair.index,
+        szDecimals: idxToDecimals[pair.tokens[0]] ?? 4,
+        maxLeverage: 1,
+        markPx: midPx,
+        midPx,
+        oraclePx: midPx,
+        funding: "0",
+        openInterest: "0",
+        prevDayPx: ctx?.prevDayPx ?? midPx,
+        dayNtlVlm: ctx?.dayNtlVlm ?? "0",
+        premium: "0",
+        dex: "spot",
+      });
+    }
+    return markets;
+  } catch (err) {
+    console.error("[api] Spot markets fetch failed:", err);
     return [];
   }
 }
@@ -437,6 +505,7 @@ export async function fetchCoincessTraderStats(
 
 export async function fetchAllMarkets(): Promise<MarketInfo[]> {
   await loadPerpDexOffsets();
+  cachedSpotMeta = null;
 
   const [mainData, xyzData, allMids] = await Promise.all([
     fetchMetaAndAssetCtxs(),
@@ -446,7 +515,10 @@ export async function fetchAllMarkets(): Promise<MarketInfo[]> {
 
   const mainMarkets = buildMarketList(mainData, "");
   const xyzMarkets = buildMarketList(xyzData, "xyz");
-  const hip3Markets = await fetchHip3SpotStocks(allMids);
+  const [hip3Markets, spotMarkets] = await Promise.all([
+    fetchHip3SpotStocks(allMids),
+    fetchSpotMarkets(allMids),
+  ]);
 
-  return [...mainMarkets, ...xyzMarkets, ...hip3Markets];
+  return [...mainMarkets, ...xyzMarkets, ...hip3Markets, ...spotMarkets];
 }
