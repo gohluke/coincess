@@ -22,7 +22,7 @@ import {
   Flame,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
-import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding, fetchSpotClearinghouseState, fetchUserLedger } from "@/lib/hyperliquid/api";
+import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding, fetchSpotClearinghouseState, fetchUserLedger, spotDisplayName } from "@/lib/hyperliquid/api";
 import type { LedgerUpdate } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
@@ -605,8 +605,12 @@ export default function DashboardPage() {
                     const limitPx = parseFloat(o.limitPx);
                     const sz = parseFloat(o.sz);
                     const notional = sz * limitPx;
+                    const coinName = resolveOrderCoin(o.coin, markets);
+                    const isSpotOrder = o.coin.startsWith("@");
                     const bare = stripPrefix(o.coin);
-                    const mkt = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === o.coin);
+                    const mkt = isSpotOrder
+                      ? markets.find((m) => m.dex === "spot" && m.assetIndex === 10000 + parseInt(o.coin.slice(1), 10))
+                      : (markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === o.coin));
                     const markPx = mkt ? parseFloat(mkt.markPx) : 0;
                     const distPct = markPx > 0 ? ((limitPx - markPx) / markPx * 100) : 0;
                     return (
@@ -614,7 +618,7 @@ export default function DashboardPage() {
                         <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${o.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
                           {o.side === "B" ? "BUY" : "SELL"}
                         </span>
-                        <span className="text-xs font-semibold shrink-0">{bare}</span>
+                        <span className="text-xs font-semibold shrink-0">{coinName}{isSpotOrder && <span className="text-[9px] text-[#555a66] ml-1">SPOT</span>}</span>
                         <span className="hidden sm:block text-[10px] text-[#848e9c] tabular-nums shrink-0">
                           {sz} @ ${limitPx.toLocaleString()}
                         </span>
@@ -826,16 +830,36 @@ function stripPrefix(coin: string): string {
   return idx >= 0 ? coin.slice(idx + 1) : coin;
 }
 
+// Resolve order coin name to display name.
+// Spot orders arrive as "@156" (pair index); perps as "BTC", "kPEPE", etc.
+function resolveOrderCoin(coin: string, mkts: MarketInfo[]): string {
+  if (coin.startsWith("@")) {
+    const pairIdx = parseInt(coin.slice(1), 10);
+    if (!isNaN(pairIdx)) {
+      const m = mkts.find((x) => x.dex === "spot" && x.assetIndex === 10000 + pairIdx);
+      if (m) return m.displayName;
+    }
+    return coin;
+  }
+  const bare = stripPrefix(coin);
+  const m = mkts.find((x) => stripPrefix(x.name) === bare);
+  return m?.displayName ?? spotDisplayName(bare);
+}
+
 function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positions: AssetPosition[]; markets: MarketInfo[] }) {
   const [expanded, setExpanded] = useState(false);
   const bare = stripPrefix(trade.coin);
+  const coinName = resolveOrderCoin(trade.coin, markets);
+  const isSpotTrade = trade.coin.startsWith("@");
   const duration = trade.closeTime ? trade.closeTime - trade.openTime : Date.now() - trade.openTime;
   const isWin = trade.netPnl > 0;
 
   const matchPos = trade.isOpen ? positions.find((ap) => stripPrefix(ap.position.coin) === bare) : null;
   const leverage = matchPos ? `${matchPos.position.leverage.value}x` : null;
 
-  const market = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === trade.coin);
+  const market = isSpotTrade
+    ? markets.find((m) => m.dex === "spot" && m.assetIndex === 10000 + parseInt(trade.coin.slice(1), 10))
+    : (markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === trade.coin));
   const markPx = market ? parseFloat(market.markPx) : 0;
 
   const hasPhantom = !trade.isOpen && trade.exitPx != null && markPx > 0;
@@ -863,11 +887,11 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
             </span>
             <div className="flex items-center">
               <Link
-                href={`/trade/${bare}`}
+                href={isSpotTrade && market ? `/trade/spot-${market.name.replace("spot:", "")}` : `/trade/${bare}`}
                 onClick={(e) => e.stopPropagation()}
                 className="text-sm font-semibold hover:text-brand transition-colors"
               >
-                {bare}
+                {coinName}{isSpotTrade && <span className="text-[9px] text-[#555a66] ml-1">SPOT</span>}
               </Link>
               {trade.isOpen && (
                 <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium">OPEN</span>
