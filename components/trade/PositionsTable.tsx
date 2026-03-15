@@ -483,7 +483,9 @@ export function PositionsTable() {
                     const isPaying = isLong ? fundingRate > 0 : fundingRate < 0;
                     const notional = Math.abs(size) * markPx;
                     const fundingPerHr = Math.abs(fundingRate) * notional;
-                    const cumFundingSinceOpen = parseFloat(pos.cumFunding?.sinceOpen ?? "0");
+                    // HL API: cumFunding.sinceOpen positive = paid (cost), negative = received (income)
+                    // Negate to get PnL perspective: positive = earned, negative = paid
+                    const cumFundingSinceOpen = -parseFloat(pos.cumFunding?.sinceOpen ?? "0");
                     const openTime = getPositionOpenTime(pos.coin);
                     const quantInfo = getQuantInfo(pos.coin);
                     const isBusy = closingCoin === pos.coin || reversingCoin === pos.coin;
