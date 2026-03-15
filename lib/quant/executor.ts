@@ -60,20 +60,23 @@ export async function placeOrder(req: OrderRequest): Promise<OrderResult> {
   const { accountAddress } = getCredentials();
   try {
     const exchange = await createExchangeClient();
-    const result = await exchange.order({
-      orders: [
-        {
-          a: req.assetIndex,
-          b: req.isBuy,
-          p: req.price,
-          s: req.size,
-          r: req.reduceOnly ?? false,
-          t: { limit: { tif: req.tif ?? "Gtc" } },
-        },
-      ],
-      grouping: "na",
-      builder: getBuilderOpt(accountAddress),
-    });
+    const result = await exchange.order(
+      {
+        orders: [
+          {
+            a: req.assetIndex,
+            b: req.isBuy,
+            p: req.price,
+            s: req.size,
+            r: req.reduceOnly ?? false,
+            t: { limit: { tif: req.tif ?? "Gtc" } },
+          },
+        ],
+        grouping: "na",
+        builder: getBuilderOpt(accountAddress),
+      },
+      { vaultAddress: accountAddress },
+    );
 
     const status = (result as Record<string, unknown>)?.response as
       | { data?: { statuses?: Array<Record<string, unknown>> } }
@@ -102,9 +105,13 @@ export async function placeOrder(req: OrderRequest): Promise<OrderResult> {
 }
 
 export async function cancelOrder(assetIndex: number, oid: number): Promise<OrderResult> {
+  const { accountAddress } = getCredentials();
   try {
     const exchange = await createExchangeClient();
-    await exchange.cancel({ cancels: [{ a: assetIndex, o: oid }] });
+    await exchange.cancel(
+      { cancels: [{ a: assetIndex, o: oid }] },
+      { vaultAddress: accountAddress },
+    );
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };
