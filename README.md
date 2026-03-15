@@ -56,7 +56,8 @@ Runs on a dedicated Contabo VPS via `pm2` — no browser needed. The quant engin
 - **Engine status bar** — live indicator (running / paused / error), last tick time, "Reset Engine" button when in error state (clears stale drawdown, resets peak equity to current NAV)
 - **Key metrics row** — Total P&L (computed from actual closed trades + unrealized + funding), Funding Income, Unrealized P&L, NAV (live account value), Gross Exposure, Max Drawdown
 - **Risk alert banner** — appears when engine hits an error (e.g. kill switch triggered); shows the exact error message with an inline "Reset" button to recover
-- **Strategies table** — add/remove/toggle strategies (Funding Rate, Momentum, Grid, Mean Reversion, Market Maker); each card shows status, trade count, PnL, last execution time; funding rate cards expand to show per-position metrics
+- **Strategies table** — add/remove/toggle strategies (Funding Rate, Momentum, Grid, Mean Reversion, Market Maker, AI Agent); each card shows status, trade count, PnL, last execution time; funding rate cards expand to show per-position metrics
+- **AI Agent strategy** — fully autonomous AI trading powered by a two-model architecture: Gemini 2.0 Flash scans all 279+ markets every 30s tick (fast, cheap ~$0.001/call), GPT-4o makes strategic trade decisions only when opportunities are found (saves cost); configurable via expandable panel with market selection checkboxes (perps, spot, stocks, commodities), capital allocation slider (% of account), confidence threshold slider (0-100%), max trades/hour, max positions, leverage, stop loss %, take profit %, model selection (analyst + trader); cost estimate: ~$3-4/day ($90-120/month); safety layers: AI confidence gate (default 70%), existing risk manager, hourly rate limiting, capital allocation cap, mandatory stop losses, full audit trail in Supabase, kill switch integration
 - **Open positions** — real-time positions from the Hyperliquid clearinghouse API (source of truth, not the engine's internal records); shows side, leverage, instrument, entry/mark price, size, 8-hour funding rate, unrealized PnL, ROE; positions tagged with strategy badge (FR, MOM, GRID, etc.) when they match a quant trade; click any row to navigate to the trade page
 - **Execution log** — last 30 trades with timestamp, instrument, side, strategy tag, entry/exit price, P&L, and open/closed status; open trades show live unrealized PnL using current mark price
 - **Footer** — peak equity, last tick time, funding payment count, error messages
@@ -81,7 +82,7 @@ Strategy backtesting and performance analysis tools.
 - **Data pipeline status** — candle storage counts, instruments tracked, data freshness
 
 #### Architecture
-- **Server strategies**: Contabo VPS runs `scripts/quant-server.ts` via pm2; signs orders with Hyperliquid API wallet key; writes to Supabase (`quant_strategies`, `quant_trades`, `quant_state`); frontend reads via `/api/quant/status` and `/api/quant/trades` API routes
+- **Server strategies**: Contabo VPS runs `scripts/quant-server.ts` via pm2; signs orders with Hyperliquid API wallet key; writes to Supabase (`quant_strategies`, `quant_trades`, `quant_state`); frontend reads via `/api/quant/status` and `/api/quant/trades` API routes; AI Agent uses Vercel AI SDK with `generateObject()` for structured JSON outputs from both Gemini (analyst) and GPT-4o (trader)
 - **Browser strategies**: Zustand store + IndexedDB; executes in the browser's event loop; uses the connected wallet for signing
 - **PnL accuracy**: Fills are deduplicated by `tid` across main and xyz dexes; total PnL is computed from closed trade records (not stale engine state); funding income fetched separately from Hyperliquid's funding API
 - **Risk management**: 80% max total exposure, 50% max per position, 8% daily loss limit (pauses trading for 24h), 20% kill switch (stops engine, requires manual reset), $100 reserve; position sizes scale down with drawdown (4x multiplier)
@@ -190,12 +191,13 @@ Strategy backtesting and performance analysis tools.
 - **CNC token (planned)** — future native token with tiered fee discounts based on staked CNC balance
 
 ### Quant Trading Suite (`/quant`)
-- **5 automated strategies** running 24/7 on a dedicated server:
+- **6 automated strategies** running 24/7 on a dedicated server:
   - **Funding Rate Harvester** — scans all markets for extreme funding rates, opens opposite positions to collect hourly funding (lowest risk, ~1-3% daily target)
   - **Momentum Scalper** — EMA(9)/EMA(21) crossover with RSI confirmation on BTC, ETH, SOL 5m candles, trailing stop at 0.5%
   - **Grid Bot** — places buy/sell limit orders at fixed intervals around current price for BTC and ETH, auto-rebalances
   - **Mean Reversion** — monitors 15m RSI across top 20 coins, enters contrarian positions on RSI extremes (<25 or >75)
   - **Market Maker** — provides two-sided liquidity with dynamic spread adjustment
+  - **AI Agent** — fully autonomous AI trader using a two-model pipeline: Gemini 2.0 Flash as market analyst (scans all markets every tick, produces structured `MarketBrief` with regime classification, top opportunities, and warnings) and GPT-4o as trade decision maker (called only when strong opportunities found, outputs `TradeDecision` with confidence scores, sizing, stop losses, and reasoning). Configurable: allowed markets, capital allocation %, confidence threshold, max trades/hour, max positions, leverage, stop loss/take profit. Defense-in-depth safety: AI confidence gate, risk manager, rate limiting, capital cap, mandatory stops, full Supabase audit trail, kill switch. Estimated cost: ~$3-4/day
 - **Risk management** — max 80% total exposure, 50% per position, daily loss limit (-8% pauses), kill switch at -20% drawdown, $100 reserve
 - **Kelly-inspired sizing** — position sizes scale down as drawdown increases (4x drawdown multiplier)
 - **Engine reset** — "Reset Engine" button clears stale drawdown, resets peak equity to current NAV, and clears error state; available inline in the risk alert banner and in the header when engine is in error
@@ -304,7 +306,8 @@ Strategy backtesting and performance analysis tools.
 - **@nktkas/hyperliquid** — TypeScript SDK for Hyperliquid signing & API
 - **@privy-io/react-auth** — embedded wallet + social login
 - **Supabase** — journal & chat persistence
-- **Vercel AI SDK + Gemini** — AI trading coach with tool calling
+- **Vercel AI SDK + Gemini + GPT-4o** — AI trading coach with tool calling + autonomous AI trader (Gemini analyst + GPT-4o trader)
+- **Zod** — schema validation for AI structured outputs
 - **idb** — IndexedDB wrapper for automation persistence
 - **viem** — Ethereum wallet interaction types
 - **Lucide React** — icons
@@ -361,6 +364,10 @@ npm run dev
 - [ ] **Gemini API key** — get a free key from [Google AI Studio](https://aistudio.google.com/apikey), add to `.env.local`:
   ```
   GOOGLE_GENERATIVE_AI_API_KEY=your_key
+  ```
+- [ ] **OpenAI API key** (required for AI Agent strategy) — get a key from [platform.openai.com/api-keys](https://platform.openai.com/api-keys), add to `.env.local`:
+  ```
+  OPENAI_API_KEY=your_key
   ```
 
 ### Recommended
@@ -545,11 +552,17 @@ coincess/
 │   │   ├── risk.ts                     # Risk manager: limits, drawdown, kill switch
 │   │   ├── indicators.ts              # Technical indicators: EMA, RSI, ATR, Bollinger
 │   │   ├── types.ts                    # Shared quant types
+│   │   ├── ai/
+│   │   │   ├── analyst.ts             # Gemini Flash market scanner (MarketBrief)
+│   │   │   ├── trader.ts             # GPT-4o trade decision maker (TradeDecision)
+│   │   │   └── prompts.ts            # System prompts for analyst + trader models
 │   │   └── strategies/
 │   │       ├── funding-rate.ts         # Funding rate harvester
 │   │       ├── momentum.ts            # EMA crossover momentum scalper
 │   │       ├── grid.ts                # Server-side grid bot
-│   │       └── mean-reversion.ts      # RSI mean reversion
+│   │       ├── mean-reversion.ts      # RSI mean reversion
+│   │       ├── market-maker.ts        # Two-sided liquidity provider
+│   │       └── ai-agent.ts           # AI Agent: wires Analyst → Trader → signals
 │   ├── automation/
 │   │   ├── engine.ts                   # Strategy execution engine
 │   │   ├── store.ts                    # Zustand store
