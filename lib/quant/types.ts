@@ -124,7 +124,7 @@ export const AI_AGENT_DEFAULTS: AiAgentConfig = {
   stopLossPct: 0.05,
   takeProfitPct: 0.10,
   analystModel: "gemini-2.5-flash",
-  traderModel: "gpt-4o",
+  traderModel: "gemini-2.5-flash",
 };
 
 export interface MarketBrief {

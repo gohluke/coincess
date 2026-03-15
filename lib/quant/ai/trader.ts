@@ -1,8 +1,16 @@
 import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { buildTraderPrompt } from "./prompts";
 import type { MarketBrief, PositionInfo, TradeDecision, AiAgentConfig } from "../types";
+
+function getModel(modelName: string) {
+  if (modelName.startsWith("gpt-") || modelName.startsWith("o1") || modelName.startsWith("o3")) {
+    return openai(modelName);
+  }
+  return google(modelName);
+}
 
 const TradeDecisionSchema = z.object({
   actions: z.array(
@@ -60,7 +68,7 @@ export async function makeTradeDecision(
 
   try {
     const { object } = await generateObject({
-      model: openai(model ?? config.traderModel),
+      model: getModel(model ?? config.traderModel),
       schema: TradeDecisionSchema,
       prompt,
       maxRetries: 1,
@@ -92,7 +100,7 @@ export async function makeTradeDecision(
 
     return decision;
   } catch (err) {
-    console.error("[ai-trader] GPT-4o call failed:", (err as Error).message);
+    console.error("[ai-trader] Trade decision failed:", (err as Error).message);
     return null;
   }
 }
