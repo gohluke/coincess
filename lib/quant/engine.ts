@@ -291,7 +291,7 @@ export class QuantEngine {
         assetIndex: signal.assetIndex,
       });
       console.log(
-        `[engine] CLOSE ${signal.coin}: ${result.success ? "OK" : result.error}`,
+        `[engine] CLOSE ${signal.coin}: ${result.success ? "OK" : result.error}${signal.reason ? ` | ${signal.reason}` : ""}`,
       );
 
       if (result.success) {
@@ -314,6 +314,7 @@ export class QuantEngine {
             exit_px: fillPx,
             pnl,
             closed_at: new Date().toISOString(),
+            meta: { close_reason: signal.reason ?? "AI close" },
           }).eq("id", t.id);
           recordTradeResult(strategy.id, pnl, 0);
         }

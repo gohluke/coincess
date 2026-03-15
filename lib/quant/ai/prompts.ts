@@ -107,7 +107,9 @@ ${brief.topOpportunities.map((o, i) => `${i + 1}. ${o.coin} (${o.market}) — ${
    Support: $${o.keyLevels.support} | Resistance: $${o.keyLevels.resistance}`).join("\n\n")}
 
 ## Instructions
-Decide what to do. Respond with JSON matching this exact schema:
+Decide what to do. You MUST evaluate every open position AND consider new opportunities.
+
+Respond with JSON matching this exact schema:
 {
   "actions": [
     {
@@ -117,23 +119,26 @@ Decide what to do. Respond with JSON matching this exact schema:
       "sizeUsd": number,
       "confidence": number (0.0-1.0),
       "stopLoss": number (price),
-      "takeProfit": number (price, optional),
-      "reasoning": string (1-2 sentences max)
+      "takeProfit": number (price),
+      "reasoning": string (REQUIRED: 1-2 sentences explaining WHY)
     }
   ],
   "portfolioReasoning": string (1-3 sentences explaining overall strategy)
 }
 
-Rules:
-- ONLY trade coins from the opportunities list
-- sizeUsd must not exceed remaining budget
-- For "close" actions: set sizeUsd to 0, stopLoss to 0
-- For "hold" actions: set sizeUsd to 0, stopLoss to 0
-- Stop loss is MANDATORY for open/adjust: use the ${(stopLossPct * 100).toFixed(1)}% default unless you have a strong technical reason for a different level
-- Confidence must reflect genuine probability of profit
-- Do NOT open a position just because an opportunity exists — only trade high-conviction setups
-- If no good trades exist, return an empty actions array
-- Consider portfolio correlation: avoid overexposure to a single sector
-- Consider existing positions: close losers early, let winners run
-- Be decisive but conservative with sizing`;
+CRITICAL RULES:
+1. **Reasoning is MANDATORY** for every action — explain WHY you are opening, closing, holding, or adjusting. Never leave reasoning empty.
+2. **Evaluate every open position** — for each open position, include either a "hold" (with reason to keep it), "close" (with reason to exit), or "adjust" action. Do NOT ignore open positions.
+3. **Close with conviction** — if a position has moved against you beyond the stop level, or the thesis has changed, close it immediately with clear reasoning.
+4. **Take profits** — if a position has hit the take-profit target or shows signs of reversal, close it. Explain the exit reasoning.
+5. ONLY trade coins from the opportunities list
+6. sizeUsd must not exceed remaining budget
+7. For "close" actions: set sizeUsd to 0, stopLoss to 0, takeProfit to 0
+8. For "hold" actions: set sizeUsd to 0, stopLoss to 0, takeProfit to 0
+9. Stop loss is MANDATORY for open/adjust: use the ${(stopLossPct * 100).toFixed(1)}% default unless you have a strong technical reason for a different level
+10. Confidence must reflect genuine probability of profit
+11. Do NOT open a position just because an opportunity exists — only trade high-conviction setups
+12. If no good new trades exist, return only hold/close actions for existing positions
+13. Consider portfolio correlation: avoid overexposure to a single sector
+14. Be decisive but conservative with sizing`;
 }
