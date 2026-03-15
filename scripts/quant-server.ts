@@ -13,6 +13,13 @@
  *   SUPABASE_SERVICE_ROLE_KEY
  */
 
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// Load .env.local so PM2 picks up env vars without shell export
+config({ path: resolve(process.cwd(), ".env.local") });
+config({ path: resolve(process.cwd(), ".env") });
+
 import { QuantEngine } from "../lib/quant/engine";
 import { DataCollector } from "../lib/quant/data/collector";
 
