@@ -357,7 +357,7 @@ export default function BuyPage() {
   const tokenBalance = getTokenBalance(selectedCoin);
   const convertFromBalance = getTokenBalance(convertFrom);
 
-  // Spot holdings: all non-zero, non-stablecoin balances with USD value + 24h change
+  // Spot holdings: all non-zero, non-stablecoin balances with USD value, cost basis + P&L
   const holdings = useMemo(() => {
     if (!spotClearinghouse?.balances || spotMarkets.length === 0) return [];
     return spotClearinghouse.balances
@@ -371,8 +371,11 @@ export default function BuyPage() {
         const px = m ? parseFloat(m.markPx) : 0;
         const amount = parseFloat(b.total);
         const usd = amount * px;
+        const costBasis = parseFloat(b.entryNtl ?? "0");
+        const pnl = costBasis > 0 ? usd - costBasis : null;
+        const pnlPct = costBasis > 0 ? ((usd - costBasis) / costBasis) * 100 : null;
         const chg = m ? get24hChange(m) : null;
-        return { coin: b.coin, displayName: dn, amount, px, usd, change24h: chg };
+        return { coin: b.coin, displayName: dn, amount, px, usd, costBasis, pnl, pnlPct, change24h: chg };
       })
       .sort((a, b) => b.usd - a.usd);
   }, [spotClearinghouse, spotMarkets, get24hChange]);
@@ -905,7 +908,15 @@ export default function BuyPage() {
                     <div className="text-sm text-white font-medium">
                       ${h.usd >= 0.01 ? h.usd.toLocaleString(undefined, { maximumFractionDigits: 2 }) : h.usd.toPrecision(3)}
                     </div>
-                    {h.change24h !== null ? (
+                    {h.pnl !== null ? (
+                      <div className={`text-[11px] ${h.pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                        {h.pnl >= 0 ? "+" : ""}{h.pnl >= 0.01 || h.pnl <= -0.01
+                          ? `$${Math.abs(h.pnl).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                          : `$${Math.abs(h.pnl).toPrecision(2)}`
+                        }
+                        {h.pnlPct !== null && <span className="ml-0.5">({h.pnl >= 0 ? "+" : ""}{h.pnlPct.toFixed(2)}%)</span>}
+                      </div>
+                    ) : h.change24h !== null ? (
                       <div className={`text-[11px] ${h.change24h >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
                         {fmtChange(h.change24h)}
                       </div>
