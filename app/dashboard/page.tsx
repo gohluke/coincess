@@ -168,6 +168,8 @@ function formatUsd(val: string | number): string {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 }
 
+const STABLECOINS = new Set(["USDC", "USDT0", "USDE", "USDH"]);
+
 function PnlBadge({ value }: { value: number }) {
   const positive = value >= 0;
   return (
@@ -308,32 +310,68 @@ export default function DashboardPage() {
     }, 0);
   }, [spot]);
 
-  // In unified mode, spotUsdcBalance already includes USDC locked as perp margin.
-  // Add only unrealized PnL to get true total equity.
+  const spotMarkets = useMemo(() => markets.filter((m) => m.dex === "spot"), [markets]);
+
+  const spotHoldings = useMemo(() => {
+    if (!spot?.balances || spotMarkets.length === 0) return [];
+    return spot.balances
+      .filter((b) => !STABLECOINS.has(b.coin) && parseFloat(b.total) > 0)
+      .map((b) => {
+        const dn = spotDisplayName(b.coin);
+        const m = spotMarkets.find((s) => s.displayName === dn);
+        const px = m ? parseFloat(m.markPx) : 0;
+        const amount = parseFloat(b.total);
+        const usd = amount * px;
+        const costBasis = parseFloat(b.entryNtl ?? "0");
+        const pnl = costBasis > 0 ? usd - costBasis : null;
+        const pnlPct = costBasis > 0 ? ((usd - costBasis) / costBasis) * 100 : null;
+        const internalName = b.coin;
+        return { coin: b.coin, displayName: dn, amount, px, usd, costBasis, pnl, pnlPct, internalName, market: m };
+      })
+      .sort((a, b) => b.usd - a.usd);
+  }, [spot, spotMarkets]);
+
+  const spotTokensTotal = useMemo(
+    () => spotHoldings.reduce((s, h) => s + h.usd, 0),
+    [spotHoldings],
+  );
+
   const accountValue = spotUsdcBalance > 0
-    ? spotUsdcBalance + totalPnl
-    : perpsAccountValue;
+    ? spotUsdcBalance + totalPnl + spotTokensTotal
+    : perpsAccountValue + spotTokensTotal;
   const activeStrategies =
     serverStrategies.filter((s) => s.status === "active").length +
     browserStrategies.filter((s) => s.status === "active").length;
 
+  const SPOT_COLORS = ["#8b5cf6", "#ec4899", "#f59e0b", "#06b6d4", "#84cc16", "#f97316", "#6366f1"];
+
   const assetDistribution = useMemo(() => {
     const items: { label: string; value: number; color: string }[] = [];
-    let positionsTotal = 0;
+    let allocated = 0;
+
     for (const ap of positions) {
       const pos = ap.position;
       const bare = stripPrefix(pos.coin);
       const posValue = parseFloat(pos.marginUsed) + parseFloat(pos.unrealizedPnl);
       if (posValue > 0.01) {
         items.push({ label: bare, value: posValue, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
-        positionsTotal += posValue;
+        allocated += posValue;
       }
     }
-    const usdcSlice = accountValue - positionsTotal;
+
+    for (let i = 0; i < spotHoldings.length; i++) {
+      const h = spotHoldings[i];
+      if (h.usd > 0.01) {
+        items.push({ label: h.displayName, value: h.usd, color: SPOT_COLORS[i % SPOT_COLORS.length] });
+        allocated += h.usd;
+      }
+    }
+
+    const usdcSlice = accountValue - allocated;
     if (usdcSlice > 0.01) items.unshift({ label: "USDC", value: usdcSlice, color: "#2775CA" });
     if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: BRAND.hex });
     return items;
-  }, [positions, accountValue]);
+  }, [positions, spotHoldings, accountValue]);
 
   if (walletLoading) {
     return (
@@ -472,8 +510,11 @@ export default function DashboardPage() {
                   <p className="text-xl font-bold">{formatUsd(perpsBalance)}</p>
                 </div>
                 <div className="bg-[#141620] rounded-xl px-4 py-3.5">
-                  <p className="text-[11px] text-[#848e9c] mb-1">Spot Balance</p>
-                  <p className="text-xl font-bold">{formatUsd(freeSpotBalance)}</p>
+                  <p className="text-[11px] text-[#848e9c] mb-1">Spot Holdings</p>
+                  <p className="text-xl font-bold">{formatUsd(spotTokensTotal)}</p>
+                  {spotHoldings.length > 0 && (
+                    <p className="text-[10px] text-[#555a66] mt-0.5">{spotHoldings.length} token{spotHoldings.length !== 1 ? "s" : ""}</p>
+                  )}
                 </div>
                 <div className="bg-[#141620] rounded-xl px-4 py-3.5">
                   <p className="text-[11px] text-[#848e9c] mb-1">EVM Balance</p>
@@ -595,6 +636,52 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* Spot Holdings */}
+            {!firstLoad && spotHoldings.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold">
+                    Spot Holdings ({spotHoldings.length})
+                  </h2>
+                  <Link href="/buy" className="text-xs text-brand hover:underline">Buy / Sell &rarr;</Link>
+                </div>
+                <div className="space-y-2">
+                  {spotHoldings.map((h) => {
+                    const spotRoute = h.market ? `/trade/spot-${h.market.name.replace("spot:", "")}` : "/buy";
+                    return (
+                      <Link key={h.coin} href={spotRoute} className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-3.5 hover:bg-[#1a1d2e] transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-[#2a2e3e] flex items-center justify-center text-xs font-bold text-white shrink-0">
+                          {h.displayName.slice(0, 2)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-semibold text-white">{h.displayName}</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">SPOT</span>
+                          </div>
+                          <p className="text-[11px] text-[#848e9c] tabular-nums">
+                            {h.amount < 0.001 ? h.amount.toPrecision(3) : h.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} @ {formatUsd(h.px)}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-semibold text-white tabular-nums">{formatUsd(h.usd)}</p>
+                          {h.pnl !== null ? (
+                            <p className={`text-[11px] tabular-nums ${h.pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                              {h.pnl >= 0 ? "+" : ""}{formatUsd(h.pnl)}
+                              {h.pnlPct !== null && (
+                                <span className="ml-0.5">({h.pnl >= 0 ? "+" : ""}{h.pnlPct.toFixed(2)}%)</span>
+                              )}
+                            </p>
+                          ) : (
+                            <p className="text-[11px] text-[#4a4e59]">&mdash;</p>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Open Orders */}
             {orders.length > 0 && (
