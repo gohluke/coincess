@@ -23,6 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { useAutomationStore } from "@/lib/automation/store";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -36,12 +37,17 @@ import { fetchAllMarkets, fetchCombinedClearinghouseState, fetchOpenOrders, fetc
 type Tab = "server" | "browser" | "lab";
 
 interface AiLogEntry {
-  timestamp: number;
-  regime?: string;
-  opportunities?: number;
-  actions?: number;
-  reasoning?: string;
-  warnings?: string[];
+  id: string;
+  strategy_id: string;
+  event_type: string;
+  market_sentiment: string | null;
+  opportunities: Array<{ coin: string; direction: string; strength: number; reason: string }>;
+  decision: { actions: Array<{ coin: string; action: string; side: string; confidence: number; reasoning: string; sizeUsd: number }> } | null;
+  signals_generated: number;
+  analyst_model: string | null;
+  trader_model: string | null;
+  error_message: string | null;
+  created_at: string;
 }
 
 const STRATEGY_LABELS: Record<string, { name: string; tag: string; color: string }> = {
@@ -252,11 +258,22 @@ function ServerStrategies({ address }: { address: string | null }) {
     }
   }, [address]);
 
+  const fetchAiLogs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/quant/ai-logs?limit=50");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setAiLogs(data);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10_000);
+    fetchAiLogs();
+    const interval = setInterval(() => { fetchData(); fetchAiLogs(); }, 10_000);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchData, fetchAiLogs]);
 
   const toggleStrategy = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "paused" : "active";
@@ -269,14 +286,27 @@ function ServerStrategies({ address }: { address: string | null }) {
   };
 
   const addStrategy = async (type: string) => {
-    if (!address) return;
-    await fetch("/api/quant/strategies", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, wallet_address: address, config: {} }),
-    });
-    setAddingStrategy(false);
-    fetchData();
+    if (!address) {
+      toast.error("Connect your wallet first");
+      return;
+    }
+    try {
+      const res = await fetch("/api/quant/strategies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, wallet_address: address, config: {} }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Failed to add strategy");
+        return;
+      }
+      toast.success(`${STRATEGY_LABELS[type]?.name ?? type} strategy added`);
+      setAddingStrategy(false);
+      fetchData();
+    } catch {
+      toast.error("Network error — try again");
+    }
   };
 
   const deleteStrategy = async (id: string) => {
@@ -526,7 +556,7 @@ function ServerStrategies({ address }: { address: string | null }) {
                           {strat.total_trades} executions &middot; last {relativeTime(strat.last_executed_at)}
                           {strat.type === "ai_agent" && (
                             <span className="text-cyan-400/50 ml-2">
-                              {((strat.config as Partial<AiAgentConfig>).analystModel ?? "gemini-2.0-flash")} + {((strat.config as Partial<AiAgentConfig>).traderModel ?? "gpt-4o")}
+                              {((strat.config as Partial<AiAgentConfig> | null)?.analystModel ?? "gemini-2.0-flash")} + {((strat.config as Partial<AiAgentConfig> | null)?.traderModel ?? "gpt-4o")}
                             </span>
                           )}
                         </p>
@@ -812,6 +842,103 @@ function ServerStrategies({ address }: { address: string | null }) {
           </div>
         )}
       </div>
+
+      {/* AI Agent Logs */}
+      {strategies.some((s) => s.type === "ai_agent") && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-widest flex items-center gap-1.5">
+              <Brain className="h-3 w-3 text-cyan-400" />
+              AI Agent Logs ({aiLogs.length})
+            </span>
+            <button
+              onClick={fetchAiLogs}
+              className="text-[9px] text-cyan-400/60 hover:text-cyan-400 transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div className="bg-[#141620] rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
+            {aiLogs.length === 0 ? (
+              <div className="text-center text-[#555a66] text-[10px] py-6">
+                No AI logs yet — activate the AI Agent strategy to see activity
+              </div>
+            ) : (
+              <div className="divide-y divide-[#2a2e3e]/20">
+                {aiLogs.map((log) => {
+                  const time = new Date(log.created_at).toLocaleString([], {
+                    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
+                  });
+                  const eventColors: Record<string, string> = {
+                    trade_decision: "text-emerald-400",
+                    analysis: "text-cyan-400",
+                    cycle: "text-[#555a66]",
+                    error: "text-red-400",
+                  };
+                  const eventLabels: Record<string, string> = {
+                    trade_decision: "TRADE",
+                    analysis: "SCAN",
+                    cycle: "IDLE",
+                    error: "ERR",
+                  };
+                  return (
+                    <div key={log.id} className="px-4 py-2.5 flex items-start gap-3">
+                      <div className="flex flex-col items-center gap-0.5 min-w-[44px]">
+                        <span className={`text-[9px] font-bold tracking-wider ${eventColors[log.event_type] ?? "text-[#555a66]"}`}>
+                          {eventLabels[log.event_type] ?? log.event_type.toUpperCase()}
+                        </span>
+                        <span className="text-[8px] text-[#4a4e59]">{time}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {log.market_sentiment && (
+                          <span className="text-[10px] text-[#848e9c]">
+                            Sentiment: <span className={log.market_sentiment === "bullish" ? "text-emerald-400" : log.market_sentiment === "bearish" ? "text-red-400" : "text-yellow-400"}>{log.market_sentiment}</span>
+                          </span>
+                        )}
+                        {log.opportunities && log.opportunities.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {log.opportunities.slice(0, 5).map((opp, i) => (
+                              <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-[#1a1d2e] text-[#9ca3af]">
+                                {opp.coin} <span className={opp.direction === "long" ? "text-emerald-400" : "text-red-400"}>{opp.direction}</span> {opp.strength}%
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {log.decision?.actions && log.decision.actions.length > 0 && (
+                          <div className="mt-1 space-y-0.5">
+                            {log.decision.actions.map((act, i) => (
+                              <div key={i} className="text-[10px]">
+                                <span className={act.side === "long" ? "text-emerald-400" : "text-red-400"}>
+                                  {act.action.toUpperCase()}
+                                </span>{" "}
+                                <span className="text-white">{act.coin}</span>{" "}
+                                <span className="text-[#848e9c]">${act.sizeUsd?.toFixed(0)}</span>{" "}
+                                <span className="text-[#555a66]">({(act.confidence * 100).toFixed(0)}%)</span>
+                                {act.reasoning && <span className="text-[#4a4e59] ml-1">— {act.reasoning}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {log.signals_generated > 0 && (
+                          <span className="text-[9px] text-emerald-400/60 mt-0.5 block">{log.signals_generated} signal(s) sent to engine</span>
+                        )}
+                        {log.error_message && (
+                          <span className="text-[9px] text-red-400/80 mt-0.5 block">{log.error_message}</span>
+                        )}
+                      </div>
+                      <div className="text-[8px] text-[#4a4e59] text-right min-w-[60px]">
+                        {log.analyst_model && <div>{log.analyst_model}</div>}
+                        {log.trader_model && log.event_type === "trade_decision" && <div>{log.trader_model}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       {engine && (
@@ -1303,7 +1430,7 @@ function AiAgentPanel({
   onConfigChange: (c: Partial<AiAgentConfig>) => void;
   onSave: () => void;
 }) {
-  const cfg = { ...AI_AGENT_DEFAULTS, ...(strat.config as Partial<AiAgentConfig>), ...configDraft };
+  const cfg = { ...AI_AGENT_DEFAULTS, ...((strat.config ?? {}) as Partial<AiAgentConfig>), ...configDraft };
   const marketOptions: { key: AiAgentConfig["allowedMarkets"][number]; label: string }[] = [
     { key: "perps", label: "Perpetuals" },
     { key: "spot", label: "Spot" },

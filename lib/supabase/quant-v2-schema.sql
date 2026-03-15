@@ -65,7 +65,24 @@ create index if not exists idx_perf_strategy on strategy_performance(strategy_id
 -- Update quant_strategies type check to include new strategy types
 alter table quant_strategies drop constraint if exists quant_strategies_type_check;
 alter table quant_strategies add constraint quant_strategies_type_check
-  check (type in ('funding_rate', 'momentum', 'grid', 'mean_reversion', 'market_maker'));
+  check (type in ('funding_rate', 'momentum', 'grid', 'mean_reversion', 'market_maker', 'ai_agent'));
+
+-- AI Agent decision & analysis logs
+create table if not exists ai_agent_logs (
+  id uuid default gen_random_uuid() primary key,
+  strategy_id uuid references quant_strategies(id) on delete cascade,
+  event_type text not null default 'cycle',
+  market_sentiment text,
+  opportunities jsonb default '[]',
+  decision jsonb,
+  signals_generated int default 0,
+  analyst_model text,
+  trader_model text,
+  error_message text,
+  created_at timestamptz default now()
+);
+create index if not exists idx_ai_logs_strategy on ai_agent_logs(strategy_id, created_at desc);
+create index if not exists idx_ai_logs_created on ai_agent_logs(created_at desc);
 
 -- Data collection state tracking
 create table if not exists data_collection_state (

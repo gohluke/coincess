@@ -58,6 +58,7 @@ Runs on a dedicated Contabo VPS via `pm2` — no browser needed. The quant engin
 - **Risk alert banner** — appears when engine hits an error (e.g. kill switch triggered); shows the exact error message with an inline "Reset" button to recover
 - **Strategies table** — add/remove/toggle strategies (Funding Rate, Momentum, Grid, Mean Reversion, Market Maker, AI Agent); each card shows status, trade count, PnL, last execution time; funding rate cards expand to show per-position metrics
 - **AI Agent strategy** — fully autonomous AI trading powered by a two-model architecture: Gemini 2.0 Flash scans all 279+ markets every 30s tick (fast, cheap ~$0.001/call), GPT-4o makes strategic trade decisions only when opportunities are found (saves cost); configurable via expandable panel with market selection checkboxes (perps, spot, stocks, commodities), capital allocation slider (% of account), confidence threshold slider (0-100%), max trades/hour, max positions, leverage, stop loss %, take profit %, model selection (analyst + trader); cost estimate: ~$3-4/day ($90-120/month); safety layers: AI confidence gate (default 70%), existing risk manager, hourly rate limiting, capital allocation cap, mandatory stop losses, full audit trail in Supabase, kill switch integration
+- **AI Agent Logs panel** — real-time scrollable log viewer on the `/automate` page showing every AI decision cycle: event type badges (TRADE in green, SCAN in cyan, IDLE in gray, ERR in red), market sentiment (bullish/bearish/neutral), top opportunity badges (coin, direction, strength %), trade decision details (action, coin, size, confidence, reasoning), signals sent to engine count, analyst/trader model names; auto-refreshes every 10s; persisted to Supabase `ai_agent_logs` table via `/api/quant/ai-logs` endpoint
 - **Open positions** — real-time positions from the Hyperliquid clearinghouse API (source of truth, not the engine's internal records); shows side, leverage, instrument, entry/mark price, size, 8-hour funding rate, unrealized PnL, ROE; positions tagged with strategy badge (FR, MOM, GRID, etc.) when they match a quant trade; click any row to navigate to the trade page
 - **Execution log** — last 30 trades with timestamp, instrument, side, strategy tag, entry/exit price, P&L, and open/closed status; open trades show live unrealized PnL using current mark price
 - **Footer** — peak equity, last tick time, funding payment count, error messages
@@ -207,8 +208,8 @@ Strategy backtesting and performance analysis tools.
 - **API Wallet** — uses Hyperliquid API wallet key (separate from main wallet) for programmatic order signing
 - **Coincess volume attribution** — bot orders include the Coincess builder field and record notional volume, so all automated trades count toward platform volume and appear on the Coincess leaderboard
 - **Server-side Supabase tracking** — after each successful order, the executor calls `upsert_coincess_trader` with trade notional to increment both order count and Coincess-specific volume (non-blocking, won't fail trades if Supabase is down)
-- **Supabase persistence** — `quant_strategies`, `quant_trades`, `quant_state` tables track all activity
-- **API routes** — `/api/quant/strategies` (CRUD), `/api/quant/trades` (history + PnL summary), `/api/quant/status` (engine health + PATCH supports `engine_status`, `max_drawdown`, `peak_equity`, `error_message`)
+- **Supabase persistence** — `quant_strategies`, `quant_trades`, `quant_state`, `ai_agent_logs` tables track all activity
+- **API routes** — `/api/quant/strategies` (CRUD), `/api/quant/trades` (history + PnL summary), `/api/quant/status` (engine health + PATCH supports `engine_status`, `max_drawdown`, `peak_equity`, `error_message`), `/api/quant/ai-logs` (AI decision logs with strategy_id filter + limit)
 
 ### Multi-Account Fleet Management
 - **100-account generation** — `scripts/generate-accounts.ts` creates wallets, stores private keys securely in Supabase `coincess_accounts` table (service-role access only)
@@ -507,6 +508,7 @@ coincess/
 │   │   ├── quant/strategies/route.ts   # Quant strategy CRUD
 │   │   ├── quant/trades/route.ts       # Quant trade history
 │   │   ├── quant/status/route.ts       # Quant engine health
+│   │   ├── quant/ai-logs/route.ts     # AI agent decision logs
 │   │   ├── dayze/sync/route.ts        # Dayze activity sync proxy
 │   │   ├── polymarket/events/          # Gamma API proxy (CORS)
 │   │   ├── polymarket/tags/            # Tags proxy

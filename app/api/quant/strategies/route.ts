@@ -48,7 +48,12 @@ export async function POST(req: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      const msg = error.code === "23514" && error.message.includes("type_check")
+        ? `Database constraint needs migration for "${type}". Run: ALTER TABLE quant_strategies DROP CONSTRAINT IF EXISTS quant_strategies_type_check; ALTER TABLE quant_strategies ADD CONSTRAINT quant_strategies_type_check CHECK (type IN ('funding_rate','momentum','grid','mean_reversion','market_maker','ai_agent'));`
+        : error.message;
+      return NextResponse.json({ error: msg }, { status: 500 });
+    }
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

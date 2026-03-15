@@ -1,3 +1,4 @@
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { analyzeMarkets } from "../ai/analyst";
 import { makeTradeDecision } from "../ai/trader";
 import type {
@@ -23,6 +24,43 @@ const MAX_LOGS = 50;
 
 export function getRecentLogs(): AiDecisionLog[] {
   return recentLogs;
+}
+
+let _sb: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient | null {
+  if (_sb) return _sb;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  _sb = createClient(url, key);
+  return _sb;
+}
+
+async function persistLog(
+  strategyId: string,
+  brief: MarketBrief | null,
+  decision: TradeDecision | null,
+  signalsGenerated: number,
+  config: AiAgentConfig,
+  error?: string,
+): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  try {
+    await sb.from("ai_agent_logs").insert({
+      strategy_id: strategyId,
+      event_type: error ? "error" : decision ? "trade_decision" : brief ? "analysis" : "cycle",
+      market_sentiment: brief?.regime ?? null,
+      opportunities: brief?.topOpportunities ?? [],
+      decision: decision ?? null,
+      signals_generated: signalsGenerated,
+      analyst_model: config.analystModel,
+      trader_model: config.traderModel,
+      error_message: error ?? null,
+    });
+  } catch (e) {
+    console.error("[ai-agent] Failed to persist log:", (e as Error).message);
+  }
 }
 
 function resolveConfig(raw: Record<string, unknown>): AiAgentConfig {
@@ -73,6 +111,7 @@ export async function evaluate(
   if (!brief || brief.topOpportunities.length === 0) {
     recentLogs.unshift({ timestamp: Date.now(), brief, decision: null, signalsGenerated: 0 });
     if (recentLogs.length > MAX_LOGS) recentLogs.pop();
+    await persistLog(strategy.id, brief, null, 0, config);
     return [];
   }
 
@@ -82,6 +121,7 @@ export async function evaluate(
     console.log("[ai-agent] No strong opportunities (all below 50), skipping trader");
     recentLogs.unshift({ timestamp: Date.now(), brief, decision: null, signalsGenerated: 0 });
     if (recentLogs.length > MAX_LOGS) recentLogs.pop();
+    await persistLog(strategy.id, brief, null, 0, config);
     return [];
   }
 
@@ -96,6 +136,7 @@ export async function evaluate(
   if (!decision || decision.actions.length === 0) {
     recentLogs.unshift({ timestamp: Date.now(), brief, decision, signalsGenerated: 0 });
     if (recentLogs.length > MAX_LOGS) recentLogs.pop();
+    await persistLog(strategy.id, brief, decision, 0, config);
     return [];
   }
 
@@ -150,6 +191,7 @@ export async function evaluate(
 
   recentLogs.unshift({ timestamp: Date.now(), brief, decision, signalsGenerated: signals.length });
   if (recentLogs.length > MAX_LOGS) recentLogs.pop();
+  await persistLog(strategy.id, brief, decision, signals.length, config);
 
   console.log(`[ai-agent] Generated ${signals.length} signal(s) from AI pipeline`);
   return signals;
