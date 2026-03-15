@@ -24,17 +24,19 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 
 ### Simple Spot Trading (`/buy`)
 - **Coinbase-style interface** — clean Buy / Sell / Convert UI for non-professional traders, mobile-first
-- **Market-cap-priority sorting** — tokens ordered BTC → ETH → SOL → HYPE → PURR → LINK first, then remaining tokens by 24h volume; coin picker dropdown follows the same order
+- **Crypto + Stocks** — supports both Hyperliquid spot tokens and HIP-3 synthetic stocks (TSLA, NVDA, AAPL, etc.) in a single UI; category tabs ("Crypto" / "Stocks") in the coin picker let users switch between the two
+- **STOCK badge** — HIP-3 tokens display a blue "STOCK" badge in the coin picker, main selector, and holdings list for clear differentiation
+- **Market-cap-priority sorting** — tokens ordered BTC → ETH → SOL → HYPE → PURR → LINK first (crypto), Tesla → NVIDIA → Apple → Amazon → Microsoft → Meta first (stocks), then remaining by 24h volume
 - **Accurate 24h price changes** — cross-references perp market `prevDayPx` for reliable 24h % (spot pairs with low volume often have stale data); falls back to spot data only when change is within ±50%; shows "—" when data is unreliable
 - **USDC-quoted pairs only** — filters Hyperliquid spot universe to only USDC-quoted pairs, avoiding duplicate base tokens
-- **Display name mapping** — wrapped tokens (UBTC, UETH, USOL) shown as familiar symbols (BTC, ETH, SOL)
-- **Convert mode** — swap between any two spot tokens via two sequential market orders routed through USDC
+- **Display name mapping** — wrapped tokens (UBTC, UETH, USOL) shown as familiar symbols (BTC, ETH, SOL); HIP-3 stocks use their full display names (e.g., "Tesla", "NVIDIA")
+- **Convert mode** — swap between any two spot tokens or stocks via two sequential market orders routed through USDC
 - **Live price refresh** — prices update every 8 seconds via `refreshMarkets()`
 - **Simple fee tier** — 5bp (0.05%) per order, still 15-30x cheaper than Coinbase
 - **Quick presets** — 25% / 50% / 75% / 100% of available balance
-- **Your Assets section** — shows all spot token holdings below the trading card (Coinbase-style portfolio); displays token amount, USD value, 24h change; USDC balance at top, tokens sorted by value; tap any token to pre-select it for selling
+- **Your Assets section** — shows all spot token and stock holdings below the trading card (Coinbase-style portfolio); displays token amount, USD value, P&L with cost basis, 24h change; USDC balance at top, tokens sorted by value; STOCK badge on HIP-3 holdings; tap any token to pre-select it for selling
 - **Auto-refresh balances** — `loadUserState()` runs on page load and every 15 seconds to keep holdings current
-- **Pro mode link** — one click to switch to the advanced `/trade` terminal for the same coin
+- **Pro mode link** — routes to `/trade/spot-{coin}` for crypto or `/trade/{ticker}` for stocks
 
 ### Prediction Markets
 - **Browse trending events** — politics, sports, crypto, pop culture, business, science, technology

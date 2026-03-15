@@ -15,10 +15,15 @@ import { BRAND_CONFIG } from "@/lib/brand";
 import type { MarketInfo } from "@/lib/hyperliquid/types";
 
 // Well-known tokens shown first in the picker (order = display priority)
-const CURATED_POPULAR = ["BTC", "ETH", "SOL", "HYPE", "PURR", "LINK"];
+const CURATED_POPULAR_CRYPTO = ["BTC", "ETH", "SOL", "HYPE", "PURR", "LINK"];
+const CURATED_POPULAR_STOCKS = ["Tesla", "NVIDIA", "Apple", "Amazon", "Microsoft", "Meta Platforms"];
 // Priority ordering for sort — lower number appears first
-const PRIORITY: Record<string, number> = {
+const PRIORITY_CRYPTO: Record<string, number> = {
   BTC: 0, ETH: 1, SOL: 2, HYPE: 3, PURR: 4, LINK: 5,
+};
+const PRIORITY_STOCKS: Record<string, number> = {
+  Tesla: 0, NVIDIA: 1, Apple: 2, Amazon: 3, Microsoft: 4, "Meta Platforms": 5,
+  "S&P 500 ETF": 6, "Nasdaq 100 ETF": 7, Robinhood: 8, MicroStrategy: 9,
 };
 const MAX_PRIORITY = 999;
 const STABLECOINS = new Set(["USDC", "USDT0", "USDE", "USDH"]);
@@ -41,30 +46,58 @@ function fmtChange(pct: number): string {
 
 type Mode = "buy" | "sell" | "convert";
 type PickerTarget = "main" | "convertFrom" | "convertTo";
+type PickerCategory = "crypto" | "stocks";
+type PickerItem = { displayName: string; ticker: string; price: number; change24h: number | null; volume: number; name: string; dex: string };
 
 function CoinPickerDropdown({
   items,
   popularCoins,
+  popularStocks,
   selectedCoin,
   pickerSearch,
   onSearchChange,
   onSelect,
 }: {
-  items: { displayName: string; price: number; change24h: number | null; volume: number; name: string }[];
+  items: PickerItem[];
   popularCoins: string[];
+  popularStocks: string[];
   selectedCoin: string;
   pickerSearch: string;
   onSearchChange: (v: string) => void;
   onSelect: (coin: string) => void;
 }) {
+  const [category, setCategory] = useState<PickerCategory>("crypto");
+
   const filtered = useMemo(() => {
-    if (!pickerSearch) return items;
-    const q = pickerSearch.toUpperCase();
-    return items.filter((m) => m.displayName.toUpperCase().includes(q));
-  }, [items, pickerSearch]);
+    let list = items;
+    if (!pickerSearch) {
+      list = list.filter((m) => category === "stocks" ? m.dex === "hip3" : m.dex === "spot");
+    } else {
+      const q = pickerSearch.toUpperCase();
+      list = list.filter((m) => m.displayName.toUpperCase().includes(q) || m.ticker.toUpperCase().includes(q));
+    }
+    return list;
+  }, [items, pickerSearch, category]);
+
+  const activePills = category === "stocks" ? popularStocks : popularCoins;
 
   return (
     <div className="bg-[#0b0e11] rounded-xl border border-[#2a2e39] overflow-hidden">
+      {/* Category tabs */}
+      <div className="flex gap-1 p-2 pb-0">
+        {(["crypto", "stocks"] as PickerCategory[]).map((cat) => (
+          <button
+            key={cat}
+            onClick={() => { setCategory(cat); onSearchChange(""); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors capitalize ${
+              category === cat ? "bg-[#1a1d26] text-white" : "text-[#4a4e59] hover:text-[#848e9c]"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       <div className="p-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#555]" />
@@ -72,16 +105,16 @@ function CoinPickerDropdown({
             type="text"
             value={pickerSearch}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search tokens..."
+            placeholder={category === "stocks" ? "Search stocks..." : "Search tokens..."}
             autoFocus
             className="w-full bg-[#12141a] rounded-lg pl-8 pr-3 py-2 text-sm text-white placeholder-[#4a4e59] focus:outline-none"
           />
         </div>
       </div>
 
-      {!pickerSearch && popularCoins.length > 0 && (
+      {!pickerSearch && activePills.length > 0 && (
         <div className="flex gap-1.5 px-2 pb-2 overflow-x-auto scrollbar-none">
-          {popularCoins.map((coin) => (
+          {activePills.map((coin) => (
             <button
               key={coin}
               onClick={() => onSelect(coin)}
@@ -100,10 +133,13 @@ function CoinPickerDropdown({
 
       <div className="max-h-56 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="py-6 text-center text-[#4a4e59] text-sm">No spot tokens found</div>
+          <div className="py-6 text-center text-[#4a4e59] text-sm">
+            {pickerSearch ? "No results" : category === "stocks" ? "No stocks available" : "No tokens found"}
+          </div>
         ) : (
           filtered.map((m) => {
             const chg = m.change24h;
+            const isStock = m.dex === "hip3";
             return (
               <button
                 key={m.name}
@@ -112,12 +148,15 @@ function CoinPickerDropdown({
                   selectedCoin === m.displayName ? "bg-[#12141a]" : ""
                 }`}
               >
-                <CoinLogo symbol={m.displayName} size={28} />
-                <div className="flex-1 text-left">
-                  <span className="text-white text-sm font-medium">{m.displayName}</span>
-                  <span className="text-[#4a4e59] text-xs ml-1">/USDC</span>
+                <CoinLogo symbol={isStock ? m.ticker : m.displayName} size={28} />
+                <div className="flex-1 text-left min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-white text-sm font-medium truncate">{m.displayName}</span>
+                    {isStock && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold shrink-0">STOCK</span>}
+                  </div>
+                  <span className="text-[#4a4e59] text-xs">{isStock ? m.ticker : ""}{isStock ? " · " : ""}/USDC</span>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <div className="text-xs text-white">${fmtPrice(m.price)}</div>
                   {chg !== null ? (
                     <div className={`text-[10px] ${chg >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
@@ -202,7 +241,7 @@ export default function BuyPage() {
 
   /* ── derived market data ── */
   const spotMarkets = useMemo(
-    () => markets.filter((m) => m.dex === "spot"),
+    () => markets.filter((m) => m.dex === "spot" || m.dex === "hip3"),
     [markets],
   );
 
@@ -236,29 +275,38 @@ export default function BuyPage() {
     return null;
   }, [perpChangeMap]);
 
-  // Pre-sorted list of spot items: curated tokens first, then by 24h volume
+  // Pre-sorted list including both spot + hip3 items
   const sortedItems = useMemo(() => {
     return spotMarkets
       .map((m) => ({
         displayName: m.displayName,
+        ticker: m.name.replace("spot:", ""),
         name: m.name,
+        dex: m.dex,
         price: parseFloat(m.markPx),
         change24h: get24hChange(m),
         volume: parseFloat(m.dayNtlVlm),
       }))
       .sort((a, b) => {
-        const pa = PRIORITY[a.displayName] ?? MAX_PRIORITY;
-        const pb = PRIORITY[b.displayName] ?? MAX_PRIORITY;
+        const prioMap = a.dex === "hip3" ? PRIORITY_STOCKS : PRIORITY_CRYPTO;
+        const prioMapB = b.dex === "hip3" ? PRIORITY_STOCKS : PRIORITY_CRYPTO;
+        const pa = prioMap[a.displayName] ?? MAX_PRIORITY;
+        const pb = prioMapB[b.displayName] ?? MAX_PRIORITY;
         if (pa !== pb) return pa - pb;
         return b.volume - a.volume;
       });
   }, [spotMarkets, get24hChange]);
 
-  // Popular coins filtered to those that exist
   const popularCoins = useMemo(() => {
-    if (spotMarkets.length === 0) return CURATED_POPULAR;
-    const available = new Set(spotMarkets.map((m) => m.displayName));
-    return CURATED_POPULAR.filter((c) => available.has(c));
+    if (spotMarkets.length === 0) return CURATED_POPULAR_CRYPTO;
+    const available = new Set(spotMarkets.filter((m) => m.dex === "spot").map((m) => m.displayName));
+    return CURATED_POPULAR_CRYPTO.filter((c) => available.has(c));
+  }, [spotMarkets]);
+
+  const popularStocks = useMemo(() => {
+    if (spotMarkets.length === 0) return CURATED_POPULAR_STOCKS;
+    const available = new Set(spotMarkets.filter((m) => m.dex === "hip3").map((m) => m.displayName));
+    return CURATED_POPULAR_STOCKS.filter((c) => available.has(c));
   }, [spotMarkets]);
 
   // Set defaults once markets load — BTC first (like Coinbase)
@@ -274,7 +322,8 @@ export default function BuyPage() {
     if (!selectedCoin) setSelectedCoin(hasFirst ? first : fallbackFirst);
     if (!convertFrom) setConvertFrom(hasFirst ? first : fallbackFirst);
     if (!convertTo) setConvertTo(hasSecond ? second : fallbackSecond);
-  }, [spotMarkets, popularCoins, selectedCoin, convertFrom, convertTo]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotMarkets.length, popularCoins, selectedCoin, convertFrom, convertTo]);
 
   /* ── state derived from selected coin ── */
   const market = spotMarkets.find((m) => m.displayName === selectedCoin);
@@ -329,7 +378,8 @@ export default function BuyPage() {
         const pnl = costBasis > 0 ? usd - costBasis : null;
         const pnlPct = costBasis > 0 ? ((usd - costBasis) / costBasis) * 100 : null;
         const chg = m ? get24hChange(m) : null;
-        return { coin: b.coin, displayName: dn, amount, px, usd, costBasis, pnl, pnlPct, change24h: chg };
+        const dex = m?.dex ?? "spot";
+        return { coin: b.coin, displayName: dn, ticker: b.coin, amount, px, usd, costBasis, pnl, pnlPct, change24h: chg, dex };
       })
       .sort((a, b) => b.usd - a.usd);
   }, [spotClearinghouse, spotMarkets, get24hChange]);
@@ -480,6 +530,7 @@ export default function BuyPage() {
   const activeCoin = mode === "convert" ? convertFrom : selectedCoin;
   const activeMarket = spotMarkets.find((m) => m.displayName === activeCoin);
   const activeInternalName = activeMarket ? activeMarket.name.replace("spot:", "") : activeCoin;
+  const isActiveStock = activeMarket?.dex === "hip3";
 
   const canSubmit = mode === "convert"
     ? convertTokenAmount > 0 && !!fromMarket && !!toMarket
@@ -505,8 +556,8 @@ export default function BuyPage() {
     <div className="min-h-screen bg-[#0b0e11] text-white">
       <div className="max-w-md mx-auto px-4 pt-8 pb-24">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight mb-1">{headerText} Crypto</h1>
-          <p className="text-sm text-[#848e9c]">Simple spot trading on Hyperliquid</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-1">{headerText}</h1>
+          <p className="text-sm text-[#848e9c]">Simple spot trading — crypto &amp; stocks on Hyperliquid</p>
         </div>
 
         <div className="bg-[#12141a] rounded-2xl overflow-hidden shadow-xl shadow-black/30">
@@ -535,7 +586,7 @@ export default function BuyPage() {
           {loading && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-brand" />
-              <span className="text-xs text-[#848e9c]">Loading spot markets...</span>
+              <span className="text-xs text-[#848e9c]">Loading markets...</span>
             </div>
           )}
 
@@ -548,9 +599,12 @@ export default function BuyPage() {
                   onClick={() => { setShowPicker(showPicker === "main" ? null : "main"); setPickerSearch(""); }}
                   className="w-full flex items-center gap-3 p-3 rounded-xl bg-[#0b0e11] hover:bg-[#161820] transition-colors"
                 >
-                  <CoinLogo symbol={selectedCoin} size={36} />
+                  <CoinLogo symbol={isActiveStock ? activeInternalName : selectedCoin} size={36} />
                   <div className="flex-1 text-left">
-                    <div className="text-white font-semibold">{selectedCoin}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white font-semibold">{selectedCoin}</span>
+                      {isActiveStock && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold">STOCK</span>}
+                    </div>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-[#848e9c]">${fmtPrice(price)}</span>
                       {change24h !== null ? (
@@ -571,6 +625,7 @@ export default function BuyPage() {
                   <CoinPickerDropdown
                     items={sortedItems}
                     popularCoins={popularCoins}
+                    popularStocks={popularStocks}
                     selectedCoin={selectedCoin}
                     pickerSearch={pickerSearch}
                     onSearchChange={setPickerSearch}
@@ -712,7 +767,7 @@ export default function BuyPage() {
 
               {showPicker === "convertFrom" && (
                 <div className="px-4 pb-2">
-                  <CoinPickerDropdown items={sortedItems} popularCoins={popularCoins} selectedCoin={convertFrom} pickerSearch={pickerSearch} onSearchChange={setPickerSearch} onSelect={handlePickerSelect} />
+                  <CoinPickerDropdown items={sortedItems} popularCoins={popularCoins} popularStocks={popularStocks} selectedCoin={convertFrom} pickerSearch={pickerSearch} onSearchChange={setPickerSearch} onSelect={handlePickerSelect} />
                 </div>
               )}
 
@@ -748,7 +803,7 @@ export default function BuyPage() {
 
               {showPicker === "convertTo" && (
                 <div className="px-4 pb-3">
-                  <CoinPickerDropdown items={sortedItems} popularCoins={popularCoins} selectedCoin={convertTo} pickerSearch={pickerSearch} onSearchChange={setPickerSearch} onSelect={handlePickerSelect} />
+                  <CoinPickerDropdown items={sortedItems} popularCoins={popularCoins} popularStocks={popularStocks} selectedCoin={convertTo} pickerSearch={pickerSearch} onSearchChange={setPickerSearch} onSelect={handlePickerSelect} />
                 </div>
               )}
 
@@ -848,9 +903,12 @@ export default function BuyPage() {
                   onClick={() => { setSelectedCoin(h.displayName); setMode("sell"); }}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#161820] transition-colors"
                 >
-                  <CoinLogo symbol={h.displayName} size={36} />
+                  <CoinLogo symbol={h.dex === "hip3" ? h.ticker : h.displayName} size={36} />
                   <div className="flex-1 min-w-0 text-left">
-                    <div className="text-white text-sm font-medium">{h.displayName}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white text-sm font-medium">{h.displayName}</span>
+                      {h.dex === "hip3" && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold">STOCK</span>}
+                    </div>
                     <div className="text-[11px] text-[#848e9c]">
                       {h.amount < 0.001
                         ? h.amount.toPrecision(3)
@@ -887,7 +945,7 @@ export default function BuyPage() {
         {/* Pro mode link */}
         <div className="text-center mt-6">
           <button
-            onClick={() => router.push(`/trade/spot-${activeInternalName}`)}
+            onClick={() => router.push(isActiveStock ? `/trade/${activeInternalName}` : `/trade/spot-${activeInternalName}`)}
             className="text-xs text-[#848e9c] hover:text-brand transition-colors"
           >
             Advanced trading →
