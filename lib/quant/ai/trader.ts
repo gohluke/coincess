@@ -13,7 +13,7 @@ const TradeDecisionSchema = z.object({
       sizeUsd: z.number(),
       confidence: z.number().min(0).max(1),
       stopLoss: z.number(),
-      takeProfit: z.number().optional(),
+      takeProfit: z.number(),
       reasoning: z.string(),
     }),
   ),
