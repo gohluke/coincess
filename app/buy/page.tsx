@@ -10,7 +10,7 @@ import { spotDisplayName } from "@/lib/hyperliquid/api";
 import { useWallet } from "@/hooks/useWallet";
 import { useSettingsStore } from "@/lib/settings/store";
 import { getConnectedAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
-import { getLogoForTicker, type LogoResult } from "@/lib/coinLogos";
+import { CoinLogo } from "@/components/CoinLogo";
 import { BRAND_CONFIG } from "@/lib/brand";
 import type { MarketInfo } from "@/lib/hyperliquid/types";
 
@@ -22,11 +22,6 @@ const PRIORITY: Record<string, number> = {
 };
 const MAX_PRIORITY = 999;
 const STABLECOINS = new Set(["USDC", "USDT0", "USDE", "USDH"]);
-
-const FALLBACK_COLORS = [
-  "#f6465d", "#0ecb81", "#f0b90b", "#3b82f6",
-  "#8b5cf6", "#ec4899", "#14b8a6", "#f97316",
-];
 
 /* ─── helpers ──────────────────────────────────────────────── */
 
@@ -40,47 +35,6 @@ function fmtPrice(px: number): string {
 function fmtChange(pct: number): string {
   const s = Math.abs(pct).toFixed(2);
   return pct >= 0 ? `+${s}%` : `-${s}%`;
-}
-
-/* ─── CoinLogo ─────────────────────────────────────────────── */
-
-function CoinLogo({ symbol, size = 40 }: { symbol: string; size?: number }) {
-  const [failed, setFailed] = useState(false);
-  const logo: LogoResult = useMemo(() => getLogoForTicker(symbol), [symbol]);
-
-  if (logo.type === "emoji") {
-    return (
-      <div
-        className="rounded-full flex items-center justify-center bg-[#1e2130] shrink-0"
-        style={{ width: size, height: size, fontSize: size * 0.45 }}
-      >
-        {logo.emoji}
-      </div>
-    );
-  }
-
-  if (logo.type === "url" && !failed) {
-    return (
-      <img
-        src={logo.src}
-        alt={symbol}
-        width={size}
-        height={size}
-        className="rounded-full shrink-0 object-cover bg-[#1e2130]"
-        onError={() => setFailed(true)}
-      />
-    );
-  }
-
-  const ci = symbol.charCodeAt(0) % FALLBACK_COLORS.length;
-  return (
-    <div
-      className="rounded-full flex items-center justify-center text-white font-bold shrink-0"
-      style={{ width: size, height: size, backgroundColor: FALLBACK_COLORS[ci], fontSize: size * 0.36 }}
-    >
-      {symbol.charAt(0)}
-    </div>
-  );
 }
 
 /* ─── CoinPickerDropdown ───────────────────────────────────── */

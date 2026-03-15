@@ -14,59 +14,7 @@ import { useTradingStore } from "@/lib/hyperliquid/store";
 import { getWs } from "@/lib/hyperliquid/websocket";
 import type { MarketInfo } from "@/lib/hyperliquid/types";
 import { getMarketCategory, type MarketCategory } from "@/lib/hyperliquid/categories";
-import { getLogoForTicker, type LogoResult } from "@/lib/coinLogos";
-
-/* ── Coin logo ──────────────────────────────────────────── */
-
-const FALLBACK_COLORS = [
-  "#f6465d", "#0ecb81", "#f0b90b", "#3b82f6",
-  "#8b5cf6", "#ec4899", "#14b8a6", "#f97316",
-];
-
-function CoinLogo({ symbol, size = 36 }: { symbol: string; size?: number }) {
-  const [failed, setFailed] = useState(false);
-  const logo: LogoResult = useMemo(() => getLogoForTicker(symbol), [symbol]);
-  const stripped = symbol.replace(/^.*:/, "");
-
-  if (logo.type === "emoji") {
-    return (
-      <div
-        className="rounded-full flex items-center justify-center bg-[#1e2130] shrink-0"
-        style={{ width: size, height: size, fontSize: size * 0.5 }}
-      >
-        {logo.emoji}
-      </div>
-    );
-  }
-
-  if (logo.type === "url" && !failed) {
-    return (
-      <img
-        src={logo.src}
-        alt={stripped}
-        width={size}
-        height={size}
-        className="rounded-full shrink-0 object-cover bg-[#1e2130]"
-        onError={() => setFailed(true)}
-      />
-    );
-  }
-
-  const ci = stripped.charCodeAt(0) % FALLBACK_COLORS.length;
-  return (
-    <div
-      className="rounded-full flex items-center justify-center text-white font-bold shrink-0"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: FALLBACK_COLORS[ci],
-        fontSize: size * 0.38,
-      }}
-    >
-      {stripped.charAt(0)}
-    </div>
-  );
-}
+import { CoinLogo } from "@/components/CoinLogo";
 
 /* ── Category tabs ──────────────────────────────────────── */
 

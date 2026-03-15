@@ -5,7 +5,7 @@ import { Search, ChevronDown, TrendingUp, TrendingDown, Star } from "lucide-reac
 import { useRouter } from "next/navigation";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { CATEGORIES, filterByCategory, type MarketCategory } from "@/lib/hyperliquid/categories";
-import { getLogoForTicker, type LogoResult } from "@/lib/coinLogos";
+import { CoinLogo } from "@/components/CoinLogo";
 
 type SortKey = "name" | "price" | "change" | "volume";
 
@@ -20,51 +20,6 @@ function loadFavorites(): Set<string> {
 
 function saveFavorites(favs: Set<string>) {
   localStorage.setItem(LS_KEY, JSON.stringify([...favs]));
-}
-
-const FALLBACK_COLORS = [
-  "#f6465d", "#0ecb81", "#f0b90b", "#3b82f6",
-  "#8b5cf6", "#ec4899", "#14b8a6", "#f97316",
-];
-
-function CoinLogo({ symbol, size = 24 }: { symbol: string; size?: number }) {
-  const [failed, setFailed] = useState(false);
-  const logo: LogoResult = useMemo(() => getLogoForTicker(symbol), [symbol]);
-  const stripped = symbol.replace(/^.*:/, "");
-
-  if (logo.type === "emoji") {
-    return (
-      <div
-        className="rounded-full flex items-center justify-center bg-[#1e2130] shrink-0"
-        style={{ width: size, height: size, fontSize: size * 0.5 }}
-      >
-        {logo.emoji}
-      </div>
-    );
-  }
-
-  if (logo.type === "url" && !failed) {
-    return (
-      <img
-        src={logo.src}
-        alt={stripped}
-        width={size}
-        height={size}
-        className="rounded-full shrink-0 object-cover bg-[#1e2130]"
-        onError={() => setFailed(true)}
-      />
-    );
-  }
-
-  const ci = stripped.charCodeAt(0) % FALLBACK_COLORS.length;
-  return (
-    <div
-      className="rounded-full flex items-center justify-center text-white font-bold shrink-0"
-      style={{ width: size, height: size, backgroundColor: FALLBACK_COLORS[ci], fontSize: size * 0.36 }}
-    >
-      {stripped.charAt(0)}
-    </div>
-  );
 }
 
 function FundingCountdown() {

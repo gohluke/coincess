@@ -27,6 +27,7 @@ import type { LedgerUpdate } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
+import { CoinLogo } from "@/components/CoinLogo";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 import PortfolioChart from "@/components/dashboard/PortfolioChart";
@@ -651,9 +652,7 @@ export default function DashboardPage() {
                     const spotRoute = h.market ? `/trade/spot-${h.market.name.replace("spot:", "")}` : "/buy";
                     return (
                       <Link key={h.coin} href={spotRoute} className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-3.5 hover:bg-[#1a1d2e] transition-colors">
-                        <div className="w-8 h-8 rounded-full bg-[#2a2e3e] flex items-center justify-center text-xs font-bold text-white shrink-0">
-                          {h.displayName.slice(0, 2)}
-                        </div>
+                        <CoinLogo symbol={h.displayName} size={32} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-semibold text-white">{h.displayName}</span>
@@ -702,6 +701,7 @@ export default function DashboardPage() {
                     const distPct = markPx > 0 ? ((limitPx - markPx) / markPx * 100) : 0;
                     return (
                       <div key={o.oid} className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-2.5">
+                        <CoinLogo symbol={coinName} size={24} />
                         <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${o.side === "B" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
                           {o.side === "B" ? "BUY" : "SELL"}
                         </span>
@@ -969,6 +969,7 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
       <button onClick={() => setExpanded((v) => !v)} className="w-full px-4 py-3 text-left hover:bg-[#1a1d2e]/50 transition-colors">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
+            <CoinLogo symbol={coinName} size={24} />
             <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${trade.direction === "Long" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
               {trade.direction.toUpperCase()}{leverage ? ` ${leverage}` : ""}
             </span>
@@ -1236,6 +1237,8 @@ function PositionRow({ ap, markets, fills, trades }: { ap: AssetPosition; market
 
   return (
     <Link href={`/trade/${tradeCoin}`} className="flex items-center gap-3 px-4 py-2.5 bg-[#141620] rounded-xl transition-colors">
+      <CoinLogo symbol={displayCoin} size={28} />
+
       {/* Direction badge */}
       <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
         {isLong ? "LONG" : "SHORT"}
