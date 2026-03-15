@@ -6,6 +6,7 @@ import * as momentum from "./strategies/momentum";
 import * as grid from "./strategies/grid";
 import * as meanReversion from "./strategies/mean-reversion";
 import * as marketMaker from "./strategies/market-maker";
+import * as aiAgent from "./strategies/ai-agent";
 import {
   calculateWeights,
   combineSignals,
@@ -257,6 +258,10 @@ export class QuantEngine {
       case "market_maker": {
         const markets = await this.fetchMarketSnapshots();
         return marketMaker.evaluate(strat, markets, ctx);
+      }
+      case "ai_agent": {
+        const markets = await this.fetchMarketSnapshots();
+        return aiAgent.evaluate(strat, markets, ctx);
       }
       default:
         return [];

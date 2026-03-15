@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase/client";
+import { AI_AGENT_DEFAULTS } from "@/lib/quant/types";
+
+const VALID_STRATEGY_TYPES = [
+  "funding_rate", "momentum", "grid", "mean_reversion", "market_maker", "ai_agent",
+] as const;
 
 export async function GET(req: Request) {
   try {
@@ -27,10 +32,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "type and wallet_address required" }, { status: 400 });
     }
 
+    if (!VALID_STRATEGY_TYPES.includes(type)) {
+      return NextResponse.json({ error: `Invalid strategy type: ${type}` }, { status: 400 });
+    }
+
+    // Merge defaults for ai_agent
+    const finalConfig = type === "ai_agent"
+      ? { ...AI_AGENT_DEFAULTS, ...(config ?? {}) }
+      : (config ?? {});
+
     const supabase = getServiceClient();
     const { data, error } = await supabase
       .from("quant_strategies")
-      .insert({ type, config: config ?? {}, wallet_address, status: "paused" })
+      .insert({ type, config: finalConfig, wallet_address, status: "paused" })
       .select()
       .single();
 

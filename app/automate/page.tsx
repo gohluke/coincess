@@ -19,17 +19,30 @@ import {
   FlaskConical,
   Database,
   CheckCircle2,
+  Brain,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 import { useAutomationStore } from "@/lib/automation/store";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StrategyCard } from "@/components/automate/StrategyCard";
 import { ActivityLog } from "@/components/automate/ActivityLog";
-import type { QuantStrategy, QuantState, QuantTrade } from "@/lib/quant/types";
+import type { QuantStrategy, QuantState, QuantTrade, AiAgentConfig } from "@/lib/quant/types";
+import { AI_AGENT_DEFAULTS } from "@/lib/quant/types";
 import type { MarketInfo, AssetPosition, FundingPayment } from "@/lib/hyperliquid/types";
 import { fetchAllMarkets, fetchCombinedClearinghouseState, fetchOpenOrders, fetchUserFunding } from "@/lib/hyperliquid/api";
 
 type Tab = "server" | "browser" | "lab";
+
+interface AiLogEntry {
+  timestamp: number;
+  regime?: string;
+  opportunities?: number;
+  actions?: number;
+  reasoning?: string;
+  warnings?: string[];
+}
 
 const STRATEGY_LABELS: Record<string, { name: string; tag: string; color: string }> = {
   funding_rate: { name: "Funding Rate Harvester", tag: "FR", color: "#10b981" },
@@ -37,6 +50,7 @@ const STRATEGY_LABELS: Record<string, { name: string; tag: string; color: string
   grid: { name: "Grid Trading", tag: "GRID", color: "#3b82f6" },
   mean_reversion: { name: "Mean Reversion", tag: "MR", color: "#f59e0b" },
   market_maker: { name: "Market Making", tag: "MM", color: "#ec4899" },
+  ai_agent: { name: "AI Agent", tag: "AI", color: "#06b6d4" },
 };
 
 function formatPnl(n: number): string {
@@ -184,6 +198,9 @@ function ServerStrategies({ address }: { address: string | null }) {
   const [accountValue, setAccountValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [addingStrategy, setAddingStrategy] = useState(false);
+  const [aiConfigOpen, setAiConfigOpen] = useState<string | null>(null);
+  const [aiLogs, setAiLogs] = useState<AiLogEntry[]>([]);
+  const [aiConfigDraft, setAiConfigDraft] = useState<Partial<AiAgentConfig>>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -278,6 +295,16 @@ function ServerStrategies({ address }: { address: string | null }) {
         peak_equity: accountValue > 0 ? accountValue : 0,
       }),
     });
+    fetchData();
+  };
+
+  const saveAiConfig = async (stratId: string) => {
+    await fetch("/api/quant/strategies", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: stratId, config: { ...AI_AGENT_DEFAULTS, ...aiConfigDraft } }),
+    });
+    setAiConfigOpen(null);
     fetchData();
   };
 
@@ -423,17 +450,28 @@ function ServerStrategies({ address }: { address: string | null }) {
         </div>
 
         {addingStrategy && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            {Object.entries(STRATEGY_LABELS).map(([type, { name, tag }]) => (
-              <button
-                key={type}
-                onClick={() => addStrategy(type)}
-                className="px-3 py-2.5 rounded-xl bg-[#141620] hover:bg-[#1a1d2e] transition-colors text-left"
-              >
-                <span className="text-[9px] font-bold text-[#848e9c] tracking-wider">{tag}</span>
-                <p className="text-[11px] text-white mt-0.5">{name}</p>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+            {Object.entries(STRATEGY_LABELS).map(([type, { name, tag, color }]) => {
+              const isAi = type === "ai_agent";
+              return (
+                <button
+                  key={type}
+                  onClick={() => addStrategy(type)}
+                  className={`px-3 py-2.5 rounded-xl transition-colors text-left ${
+                    isAi
+                      ? "bg-gradient-to-br from-cyan-950/40 to-[#141620] border border-cyan-500/20 hover:border-cyan-500/40"
+                      : "bg-[#141620] hover:bg-[#1a1d2e]"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {isAi && <Brain className="h-3 w-3 text-cyan-400" />}
+                    <span className="text-[9px] font-bold tracking-wider" style={{ color }}>{tag}</span>
+                  </div>
+                  <p className="text-[11px] text-white mt-0.5">{name}</p>
+                  {isAi && <p className="text-[8px] text-cyan-400/50 mt-0.5">Gemini + GPT-4o</p>}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -480,9 +518,17 @@ function ServerStrategies({ address }: { address: string | null }) {
                         {meta.tag}
                       </span>
                       <div>
-                        <p className="text-[13px] font-medium text-white">{meta.name}</p>
+                        <div className="flex items-center gap-1.5">
+                          {strat.type === "ai_agent" && <Brain className="h-3.5 w-3.5 text-cyan-400" />}
+                          <p className="text-[13px] font-medium text-white">{meta.name}</p>
+                        </div>
                         <p className="text-[10px] text-[#848e9c] font-mono">
                           {strat.total_trades} executions &middot; last {relativeTime(strat.last_executed_at)}
+                          {strat.type === "ai_agent" && (
+                            <span className="text-cyan-400/50 ml-2">
+                              {((strat.config as Partial<AiAgentConfig>).analystModel ?? "gemini-2.0-flash")} + {((strat.config as Partial<AiAgentConfig>).traderModel ?? "gpt-4o")}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -563,6 +609,17 @@ function ServerStrategies({ address }: { address: string | null }) {
                         compact
                       />
                     </div>
+                  )}
+
+                  {strat.type === "ai_agent" && (
+                    <AiAgentPanel
+                      strat={strat}
+                      isOpen={aiConfigOpen === strat.id}
+                      onToggle={() => setAiConfigOpen(aiConfigOpen === strat.id ? null : strat.id)}
+                      configDraft={aiConfigDraft}
+                      onConfigChange={setAiConfigDraft}
+                      onSave={() => saveAiConfig(strat.id)}
+                    />
                   )}
 
                   {strat.error_message && (
@@ -988,6 +1045,7 @@ function QuantLab() {
               <option value="mean_reversion">Mean Reversion</option>
               <option value="funding_rate">Funding Rate</option>
               <option value="market_maker">Market Making</option>
+              <option value="ai_agent">AI Agent</option>
               <option value="all">All Strategies</option>
             </select>
           </div>
@@ -1225,6 +1283,211 @@ function MiniEquityCurve({ data }: { data: number[] }) {
         vectorEffect="non-scaling-stroke"
       />
     </svg>
+  );
+}
+
+/* ─── AI Agent Panel ─── */
+
+function AiAgentPanel({
+  strat,
+  isOpen,
+  onToggle,
+  configDraft,
+  onConfigChange,
+  onSave,
+}: {
+  strat: QuantStrategy;
+  isOpen: boolean;
+  onToggle: () => void;
+  configDraft: Partial<AiAgentConfig>;
+  onConfigChange: (c: Partial<AiAgentConfig>) => void;
+  onSave: () => void;
+}) {
+  const cfg = { ...AI_AGENT_DEFAULTS, ...(strat.config as Partial<AiAgentConfig>), ...configDraft };
+  const marketOptions: { key: AiAgentConfig["allowedMarkets"][number]; label: string }[] = [
+    { key: "perps", label: "Perpetuals" },
+    { key: "spot", label: "Spot" },
+    { key: "stocks", label: "Stocks" },
+    { key: "commodities", label: "Commodities" },
+  ];
+
+  return (
+    <div className="border-t border-[#2a2e3e]/30">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-2 hover:bg-[#1a1d2e]/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Brain className="h-3.5 w-3.5 text-cyan-400" />
+          <span className="text-[10px] text-cyan-400 font-medium uppercase tracking-wider">AI Configuration</span>
+        </div>
+        {isOpen ? <ChevronUp className="h-3 w-3 text-[#848e9c]" /> : <ChevronDown className="h-3 w-3 text-[#848e9c]" />}
+      </button>
+
+      {isOpen && (
+        <div className="px-4 pb-4 space-y-4">
+          {/* Market Selection */}
+          <div>
+            <label className="text-[9px] text-[#848e9c] uppercase tracking-wider font-medium block mb-1.5">Markets</label>
+            <div className="flex flex-wrap gap-1.5">
+              {marketOptions.map((opt) => {
+                const active = cfg.allowedMarkets.includes(opt.key);
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => {
+                      const markets = active
+                        ? cfg.allowedMarkets.filter((m) => m !== opt.key)
+                        : [...cfg.allowedMarkets, opt.key];
+                      onConfigChange({ ...configDraft, allowedMarkets: markets as AiAgentConfig["allowedMarkets"] });
+                    }}
+                    className={`px-2.5 py-1 rounded text-[10px] font-medium transition-colors border ${
+                      active
+                        ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
+                        : "bg-[#141620] text-[#848e9c] border-[#2a2e3e] hover:border-[#4a4e59]"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sliders */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SliderInput
+              label="Capital Allocation"
+              value={cfg.capitalAllocationPct}
+              min={0.05} max={1} step={0.05}
+              format={(v) => `${(v * 100).toFixed(0)}%`}
+              onChange={(v) => onConfigChange({ ...configDraft, capitalAllocationPct: v })}
+            />
+            <SliderInput
+              label="Confidence Threshold"
+              value={cfg.confidenceThreshold}
+              min={0.3} max={0.95} step={0.05}
+              format={(v) => `${(v * 100).toFixed(0)}%`}
+              onChange={(v) => onConfigChange({ ...configDraft, confidenceThreshold: v })}
+            />
+            <SliderInput
+              label="Max Trades/Hour"
+              value={cfg.maxTradesPerHour}
+              min={1} max={30} step={1}
+              format={(v) => v.toString()}
+              onChange={(v) => onConfigChange({ ...configDraft, maxTradesPerHour: v })}
+            />
+            <SliderInput
+              label="Max Positions"
+              value={cfg.maxPositions}
+              min={1} max={20} step={1}
+              format={(v) => v.toString()}
+              onChange={(v) => onConfigChange({ ...configDraft, maxPositions: v })}
+            />
+            <SliderInput
+              label="Default Leverage"
+              value={cfg.defaultLeverage}
+              min={1} max={20} step={1}
+              format={(v) => `${v}x`}
+              onChange={(v) => onConfigChange({ ...configDraft, defaultLeverage: v })}
+            />
+            <SliderInput
+              label="Stop Loss %"
+              value={cfg.stopLossPct}
+              min={0.01} max={0.15} step={0.01}
+              format={(v) => `${(v * 100).toFixed(0)}%`}
+              onChange={(v) => onConfigChange({ ...configDraft, stopLossPct: v })}
+            />
+            <SliderInput
+              label="Take Profit %"
+              value={cfg.takeProfitPct}
+              min={0.02} max={0.50} step={0.01}
+              format={(v) => `${(v * 100).toFixed(0)}%`}
+              onChange={(v) => onConfigChange({ ...configDraft, takeProfitPct: v })}
+            />
+          </div>
+
+          {/* Models */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[9px] text-[#848e9c] uppercase tracking-wider font-medium block mb-1">Analyst Model</label>
+              <select
+                value={cfg.analystModel}
+                onChange={(e) => onConfigChange({ ...configDraft, analystModel: e.target.value })}
+                className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+              >
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[9px] text-[#848e9c] uppercase tracking-wider font-medium block mb-1">Trader Model</label>
+              <select
+                value={cfg.traderModel}
+                onChange={(e) => onConfigChange({ ...configDraft, traderModel: e.target.value })}
+                className="w-full bg-[#0b0e11] border border-[#2a2e3e] rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+              >
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-4o-mini">GPT-4o Mini</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Cost estimate */}
+          <div className="bg-[#0b0e11] rounded-lg px-3 py-2 border border-[#2a2e3e]/50">
+            <p className="text-[9px] text-[#555a66] uppercase tracking-wider font-medium mb-1">Estimated Daily Cost</p>
+            <p className="text-xs text-[#848e9c]">
+              Analyst: ~$2.88/day (2,880 calls) &middot; Trader: ~$0.50-1.00/day &middot;{" "}
+              <span className="text-cyan-400 font-medium">Total: ~$3-4/day</span>
+            </p>
+          </div>
+
+          <button
+            onClick={onSave}
+            className="w-full py-2 rounded-lg bg-cyan-500/20 text-cyan-400 text-xs font-medium hover:bg-cyan-500/30 transition-colors"
+          >
+            Save Configuration
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SliderInput({
+  label,
+  value,
+  min,
+  max,
+  step,
+  format,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  format: (v: number) => string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <label className="text-[9px] text-[#848e9c] uppercase tracking-wider font-medium">{label}</label>
+        <span className="text-[10px] text-white font-medium tabular-nums">{format(value)}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full h-1 rounded-full appearance-none cursor-pointer bg-[#2a2e3e] accent-cyan-400"
+      />
+    </div>
   );
 }
 

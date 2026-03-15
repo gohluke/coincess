@@ -2,17 +2,17 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUpDown, Search, ChevronDown, Loader2, Check } from "lucide-react";
+import { ArrowDown, ArrowUpDown, Search, ChevronDown, Loader2, Check, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndApproveAgent, signAndApproveBuilderFee, getStoredAgent } from "@/lib/hyperliquid/signing";
-import { spotDisplayName } from "@/lib/hyperliquid/api";
+import { spotDisplayName, fetchUserFills } from "@/lib/hyperliquid/api";
 import { useWallet } from "@/hooks/useWallet";
 import { useSettingsStore } from "@/lib/settings/store";
 import { getConnectedAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
 import { CoinLogo } from "@/components/CoinLogo";
 import { BRAND_CONFIG } from "@/lib/brand";
-import type { MarketInfo } from "@/lib/hyperliquid/types";
+import type { MarketInfo, Fill } from "@/lib/hyperliquid/types";
 
 // Well-known tokens shown first in the picker (order = display priority)
 const CURATED_POPULAR_CRYPTO = ["BTC", "ETH", "SOL", "HYPE", "PURR", "LINK"];
@@ -40,6 +40,30 @@ function fmtPrice(px: number): string {
 function fmtChange(pct: number): string {
   const s = Math.abs(pct).toFixed(2);
   return pct >= 0 ? `+${s}%` : `-${s}%`;
+}
+
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function resolveSpotCoin(coin: string, mkts: MarketInfo[]): string {
+  if (coin.startsWith("@")) {
+    const pairIdx = parseInt(coin.slice(1), 10);
+    if (!isNaN(pairIdx)) {
+      const m = mkts.find((x) => (x.dex === "spot" || x.dex === "hip3") && x.assetIndex === 10000 + pairIdx);
+      if (m) return m.displayName;
+    }
+    return coin;
+  }
+  return spotDisplayName(coin);
 }
 
 /* ─── CoinPickerDropdown ───────────────────────────────────── */
@@ -202,6 +226,7 @@ export default function BuyPage() {
   const [agentApproved, setAgentApproved] = useState(false);
   const [enablingTrading, setEnablingTrading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [spotFills, setSpotFills] = useState<Fill[]>([]);
   const defaultsSet = useRef(false);
 
   /* ── wallet sync ── */
@@ -234,6 +259,19 @@ export default function BuyPage() {
     const id = setInterval(loadUserState, 15000);
     return () => clearInterval(id);
   }, [address, loadUserState]);
+
+  // Fetch spot fills
+  useEffect(() => {
+    if (!address) { setSpotFills([]); return; }
+    let cancelled = false;
+    const load = () => fetchUserFills(address).then((all) => {
+      if (cancelled) return;
+      setSpotFills(all.filter((f) => f.coin.startsWith("@")).sort((a, b) => b.time - a.time));
+    }).catch(() => {});
+    load();
+    const id = setInterval(load, 30000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [address]);
 
   useEffect(() => {
     if (address) setAgentApproved(!!getStoredAgent(address));
@@ -392,6 +430,35 @@ export default function BuyPage() {
     () => holdings.reduce((sum, h) => sum + h.usd, 0) + spotUsdcBalance,
     [holdings, spotUsdcBalance],
   );
+
+  // All-time realized PnL per coin from fills
+  const allTimePnlByCoin = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const f of spotFills) {
+      const dn = resolveSpotCoin(f.coin, markets);
+      const pnl = parseFloat(f.closedPnl);
+      if (pnl !== 0) map.set(dn, (map.get(dn) ?? 0) + pnl);
+    }
+    return map;
+  }, [spotFills, markets]);
+
+  const totalRealizedPnl = useMemo(
+    () => Array.from(allTimePnlByCoin.values()).reduce((a, b) => a + b, 0),
+    [allTimePnlByCoin],
+  );
+
+  // Recent activity items (latest 20 fills, resolved)
+  const recentActivity = useMemo(() => {
+    return spotFills.slice(0, 20).map((f) => {
+      const dn = resolveSpotCoin(f.coin, markets);
+      const isBuy = f.side === "B";
+      const sz = parseFloat(f.sz);
+      const px = parseFloat(f.px);
+      const usd = sz * px;
+      const pnl = parseFloat(f.closedPnl);
+      return { ...f, displayName: dn, isBuy, amount: sz, priceNum: px, usdValue: usd, realizedPnl: pnl };
+    });
+  }, [spotFills, markets]);
 
   /* ── actions ── */
   const handlePreset = (pct: number) => {
@@ -924,24 +991,81 @@ export default function BuyPage() {
                     <div className="text-sm text-white font-medium">
                       ${h.usd >= 0.01 ? h.usd.toLocaleString(undefined, { maximumFractionDigits: 2 }) : h.usd.toPrecision(3)}
                     </div>
-                    {h.pnl !== null ? (
-                      <div className={`text-[11px] ${h.pnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                        {h.pnl >= 0 ? "+" : ""}{h.pnl >= 0.01 || h.pnl <= -0.01
-                          ? `$${Math.abs(h.pnl).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-                          : `$${Math.abs(h.pnl).toPrecision(2)}`
-                        }
-                        {h.pnlPct !== null && <span className="ml-0.5">({h.pnl >= 0 ? "+" : ""}{h.pnlPct.toFixed(2)}%)</span>}
-                      </div>
-                    ) : h.change24h !== null ? (
-                      <div className={`text-[11px] ${h.change24h >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
-                        {fmtChange(h.change24h)}
-                      </div>
-                    ) : (
-                      <div className="text-[11px] text-[#4a4e59]">—</div>
-                    )}
+                    {(() => {
+                      const realized = allTimePnlByCoin.get(h.displayName) ?? 0;
+                      const totalPnl = (h.pnl ?? 0) + realized;
+                      if (h.pnl !== null || realized !== 0) {
+                        return (
+                          <div className={`text-[11px] ${totalPnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                            {totalPnl >= 0 ? "+" : ""}
+                            {Math.abs(totalPnl) >= 0.01
+                              ? `$${Math.abs(totalPnl).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                              : `$${Math.abs(totalPnl).toPrecision(2)}`
+                            }
+                            {h.pnlPct !== null && <span className="ml-0.5">({h.pnl! >= 0 ? "+" : ""}{h.pnlPct.toFixed(2)}%)</span>}
+                          </div>
+                        );
+                      }
+                      if (h.change24h !== null) {
+                        return (
+                          <div className={`text-[11px] ${h.change24h >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                            {fmtChange(h.change24h)}
+                          </div>
+                        );
+                      }
+                      return <div className="text-[11px] text-[#4a4e59]">—</div>;
+                    })()}
                   </div>
                 </button>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Recent Activity ── */}
+        {address && recentActivity.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <div className="flex items-center gap-2">
+                <Clock className="h-3.5 w-3.5 text-[#848e9c]" />
+                <h2 className="text-sm font-semibold text-white">Recent Activity</h2>
+              </div>
+              {totalRealizedPnl !== 0 && (
+                <span className={`text-xs font-medium ${totalRealizedPnl >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                  All-time: {totalRealizedPnl >= 0 ? "+" : ""}${Math.abs(totalRealizedPnl).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </span>
+              )}
+            </div>
+            <div className="bg-[#12141a] rounded-2xl overflow-hidden divide-y divide-[#1e2130]">
+              {recentActivity.map((a) => {
+                const mkt = spotMarkets.find((m) => m.displayName === a.displayName);
+                const isStock = mkt?.dex === "hip3";
+                return (
+                  <div key={a.tid} className="flex items-center gap-3 px-4 py-3">
+                    <CoinLogo symbol={isStock ? (mkt?.name.replace("spot:", "") ?? a.displayName) : a.displayName} size={32} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                          a.isBuy
+                            ? "bg-[#0ecb81]/15 text-[#0ecb81]"
+                            : "bg-[#f6465d]/15 text-[#f6465d]"
+                        }`}>
+                          {a.isBuy ? "BUY" : "SELL"}
+                        </span>
+                        <span className="text-white text-sm font-medium truncate">{a.displayName}</span>
+                        {isStock && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold shrink-0">STOCK</span>}
+                      </div>
+                      <div className="text-[11px] text-[#848e9c]">
+                        {a.amount < 0.001 ? a.amount.toPrecision(3) : a.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} @ ${fmtPrice(a.priceNum)}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-xs text-white">${a.usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                      <div className="text-[10px] text-[#4a4e59]">{timeAgo(a.time)}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

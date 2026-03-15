@@ -22,6 +22,11 @@ const REQUIRED_ENV = [
   "SUPABASE_SERVICE_ROLE_KEY",
 ];
 
+const AI_ENV = [
+  "GOOGLE_GENERATIVE_AI_API_KEY",
+  "OPENAI_API_KEY",
+];
+
 function checkEnv(): void {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
   if (missing.length > 0) {
@@ -43,14 +48,22 @@ function checkEnv(): void {
 async function main(): Promise<void> {
   checkEnv();
 
-  console.log("┌─────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server  v2    │");
-  console.log("│  FR | MOM | GRID | MR | MM + Combiner   │");
-  console.log("│  Data Pipeline + Backtester Ready        │");
-  console.log("└─────────────────────────────────────────┘");
+  const hasAiKeys = AI_ENV.every((k) => !!process.env[k]);
+
+  console.log("┌─────────────────────────────────────────────┐");
+  console.log("│     Coincess Quant Trading Server  v3        │");
+  console.log("│  FR | MOM | GRID | MR | MM | AI + Combiner  │");
+  console.log("│  Data Pipeline + Backtester Ready            │");
+  console.log("└─────────────────────────────────────────────┘");
   console.log();
   console.log(`Account: ${process.env.HL_ACCOUNT_ADDRESS}`);
   console.log(`Time:    ${new Date().toISOString()}`);
+  console.log(`AI:      ${hasAiKeys ? "Gemini + GPT-4o ready" : "MISSING KEYS (ai_agent strategy disabled)"}`);
+  if (!hasAiKeys) {
+    const missing = AI_ENV.filter((k) => !process.env[k]);
+    console.warn(`  ⚠ Missing: ${missing.join(", ")}`);
+    console.warn("  AI Agent strategies will fail until these are set.");
+  }
   console.log();
 
   const engine = new QuantEngine();

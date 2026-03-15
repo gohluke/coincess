@@ -1,4 +1,4 @@
-export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion" | "market_maker";
+export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion" | "market_maker" | "ai_agent";
 export type StrategyStatus = "active" | "paused" | "stopped" | "error";
 export type EngineStatus = "running" | "stopped" | "paused" | "error";
 export type TradeSide = "long" | "short";
@@ -99,6 +99,59 @@ export interface StrategySignal {
   reason: string;
   stopLoss?: number;
   takeProfit?: number;
+}
+
+export interface AiAgentConfig {
+  allowedMarkets: ("perps" | "spot" | "stocks" | "commodities")[];
+  capitalAllocationPct: number;
+  maxTradesPerHour: number;
+  confidenceThreshold: number;
+  maxPositions: number;
+  defaultLeverage: number;
+  stopLossPct: number;
+  takeProfitPct: number;
+  analystModel: string;
+  traderModel: string;
+}
+
+export const AI_AGENT_DEFAULTS: AiAgentConfig = {
+  allowedMarkets: ["perps", "spot", "stocks", "commodities"],
+  capitalAllocationPct: 0.30,
+  maxTradesPerHour: 10,
+  confidenceThreshold: 0.70,
+  maxPositions: 5,
+  defaultLeverage: 3,
+  stopLossPct: 0.05,
+  takeProfitPct: 0.10,
+  analystModel: "gemini-2.0-flash",
+  traderModel: "gpt-4o",
+};
+
+export interface MarketBrief {
+  regime: "trending" | "ranging" | "volatile" | "quiet";
+  topOpportunities: Array<{
+    coin: string;
+    market: "perp" | "spot" | "stock" | "commodity";
+    direction: "long" | "short" | "neutral";
+    strength: number;
+    reasons: string[];
+    keyLevels: { support: number; resistance: number };
+  }>;
+  warnings: string[];
+}
+
+export interface TradeDecision {
+  actions: Array<{
+    action: "open" | "close" | "adjust" | "hold";
+    coin: string;
+    side: "long" | "short";
+    sizeUsd: number;
+    confidence: number;
+    stopLoss: number;
+    takeProfit?: number;
+    reasoning: string;
+  }>;
+  portfolioReasoning: string;
 }
 
 export interface MarketSnapshot {
