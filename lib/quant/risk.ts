@@ -9,7 +9,7 @@ export interface RiskLimits {
 }
 
 const DEFAULT_LIMITS: RiskLimits = {
-  maxTotalExposurePct: 0.80,
+  maxTotalExposurePct: 0.50,
   maxPerPositionPct: 0.50,
   dailyLossLimitPct: 0.08,
   maxDrawdownPct: 0.20,
