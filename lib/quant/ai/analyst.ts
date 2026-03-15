@@ -29,7 +29,7 @@ export async function analyzeMarkets(
   markets: MarketSnapshot[],
   positions: PositionInfo[],
   accountValue: number,
-  model = "gemini-2.0-flash",
+  model = "gemini-2.0-flash-001",
 ): Promise<MarketBrief | null> {
   const now = Date.now();
   if (now - lastCallTime < MIN_INTERVAL_MS) {

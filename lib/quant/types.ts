@@ -123,7 +123,7 @@ export const AI_AGENT_DEFAULTS: AiAgentConfig = {
   defaultLeverage: 3,
   stopLossPct: 0.05,
   takeProfitPct: 0.10,
-  analystModel: "gemini-2.0-flash",
+  analystModel: "gemini-2.0-flash-001",
   traderModel: "gpt-4o",
 };
 
