@@ -347,15 +347,16 @@ export default function DashboardPage() {
   const SPOT_COLORS = ["#8b5cf6", "#ec4899", "#f59e0b", "#06b6d4", "#84cc16", "#f97316", "#6366f1"];
 
   const assetDistribution = useMemo(() => {
-    const items: { label: string; value: number; color: string }[] = [];
+    const items: { label: string; ticker: string; value: number; color: string }[] = [];
     let allocated = 0;
 
     for (const ap of positions) {
       const pos = ap.position;
       const bare = stripPrefix(pos.coin);
+      const mkt = markets.find((m) => stripPrefix(m.name) === bare) ?? markets.find((m) => m.name === pos.coin);
       const posValue = parseFloat(pos.marginUsed) + parseFloat(pos.unrealizedPnl);
       if (posValue > 0.01) {
-        items.push({ label: bare, value: posValue, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
+        items.push({ label: mkt?.displayName ?? bare, ticker: bare, value: posValue, color: parseFloat(pos.szi) > 0 ? "#0ecb81" : "#f6465d" });
         allocated += posValue;
       }
     }
@@ -363,16 +364,16 @@ export default function DashboardPage() {
     for (let i = 0; i < spotHoldings.length; i++) {
       const h = spotHoldings[i];
       if (h.usd > 0.01) {
-        items.push({ label: h.displayName, value: h.usd, color: SPOT_COLORS[i % SPOT_COLORS.length] });
+        items.push({ label: h.displayName, ticker: h.displayName, value: h.usd, color: SPOT_COLORS[i % SPOT_COLORS.length] });
         allocated += h.usd;
       }
     }
 
     const usdcSlice = accountValue - allocated;
-    if (usdcSlice > 0.01) items.unshift({ label: "USDC", value: usdcSlice, color: "#2775CA" });
-    if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", value: accountValue, color: BRAND.hex });
+    if (usdcSlice > 0.01) items.unshift({ label: "USDC", ticker: "USDC", value: usdcSlice, color: "#2775CA" });
+    if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", ticker: "USDC", value: accountValue, color: BRAND.hex });
     return items;
-  }, [positions, spotHoldings, accountValue]);
+  }, [positions, spotHoldings, accountValue, markets]);
 
   if (walletLoading) {
     return (
@@ -547,7 +548,7 @@ export default function DashboardPage() {
                     {assetDistribution.map((a) => (
                       <div key={a.label} className="flex items-center justify-between py-1.5">
                         <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
+                          <CoinLogo symbol={a.ticker} size={20} />
                           <span className="text-sm text-white">{a.label}</span>
                         </div>
                         <div className="flex items-center gap-3">
@@ -1237,7 +1238,7 @@ function PositionRow({ ap, markets, fills, trades }: { ap: AssetPosition; market
 
   return (
     <Link href={`/trade/${tradeCoin}`} className="flex items-center gap-3 px-4 py-2.5 bg-[#141620] rounded-xl transition-colors">
-      <CoinLogo symbol={displayCoin} size={28} />
+      <CoinLogo symbol={bare} size={28} />
 
       {/* Direction badge */}
       <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold ${isLong ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
