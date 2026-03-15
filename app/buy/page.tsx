@@ -260,17 +260,20 @@ export default function BuyPage() {
     return map;
   }, [markets]);
 
-  // Compute accurate 24h change: prefer perp data, fall back to spot prevDayPx
+  // Compute accurate 24h change: prefer perp data, fall back to own prevDayPx
   const get24hChange = useCallback((spot: MarketInfo): number | null => {
     const dn = spot.displayName;
-    // Try matching perp by display name
     if (perpChangeMap.has(dn)) return perpChangeMap.get(dn)!;
-    // Fall back to spot's own prevDayPx but cap at ±50% to filter stale data
+    // HIP-3 tickers (e.g. "TSLA") may match a perp name directly
+    const ticker = spot.name.replace("spot:", "");
+    if (ticker !== dn && perpChangeMap.has(ticker)) return perpChangeMap.get(ticker)!;
+    // Fall back to own prevDayPx — cap at ±50% for spot crypto (stale data),
+    // but HIP-3 stocks track real prices so their prevDayPx is reliable
     const px = parseFloat(spot.markPx);
     const prev = parseFloat(spot.prevDayPx);
     if (px > 0 && prev > 0) {
       const chg = ((px - prev) / prev) * 100;
-      if (Math.abs(chg) <= 50) return chg;
+      if (spot.dex === "hip3" || Math.abs(chg) <= 50) return chg;
     }
     return null;
   }, [perpChangeMap]);
