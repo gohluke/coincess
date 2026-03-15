@@ -3,6 +3,8 @@ import { RiskManager } from "./risk";
 import { placeOrder, closePosition, fetchAccountValue, fetchPositions, getAccountAddress } from "./executor";
 import { PriceFeed } from "./price-feed";
 import { PositionGuard } from "./position-guard";
+import { SpikeDetector } from "./spike-detector";
+import { SpikeReversionStrategy } from "./strategies/spike-reversion";
 import * as fundingRate from "./strategies/funding-rate";
 import * as momentum from "./strategies/momentum";
 import * as grid from "./strategies/grid";
@@ -68,6 +70,8 @@ export class QuantEngine {
   private walletAddress: string;
   priceFeed: PriceFeed;
   private positionGuard: PositionGuard;
+  private spikeDetector: SpikeDetector;
+  private spikeReversion: SpikeReversionStrategy;
   private lastAiRunTime = 0;
   private lastAiPrices: Map<string, number> = new Map();
 
@@ -81,6 +85,8 @@ export class QuantEngine {
     this.walletAddress = getAccountAddress();
     this.priceFeed = new PriceFeed(this.walletAddress);
     this.positionGuard = new PositionGuard(this.priceFeed);
+    this.spikeDetector = new SpikeDetector(this.priceFeed);
+    this.spikeReversion = new SpikeReversionStrategy(this.walletAddress);
   }
 
   async start(): Promise<void> {
@@ -100,6 +106,15 @@ export class QuantEngine {
     // Start rule-based SL/TP guard on the live price stream
     await this.positionGuard.start();
 
+    // Start spike detection + mean-reversion (event-driven, independent of tick loop)
+    await this.spikeReversion.start();
+    this.spikeDetector.onSpike((event) => {
+      this.spikeReversion.handleSpike(event).catch((e) =>
+        console.error("[engine] Spike handler error:", (e as Error).message),
+      );
+    });
+    this.spikeDetector.start();
+
     this.tickTimer = setInterval(() => {
       this.tick().catch((err) => {
         console.error("[engine] Tick error:", err);
@@ -117,6 +132,8 @@ export class QuantEngine {
       clearInterval(this.tickTimer);
       this.tickTimer = null;
     }
+    this.spikeDetector.stop();
+    this.spikeReversion.stop();
     this.positionGuard.stop();
     this.priceFeed.stop();
     await this.updateState({ engine_status: "stopped" });

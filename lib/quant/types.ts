@@ -1,4 +1,4 @@
-export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion" | "market_maker" | "ai_agent";
+export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion" | "market_maker" | "ai_agent" | "spike_reversion";
 export type StrategyStatus = "active" | "paused" | "stopped" | "error";
 export type EngineStatus = "running" | "stopped" | "paused" | "error";
 export type TradeSide = "long" | "short";
@@ -125,6 +125,28 @@ export const AI_AGENT_DEFAULTS: AiAgentConfig = {
   takeProfitPct: 0.10,
   analystModel: "gemini-2.5-flash",
   traderModel: "gemini-2.5-flash",
+};
+
+export interface SpikeReversionConfig {
+  lookbackMs: number;
+  spikeThresholdPct: number;
+  takeProfitRatio: number;
+  stopLossRatio: number;
+  maxPositions: number;
+  cooldownMs: number;
+  minVolumeUsd: number;
+  capitalAllocationPct: number;
+}
+
+export const SPIKE_REVERSION_DEFAULTS: SpikeReversionConfig = {
+  lookbackMs: 60_000,
+  spikeThresholdPct: 0.02,
+  takeProfitRatio: 0.5,
+  stopLossRatio: 0.67,
+  maxPositions: 3,
+  cooldownMs: 300_000,
+  minVolumeUsd: 1_000_000,
+  capitalAllocationPct: 0.10,
 };
 
 export interface MarketBrief {
