@@ -87,6 +87,23 @@ function filterMarketsByConfig(markets: MarketSnapshot[], config: AiAgentConfig)
   });
 }
 
+/**
+ * Risk-based position sizing: AI picks direction + confidence, this function
+ * determines how much capital to allocate.
+ *
+ * budget_per_slot = accountValue * capitalAllocationPct / maxPositions
+ * final_size     = budget_per_slot * confidence   (clamped to $10 minimum)
+ */
+function calculateRiskAdjustedSize(
+  config: AiAgentConfig,
+  accountValue: number,
+  confidence: number,
+): number {
+  const perSlotBudget = (accountValue * config.capitalAllocationPct) / config.maxPositions;
+  const clamped = Math.max(0.1, Math.min(1.0, confidence));
+  return Math.max(10, perSlotBudget * clamped);
+}
+
 export async function evaluate(
   strategy: QuantStrategy,
   markets: MarketSnapshot[],
@@ -170,10 +187,12 @@ export async function evaluate(
       continue;
     }
 
-    // "open" or "adjust"
-    const sizeInCoins = action.sizeUsd / market.markPx;
+    // "open" or "adjust" — override AI sizeUsd with risk-adjusted sizing
+    const riskSizeUsd = calculateRiskAdjustedSize(config, ctx.accountValue, action.confidence);
+    const effectiveSizeUsd = Math.min(action.sizeUsd, riskSizeUsd);
+    const sizeInCoins = effectiveSizeUsd / market.markPx;
     if (sizeInCoins * market.markPx < 10) {
-      console.log(`[ai-agent] ${action.coin} notional too small, skipping`);
+      console.log(`[ai-agent] ${action.coin} notional too small ($${effectiveSizeUsd.toFixed(2)}), skipping`);
       continue;
     }
 
@@ -183,7 +202,7 @@ export async function evaluate(
       size: sizeInCoins,
       price: market.markPx,
       assetIndex: market.assetIndex,
-      reason: `AI ${action.action} (${(action.confidence * 100).toFixed(0)}%): ${action.reasoning}`,
+      reason: `AI ${action.action} (${(action.confidence * 100).toFixed(0)}%, $${effectiveSizeUsd.toFixed(0)}): ${action.reasoning}`,
       stopLoss: action.stopLoss > 0 ? action.stopLoss : undefined,
       takeProfit: action.takeProfit,
     });

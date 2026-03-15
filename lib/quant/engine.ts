@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { RiskManager } from "./risk";
 import { placeOrder, closePosition, fetchAccountValue, fetchPositions, getAccountAddress } from "./executor";
+import { PriceFeed } from "./price-feed";
+import { PositionGuard } from "./position-guard";
 import * as fundingRate from "./strategies/funding-rate";
 import * as momentum from "./strategies/momentum";
 import * as grid from "./strategies/grid";
@@ -26,6 +28,8 @@ import type {
 
 const HL_API = "https://api.hyperliquid.xyz";
 const TICK_INTERVAL_MS = 30_000; // 30 seconds
+const AI_ANALYSIS_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes between AI calls
+const SIGNIFICANT_MOVE_PCT = 0.02; // 2% price move triggers early AI re-analysis
 
 const assetMeta: Map<number, { szDecimals: number }> = new Map();
 
@@ -62,6 +66,10 @@ export class QuantEngine {
   private tickTimer: ReturnType<typeof setInterval> | null = null;
   private tickCount = 0;
   private walletAddress: string;
+  priceFeed: PriceFeed;
+  private positionGuard: PositionGuard;
+  private lastAiRunTime = 0;
+  private lastAiPrices: Map<string, number> = new Map();
 
   constructor() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -71,6 +79,8 @@ export class QuantEngine {
     this.supabase = createClient(url, key);
     this.risk = new RiskManager();
     this.walletAddress = getAccountAddress();
+    this.priceFeed = new PriceFeed(this.walletAddress);
+    this.positionGuard = new PositionGuard(this.priceFeed);
   }
 
   async start(): Promise<void> {
@@ -79,6 +89,16 @@ export class QuantEngine {
 
     console.log("[engine] Starting quant engine...");
     await this.updateState({ engine_status: "running", error_message: null });
+
+    // Phase 1: start real-time WebSocket price feed
+    this.priceFeed.start();
+    await this.discoverHip3Aliases();
+    // Give WebSocket a moment to connect and receive first prices
+    await new Promise((r) => setTimeout(r, 2000));
+    console.log(`[engine] Price feed: ${this.priceFeed.isConnected ? "connected" : "connecting"} (${this.priceFeed.priceCount} prices)`);
+
+    // Start rule-based SL/TP guard on the live price stream
+    await this.positionGuard.start();
 
     this.tickTimer = setInterval(() => {
       this.tick().catch((err) => {
@@ -97,6 +117,8 @@ export class QuantEngine {
       clearInterval(this.tickTimer);
       this.tickTimer = null;
     }
+    this.positionGuard.stop();
+    this.priceFeed.stop();
     await this.updateState({ engine_status: "stopped" });
     console.log("[engine] Stopped.");
   }
@@ -260,7 +282,23 @@ export class QuantEngine {
         return marketMaker.evaluate(strat, markets, ctx);
       }
       case "ai_agent": {
+        // AI runs every 5 min, or on significant price moves — SL/TP is handled
+        // independently by the PositionGuard on every WebSocket tick.
+        const now = Date.now();
+        const elapsed = now - this.lastAiRunTime;
+        const significantMove = this.hasSignificantPriceMove();
+
+        if (elapsed < AI_ANALYSIS_INTERVAL_MS && !significantMove) {
+          return []; // guard handles SL/TP, no need for AI this tick
+        }
+
+        if (significantMove) {
+          console.log("[engine] Significant price move detected — triggering AI analysis early");
+        }
+
+        this.lastAiRunTime = now;
         const markets = await this.fetchMarketSnapshots();
+        this.snapshotAiPrices(markets);
         return aiAgent.evaluate(strat, markets, ctx);
       }
       default:
@@ -390,7 +428,7 @@ export class QuantEngine {
         fees: 0,
         status: "open",
         oid: result.oid ?? null,
-        meta: { reason: signal.reason, stopLoss: signal.stopLoss },
+        meta: { reason: signal.reason, stopLoss: signal.stopLoss, takeProfit: signal.takeProfit, assetIndex: signal.assetIndex },
         opened_at: new Date().toISOString(),
       });
 
@@ -703,5 +741,59 @@ export class QuantEngine {
 
   private async logTrade(trade: Omit<QuantTrade, "id" | "exit_px" | "pnl" | "closed_at"> & { meta: Record<string, unknown> }): Promise<void> {
     await this.supabase.from("quant_trades").insert(trade);
+  }
+
+  // ------------------------------------------------------------------
+  // Price Feed helpers
+  // ------------------------------------------------------------------
+
+  /** Discover HIP-3 spot pair aliases (TSLA -> @264) so PriceFeed.getPrice("TSLA") works */
+  private async discoverHip3Aliases(): Promise<void> {
+    try {
+      const res = await fetch(`${HL_API}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "spotMeta" }),
+      });
+      const spotMeta = (await res.json()) as {
+        tokens: Array<{ index: number; name: string }>;
+        universe: Array<{ name: string; index: number; tokens: number[] }>;
+      };
+      const idxToName: Record<number, string> = {};
+      for (const t of spotMeta.tokens) idxToName[t.index] = t.name;
+
+      let count = 0;
+      for (const pair of spotMeta.universe) {
+        if (!pair.tokens?.length) continue;
+        const baseName = idxToName[pair.tokens[0]];
+        if (baseName && HIP3_STOCKS.has(baseName)) {
+          this.priceFeed.setAlias(baseName, pair.name);
+          count++;
+        }
+      }
+      if (count > 0) console.log(`[engine] Registered ${count} HIP-3 price aliases`);
+    } catch (e) {
+      console.error("[engine] HIP-3 alias discovery failed:", (e as Error).message);
+    }
+  }
+
+  /** Check if any tracked coin moved >SIGNIFICANT_MOVE_PCT since last AI run */
+  private hasSignificantPriceMove(): boolean {
+    if (this.lastAiPrices.size === 0) return false;
+    for (const [coin, lastPx] of this.lastAiPrices) {
+      const current = this.priceFeed.getPrice(coin);
+      if (!current || lastPx <= 0) continue;
+      if (Math.abs((current - lastPx) / lastPx) >= SIGNIFICANT_MOVE_PCT) return true;
+    }
+    return false;
+  }
+
+  /** Snapshot current prices for change detection on next tick */
+  private snapshotAiPrices(markets: MarketSnapshot[]): void {
+    this.lastAiPrices.clear();
+    for (const m of markets) {
+      const px = this.priceFeed.getPrice(m.coin) ?? m.markPx;
+      if (px > 0) this.lastAiPrices.set(m.coin, px);
+    }
   }
 }

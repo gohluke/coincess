@@ -57,15 +57,16 @@ async function main(): Promise<void> {
 
   const hasAiKeys = AI_ENV.every((k) => !!process.env[k]);
 
-  console.log("┌─────────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server  v3        │");
-  console.log("│  FR | MOM | GRID | MR | MM | AI + Combiner  │");
-  console.log("│  Data Pipeline + Backtester Ready            │");
-  console.log("└─────────────────────────────────────────────┘");
+  console.log("┌──────────────────────────────────────────────────┐");
+  console.log("│     Coincess Quant Trading Server  v4             │");
+  console.log("│  FR | MOM | GRID | MR | MM | AI + Combiner       │");
+  console.log("│  WebSocket Feed + Rule-Based SL/TP Guard          │");
+  console.log("│  AI every 5min | Risk-Based Position Sizing       │");
+  console.log("└──────────────────────────────────────────────────┘");
   console.log();
   console.log(`Account: ${process.env.HL_ACCOUNT_ADDRESS}`);
   console.log(`Time:    ${new Date().toISOString()}`);
-  console.log(`AI:      ${hasAiKeys ? "Gemini + GPT-4o ready" : "MISSING KEYS (ai_agent strategy disabled)"}`);
+  console.log(`AI:      ${hasAiKeys ? "Gemini ready (5-min cycle + event triggers)" : "MISSING KEYS (ai_agent strategy disabled)"}`);
   if (!hasAiKeys) {
     const missing = AI_ENV.filter((k) => !process.env[k]);
     console.warn(`  ⚠ Missing: ${missing.join(", ")}`);
