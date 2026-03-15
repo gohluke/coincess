@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { getLogoForTicker, type LogoResult } from "@/lib/coinLogos";
 
 const FALLBACK_COLORS = [
@@ -9,8 +9,17 @@ const FALLBACK_COLORS = [
 ];
 
 export function CoinLogo({ symbol, size = 32 }: { symbol: string; size?: number }) {
-  const [failed, setFailed] = useState(false);
+  const [srcIndex, setSrcIndex] = useState(0);
   const logo: LogoResult = useMemo(() => getLogoForTicker(symbol), [symbol]);
+
+  const allUrls = useMemo(() => {
+    if (logo.type !== "url") return [];
+    return [logo.src, ...(logo.fallbacks ?? [])];
+  }, [logo]);
+
+  const handleError = useCallback(() => {
+    setSrcIndex((prev) => prev + 1);
+  }, []);
 
   if (logo.type === "emoji") {
     return (
@@ -23,16 +32,16 @@ export function CoinLogo({ symbol, size = 32 }: { symbol: string; size?: number 
     );
   }
 
-  if (logo.type === "url" && !failed) {
+  if (logo.type === "url" && srcIndex < allUrls.length) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={logo.src}
+        src={allUrls[srcIndex]}
         alt={symbol}
         width={size}
         height={size}
         className="rounded-full shrink-0 object-cover bg-[#1e2130]"
-        onError={() => setFailed(true)}
+        onError={handleError}
       />
     );
   }

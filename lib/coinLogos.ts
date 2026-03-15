@@ -94,10 +94,27 @@ const CRYPTO_ALIASES: Record<string, string> = {
   RENDER: "rndr",
 };
 
+/* ── Reverse map: display name → ticker for HIP-3 stocks ── */
+
+const DISPLAY_TO_TICKER: Record<string, string> = {};
+// Built at module init from HIP3_STOCK_DISPLAY (imported indirectly)
+// We mirror the known display names here so CoinLogo can resolve "Tesla" → "TSLA"
+const KNOWN_DISPLAY_TICKERS: Record<string, string> = {
+  TESLA: "TSLA", NVIDIA: "NVDA", APPLE: "AAPL", MICROSOFT: "MSFT",
+  AMAZON: "AMZN", "META PLATFORMS": "META", GOOGLE: "GOOGL", AMD: "AMD",
+  INTEL: "INTC", PALANTIR: "PLTR", COINBASE: "COIN", ROBINHOOD: "HOOD",
+  ORACLE: "ORCL", MICRON: "MU", MICROSTRATEGY: "MSTR", NETFLIX: "NFLX",
+  COSTCO: "COST", "ELI LILLY": "LLY", TSMC: "TSM", RIVIAN: "RIVN",
+  ALIBABA: "BABA", GAMESTOP: "GME", SOFTBANK: "SOFTBANK", HYUNDAI: "HYUNDAI",
+  KIOXIA: "KIOXIA", SAMSUNG: "SMSN", COREWEAVE: "CRWV", "SK HYNIX": "SKHX",
+  "S&P 500 ETF": "USAR", "JAPAN ETF": "EWJ", "KOREA ETF": "EWY",
+  "URANIUM ETF": "URNM",
+};
+
 /* ── Public API ────────────────────────────────────────── */
 
 export type LogoResult =
-  | { type: "url"; src: string }
+  | { type: "url"; src: string; fallbacks?: string[] }
   | { type: "emoji"; emoji: string }
   | { type: "fallback" };
 
@@ -110,30 +127,38 @@ export function getLogoForTicker(rawName: string): LogoResult {
     return { type: "url", src: LOCAL[upper] };
   }
 
-  // 2. Stock domain → Clearbit
-  if (STOCK_DOMAINS[upper]) {
+  // 2. Resolve display name → ticker (e.g. "Tesla" → "TSLA")
+  const resolvedTicker = KNOWN_DISPLAY_TICKERS[upper] ?? upper;
+  const domain = STOCK_DOMAINS[resolvedTicker] ?? STOCK_DOMAINS[upper];
+
+  // 3. Stock domain → multiple CDN sources for resilience
+  if (domain) {
     return {
       type: "url",
-      src: `https://logo.clearbit.com/${STOCK_DOMAINS[upper]}`,
+      src: `https://logo.clearbit.com/${domain}`,
+      fallbacks: [
+        `https://icon.horse/icon/${domain}`,
+        `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+      ],
     };
   }
 
-  // 3. Commodity emoji
+  // 4. Commodity emoji
   if (COMMODITY_EMOJI[upper]) {
     return { type: "emoji", emoji: COMMODITY_EMOJI[upper] };
   }
 
-  // 4. Forex flag
+  // 5. Forex flag
   if (FOREX_FLAGS[upper]) {
     return { type: "emoji", emoji: FOREX_FLAGS[upper] };
   }
 
-  // 5. Index emoji
+  // 6. Index emoji
   if (INDEX_EMOJI[upper]) {
     return { type: "emoji", emoji: INDEX_EMOJI[upper] };
   }
 
-  // 6. Crypto → CoinCap CDN
+  // 7. Crypto → CoinCap CDN
   const alias = CRYPTO_ALIASES[stripped] || stripped.toLowerCase();
   return {
     type: "url",
