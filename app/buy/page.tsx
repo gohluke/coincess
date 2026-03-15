@@ -267,13 +267,14 @@ export default function BuyPage() {
     // HIP-3 tickers (e.g. "TSLA") may match a perp name directly
     const ticker = spot.name.replace("spot:", "");
     if (ticker !== dn && perpChangeMap.has(ticker)) return perpChangeMap.get(ticker)!;
-    // Fall back to own prevDayPx — cap at ±50% for spot crypto (stale data),
-    // but HIP-3 stocks track real prices so their prevDayPx is reliable
+    // Fall back to own prevDayPx — cap at ±15% for stocks, ±50% for crypto
+    // to filter stale/initial-listing prevDayPx values
     const px = parseFloat(spot.markPx);
     const prev = parseFloat(spot.prevDayPx);
     if (px > 0 && prev > 0) {
       const chg = ((px - prev) / prev) * 100;
-      if (spot.dex === "hip3" || Math.abs(chg) <= 50) return chg;
+      const cap = spot.dex === "hip3" ? 15 : 50;
+      if (Math.abs(chg) <= cap) return chg;
     }
     return null;
   }, [perpChangeMap]);
