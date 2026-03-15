@@ -16,14 +16,14 @@ import type { MarketInfo } from "@/lib/hyperliquid/types";
 
 // Well-known tokens shown first in the picker (order = display priority)
 const CURATED_POPULAR_CRYPTO = ["BTC", "ETH", "SOL", "HYPE", "PURR", "LINK"];
-const CURATED_POPULAR_STOCKS = ["Tesla", "NVIDIA", "Apple", "Amazon", "Microsoft", "Meta Platforms"];
+const CURATED_POPULAR_STOCKS = ["Tesla", "Apple", "Amazon", "Microsoft", "Meta Platforms", "Alphabet"];
 // Priority ordering for sort — lower number appears first
 const PRIORITY_CRYPTO: Record<string, number> = {
   BTC: 0, ETH: 1, SOL: 2, HYPE: 3, PURR: 4, LINK: 5,
 };
 const PRIORITY_STOCKS: Record<string, number> = {
-  Tesla: 0, NVIDIA: 1, Apple: 2, Amazon: 3, Microsoft: 4, "Meta Platforms": 5,
-  "S&P 500 ETF": 6, "Nasdaq 100 ETF": 7, Robinhood: 8, MicroStrategy: 9,
+  Tesla: 0, Apple: 1, Amazon: 2, Microsoft: 3, "Meta Platforms": 4, Alphabet: 5,
+  "S&P 500 ETF": 6, "Nasdaq 100 ETF": 7, Robinhood: 8, Circle: 9,
 };
 const MAX_PRIORITY = 999;
 const STABLECOINS = new Set(["USDC", "USDT0", "USDE", "USDH"]);

@@ -274,19 +274,18 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   return data.leaderboardRows;
 }
 
+// HIP-3 synthetic stock tokens available on Hyperliquid spot.
+// Only include tickers that actually exist in the spot metadata.
 const HIP3_STOCK_NAMES = new Set([
-  "TSLA", "NVDA", "GOOGL", "AAPL", "HOOD", "MSTR", "SPY", "AMZN",
-  "META", "QQQ", "MSFT", "ORCL", "AVGO", "GLD", "MU", "SLV",
-  "SPACEX", "OPENAI", "INTC", "NFLX",
+  "TSLA", "AAPL", "GOOGL", "AMZN", "META", "MSFT",
+  "HOOD", "SPY", "QQQ", "GLD", "SLV", "CRCL",
 ]);
 
 const HIP3_STOCK_DISPLAY: Record<string, string> = {
-  TSLA: "Tesla", NVDA: "NVIDIA", GOOGL: "Alphabet", AAPL: "Apple",
-  HOOD: "Robinhood", MSTR: "MicroStrategy", SPY: "S&P 500 ETF",
-  AMZN: "Amazon", META: "Meta Platforms", QQQ: "Nasdaq 100 ETF",
-  MSFT: "Microsoft", ORCL: "Oracle", AVGO: "Broadcom", GLD: "Gold ETF",
-  MU: "Micron", SLV: "Silver ETF", SPACEX: "SpaceX", OPENAI: "OpenAI",
-  INTC: "Intel", NFLX: "Netflix",
+  TSLA: "Tesla", AAPL: "Apple", GOOGL: "Alphabet", AMZN: "Amazon",
+  META: "Meta Platforms", MSFT: "Microsoft", HOOD: "Robinhood",
+  SPY: "S&P 500 ETF", QQQ: "Nasdaq 100 ETF",
+  GLD: "Gold ETF", SLV: "Silver ETF", CRCL: "Circle",
 };
 
 interface SpotMetaResponse {
