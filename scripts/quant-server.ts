@@ -16,8 +16,8 @@
 import { config } from "dotenv";
 import { resolve } from "path";
 
-// Load .env.local so PM2 picks up env vars without shell export
-config({ path: resolve(process.cwd(), ".env.local") });
+// Load .env.local with override so PM2-cached env vars get refreshed
+config({ path: resolve(process.cwd(), ".env.local"), override: true });
 config({ path: resolve(process.cwd(), ".env") });
 
 import { QuantEngine } from "../lib/quant/engine";
