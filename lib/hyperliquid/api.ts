@@ -364,7 +364,7 @@ const SPOT_DISPLAY_NAME: Record<string, string> = {
   USDT0: "USDT", USDE: "USDE", LINK0: "LINK", XAUT0: "XAUT",
 };
 
-function spotDisplayName(raw: string): string {
+export function spotDisplayName(raw: string): string {
   return SPOT_DISPLAY_NAME[raw] ?? raw;
 }
 

@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUpDown, Search, ChevronDown, Loader2, Check } from "luc
 import { toast } from "sonner";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndApproveAgent, signAndApproveBuilderFee, getStoredAgent } from "@/lib/hyperliquid/signing";
+import { spotDisplayName } from "@/lib/hyperliquid/api";
 import { useWallet } from "@/hooks/useWallet";
 import { useSettingsStore } from "@/lib/settings/store";
 import { getConnectedAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
@@ -20,6 +21,7 @@ const PRIORITY: Record<string, number> = {
   BTC: 0, ETH: 1, SOL: 2, HYPE: 3, PURR: 4, LINK: 5,
 };
 const MAX_PRIORITY = 999;
+const STABLECOINS = new Set(["USDC", "USDT0", "USDE", "USDH"]);
 
 const FALLBACK_COLORS = [
   "#f6465d", "#0ecb81", "#f0b90b", "#3b82f6",
@@ -232,6 +234,14 @@ export default function BuyPage() {
     return () => clearInterval(id);
   }, [refreshMarkets]);
 
+  // Load balances on connect + refresh every 15s
+  useEffect(() => {
+    if (!address) return;
+    loadUserState();
+    const id = setInterval(loadUserState, 15000);
+    return () => clearInterval(id);
+  }, [address, loadUserState]);
+
   useEffect(() => {
     if (address) setAgentApproved(!!getStoredAgent(address));
   }, [address]);
@@ -346,6 +356,31 @@ export default function BuyPage() {
 
   const tokenBalance = getTokenBalance(selectedCoin);
   const convertFromBalance = getTokenBalance(convertFrom);
+
+  // Spot holdings: all non-zero, non-stablecoin balances with USD value + 24h change
+  const holdings = useMemo(() => {
+    if (!spotClearinghouse?.balances || spotMarkets.length === 0) return [];
+    return spotClearinghouse.balances
+      .filter((b) => {
+        if (STABLECOINS.has(b.coin)) return false;
+        return parseFloat(b.total) > 0;
+      })
+      .map((b) => {
+        const dn = spotDisplayName(b.coin);
+        const m = spotMarkets.find((s) => s.displayName === dn);
+        const px = m ? parseFloat(m.markPx) : 0;
+        const amount = parseFloat(b.total);
+        const usd = amount * px;
+        const chg = m ? get24hChange(m) : null;
+        return { coin: b.coin, displayName: dn, amount, px, usd, change24h: chg };
+      })
+      .sort((a, b) => b.usd - a.usd);
+  }, [spotClearinghouse, spotMarkets, get24hChange]);
+
+  const totalHoldingsUsd = useMemo(
+    () => holdings.reduce((sum, h) => sum + h.usd, 0) + spotUsdcBalance,
+    [holdings, spotUsdcBalance],
+  );
 
   /* ── actions ── */
   const handlePreset = (pct: number) => {
@@ -825,6 +860,64 @@ export default function BuyPage() {
             </p>
           </div>}
         </div>
+
+        {/* ── Your Assets ── */}
+        {address && (holdings.length > 0 || spotUsdcBalance > 0) && (
+          <div className="mt-6">
+            <div className="flex items-baseline justify-between mb-3 px-1">
+              <h2 className="text-sm font-semibold text-white">Your assets</h2>
+              <span className="text-xs text-[#848e9c]">${totalHoldingsUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="bg-[#12141a] rounded-2xl overflow-hidden divide-y divide-[#1e2130]">
+              {/* USDC row */}
+              {spotUsdcBalance > 0.01 && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <CoinLogo symbol="USDC" size={36} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-sm font-medium">USDC</div>
+                    <div className="text-[11px] text-[#848e9c]">USD Coin</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-white font-medium">${spotUsdcBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                    <div className="text-[11px] text-[#848e9c]">{spotUsdcBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Token rows */}
+              {holdings.map((h) => (
+                <button
+                  key={h.coin}
+                  onClick={() => { setSelectedCoin(h.displayName); setMode("sell"); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#161820] transition-colors"
+                >
+                  <CoinLogo symbol={h.displayName} size={36} />
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="text-white text-sm font-medium">{h.displayName}</div>
+                    <div className="text-[11px] text-[#848e9c]">
+                      {h.amount < 0.001
+                        ? h.amount.toPrecision(3)
+                        : h.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                      {" "}{h.displayName}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-white font-medium">
+                      ${h.usd >= 0.01 ? h.usd.toLocaleString(undefined, { maximumFractionDigits: 2 }) : h.usd.toPrecision(3)}
+                    </div>
+                    {h.change24h !== null ? (
+                      <div className={`text-[11px] ${h.change24h >= 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}`}>
+                        {fmtChange(h.change24h)}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-[#4a4e59]">—</div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Pro mode link */}
         <div className="text-center mt-6">

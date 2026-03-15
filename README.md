@@ -32,6 +32,8 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Live price refresh** — prices update every 8 seconds via `refreshMarkets()`
 - **Simple fee tier** — 5bp (0.05%) per order, still 15-30x cheaper than Coinbase
 - **Quick presets** — 25% / 50% / 75% / 100% of available balance
+- **Your Assets section** — shows all spot token holdings below the trading card (Coinbase-style portfolio); displays token amount, USD value, 24h change; USDC balance at top, tokens sorted by value; tap any token to pre-select it for selling
+- **Auto-refresh balances** — `loadUserState()` runs on page load and every 15 seconds to keep holdings current
 - **Pro mode link** — one click to switch to the advanced `/trade` terminal for the same coin
 
 ### Prediction Markets
