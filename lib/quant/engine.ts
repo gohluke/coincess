@@ -688,7 +688,8 @@ export class QuantEngine {
 
   /**
    * Reconcile Supabase open trades with actual HL positions.
-   * Any trade whose coin has no matching HL position is marked closed.
+   * Closes trades when: (a) no HL position exists for the coin, or
+   * (b) the trade direction is opposite to the HL net position (netted out).
    */
   async reconcileOpenTrades(positions: PositionInfo[]): Promise<number> {
     const { data: openTrades } = await this.supabase
@@ -698,9 +699,12 @@ export class QuantEngine {
 
     if (!openTrades || openTrades.length === 0) return 0;
 
-    const hlCoins = new Set(positions.map((p) => p.coin));
+    // Build map of coin -> HL direction
+    const hlPositions = new Map<string, "long" | "short">();
+    for (const p of positions) {
+      hlPositions.set(p.coin, p.szi > 0 ? "long" : "short");
+    }
 
-    // Fetch current mark prices for PnL calculation
     let allMids: Record<string, string> = {};
     try {
       const res = await fetch(`${HL_API}/info`, {
@@ -713,7 +717,16 @@ export class QuantEngine {
 
     let closed = 0;
     for (const trade of openTrades) {
-      if (hlCoins.has(trade.coin)) continue;
+      const hlDir = hlPositions.get(trade.coin);
+      const tradeDir = trade.side as "long" | "short";
+
+      // Keep trade if HL has a position in the same direction
+      if (hlDir === tradeDir) continue;
+
+      // Close: either no HL position or HL direction is opposite (netted)
+      const reason = !hlDir
+        ? "Position reconciliation: no matching HL position"
+        : `Position reconciliation: trade ${tradeDir} netted by HL ${hlDir} position`;
 
       const markPx = parseFloat(allMids[trade.coin] ?? "0");
       const entryPx = Number(trade.entry_px);
@@ -727,7 +740,7 @@ export class QuantEngine {
         exit_px: markPx || null,
         pnl: markPx > 0 ? pnl : 0,
         closed_at: new Date().toISOString(),
-        meta: { close_reason: "Position reconciliation: no matching HL position" },
+        meta: { close_reason: reason },
       }).eq("id", trade.id);
 
       if (trade.strategy_id) {
@@ -744,7 +757,7 @@ export class QuantEngine {
         recordTradeResult(trade.strategy_id, markPx > 0 ? pnl : 0, 0);
       }
 
-      console.log(`[engine] RECONCILE: closed stale trade ${trade.coin} ${trade.side} (pnl=${pnl.toFixed(4)})`);
+      console.log(`[engine] RECONCILE: closed ${trade.coin} ${trade.side} — ${reason} (pnl=${pnl.toFixed(4)})`);
       closed++;
     }
 
