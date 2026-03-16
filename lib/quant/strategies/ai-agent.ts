@@ -3,6 +3,7 @@ import { analyzeMarkets } from "../ai/analyst";
 import { makeTradeDecision } from "../ai/trader";
 import type { RecentTradeResult } from "../ai/prompts";
 import { selectTopCoins, buildTechnicalSnapshots } from "../market-analysis";
+import { buildMicrostructure, recordFundingOi } from "../market-microstructure";
 import type {
   QuantStrategy,
   StrategySignal,
@@ -147,17 +148,35 @@ export async function evaluate(
 
   // Build enriched technical data for top coins (parallel candle fetches)
   const topCoins = selectTopCoins(filteredMarkets, 15);
-  const technicals = await buildTechnicalSnapshots(topCoins);
+  const [technicals, recentTrades] = await Promise.all([
+    buildTechnicalSnapshots(topCoins),
+    fetchRecentTrades(),
+  ]);
   console.log(`[ai-agent] Built technical snapshots for ${technicals.length} coins`);
 
-  // Fetch recent trade history for the AI to learn from
-  const recentTrades = await fetchRecentTrades();
   if (recentTrades.length > 0) {
     const wins = recentTrades.filter((t) => t.pnl > 0).length;
     console.log(`[ai-agent] Feeding ${recentTrades.length} recent trades (${wins}W/${recentTrades.length - wins}L) to AI`);
   }
 
-  // Step 1: Analyst scans markets with full technical data
+  // Record funding/OI snapshots for delta tracking
+  for (const m of filteredMarkets) {
+    if (m.dex === "perp" && !m.coin.startsWith("xyz:")) {
+      recordFundingOi(m.coin, m.funding, m.openInterest);
+    }
+  }
+
+  // Fetch order book imbalance + funding/OI deltas for top coins
+  const microstructure = await buildMicrostructure(
+    topCoins.map((m) => ({ coin: m.coin, funding: m.funding, openInterest: m.openInterest })),
+  );
+  const crowded = microstructure.filter((m) => m.crowdedLong || m.crowdedShort);
+  if (crowded.length > 0) {
+    console.log(`[ai-agent] Crowded trades detected: ${crowded.map((m) => `${m.coin}(${m.crowdedLong ? "LONG" : "SHORT"})`).join(", ")}`);
+  }
+  console.log(`[ai-agent] Microstructure data for ${microstructure.length} coins (book + flow)`);
+
+  // Step 1: Analyst scans markets with full technical + microstructure data
   const brief = await analyzeMarkets(
     filteredMarkets,
     ctx.positions,
@@ -165,6 +184,7 @@ export async function evaluate(
     config.analystModel,
     technicals,
     recentTrades,
+    microstructure,
   );
 
   if (!brief || brief.topOpportunities.length === 0) {

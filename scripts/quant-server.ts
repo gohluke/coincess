@@ -58,15 +58,11 @@ async function main(): Promise<void> {
   const hasAiKeys = AI_ENV.every((k) => !!process.env[k]);
 
   console.log("┌──────────────────────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server  v5                    │");
-  console.log("│  FR | MOM | GRID | MR | MM | AI + Combiner              │");
-  console.log("│  NEW: Full TA Feed (RSI/MACD/BB/ATR) to AI              │");
-  console.log("│  NEW: AI Performance Feedback Loop                       │");
-  console.log("│  NEW: Trailing Stop Loss                                 │");
-  console.log("│  NEW: ATR-Dynamic Spike Thresholds                       │");
-  console.log("│  NEW: SL/TP on ALL strategies (FR, MOM, Spike)           │");
-  console.log("│  NEW: Smart Coin Universe (top 15 by vol+vol)            │");
-  console.log("│  NEW: Multi-Timeframe Trend Filter                       │");
+  console.log("│     Coincess Quant Trading Server  v5.1                  │");
+  console.log("│  Full TA + Order Book Imbalance + Flow Analysis          │");
+  console.log("│  Trailing Stop + Partial Profit Taking                   │");
+  console.log("│  Crowded Trade Detection + Session Awareness             │");
+  console.log("│  AI Scoring Rubric + Performance Feedback                │");
   console.log("└──────────────────────────────────────────────────────────┘");
   console.log();
   console.log(`Account: ${process.env.HL_ACCOUNT_ADDRESS}`);

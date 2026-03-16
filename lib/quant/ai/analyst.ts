@@ -5,6 +5,7 @@ import { buildAnalystPrompt } from "./prompts";
 import type { RecentTradeResult } from "./prompts";
 import type { MarketSnapshot, PositionInfo, MarketBrief } from "../types";
 import type { TechnicalSnapshot } from "../market-analysis";
+import type { MarketMicrostructure } from "../market-microstructure";
 
 const MarketBriefSchema = z.object({
   regime: z.enum(["trending", "ranging", "volatile", "quiet"]),
@@ -34,6 +35,7 @@ export async function analyzeMarkets(
   model = "gemini-2.5-flash",
   technicals?: TechnicalSnapshot[],
   recentTrades?: RecentTradeResult[],
+  microstructure?: MarketMicrostructure[],
 ): Promise<MarketBrief | null> {
   const now = Date.now();
   if (now - lastCallTime < MIN_INTERVAL_MS) {
@@ -42,7 +44,7 @@ export async function analyzeMarkets(
   }
   lastCallTime = now;
 
-  const prompt = buildAnalystPrompt(markets, positions, accountValue, technicals, recentTrades);
+  const prompt = buildAnalystPrompt(markets, positions, accountValue, technicals, recentTrades, microstructure);
 
   try {
     const { object } = await generateObject({

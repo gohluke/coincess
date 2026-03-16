@@ -1,27 +1,27 @@
 /**
- * Position Guard v2 — Rule-Based SL/TP + Trailing Stop
+ * Position Guard v3 — SL/TP + Trailing Stop + Partial Profit Taking
  *
- * Checks all open trades against their stop-loss and take-profit levels
- * on every WebSocket price update. Now with trailing stop support:
- * as price moves in your favor, the stop ratchets up to lock in profit.
+ * Three-layer exit system:
+ * 1. Fixed SL — hard stop on every trade
+ * 2. Trailing Stop — activates after 0.5% profit, ratchets to lock gains
+ * 3. Partial TP — at 50% of the way to TP, close half the position
+ *    and let the rest ride with a widened trailing stop
  *
- * Trailing logic:
- * - Track peak favorable price per trade (highest for longs, lowest for shorts)
- * - Trail = peakPrice - (entryPrice * trailPct)  for longs
- * - Trail = peakPrice + (entryPrice * trailPct)  for shorts
- * - Only ratchet tighter, never looser than original SL
+ * This ensures we never leave all the money on the table.
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { closePosition } from "./executor";
+import { closePosition, placeOrder } from "./executor";
 import type { PriceFeed } from "./price-feed";
 
 const HL_API = "https://api.hyperliquid.xyz";
 
-// After price moves this far in your favor, switch from fixed SL to trailing
-const TRAIL_ACTIVATION_PCT = 0.005; // 0.5% in profit to activate trail
-// Trail distance as fraction of entry price
-const TRAIL_DISTANCE_PCT = 0.008; // 0.8% trailing distance
+const TRAIL_ACTIVATION_PCT = 0.005;
+const TRAIL_DISTANCE_PCT = 0.008;
+
+// Partial profit taking: close 50% at this fraction of the entry→TP distance
+const PARTIAL_TP_FRACTION = 0.5;  // 50% of the way to TP
+const PARTIAL_TP_CLOSE_PCT = 0.5; // close 50% of position size
 
 interface GuardedTrade {
   id: string;
@@ -52,6 +52,8 @@ export class PositionGuard {
   private peakPrices: Map<string, number> = new Map();
   /** Active trailing stop levels (ratcheted from peak) */
   private trailingStops: Map<string, number> = new Map();
+  /** Trades that already had partial profit taken */
+  private partialTpDone: Set<string> = new Set();
 
   constructor(priceFeed: PriceFeed) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -76,7 +78,7 @@ export class PositionGuard {
 
     this.priceFeed.onPrice((prices) => this.checkAllPositions(prices));
 
-    console.log(`[guard] Position guard v2 started — tracking ${this.trades.size} open trade(s) (trailing stops enabled)`);
+    console.log(`[guard] Position guard v3 started — tracking ${this.trades.size} open trade(s) (trailing + partial TP)`);
   }
 
   stop(): void {
@@ -142,11 +144,12 @@ export class PositionGuard {
       });
     }
 
-    // Clean up peak/trail data for trades that are gone
+    // Clean up tracking data for trades that are gone
     for (const id of this.peakPrices.keys()) {
       if (!newIds.has(id)) {
         this.peakPrices.delete(id);
         this.trailingStops.delete(id);
+        this.partialTpDone.delete(id);
       }
     }
   }
@@ -167,6 +170,9 @@ export class PositionGuard {
 
       // Update trailing stop
       this.updateTrailingStop(id, trade, price);
+
+      // Check partial profit taking
+      this.checkPartialTp(id, trade, price);
 
       const trigger = this.checkTrigger(trade, price, id);
       if (trigger) {
@@ -223,6 +229,129 @@ export class PositionGuard {
           this.trailingStops.set(id, newTrail);
         }
       }
+    }
+  }
+
+  /**
+   * Partial profit taking: when price reaches 50% of the way to TP,
+   * close half the position via a reduce-only order and move the SL
+   * to breakeven on the remaining half.
+   */
+  private checkPartialTp(id: string, trade: GuardedTrade, price: number): void {
+    if (this.partialTpDone.has(id)) return;
+    if (this.closingSet.has(id)) return;
+    if (!trade.takeProfit || !trade.entry_px) return;
+    if (trade.size < 2) return; // can't split meaningfully
+
+    const tpDistance = Math.abs(trade.takeProfit - trade.entry_px);
+    const partialLevel = trade.side === "long"
+      ? trade.entry_px + tpDistance * PARTIAL_TP_FRACTION
+      : trade.entry_px - tpDistance * PARTIAL_TP_FRACTION;
+
+    const triggered = trade.side === "long"
+      ? price >= partialLevel
+      : price <= partialLevel;
+
+    if (!triggered) return;
+
+    this.partialTpDone.add(id);
+    this.executePartialClose(trade, price, partialLevel).catch((e) =>
+      console.error(`[guard] Partial TP error ${trade.coin}:`, (e as Error).message),
+    );
+  }
+
+  private async executePartialClose(
+    trade: GuardedTrade,
+    currentPrice: number,
+    partialLevel: number,
+  ): Promise<void> {
+    const closeSize = trade.size * PARTIAL_TP_CLOSE_PCT;
+    const assetIndex = this.resolveAssetIndex(trade);
+
+    console.log(
+      `[guard] PARTIAL TP ${trade.coin} ${trade.side}: closing ${(PARTIAL_TP_CLOSE_PCT * 100).toFixed(0)}% ` +
+      `(${closeSize.toFixed(4)}) @ ${currentPrice.toFixed(4)} (halfway to TP=${trade.takeProfit?.toFixed(4)})`,
+    );
+
+    const result = await closePosition({
+      coin: trade.coin,
+      size: closeSize,
+      isBuy: trade.side === "short",
+      markPrice: currentPrice,
+      assetIndex,
+    });
+
+    if (result.success) {
+      const fillPx = parseFloat(result.avgPx ?? String(currentPrice));
+      const pnl = trade.side === "long"
+        ? (fillPx - trade.entry_px) * closeSize
+        : (trade.entry_px - fillPx) * closeSize;
+
+      // Update trade in Supabase: reduce size, add partial TP note
+      const newSize = trade.size - closeSize;
+      await this.supabase.from("quant_trades").update({
+        size: newSize,
+        meta: {
+          stopLoss: trade.stopLoss,
+          takeProfit: trade.takeProfit,
+          assetIndex,
+          partialTp: {
+            closedSize: closeSize,
+            closedAt: fillPx,
+            pnl,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      }).eq("id", trade.id);
+
+      // Update in-memory trade size
+      trade.size = newSize;
+
+      // Move SL to breakeven on remaining position
+      trade.stopLoss = trade.entry_px;
+      this.trailingStops.delete(trade.id);
+
+      // Log
+      try {
+        await this.supabase.from("ai_agent_logs").insert({
+          strategy_id: trade.strategy_id,
+          event_type: "partial_tp",
+          decision: {
+            coin: trade.coin,
+            side: trade.side,
+            closedSize: closeSize,
+            remainingSize: newSize,
+            entryPx: trade.entry_px,
+            exitPx: fillPx,
+            pnl,
+            partialLevel,
+            newStopLoss: trade.entry_px,
+          },
+          signals_generated: 0,
+          error_message: null,
+        });
+      } catch { /* non-critical */ }
+
+      // Update strategy PnL
+      if (trade.strategy_id) {
+        const { data: strat } = await this.supabase
+          .from("quant_strategies")
+          .select("total_pnl")
+          .eq("id", trade.strategy_id)
+          .single();
+        if (strat) {
+          await this.supabase.from("quant_strategies").update({
+            total_pnl: (strat.total_pnl ?? 0) + pnl,
+          }).eq("id", trade.strategy_id);
+        }
+      }
+
+      console.log(
+        `[guard] PARTIAL TP filled ${trade.coin}: closed ${closeSize.toFixed(4)} @ ${fillPx.toFixed(4)}, ` +
+        `pnl=${pnl.toFixed(4)}, remaining=${newSize.toFixed(4)}, SL moved to breakeven`,
+      );
+    } else {
+      console.error(`[guard] Partial TP failed ${trade.coin}: ${result.error}`);
     }
   }
 
@@ -333,6 +462,7 @@ export class PositionGuard {
       this.trades.delete(trade.id);
       this.peakPrices.delete(trade.id);
       this.trailingStops.delete(trade.id);
+      this.partialTpDone.delete(trade.id);
       console.log(
         `[guard] ${label} closed ${trade.coin} ${trade.side}: ` +
         `pnl=${pnl.toFixed(4)} (entry=${trade.entry_px.toFixed(4)}, exit=${fillPx.toFixed(4)})`,
