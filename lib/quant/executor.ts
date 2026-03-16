@@ -91,7 +91,7 @@ export async function placeOrder(req: OrderRequest): Promise<OrderResult> {
     const resting = s.resting as { oid: number } | undefined;
     if (resting) {
       trackBotTrade(accountAddress, notional);
-      return { success: true, avgPx: req.price, oid: resting.oid };
+      return { success: true, oid: resting.oid };
     }
 
     if (s.error) return { success: false, error: String(s.error) };

@@ -519,10 +519,10 @@ function ServerStrategies({ address }: { address: string | null }) {
             <MetricCell label="Daily Vol Proj" value={`$${((rfStats.dailyVolumeProjected ?? 0) / 1000).toFixed(0)}K`} compact />
           </div>
 
-          {rfStats.currentTrade && (
+          {rfStats.activeTrades?.[0] && (
             <div className="px-4 py-2 border-t border-cyan-500/10 bg-cyan-950/20">
               <p className="text-[10px] text-cyan-400 font-mono">
-                Active: {rfStats.currentTrade.phase} {rfStats.currentTrade.side?.toUpperCase()} {rfStats.currentTrade.coin} @ ${rfStats.currentTrade.entryPx}
+                Active: {rfStats.activeTrades[0].phase} {rfStats.activeTrades[0].side?.toUpperCase()} {rfStats.activeTrades[0].coin} @ ${rfStats.activeTrades[0].entryPx}
               </p>
             </div>
           )}
