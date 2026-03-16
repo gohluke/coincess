@@ -104,10 +104,10 @@ export class RebateFarmer {
   private coinPerf: Map<string, CoinPerf> = new Map();
 
   private readonly STALE_QUOTE_MS = 8_000;
-  private readonly UNWIND_COOLDOWN_MS = 10_000;
-  private readonly MAX_UNWIND_ATTEMPTS = 30;
+  private readonly UNWIND_COOLDOWN_MS = 3_000;
+  private readonly MAX_UNWIND_ATTEMPTS = 30; // ~90s at 3s cooldown
   private readonly DIAG_INTERVAL = 60;
-  private readonly VOLUME_LOG_INTERVAL = 30; // log volume stats every 30 cycles
+  private readonly VOLUME_LOG_INTERVAL = 30;
 
   constructor(priceFeed: PriceFeed, config?: Partial<RebateFarmerConfig>) {
     this.config = { ...REBATE_FARMER_DEFAULTS, ...config };
@@ -427,18 +427,24 @@ export class RebateFarmer {
     const sinceLast = Date.now() - this.state.lastUnwindAttempt;
     if (sinceLast < this.UNWIND_COOLDOWN_MS) return;
 
-    // Place new unwind order at profitable price
     const book = await this.fetchL2(coin);
     if (!book) return;
 
     const unwindSide: "buy" | "sell" = side === "buy" ? "sell" : "buy";
-    const feeBuffer = this.currentMakerBps * 2 / 10_000 + 0.0002;
+    const feeBuffer = this.currentMakerBps * 2 / 10_000 + 0.0001;
 
+    // Place slightly inside the spread to attract fills, but still profitable
     let unwindPx: number;
+    const minProfit = entryPx * feeBuffer;
     if (unwindSide === "sell") {
-      unwindPx = Math.max(book.bestAsk, entryPx * (1 + feeBuffer));
+      const profitFloor = entryPx + minProfit;
+      // Undercut the ask by 1 tick to be first in queue, but stay above profit floor
+      const aggressive = book.bestAsk * 0.9999;
+      unwindPx = Math.max(aggressive, profitFloor);
     } else {
-      unwindPx = Math.min(book.bestBid, entryPx * (1 - feeBuffer));
+      const profitCeiling = entryPx - minProfit;
+      const aggressive = book.bestBid * 1.0001;
+      unwindPx = Math.min(aggressive, profitCeiling);
     }
 
     const sizeStr = this.roundSize(size, coin);
@@ -451,6 +457,7 @@ export class RebateFarmer {
       return;
     }
 
+    const attempt = this.state.unwindAttempts + 1;
     const result = await placeOrder({
       coin,
       isBuy: unwindSide === "buy",
@@ -460,15 +467,17 @@ export class RebateFarmer {
       assetIndex,
     });
 
-    this.state.unwindAttempts++;
+    this.state.unwindAttempts = attempt;
     this.state.lastUnwindAttempt = Date.now();
 
     if (result.success && result.oid) {
       this.state.unwindOid = result.oid;
+      if (attempt <= 3 || attempt % 10 === 0) {
+        console.log(`[rebate-farmer] Unwind #${attempt} ${coin} ${unwindSide} @ ${priceStr} (oid=${result.oid})`);
+      }
     }
 
     if (result.success && result.avgPx) {
-      // Filled immediately
       const fillPx = parseFloat(result.avgPx);
       this.completeRoundTrip(fillPx);
     }
