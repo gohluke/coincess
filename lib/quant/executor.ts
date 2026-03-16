@@ -111,6 +111,40 @@ export async function cancelOrder(assetIndex: number, oid: number): Promise<Orde
   }
 }
 
+export async function cancelAllOpenOrders(): Promise<number> {
+  try {
+    const { accountAddress } = getCredentials();
+    const res = await fetch(`${HL_API}/info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "openOrders", user: accountAddress }),
+    });
+    const orders = (await res.json()) as Array<{ coin: string; oid: number }>;
+    if (orders.length === 0) return 0;
+
+    const exchange = await createExchangeClient();
+    const metaRes = await fetch(`${HL_API}/info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "metaAndAssetCtxs" }),
+    });
+    const [meta] = (await metaRes.json()) as [{ universe: Array<{ name: string }> }, unknown[]];
+    const coinToIdx = new Map<string, number>();
+    for (let i = 0; i < meta.universe.length; i++) coinToIdx.set(meta.universe[i].name, i);
+
+    const cancels = orders
+      .map((o) => ({ a: coinToIdx.get(o.coin) ?? -1, o: o.oid }))
+      .filter((c) => c.a >= 0);
+    if (cancels.length > 0) {
+      await exchange.cancel({ cancels });
+    }
+    return orders.length;
+  } catch (err) {
+    console.error("[executor] cancelAllOpenOrders failed:", (err as Error).message);
+    return 0;
+  }
+}
+
 function hlRoundPrice(price: number): string {
   if (price >= 100_000) return (Math.round(price / 10) * 10).toString();
   if (price >= 10_000) return (Math.round(price)).toString();

@@ -51,6 +51,7 @@ interface AiLogEntry {
 }
 
 const STRATEGY_LABELS: Record<string, { name: string; tag: string; color: string }> = {
+  rebate_farmer: { name: "Rebate Farmer", tag: "RF", color: "#22d3ee" },
   funding_rate: { name: "Funding Rate Harvester", tag: "FR", color: "#10b981" },
   momentum: { name: "Momentum Scalper", tag: "MOM", color: "#8b5cf6" },
   grid: { name: "Grid Trading", tag: "GRID", color: "#3b82f6" },

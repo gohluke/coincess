@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { RiskManager } from "./risk";
-import { placeOrder, closePosition, fetchAccountValue, fetchPositions, getAccountAddress } from "./executor";
+import { placeOrder, closePosition, fetchAccountValue, fetchPositions, getAccountAddress, cancelAllOpenOrders } from "./executor";
 import { PriceFeed } from "./price-feed";
 import { PositionGuard } from "./position-guard";
 import { SpikeDetector } from "./spike-detector";
@@ -159,6 +159,12 @@ export class QuantEngine {
 
   private async closeAllLegacyPositions(): Promise<void> {
     try {
+      // Cancel ALL resting orders first (stale unwinds, etc.)
+      const cancelled = await cancelAllOpenOrders();
+      if (cancelled > 0) {
+        console.log(`[engine] Cancelled ${cancelled} stale orders`);
+      }
+
       const positions = await fetchPositions();
       const open = positions.filter((p) => parseFloat(p.position.szi) !== 0);
       if (open.length === 0) {
@@ -281,42 +287,8 @@ export class QuantEngine {
         updatePriceHistory(m.coin, m.markPx);
       }
 
-      // Collect signals from all active strategies
-      const allSignals: Array<{ signal: StrategySignal; strategy: QuantStrategy }> = [];
-
-      for (const strat of strategies) {
-        try {
-          const signals = await this.evaluateStrategy(strat, ctx);
-          for (const signal of signals) {
-            allSignals.push({ signal, strategy: strat });
-          }
-        } catch (err) {
-          console.error(`[engine] Strategy ${strat.type} error:`, err);
-          await this.updateStrategy(strat.id, {
-            status: "error",
-            error_message: (err as Error).message,
-          });
-        }
-      }
-
-      // Signal combiner: weigh strategies by rolling performance
-      const weights = calculateWeights(strategies);
-      const combined = combineSignals(allSignals, weights, ctx, state);
-
-      // Log regime detection periodically
-      if (this.tickCount % 60 === 0) {
-        const btcPrices = markets.filter((m) => m.coin === "BTC").map((m) => m.markPx);
-        if (btcPrices.length > 0) {
-          const regime = detectRegime(btcPrices);
-          console.log(`[engine] Market regime: ${regime}`);
-        }
-      }
-
-      // DISABLED: signal execution — only rebate farmer trades now.
-      // Legacy strategies still evaluate (for logging) but cannot open/close positions.
-      if (allSignals.length > 0) {
-        console.log(`[engine] ${allSignals.length} signals from legacy strategies (IGNORED — rebate-farmer only mode)`);
-      }
+      // All legacy strategies DISABLED — rebate farmer is the only active strategy.
+      // Skip evaluation entirely to save compute (no more AI agent API calls).
 
       // Update engine state
       const currentExposure = positions.reduce(
@@ -389,24 +361,8 @@ export class QuantEngine {
         return marketMaker.evaluate(strat, markets, ctx);
       }
       case "ai_agent": {
-        // AI runs every 5 min, or on significant price moves — SL/TP is handled
-        // independently by the PositionGuard on every WebSocket tick.
-        const now = Date.now();
-        const elapsed = now - this.lastAiRunTime;
-        const significantMove = this.hasSignificantPriceMove();
-
-        if (elapsed < AI_ANALYSIS_INTERVAL_MS && !significantMove) {
-          return []; // guard handles SL/TP, no need for AI this tick
-        }
-
-        if (significantMove) {
-          console.log("[engine] Significant price move detected — triggering AI analysis early");
-        }
-
-        this.lastAiRunTime = now;
-        const markets = await this.fetchMarketSnapshots();
-        this.snapshotAiPrices(markets);
-        return aiAgent.evaluate(strat, markets, ctx);
+        // DISABLED: AI agent is no longer used. Rebate farmer is the only active strategy.
+        return [];
       }
       default:
         return [];
