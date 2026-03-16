@@ -163,7 +163,7 @@ export class RebateFarmer {
       return;
     }
 
-    const isDiagCycle = this.cycleCount <= 5 || this.cycleCount % this.DIAGNOSTIC_LOG_INTERVAL === 0;
+    const isDiagCycle = this.cycleCount === 3 || this.cycleCount % this.DIAGNOSTIC_LOG_INTERVAL === 0;
 
     for (const coin of this.config.coins) {
       try {
