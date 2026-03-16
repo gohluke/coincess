@@ -956,4 +956,54 @@ export class RebateFarmer {
   get isRunning(): boolean {
     return this.running;
   }
+
+  getSnapshot(): Record<string, unknown> {
+    const s = this.stats;
+    const elapsed = Date.now() - this.sessionStartTime;
+    const hrs = elapsed / 3_600_000;
+    const net = s.grossPnl - s.fees;
+    const winRate = s.roundTrips > 0 ? (s.wins / s.roundTrips * 100) : 0;
+    const hourlyRate = hrs > 0.01 ? net / hrs : 0;
+    const dailyProjected = hourlyRate * 24;
+    const volRate = hrs > 0.01 ? this.sessionVolume / hrs : 0;
+
+    const coins: Record<string, { trades: number; wins: number; netPnl: number }> = {};
+    for (const [coin, perf] of this.coinPerf) {
+      coins[coin] = { trades: perf.trades, wins: perf.wins, netPnl: perf.netPnl };
+    }
+
+    return {
+      status: this.running ? "active" : "stopped",
+      sessionUptime: elapsed,
+      sessionTrades: s.roundTrips,
+      sessionWins: s.wins,
+      sessionLosses: s.losses,
+      winRate: Math.round(winRate * 10) / 10,
+      grossPnl: Math.round(s.grossPnl * 10000) / 10000,
+      fees: Math.round(s.fees * 10000) / 10000,
+      netPnl: Math.round(net * 10000) / 10000,
+      hourlyRate: Math.round(hourlyRate * 100) / 100,
+      dailyProjected: Math.round(dailyProjected * 100) / 100,
+      sessionVolume: Math.round(this.sessionVolume),
+      allTimeVolume: Math.round(this.allTimeVolume),
+      volumeRate: Math.round(volRate),
+      dailyVolumeProjected: Math.round(volRate * 24),
+      feeTier: this.currentFeeTier,
+      makerFeeBps: this.currentMakerBps,
+      coins,
+      config: {
+        orderSize: this.config.orderSizeUsd,
+        minSpreadBps: MIN_SPREAD_BPS,
+        coinCount: this.config.coins.length,
+        coinList: this.config.coins,
+      },
+      currentTrade: this.state.phase !== "idle" ? {
+        phase: this.state.phase,
+        coin: this.state.coin,
+        side: this.state.side,
+        entryPx: this.state.entryPx,
+        size: this.state.size,
+      } : null,
+    };
+  }
 }

@@ -20,6 +20,7 @@ import { resolve } from "path";
 config({ path: resolve(process.cwd(), ".env.local"), override: true });
 config({ path: resolve(process.cwd(), ".env") });
 
+import { createServer } from "http";
 import { QuantEngine } from "../lib/quant/engine";
 import { DataCollector } from "../lib/quant/data/collector";
 
@@ -91,6 +92,23 @@ async function main(): Promise<void> {
   // Start data collection alongside the engine
   await collector.start();
   await engine.start();
+
+  // HTTP stats server for frontend to query live rebate farmer data
+  const statsPort = parseInt(process.env.STATS_PORT ?? "3099", 10);
+  const http = createServer((req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/json");
+    if (req.url === "/stats/rebate-farmer") {
+      res.end(JSON.stringify(engine.getRebateFarmerSnapshot()));
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ error: "not found" }));
+    }
+  });
+  http.listen(statsPort, "0.0.0.0", () => {
+    console.log(`[server] Stats API on :${statsPort}/stats/rebate-farmer`);
+  });
+
   console.log("[server] Engine + data collector running. Press Ctrl+C to stop.");
 }
 

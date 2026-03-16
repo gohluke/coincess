@@ -3,7 +3,7 @@ import { getServiceClient } from "@/lib/supabase/client";
 import { AI_AGENT_DEFAULTS } from "@/lib/quant/types";
 
 const VALID_STRATEGY_TYPES = [
-  "funding_rate", "momentum", "grid", "mean_reversion", "market_maker", "ai_agent",
+  "funding_rate", "momentum", "grid", "mean_reversion", "market_maker", "ai_agent", "rebate_farmer",
 ] as const;
 
 export async function GET(req: Request) {

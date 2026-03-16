@@ -209,12 +209,16 @@ function ServerStrategies({ address }: { address: string | null }) {
   const [aiLogs, setAiLogs] = useState<AiLogEntry[]>([]);
   const [aiConfigDraft, setAiConfigDraft] = useState<Partial<AiAgentConfig>>({});
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [rfStats, setRfStats] = useState<Record<string, any> | null>(null);
+
   const fetchData = useCallback(async () => {
     try {
       const fetches: Promise<unknown>[] = [
         fetch("/api/quant/status"),
         fetch("/api/quant/trades?limit=50"),
         fetchAllMarkets().catch(() => [] as MarketInfo[]),
+        fetch("/api/quant/rebate-farmer").then(r => r.ok ? r.json() : null).catch(() => null),
       ];
       if (address) {
         fetches.push(
@@ -228,6 +232,7 @@ function ServerStrategies({ address }: { address: string | null }) {
       const statusData = await (results[0] as Response).json();
       const tradesData = await (results[1] as Response).json();
       const marketsData = results[2] as MarketInfo[];
+      const rfData = results[3] as Record<string, unknown> | null;
 
       setEngine(statusData.engine);
       setStrategies(statusData.strategies ?? []);
@@ -235,21 +240,22 @@ function ServerStrategies({ address }: { address: string | null }) {
       setTrades(tradesData.trades ?? []);
       setTradesSummary(tradesData.summary ?? { totalPnl: 0, totalFees: 0, netPnl: 0 });
       setMarkets(marketsData);
+      if (rfData && !rfData.error) setRfStats(rfData);
 
-      if (address && results[3]) {
-        const ch = results[3] as { assetPositions: AssetPosition[]; marginSummary: { accountValue: string } };
+      if (address && results[4]) {
+        const ch = results[4] as { assetPositions: AssetPosition[]; marginSummary: { accountValue: string } };
         const positions = ch.assetPositions?.filter(
           (ap) => parseFloat(ap.position.szi) !== 0
         ) ?? [];
         setWalletPositions(positions);
         setAccountValue(parseFloat(ch.marginSummary?.accountValue ?? "0"));
       }
-      if (address && results[4]) {
-        const orders = results[4] as { coin: string }[];
+      if (address && results[5]) {
+        const orders = results[5] as { coin: string }[];
         setOpenOrderCount(Array.isArray(orders) ? orders.length : 0);
       }
-      if (address && results[5]) {
-        const fp = results[5] as FundingPayment[];
+      if (address && results[6]) {
+        const fp = results[6] as FundingPayment[];
         setFundingPayments(Array.isArray(fp) ? fp : []);
       }
     } catch (err) {
@@ -467,10 +473,83 @@ function ServerStrategies({ address }: { address: string | null }) {
         </div>
       )}
 
-      {/* Strategies Table */}
+      {/* Rebate Farmer — Primary Active Strategy */}
+      {rfStats && (
+        <div className="bg-gradient-to-br from-cyan-950/30 to-[#141620] rounded-xl border border-cyan-500/20 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/10">
+            <div className="flex items-center gap-3">
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider text-cyan-400 bg-cyan-400/10 border border-cyan-400/20">
+                RF
+              </span>
+              <div>
+                <p className="text-[13px] font-medium text-white">Rebate Farmer v3</p>
+                <p className="text-[10px] text-[#848e9c] font-mono">
+                  {rfStats.config?.coinCount ?? 0} coins &middot; ${rfStats.config?.orderSize ?? 50}/trade &middot; maker-only
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className={`text-sm font-semibold tabular-nums ${(rfStats.netPnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {(rfStats.netPnl ?? 0) >= 0 ? "+" : ""}${(rfStats.netPnl ?? 0).toFixed(4)}
+                </p>
+                <span className="inline-flex items-center gap-1 text-[9px] font-medium text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full inline-block bg-emerald-400 animate-pulse" />
+                  {(rfStats.status === "active" ? "ACTIVE" : "STOPPED")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#0b0e11]/50">
+            <MetricCell label="Win Rate" value={`${rfStats.winRate ?? 0}%`} valueColor={rfStats.winRate >= 60 ? "text-emerald-400" : "text-yellow-400"} compact />
+            <MetricCell label="Trades" value={`${rfStats.sessionWins ?? 0}W / ${rfStats.sessionLosses ?? 0}L`} compact />
+            <MetricCell label="Hourly Rate" value={`$${(rfStats.hourlyRate ?? 0).toFixed(2)}/hr`} valueColor={(rfStats.hourlyRate ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"} compact />
+            <MetricCell label="Session Vol" value={`$${((rfStats.sessionVolume ?? 0) / 1000).toFixed(1)}K`} compact />
+            <MetricCell label="Fee Tier" value={rfStats.feeTier ?? "Tier 0"} valueColor="text-cyan-400" compact />
+            <MetricCell label="Maker Fee" value={`${rfStats.makerFeeBps ?? 1.5}bps`} compact />
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-px bg-[#0b0e11]/50">
+            <MetricCell label="Daily Proj" value={`$${(rfStats.dailyProjected ?? 0).toFixed(2)}`} valueColor={(rfStats.dailyProjected ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"} compact />
+            <MetricCell label="Gross P&L" value={`$${(rfStats.grossPnl ?? 0).toFixed(4)}`} compact />
+            <MetricCell label="Total Fees" value={`-$${(rfStats.fees ?? 0).toFixed(4)}`} valueColor="text-red-400" compact />
+            <MetricCell label="All-time Vol" value={`$${((rfStats.allTimeVolume ?? 0) / 1000).toFixed(1)}K`} compact />
+            <MetricCell label="Vol/hr" value={`$${((rfStats.volumeRate ?? 0) / 1000).toFixed(1)}K`} compact />
+            <MetricCell label="Daily Vol Proj" value={`$${((rfStats.dailyVolumeProjected ?? 0) / 1000).toFixed(0)}K`} compact />
+          </div>
+
+          {rfStats.currentTrade && (
+            <div className="px-4 py-2 border-t border-cyan-500/10 bg-cyan-950/20">
+              <p className="text-[10px] text-cyan-400 font-mono">
+                Active: {rfStats.currentTrade.phase} {rfStats.currentTrade.side?.toUpperCase()} {rfStats.currentTrade.coin} @ ${rfStats.currentTrade.entryPx}
+              </p>
+            </div>
+          )}
+
+          {rfStats.coins && Object.keys(rfStats.coins).length > 0 && (
+            <div className="px-4 py-2 border-t border-[#2a2e3e]/30">
+              <p className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-1.5">Top Coins</p>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(rfStats.coins as Record<string, { trades: number; wins: number; netPnl: number }>)
+                  .sort(([, a], [, b]) => b.netPnl - a.netPnl)
+                  .slice(0, 8)
+                  .map(([coin, perf]) => (
+                    <span key={coin} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#1a1d2e] text-[#848e9c]">
+                      {coin} <span className={perf.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}>{perf.netPnl >= 0 ? "+" : ""}${perf.netPnl.toFixed(3)}</span>
+                      <span className="text-[#4a4e59] ml-0.5">{perf.wins}/{perf.trades}</span>
+                    </span>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Legacy Strategies */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-widest">Strategies</span>
+          <span className="text-[10px] font-medium text-[#848e9c] uppercase tracking-widest">Other Strategies</span>
           <button
             onClick={() => setAddingStrategy(!addingStrategy)}
             className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium text-[#848e9c] hover:text-white hover:bg-[#1a1d2e] transition-colors"

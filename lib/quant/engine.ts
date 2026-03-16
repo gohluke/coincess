@@ -142,6 +142,10 @@ export class QuantEngine {
     await this.tick();
   }
 
+  getRebateFarmerSnapshot(): Record<string, unknown> {
+    return this.rebateFarmer.getSnapshot();
+  }
+
   async stop(): Promise<void> {
     this.running = false;
     if (this.tickTimer) {
