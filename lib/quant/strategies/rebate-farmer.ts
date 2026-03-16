@@ -233,12 +233,22 @@ export class RebateFarmer {
     const coins = this.getPrioritizedCoins();
     if (coins.length === 0) return;
 
-    // Batch-fetch L2 for all coins in parallel (much faster than sequential)
+    // Scan 4 coins per cycle in parallel (fast cycles, full rotation every ~4 cycles)
+    const BATCH = 4;
+    const start = this.coinIndex;
+    const batch: string[] = [];
+    for (let i = 0; i < Math.min(BATCH, coins.length); i++) {
+      batch.push(coins[(start + i) % coins.length]);
+    }
+    this.coinIndex = (start + BATCH) % coins.length;
+
+    // On diagnostic cycles, scan all coins for the full picture
+    const toScan = diag ? coins : batch;
+
     const books = await Promise.all(
-      coins.map(async (coin) => ({ coin, book: await this.fetchL2(coin) })),
+      toScan.map(async (coin) => ({ coin, book: await this.fetchL2(coin) })),
     );
 
-    // Find best opportunity: highest spread that meets thresholds
     let best: { coin: string; book: L2Book; assetIndex: number; score: number } | null = null;
 
     for (const { coin, book } of books) {
@@ -256,7 +266,6 @@ export class RebateFarmer {
       if (book.spreadBps < MIN_SPREAD_BPS) continue;
       if (Math.abs(book.imbalance) < MIN_IMBALANCE) continue;
 
-      // Score = spread * |imbalance| * coin_win_rate_bonus
       const perf = this.coinPerf.get(coin);
       const winBonus = perf && perf.trades >= 3
         ? 0.5 + (perf.wins / perf.trades)
