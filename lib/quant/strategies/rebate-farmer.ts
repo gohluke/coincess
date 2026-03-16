@@ -72,6 +72,7 @@ export class RebateFarmer {
 
   private cycleCount = 0;
   private coinIndex = 0; // rotate through coins
+  private cycling = false; // prevent overlapping cycles
 
   private readonly STALE_QUOTE_MS = 8_000;
   private readonly UNWIND_COOLDOWN_MS = 10_000;
@@ -152,7 +153,12 @@ export class RebateFarmer {
   // ------------------------------------------------------------------
 
   private async cycle(): Promise<void> {
-    if (!this.running) return;
+    if (!this.running || this.cycling) return;
+    this.cycling = true;
+    try { await this.doCycle(); } finally { this.cycling = false; }
+  }
+
+  private async doCycle(): Promise<void> {
     this.cycleCount++;
     this.maybeResetStats();
 

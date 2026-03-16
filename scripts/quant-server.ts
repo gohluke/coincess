@@ -58,12 +58,12 @@ async function main(): Promise<void> {
   const hasAiKeys = AI_ENV.every((k) => !!process.env[k]);
 
   console.log("┌──────────────────────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server  v6.0                  │");
-  console.log("│  NEW: Rebate Farmer — HF spread capture via Alo orders   │");
-  console.log("│  Full TA + Order Book Imbalance + Flow Analysis          │");
-  console.log("│  Trailing Stop + Partial Profit Taking                   │");
-  console.log("│  Crowded Trade Detection + Session Awareness             │");
-  console.log("│  AI Scoring Rubric + Performance Feedback                │");
+  console.log("│     Coincess Quant Trading Server  v7.0                  │");
+  console.log("│  SAFE MODE: Rebate Farmer ONLY                           │");
+  console.log("│  All legacy strategies DISABLED                           │");
+  console.log("│  One position at a time | Maker-only unwind              │");
+  console.log("│  Min spread 7bps | Race-condition proof                   │");
+  console.log("│  Auto-closes all legacy positions on startup             │");
   console.log("└──────────────────────────────────────────────────────────┘");
   console.log();
   console.log(`Account: ${process.env.HL_ACCOUNT_ADDRESS}`);

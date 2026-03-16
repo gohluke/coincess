@@ -117,19 +117,18 @@ export class QuantEngine {
     await new Promise((r) => setTimeout(r, 2000));
     console.log(`[engine] Price feed: ${this.priceFeed.isConnected ? "connected" : "connecting"} (${this.priceFeed.priceCount} prices)`);
 
-    // Start rule-based SL/TP guard on the live price stream
+    // Close ALL legacy positions on startup (from old strategies)
+    await this.closeAllLegacyPositions();
+
+    // Keep position guard for SL/TP on any remaining positions
     await this.positionGuard.start();
 
-    // Start spike detection + mean-reversion (event-driven, independent of tick loop)
-    await this.spikeReversion.start();
-    this.spikeDetector.onSpike((event) => {
-      this.spikeReversion.handleSpike(event).catch((e) =>
-        console.error("[engine] Spike handler error:", (e as Error).message),
-      );
-    });
-    this.spikeDetector.start();
+    // DISABLED: spike reversion & spike detector — only rebate farmer runs
+    // await this.spikeReversion.start();
+    // this.spikeDetector.onSpike(...)
+    // this.spikeDetector.start();
 
-    // Start rebate farmer (high-frequency spread capture, independent of tick loop)
+    // Rebate farmer is the ONLY active trading strategy
     await this.rebateFarmer.start();
 
     this.tickTimer = setInterval(() => {
@@ -150,12 +149,45 @@ export class QuantEngine {
       this.tickTimer = null;
     }
     this.rebateFarmer.stop();
-    this.spikeDetector.stop();
-    this.spikeReversion.stop();
+    // this.spikeDetector.stop();
+    // this.spikeReversion.stop();
     this.positionGuard.stop();
     this.priceFeed.stop();
     await this.updateState({ engine_status: "stopped" });
     console.log("[engine] Stopped.");
+  }
+
+  private async closeAllLegacyPositions(): Promise<void> {
+    try {
+      const positions = await fetchPositions();
+      const open = positions.filter((p) => parseFloat(p.position.szi) !== 0);
+      if (open.length === 0) {
+        console.log("[engine] No legacy positions to close");
+        return;
+      }
+      console.log(`[engine] Closing ${open.length} legacy positions...`);
+      for (const p of open) {
+        const coin = p.position.coin;
+        const szi = parseFloat(p.position.szi);
+        const isBuy = szi < 0; // close short = buy, close long = sell
+        const markPx = parseFloat(p.position.entryPx);
+        try {
+          const result = await closePosition({
+            coin,
+            size: Math.abs(szi),
+            isBuy,
+            markPrice: markPx,
+            assetIndex: 0,
+          });
+          const side = szi > 0 ? "LONG" : "SHORT";
+          console.log(`[engine] Closed ${coin} ${side} ${Math.abs(szi)}: ${result.success ? "OK" : result.error}`);
+        } catch (e) {
+          console.error(`[engine] Failed to close ${coin}:`, (e as Error).message);
+        }
+      }
+    } catch (e) {
+      console.error("[engine] Legacy position cleanup failed:", (e as Error).message);
+    }
   }
 
   async tick(): Promise<void> {
@@ -237,31 +269,10 @@ export class QuantEngine {
         }
       }
 
-      // Execute: use combined signals if combiner produced output, else raw signals
-      const signalsToExecute = combined.length > 0
-        ? combined.map((s) => ({ signal: s as StrategySignal, strategy: strategies[0] }))
-        : allSignals;
-
-      for (const { signal, strategy } of signalsToExecute) {
-        const isCloseSignal = signal.size === 0;
-
-        if (!isCloseSignal) {
-          const check = this.risk.checkPreTrade(signal, ctx, state);
-          if (!check.allowed) {
-            console.log(`[engine] Risk blocked ${signal.coin} ${signal.side}: ${check.reason}`);
-            continue;
-          }
-
-          // Prevent duplicate or conflicting positions on the same coin
-          const existingPos = positions.find((p) => p.coin === signal.coin);
-          if (existingPos) {
-            const existingSide = existingPos.szi > 0 ? "long" : "short";
-            console.log(`[engine] SKIP ${signal.coin} ${signal.side}: already have ${existingSide} position`);
-            continue;
-          }
-        }
-
-        await this.executeSignal(signal, strategy);
+      // DISABLED: signal execution — only rebate farmer trades now.
+      // Legacy strategies still evaluate (for logging) but cannot open/close positions.
+      if (allSignals.length > 0) {
+        console.log(`[engine] ${allSignals.length} signals from legacy strategies (IGNORED — rebate-farmer only mode)`);
       }
 
       // Update engine state
