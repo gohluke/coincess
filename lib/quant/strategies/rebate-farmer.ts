@@ -698,8 +698,7 @@ export class RebateFarmer {
       };
 
       if (data.userAddRate) {
-        const realMakerRate = parseFloat(data.userAddRate);
-        this.currentMakerBps = realMakerRate * 10_000;
+        this.currentMakerBps = Math.round(parseFloat(data.userAddRate) * 100_000) / 10;
       }
 
       // Calculate 14-day rolling volume from daily data
