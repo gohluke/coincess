@@ -225,10 +225,22 @@ export class QuantEngine {
         : allSignals;
 
       for (const { signal, strategy } of signalsToExecute) {
-        const check = this.risk.checkPreTrade(signal, ctx, state);
-        if (!check.allowed) {
-          console.log(`[engine] Risk blocked ${signal.coin} ${signal.side}: ${check.reason}`);
-          continue;
+        const isCloseSignal = signal.size === 0;
+
+        if (!isCloseSignal) {
+          const check = this.risk.checkPreTrade(signal, ctx, state);
+          if (!check.allowed) {
+            console.log(`[engine] Risk blocked ${signal.coin} ${signal.side}: ${check.reason}`);
+            continue;
+          }
+
+          // Prevent duplicate or conflicting positions on the same coin
+          const existingPos = positions.find((p) => p.coin === signal.coin);
+          if (existingPos) {
+            const existingSide = existingPos.szi > 0 ? "long" : "short";
+            console.log(`[engine] SKIP ${signal.coin} ${signal.side}: already have ${existingSide} position`);
+            continue;
+          }
         }
 
         await this.executeSignal(signal, strategy);

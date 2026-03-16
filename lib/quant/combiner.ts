@@ -291,12 +291,17 @@ export function combineSignals(
     const openPositions = ctx.positions.filter((p) => Math.abs(p.szi) > 0).length;
     if (openPositions >= config.maxTotalPositions) continue;
 
+    // Preserve SL/TP from the highest-weighted source signal
+    const bestSource = signals.sort((a, b) => b.weight - a.weight)[0].signal;
+
     combined.push({
       coin,
       side: side as "long" | "short",
       size: adjustedSize * correlationPenalty,
       price: avgPrice,
       assetIndex: signals[0].signal.assetIndex,
+      stopLoss: bestSource.stopLoss,
+      takeProfit: bestSource.takeProfit,
       reason: `COMBINED [${signals.map((s) => s.strategy.type).join("+")}] conf=${(confidence * 100).toFixed(0)}%`,
       confidence,
       sourceStrategies: signals.map((s) => s.strategy.type),
