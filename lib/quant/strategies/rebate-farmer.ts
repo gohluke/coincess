@@ -20,7 +20,8 @@ import { REBATE_FARMER_DEFAULTS } from "../types";
 const HL_API = "https://api.hyperliquid.xyz";
 
 const MAKER_FEE_BPS = 1.5; // Tier 0 maker fee: 0.015%
-const MIN_PROFITABLE_SPREAD_BPS = MAKER_FEE_BPS * 2; // need spread > 2× maker fee (3 bps)
+// Need spread > 2× maker fee + healthy buffer for slippage/adverse selection
+const MIN_PROFITABLE_SPREAD_BPS = 5; // only trade when spread > 5 bps (was 3, caused losses)
 
 interface L2Snapshot {
   bestBid: number;
@@ -326,8 +327,12 @@ export class RebateFarmer {
     });
 
     if (result.success) {
+      console.log(
+        `[rebate-farmer] PLACED ${side.toUpperCase()} ${coin} $${notional.toFixed(0)} @ ${priceStr} ` +
+        `(spread=${book.spreadBps.toFixed(1)}bps, ${result.oid ? "resting" : "filled"})`,
+      );
+
       if (result.oid) {
-        // Order is resting (not immediately filled — expected with Alo)
         this.activeQuotes.set(coin, {
           oid: result.oid,
           coin,
@@ -339,7 +344,6 @@ export class RebateFarmer {
         });
       }
 
-      // If Alo order somehow filled immediately (rare, but possible at exact tick)
       if (result.avgPx) {
         const fillPx = parseFloat(result.avgPx);
         this.recordFill(coin, side, parseFloat(sizeStr), fillPx, assetIndex);
@@ -409,9 +413,16 @@ export class RebateFarmer {
         const pnl = side === "sell"
           ? (fillPx - inv.avgEntryPx) * qty
           : (inv.avgEntryPx - fillPx) * qty;
+        const estFees = qty * fillPx * MAKER_FEE_BPS * 2 / 10_000;
+        const netPnl = pnl - estFees;
         this.dailyStats.roundTrips++;
         this.dailyStats.grossPnl += pnl;
-        if (pnl < 0) this.dailyLoss += Math.abs(pnl);
+        this.dailyStats.fees += estFees;
+        if (netPnl < 0) this.dailyLoss += Math.abs(netPnl);
+        console.log(
+          `[rebate-farmer] ROUND TRIP ${coin}: gross=${pnl >= 0 ? "+" : ""}$${pnl.toFixed(4)} ` +
+          `fees=-$${estFees.toFixed(4)} net=${netPnl >= 0 ? "+" : ""}$${netPnl.toFixed(4)}`,
+        );
         this.inventory.delete(coin);
         this.inventoryTimestamps.delete(coin);
       } else {
@@ -466,7 +477,20 @@ export class RebateFarmer {
     book: L2Snapshot,
   ): Promise<void> {
     const qty = Math.abs(inv.netQty);
-    const price = side === "sell" ? book.bestAsk : book.bestBid;
+
+    // Calculate minimum profitable unwind price (entry ± round-trip fees)
+    const feeBuffer = MAKER_FEE_BPS * 2 / 10_000; // both entry and exit maker fees
+    let price: number;
+    if (side === "sell") {
+      // We're long, need to sell ABOVE entry + fees
+      const minProfitablePx = inv.avgEntryPx * (1 + feeBuffer + 0.0001); // +1 bps extra buffer
+      price = Math.max(book.bestAsk, minProfitablePx);
+    } else {
+      // We're short, need to buy BELOW entry - fees
+      const minProfitablePx = inv.avgEntryPx * (1 - feeBuffer - 0.0001);
+      price = Math.min(book.bestBid, minProfitablePx);
+    }
+
     const sizeStr = this.roundSize(qty, coin);
     const priceStr = this.roundPrice(price);
 
