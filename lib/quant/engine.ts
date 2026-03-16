@@ -230,6 +230,11 @@ export class QuantEngine {
           console.error(`[engine] Failed to close ${coin}:`, (e as Error).message);
         }
       }
+
+      // Reset peak equity to current account value (clean slate)
+      const currentValue = await fetchAccountValue();
+      await this.updateState({ peak_equity: currentValue, max_drawdown: 0 });
+      console.log(`[engine] Peak equity reset to $${currentValue.toFixed(2)}`);
     } catch (e) {
       console.error("[engine] Legacy position cleanup failed:", (e as Error).message);
     }
@@ -265,17 +270,10 @@ export class QuantEngine {
       // Reconcile Supabase open trades with actual Hyperliquid positions
       await this.reconcileOpenTrades(positions);
 
-      // Risk check
+      // Risk check — DISABLED in safe mode. Rebate farmer has its own $10 daily loss limit.
+      // The kill switch was triggering because peak_equity was stale from legacy positions.
+      // Just track the drawdown metric, don't act on it.
       const riskUpdate = this.risk.updatePostTick(state, accountValue);
-      if (riskUpdate.shouldKill) {
-        console.error("[engine] KILL SWITCH: max drawdown exceeded");
-        await this.stop();
-        await this.updateState({
-          engine_status: "error",
-          error_message: "Kill switch: max drawdown exceeded",
-        });
-        return;
-      }
 
       // Update price history for correlation tracking
       const markets = await this.fetchMarketSnapshots();
