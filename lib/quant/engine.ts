@@ -90,7 +90,8 @@ export class QuantEngine {
     this.spikeDetector = new SpikeDetector(this.priceFeed);
     this.spikeReversion = new SpikeReversionStrategy(this.walletAddress);
     this.rebateFarmer = new RebateFarmer(this.priceFeed, {
-      coins: ["BTC", "ETH", "SOL", "DOGE", "SUI", "AVAX", "LINK"],
+      // Mix of liquid + medium-liquidity coins for wider spreads
+      coins: ["BTC", "ETH", "SOL", "DOGE", "SUI", "AVAX", "LINK", "PEPE", "WIF", "BONK", "ONDO", "SEI", "INJ"],
       orderSizeUsd: 100,
       maxExposureUsd: 300,
       cycleSleepMs: 500,

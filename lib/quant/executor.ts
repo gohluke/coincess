@@ -166,7 +166,7 @@ export async function fetchAccountValue(): Promise<number> {
   const spotData = (await spotRes.json()) as {
     balances: Array<{ coin: string; total: string }>;
   };
-  const allMids = (await allMidsRes.json()) as Record<string, string>;
+  const allMids = (await allMidsRes.json()) as Record<string, string> | null;
 
   const perpsValue = parseFloat(perpsData.marginSummary.accountValue);
   const stableCoins = new Set(["USDC", "USDE", "USDT0"]);
@@ -176,8 +176,7 @@ export async function fetchAccountValue(): Promise<number> {
     if (bal === 0) continue;
     if (stableCoins.has(b.coin)) {
       spotValue += bal;
-    } else {
-      // Value non-stable tokens (HIP-3 stocks, etc.) using allMids
+    } else if (allMids) {
       const mid = parseFloat(allMids[b.coin] ?? "0");
       if (mid > 0) spotValue += bal * mid;
     }

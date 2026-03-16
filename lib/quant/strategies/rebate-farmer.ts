@@ -20,7 +20,7 @@ import { REBATE_FARMER_DEFAULTS } from "../types";
 const HL_API = "https://api.hyperliquid.xyz";
 
 const MAKER_FEE_BPS = 1.5; // Tier 0 maker fee: 0.015%
-const MIN_PROFITABLE_SPREAD_BPS = MAKER_FEE_BPS * 2 + 0.5; // need spread > 2× maker fee + buffer
+const MIN_PROFITABLE_SPREAD_BPS = MAKER_FEE_BPS * 2; // need spread > 2× maker fee (3 bps)
 
 interface L2Snapshot {
   bestBid: number;
@@ -79,6 +79,10 @@ export class RebateFarmer {
   private readonly STALE_QUOTE_MS = 5_000;
   private readonly MAX_INVENTORY_AGE_MS = 60_000;
   private inventoryTimestamps: Map<string, number> = new Map();
+
+  // Diagnostic logging
+  private cycleCount = 0;
+  private readonly DIAGNOSTIC_LOG_INTERVAL = 120; // log every 120 cycles (~60s at 500ms)
 
   constructor(priceFeed: PriceFeed, config?: Partial<RebateFarmerConfig>) {
     this.config = { ...REBATE_FARMER_DEFAULTS, ...config };
@@ -148,6 +152,7 @@ export class RebateFarmer {
 
   private async cycle(): Promise<void> {
     if (!this.running) return;
+    this.cycleCount++;
 
     this.maybeResetDailyStats();
 
@@ -158,22 +163,32 @@ export class RebateFarmer {
       return;
     }
 
+    const isDiagCycle = this.cycleCount <= 5 || this.cycleCount % this.DIAGNOSTIC_LOG_INTERVAL === 0;
+
     for (const coin of this.config.coins) {
       try {
-        await this.processCoin(coin);
+        await this.processCoin(coin, isDiagCycle);
       } catch (e) {
         console.error(`[rebate-farmer] ${coin} error:`, (e as Error).message);
       }
     }
   }
 
-  private async processCoin(coin: string): Promise<void> {
+  private async processCoin(coin: string, diag = false): Promise<void> {
     const assetIndex = this.assetIndices.get(coin);
     if (assetIndex === undefined) return;
 
     // Step 1: Fetch L2 book for this coin
     const book = await this.fetchL2(coin);
     if (!book) return;
+
+    if (diag) {
+      const imb = book.imbalance > 0 ? `+${book.imbalance.toFixed(2)}` : book.imbalance.toFixed(2);
+      console.log(
+        `[rebate-farmer] ${coin}: spread=${book.spreadBps.toFixed(1)}bps mid=$${book.midPrice.toFixed(2)} ` +
+        `imb=${imb} (need>=${MIN_PROFITABLE_SPREAD_BPS.toFixed(1)}bps)`,
+      );
+    }
 
     // Step 2: Check if existing quote should be cancelled
     const existing = this.activeQuotes.get(coin);
@@ -207,6 +222,9 @@ export class RebateFarmer {
     if (totalExposure + this.config.orderSizeUsd > this.config.maxExposureUsd) return;
 
     // Step 7: Place the maker order
+    if (diag) {
+      console.log(`[rebate-farmer] QUOTING ${coin} ${side} @ spread=${book.spreadBps.toFixed(1)}bps`);
+    }
     await this.placeQuote(coin, side, book, assetIndex);
   }
 
