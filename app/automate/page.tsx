@@ -482,9 +482,9 @@ function ServerStrategies({ address }: { address: string | null }) {
                 RF
               </span>
               <div>
-                <p className="text-[13px] font-medium text-white">Rebate Farmer v3</p>
+                <p className="text-[13px] font-medium text-white">Rebate Farmer v5</p>
                 <p className="text-[10px] text-[#848e9c] font-mono">
-                  {rfStats.config?.coinCount ?? 0} coins &middot; ${rfStats.config?.orderSize ?? 50}/trade &middot; maker-only
+                  {rfStats.config?.coinCount ?? 0} coins &middot; ${rfStats.config?.orderSize ?? 50}/trade &middot; {rfStats.config?.maxConcurrent ?? 3} concurrent &middot; stop-loss {rfStats.config?.stopLossBps ?? 8}bps
                 </p>
               </div>
             </div>
@@ -519,11 +519,14 @@ function ServerStrategies({ address }: { address: string | null }) {
             <MetricCell label="Daily Vol Proj" value={`$${((rfStats.dailyVolumeProjected ?? 0) / 1000).toFixed(0)}K`} compact />
           </div>
 
-          {rfStats.activeTrades?.[0] && (
-            <div className="px-4 py-2 border-t border-cyan-500/10 bg-cyan-950/20">
-              <p className="text-[10px] text-cyan-400 font-mono">
-                Active: {rfStats.activeTrades[0].phase} {rfStats.activeTrades[0].side?.toUpperCase()} {rfStats.activeTrades[0].coin} @ ${rfStats.activeTrades[0].entryPx}
-              </p>
+          {rfStats.activeTrades && rfStats.activeTrades.length > 0 && (
+            <div className="px-4 py-2 border-t border-cyan-500/10 bg-cyan-950/20 space-y-1">
+              <p className="text-[9px] text-[#848e9c] uppercase tracking-wider">Active Trades ({rfStats.activeTrades.length}/{rfStats.config?.maxConcurrent ?? 3})</p>
+              {rfStats.activeTrades.map((t: { coin: string; phase: string; side: string; entryPx: number; size: number }, i: number) => (
+                <p key={i} className="text-[10px] text-cyan-400 font-mono">
+                  {t.phase} {t.side?.toUpperCase()} {t.coin} @ ${t.entryPx} ({t.size?.toFixed(2)} units)
+                </p>
+              ))}
             </div>
           )}
 

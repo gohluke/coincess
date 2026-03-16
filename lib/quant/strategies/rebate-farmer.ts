@@ -1,13 +1,15 @@
 /**
- * Rebate Farmer v4.1 — Single-position spread capture via maker-only orders.
+ * Rebate Farmer v5 — Multi-position spread capture with risk management.
  *
- * v4.1 fixes over v4:
- * - Reverted to single position to eliminate race conditions
- * - Added reduceOnly on unwind orders to prevent direction flips
- * - Added HL position guard before entry to prevent accumulation
- * - Separated orphan adoption from entry logic
+ * v5 over v4.1:
+ * - Hard stop-loss: force close when mid moves 8+ bps against entry
+ * - Faster abandonment: 12 attempts / 10s cooldown (2 min max hold)
+ * - Wider profit target: capture 40-50% of original spread, not just fees
+ * - Multi-position: 3 concurrent trades on different coins
+ * - Higher min spread (7 bps) for better risk/reward
  *
- * Kept from v4: auto-discovery, dynamic sizing, fill-rate tracking, volume filter
+ * Kept: auto-discovery, dynamic sizing, fill-rate tracking, volume filter,
+ *       reduceOnly unwinds, HL position guard, Supabase trade logging
  */
 
 import { placeOrder, cancelOrder, closePosition, cancelAllOpenOrders, fetchPositions } from "../executor";
@@ -18,10 +20,11 @@ import { REBATE_FARMER_DEFAULTS } from "../types";
 
 const HL_API = "https://api.hyperliquid.xyz";
 
-const MIN_SPREAD_BPS = 5;
+const MIN_SPREAD_BPS = 7;
 const MIN_IMBALANCE = 0.10;
 const MIN_HOURLY_VOLUME_USD = 5_000;
-const MAX_CONCURRENT_TRADES = 1;
+const MAX_CONCURRENT_TRADES = 3;
+const STOP_LOSS_BPS = 8;
 
 const FEE_TIERS = [
   { minVol: 0,           makerBps: 1.5,  takerBps: 4.5,  label: "Tier 0" },
@@ -56,6 +59,7 @@ interface TradeState {
   unwindAttempts: number;
   lastUnwindPx: number;
   entryPlacedAt: number;
+  entrySpreadBps: number;
 }
 
 interface Stats {
@@ -115,8 +119,8 @@ export class RebateFarmer {
   private lastVolumeRefresh = 0;
 
   private readonly STALE_QUOTE_MS = 120_000;
-  private readonly UNWIND_COOLDOWN_MS = 15_000;
-  private readonly MAX_UNWIND_ATTEMPTS = 40;
+  private readonly UNWIND_COOLDOWN_MS = 10_000;
+  private readonly MAX_UNWIND_ATTEMPTS = 12;
   private readonly DIAG_INTERVAL = 60;
   private readonly VOLUME_LOG_INTERVAL = 30;
 
@@ -140,7 +144,7 @@ export class RebateFarmer {
     this.sessionStartTime = Date.now();
     this.sessionVolume = 0;
 
-    console.log("[rebate-farmer] v4.1 starting — single position + auto-discovery + safety guards");
+    console.log(`[rebate-farmer] v5 starting — ${MAX_CONCURRENT_TRADES} concurrent positions + stop-loss@${STOP_LOSS_BPS}bps + min-spread@${MIN_SPREAD_BPS}bps`);
 
     await this.loadAssetMeta();
     await this.discoverCoins();
@@ -149,7 +153,7 @@ export class RebateFarmer {
     this.resetStats();
 
     console.log(`[rebate-farmer]   coins: ${this.activeCoinList.join(", ")}`);
-    console.log(`[rebate-farmer]   baseSize: $${this.config.orderSizeUsd} | maxExposure: $${this.config.maxExposureUsd} | single position`);
+    console.log(`[rebate-farmer]   baseSize: $${this.config.orderSizeUsd} | maxExposure: $${this.config.maxExposureUsd} | ${MAX_CONCURRENT_TRADES} positions | stopLoss: ${STOP_LOSS_BPS}bps`);
     console.log(`[rebate-farmer]   reduceOnly unwinds | HL position guard | auto-discovery`);
 
     this.priceFeed.onUserEvent((event) => {
@@ -217,7 +221,7 @@ export class RebateFarmer {
     }
 
     // Adopt any orphaned HL positions first (separate from entry logic)
-    if (this.trades.size === 0) {
+    if (this.trades.size < MAX_CONCURRENT_TRADES) {
       await this.adoptOrphans();
     }
 
@@ -234,8 +238,8 @@ export class RebateFarmer {
       }
     }
 
-    // Find new opportunities if we have capacity AND no active trades
-    if (this.trades.size === 0) {
+    // Find new opportunities if we have capacity
+    if (this.trades.size < MAX_CONCURRENT_TRADES) {
       await this.findOpportunity(isDiag);
     }
   }
@@ -279,6 +283,7 @@ export class RebateFarmer {
           unwindAttempts: 0,
           lastUnwindPx: 0,
           entryPlacedAt: Date.now(),
+          entrySpreadBps: 10,
         });
         return; // Only adopt ONE orphan at a time
       }
@@ -366,8 +371,13 @@ export class RebateFarmer {
       return;
     }
 
-    // Dynamic sizing based on spread
-    const remainingCapacity = this.config.maxExposureUsd;
+    // Dynamic sizing — subtract current exposure from active trades
+    let currentExposure = 0;
+    for (const t of this.trades.values()) {
+      currentExposure += t.size * t.entryPx;
+    }
+    const remainingCapacity = this.config.maxExposureUsd - currentExposure;
+    if (remainingCapacity < 50) return;
     const dynamicSize = this.getDynamicSize(best.book.spreadBps, remainingCapacity);
     if (dynamicSize < 50) {
       console.log(`[rebate-farmer] SKIP ${best.coin}: dynamic size $${dynamicSize.toFixed(0)} too small`);
@@ -396,8 +406,8 @@ export class RebateFarmer {
     assetIndex: number,
     sizeUsd: number,
   ): Promise<void> {
-    // Hard guard: never enter if we already have a trade
-    if (this.trades.size > 0) return;
+    if (this.trades.size >= MAX_CONCURRENT_TRADES) return;
+    if (this.trades.has(coin)) return;
 
     const price = side === "buy" ? book.bestBid : book.bestAsk;
     const size = sizeUsd / price;
@@ -443,6 +453,7 @@ export class RebateFarmer {
         unwindAttempts: 0,
         lastUnwindPx: 0,
         entryPlacedAt: now,
+        entrySpreadBps: book.spreadBps,
       });
     }
 
@@ -461,6 +472,7 @@ export class RebateFarmer {
         unwindAttempts: 0,
         lastUnwindPx: 0,
         entryPlacedAt: now,
+        entrySpreadBps: book.spreadBps,
       });
       this.stats.volume += notional;
       console.log(`[rebate-farmer] Immediate fill on ${coin} — switching to unwind`);
@@ -551,6 +563,21 @@ export class RebateFarmer {
       return;
     }
 
+    // Hard stop-loss: check if mid has moved too far against us
+    const slBook = await this.fetchL2(coin);
+    if (slBook) {
+      const lossBps = side === "buy"
+        ? ((entryPx - slBook.mid) / entryPx) * 10_000
+        : ((slBook.mid - entryPx) / entryPx) * 10_000;
+      if (lossBps > STOP_LOSS_BPS) {
+        console.log(`[rebate-farmer] STOP LOSS ${coin}: mid moved ${lossBps.toFixed(1)}bps against entry — force closing`);
+        if (unwindOid) await cancelOrder(assetIndex, unwindOid).catch(() => {});
+        await this.forceClose(trade);
+        this.trades.delete(coin);
+        return;
+      }
+    }
+
     if (unwindOid) {
       const age = Date.now() - trade.lastUnwindAttempt;
       if (age < this.UNWIND_COOLDOWN_MS) return;
@@ -578,9 +605,11 @@ export class RebateFarmer {
 
     const unwindSide: "buy" | "sell" = side === "buy" ? "sell" : "buy";
     const feeBuffer = this.currentMakerBps * 2 / 10_000 + 0.0001;
+    const spreadTarget = (trade.entrySpreadBps * 0.45) / 10_000;
+    const targetBps = Math.max(feeBuffer, spreadTarget);
 
     let unwindPx: number;
-    const minProfit = entryPx * feeBuffer;
+    const minProfit = entryPx * targetBps;
     if (unwindSide === "sell") {
       const profitFloor = entryPx + minProfit;
       const aggressive = book.bestAsk * 0.9999;
@@ -743,7 +772,6 @@ export class RebateFarmer {
   ): void {
     const now = new Date().toISOString();
     this.supabase.from("quant_trades").insert({
-      strategy_id: "rebate-farmer",
       strategy_type: "rebate_farmer",
       coin,
       side: side === "buy" ? "long" : "short",
@@ -755,7 +783,7 @@ export class RebateFarmer {
       status,
       opened_at: now,
       closed_at: now,
-      meta: { strategy: "rebate-farmer-v4.1" },
+      meta: { strategy: "rebate-farmer-v5" },
     }).then(({ error }) => {
       if (error) console.error("[rebate-farmer] Supabase trade log failed:", error.message);
     });
@@ -1181,7 +1209,7 @@ export class RebateFarmer {
         makerBps: this.currentMakerBps,
         coinPerf: coinPerfSnapshot,
       },
-    }).then(() => {}).catch(() => {});
+    }).then(() => {}, () => {});
   }
 
   // ------------------------------------------------------------------
@@ -1273,7 +1301,7 @@ export class RebateFarmer {
 
     return {
       status: this.running ? "active" : "stopped",
-      version: "v4.1",
+      version: "v5",
       sessionUptime: elapsed,
       sessionTrades: s.roundTrips,
       sessionWins: s.wins,
@@ -1297,6 +1325,8 @@ export class RebateFarmer {
         orderSize: this.config.orderSizeUsd,
         maxExposure: this.config.maxExposureUsd,
         minSpreadBps: MIN_SPREAD_BPS,
+        maxConcurrent: MAX_CONCURRENT_TRADES,
+        stopLossBps: STOP_LOSS_BPS,
         coinCount: this.activeCoinList.length,
         coinList: this.activeCoinList,
       },

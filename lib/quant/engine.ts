@@ -90,15 +90,10 @@ export class QuantEngine {
     this.spikeDetector = new SpikeDetector(this.priceFeed);
     this.spikeReversion = new SpikeReversionStrategy(this.walletAddress);
     this.rebateFarmer = new RebateFarmer(this.priceFeed, {
-      // Only coins with confirmed 5+ bps spreads (low liquidity perps)
-      coins: [
-        "GRASS", "INJ", "WIF", "ONDO", "TIA",
-        "kBONK", "POPCAT", "kSHIB", "SPX", "CAKE",
-        "MNT", "GRIFFAIN", "MELANIA", "STRK",
-      ],
-      orderSizeUsd: 50,    // smaller orders to reduce risk while tuning
-      maxExposureUsd: 150,
-      cycleSleepMs: 1000,  // slower cycle — less aggressive while we learn
+      coins: [],
+      orderSizeUsd: 200,
+      maxExposureUsd: 400,
+      cycleSleepMs: 1000,
       maxDailyLossUsd: 10,
     });
   }
@@ -117,8 +112,8 @@ export class QuantEngine {
     await new Promise((r) => setTimeout(r, 2000));
     console.log(`[engine] Price feed: ${this.priceFeed.isConnected ? "connected" : "connecting"} (${this.priceFeed.priceCount} prices)`);
 
-    // Close ALL legacy positions on startup (from old strategies)
-    await this.closeAllLegacyPositions();
+    // Close legacy positions, but skip coins managed by rebate farmer
+    await this.closeAllLegacyPositions(new Set(this.rebateFarmer.managedCoins));
 
     // Keep position guard for SL/TP on any remaining positions
     await this.positionGuard.start();
@@ -161,17 +156,18 @@ export class QuantEngine {
     console.log("[engine] Stopped.");
   }
 
-  private async closeAllLegacyPositions(): Promise<void> {
+  private async closeAllLegacyPositions(farmerCoins: Set<string>): Promise<void> {
     try {
-      // Cancel ALL resting orders first (stale unwinds, etc.)
-      const cancelled = await cancelAllOpenOrders();
-      if (cancelled > 0) {
-        console.log(`[engine] Cancelled ${cancelled} stale orders`);
-      }
-
       const positions = await fetchPositions();
       const open = positions.filter((p) => parseFloat(p.position.szi) !== 0);
-      if (open.length === 0) {
+      const legacy = open.filter((p) => !farmerCoins.has(p.position.coin));
+      const adopted = open.filter((p) => farmerCoins.has(p.position.coin));
+
+      if (adopted.length > 0) {
+        console.log(`[engine] Skipping ${adopted.length} position(s) managed by rebate farmer: ${adopted.map(p => p.position.coin).join(", ")}`);
+      }
+
+      if (legacy.length === 0) {
         console.log("[engine] No legacy positions to close");
         return;
       }
@@ -201,8 +197,8 @@ export class QuantEngine {
       }
       const allMids = (await midsRes.json()) as Record<string, string> | null;
 
-      console.log(`[engine] Closing ${open.length} legacy positions...`);
-      for (const p of open) {
+      console.log(`[engine] Closing ${legacy.length} legacy positions...`);
+      for (const p of legacy) {
         const coin = p.position.coin;
         const szi = parseFloat(p.position.szi);
         const isBuy = szi < 0;
