@@ -33,6 +33,8 @@ export class PositionGuard {
   private running = false;
   /** Prevent duplicate close attempts for the same trade */
   private closingSet: Set<string> = new Set();
+  /** Trades that failed with "would increase position" — skip until next refresh */
+  private skippedTrades: Set<string> = new Set();
   private lastCheckMs = 0;
   private checksRun = 0;
   private closesRun = 0;
@@ -100,6 +102,7 @@ export class PositionGuard {
       .eq("status", "open");
 
     this.trades.clear();
+    this.skippedTrades.clear();
     for (const t of data ?? []) {
       const meta = (t.meta ?? {}) as Record<string, unknown>;
       const sl = typeof meta.stopLoss === "number" ? meta.stopLoss : null;
@@ -128,7 +131,7 @@ export class PositionGuard {
     this.checksRun++;
 
     for (const [id, trade] of this.trades) {
-      if (this.closingSet.has(id)) continue;
+      if (this.closingSet.has(id) || this.skippedTrades.has(id)) continue;
 
       const price = this.priceFeed.getPrice(trade.coin);
       if (!price || price <= 0) continue;
@@ -137,7 +140,8 @@ export class PositionGuard {
       if (trigger) {
         this.closingSet.add(id);
         this.executeGuardClose(trade, price, trigger).catch((e) => {
-          console.error(`[guard] Close error ${trade.coin}:`, (e as Error).message);
+          const msg = (e as Error).message;
+          console.error(`[guard] Close error ${trade.coin}:`, msg);
           this.closingSet.delete(id);
         });
       }
@@ -242,7 +246,15 @@ export class PositionGuard {
         `pnl=${pnl.toFixed(4)} (entry=${trade.entry_px.toFixed(4)}, exit=${fillPx.toFixed(4)})`,
       );
     } else {
-      console.error(`[guard] Failed to close ${trade.coin}: ${result.error}`);
+      const err = result.error ?? "";
+      if (err.includes("increase position")) {
+        console.warn(
+          `[guard] Skipping ${trade.coin} ${trade.side}: net HL position is opposite direction (would increase)`,
+        );
+        this.skippedTrades.add(trade.id);
+      } else {
+        console.error(`[guard] Failed to close ${trade.coin}: ${err}`);
+      }
     }
 
     this.closingSet.delete(trade.id);
