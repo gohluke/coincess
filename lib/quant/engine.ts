@@ -252,7 +252,7 @@ export class QuantEngine {
     const start = Date.now();
 
     try {
-      const [accountValue, rawPositions, strategies, state] = await Promise.all([
+      const [accountValue, rawPositions, , state] = await Promise.all([
         fetchAccountValue(),
         fetchPositions(),
         this.getActiveStrategies(),
@@ -315,11 +315,10 @@ export class QuantEngine {
       }
 
       const elapsed = Date.now() - start;
-      const shouldLog = this.tickCount <= 3 || this.tickCount % 10 === 0 || allSignals.length > 0;
-      if (shouldLog) {
+      if (this.tickCount <= 3 || this.tickCount % 10 === 0) {
         console.log(
           `[engine] Tick #${this.tickCount}: $${accountValue.toFixed(2)} | ` +
-          `${strategies.length} strats | ${positions.length} pos | ${allSignals.length} signals | ${elapsed}ms`,
+          `${positions.length} pos | ${elapsed}ms`,
         );
       }
     } catch (err) {
