@@ -165,22 +165,39 @@ export class QuantEngine {
         console.log("[engine] No legacy positions to close");
         return;
       }
+
+      // Fetch current mid prices for accurate close orders
+      const midsRes = await fetch(`${HL_API}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "allMids" }),
+      });
+      const allMids = (await midsRes.json()) as Record<string, string> | null;
+
       console.log(`[engine] Closing ${open.length} legacy positions...`);
       for (const p of open) {
         const coin = p.position.coin;
         const szi = parseFloat(p.position.szi);
-        const isBuy = szi < 0; // close short = buy, close long = sell
-        const markPx = parseFloat(p.position.entryPx);
+        const isBuy = szi < 0;
+        const currentMid = allMids ? parseFloat(allMids[coin] ?? "0") : 0;
+        if (currentMid <= 0) {
+          console.warn(`[engine] No mid price for ${coin}, skipping`);
+          continue;
+        }
         try {
           const result = await closePosition({
             coin,
             size: Math.abs(szi),
             isBuy,
-            markPrice: markPx,
+            markPrice: currentMid,
             assetIndex: 0,
           });
           const side = szi > 0 ? "LONG" : "SHORT";
-          console.log(`[engine] Closed ${coin} ${side} ${Math.abs(szi)}: ${result.success ? "OK" : result.error}`);
+          const upnl = parseFloat(p.position.unrealizedPnl);
+          console.log(
+            `[engine] Closed ${coin} ${side} ${Math.abs(szi)} @ $${currentMid.toFixed(4)}: ` +
+            `${result.success ? "OK" : result.error} (uPnL: $${upnl.toFixed(4)})`,
+          );
         } catch (e) {
           console.error(`[engine] Failed to close ${coin}:`, (e as Error).message);
         }

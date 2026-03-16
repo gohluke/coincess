@@ -635,7 +635,7 @@ export class RebateFarmer {
     this.supabase.from("ai_agent_logs").insert({
       action: "rebate_farmer_daily",
       details: { ...s, net, date: new Date().toISOString().split("T")[0] },
-    }).catch(() => {});
+    }).then(() => {}).catch(() => {});
   }
 
   logStatus(): void {
