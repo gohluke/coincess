@@ -58,22 +58,17 @@ async function main(): Promise<void> {
   const hasAiKeys = AI_ENV.every((k) => !!process.env[k]);
 
   console.log("┌──────────────────────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server  v7.0                  │");
-  console.log("│  SAFE MODE: Rebate Farmer ONLY                           │");
-  console.log("│  All legacy strategies DISABLED                           │");
+  console.log("│     Coincess Quant Trading Server  v8.0                  │");
+  console.log("│  Rebate Farmer v3: Volume Tracking + Smart Routing       │");
+  console.log("│  ─────────────────────────────────────────────────────── │");
+  console.log("│  Parallel L2 scanning | Best-spread-first execution      │");
+  console.log("│  Per-coin win rate tracking | Adaptive fee tiers          │");
+  console.log("│  Live 14-day volume + fee tier progression               │");
   console.log("│  One position at a time | Maker-only unwind              │");
-  console.log("│  Min spread 7bps | Race-condition proof                   │");
-  console.log("│  Auto-closes all legacy positions on startup             │");
   console.log("└──────────────────────────────────────────────────────────┘");
   console.log();
   console.log(`Account: ${process.env.HL_ACCOUNT_ADDRESS}`);
   console.log(`Time:    ${new Date().toISOString()}`);
-  console.log(`AI:      ${hasAiKeys ? "Gemini 2.5 Flash (5-min cycle + technical analysis)" : "MISSING KEYS (ai_agent strategy disabled)"}`);
-  if (!hasAiKeys) {
-    const missing = AI_ENV.filter((k) => !process.env[k]);
-    console.warn(`  Missing: ${missing.join(", ")}`);
-    console.warn("  AI Agent strategies will fail until these are set.");
-  }
   console.log();
 
   const engine = new QuantEngine();

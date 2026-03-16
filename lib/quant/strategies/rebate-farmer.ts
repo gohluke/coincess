@@ -17,9 +17,18 @@ import { REBATE_FARMER_DEFAULTS } from "../types";
 
 const HL_API = "https://api.hyperliquid.xyz";
 
-const MAKER_FEE_BPS = 1.5;
 const MIN_SPREAD_BPS = 7;
-const MIN_IMBALANCE = 0.10; // need clear directional bias
+const MIN_IMBALANCE = 0.10;
+
+// Hyperliquid fee tiers (14-day rolling volume)
+const FEE_TIERS = [
+  { minVol: 0,           makerBps: 1.5,  takerBps: 4.5,  label: "Tier 0" },
+  { minVol: 1_000_000,   makerBps: 1.2,  takerBps: 4.0,  label: "Tier 1" },
+  { minVol: 5_000_000,   makerBps: 1.0,  takerBps: 3.5,  label: "Tier 2" },
+  { minVol: 25_000_000,  makerBps: 0.8,  takerBps: 3.0,  label: "Tier 3" },
+  { minVol: 100_000_000, makerBps: 0.6,  takerBps: 2.5,  label: "Tier 4" },
+  { minVol: 500_000_000, makerBps: 0.4,  takerBps: 2.0,  label: "Tier 5" },
+];
 
 interface L2Book {
   bestBid: number;
@@ -54,6 +63,14 @@ interface Stats {
   losses: number;
 }
 
+interface CoinPerf {
+  trades: number;
+  wins: number;
+  netPnl: number;
+  avgSpreadBps: number;
+  totalSpread: number;
+}
+
 export class RebateFarmer {
   private config: RebateFarmerConfig;
   private priceFeed: PriceFeed;
@@ -71,13 +88,26 @@ export class RebateFarmer {
   private statsResetDay = -1;
 
   private cycleCount = 0;
-  private coinIndex = 0; // rotate through coins
-  private cycling = false; // prevent overlapping cycles
+  private coinIndex = 0;
+  private cycling = false;
+
+  // Volume & fee tier tracking
+  private sessionStartTime = Date.now();
+  private sessionVolume = 0;
+  private allTimeVolume = 0;
+  private currentMakerBps = 1.5;
+  private currentFeeTier = "Tier 0";
+  private lastFeeTierCheck = 0;
+  private readonly FEE_TIER_CHECK_INTERVAL = 300_000; // re-check every 5 min
+
+  // Per-coin performance tracking (prioritize best performers)
+  private coinPerf: Map<string, CoinPerf> = new Map();
 
   private readonly STALE_QUOTE_MS = 8_000;
   private readonly UNWIND_COOLDOWN_MS = 10_000;
-  private readonly MAX_UNWIND_ATTEMPTS = 30; // ~5 min at 10s cooldown
-  private readonly DIAG_INTERVAL = 60; // log diagnostics every 60 cycles
+  private readonly MAX_UNWIND_ATTEMPTS = 30;
+  private readonly DIAG_INTERVAL = 60;
+  private readonly VOLUME_LOG_INTERVAL = 30; // log volume stats every 30 cycles
 
   constructor(priceFeed: PriceFeed, config?: Partial<RebateFarmerConfig>) {
     this.config = { ...REBATE_FARMER_DEFAULTS, ...config };
@@ -108,13 +138,17 @@ export class RebateFarmer {
   async start(): Promise<void> {
     if (this.running) return;
     this.running = true;
+    this.sessionStartTime = Date.now();
+    this.sessionVolume = 0;
 
-    console.log("[rebate-farmer] v2 starting — risk-free mode");
+    console.log("[rebate-farmer] v3 starting — risk-free mode + volume tracking");
     console.log(`[rebate-farmer]   coins: ${this.config.coins.join(", ")}`);
     console.log(`[rebate-farmer]   orderSize: $${this.config.orderSizeUsd} | minSpread: ${MIN_SPREAD_BPS}bps`);
     console.log(`[rebate-farmer]   ONE position at a time | maker-only unwind`);
 
     await this.loadAssetMeta();
+    await this.fetchFeeTier();
+    await this.loadAllTimeVolume();
     this.resetStats();
 
     this.priceFeed.onUserEvent((event) => {
@@ -169,6 +203,14 @@ export class RebateFarmer {
     }
 
     const isDiag = this.cycleCount % this.DIAG_INTERVAL === 0;
+    const isVolLog = this.cycleCount % this.VOLUME_LOG_INTERVAL === 0;
+
+    if (isVolLog) this.logVolumeStatus();
+
+    // Refresh fee tier periodically
+    if (Date.now() - this.lastFeeTierCheck > this.FEE_TIER_CHECK_INTERVAL) {
+      this.fetchFeeTier().catch(() => {});
+    }
 
     switch (this.state.phase) {
       case "idle":
@@ -188,19 +230,21 @@ export class RebateFarmer {
   // ------------------------------------------------------------------
 
   private async findOpportunity(diag: boolean): Promise<void> {
-    const coins = this.config.coins;
+    const coins = this.getPrioritizedCoins();
     if (coins.length === 0) return;
 
-    // Rotate through coins round-robin
-    const startIdx = this.coinIndex;
-    for (let i = 0; i < coins.length; i++) {
-      const idx = (startIdx + i) % coins.length;
-      const coin = coins[idx];
+    // Batch-fetch L2 for all coins in parallel (much faster than sequential)
+    const books = await Promise.all(
+      coins.map(async (coin) => ({ coin, book: await this.fetchL2(coin) })),
+    );
+
+    // Find best opportunity: highest spread that meets thresholds
+    let best: { coin: string; book: L2Book; assetIndex: number; score: number } | null = null;
+
+    for (const { coin, book } of books) {
+      if (!book) continue;
       const assetIndex = this.assetIndices.get(coin);
       if (assetIndex === undefined) continue;
-
-      const book = await this.fetchL2(coin);
-      if (!book) continue;
 
       if (diag) {
         const imb = book.imbalance >= 0 ? `+${book.imbalance.toFixed(2)}` : book.imbalance.toFixed(2);
@@ -212,14 +256,22 @@ export class RebateFarmer {
       if (book.spreadBps < MIN_SPREAD_BPS) continue;
       if (Math.abs(book.imbalance) < MIN_IMBALANCE) continue;
 
-      const side: "buy" | "sell" = book.imbalance > 0 ? "buy" : "sell";
-      this.coinIndex = (idx + 1) % coins.length;
+      // Score = spread * |imbalance| * coin_win_rate_bonus
+      const perf = this.coinPerf.get(coin);
+      const winBonus = perf && perf.trades >= 3
+        ? 0.5 + (perf.wins / perf.trades)
+        : 1.0;
+      const score = book.spreadBps * Math.abs(book.imbalance) * winBonus;
 
-      await this.placeEntry(coin, side, book, assetIndex);
-      return; // placed one quote, done for this cycle
+      if (!best || score > best.score) {
+        best = { coin, book, assetIndex, score };
+      }
     }
 
-    this.coinIndex = (startIdx + 1) % coins.length;
+    if (best) {
+      const side: "buy" | "sell" = best.book.imbalance > 0 ? "buy" : "sell";
+      await this.placeEntry(best.coin, side, best.book, best.assetIndex);
+    }
   }
 
   private async placeEntry(
@@ -371,7 +423,7 @@ export class RebateFarmer {
     if (!book) return;
 
     const unwindSide: "buy" | "sell" = side === "buy" ? "sell" : "buy";
-    const feeBuffer = MAKER_FEE_BPS * 2 / 10_000 + 0.0002; // fees + 2bps extra
+    const feeBuffer = this.currentMakerBps * 2 / 10_000 + 0.0002;
 
     let unwindPx: number;
     if (unwindSide === "sell") {
@@ -457,14 +509,19 @@ export class RebateFarmer {
     const pnl = this.state.side === "buy"
       ? (exitPx - entryPx) * size
       : (entryPx - exitPx) * size;
-    const fees = size * exitPx * MAKER_FEE_BPS / 10_000;
+    const fees = size * exitPx * this.currentMakerBps / 10_000;
     const net = pnl - fees;
+    const tradeVol = size * entryPx + size * exitPx;
 
     console.log(`[rebate-farmer] LOSS ${coin}: net $${net.toFixed(4)}`);
     this.stats.roundTrips++;
     this.stats.grossPnl += pnl;
     this.stats.fees += fees;
+    this.stats.volume += tradeVol;
+    this.sessionVolume += tradeVol;
+    this.allTimeVolume += tradeVol;
     this.stats.losses++;
+    this.updateCoinPerf(coin, false, net, 0);
     if (net < 0) this.dailyLoss += Math.abs(net);
   }
 
@@ -475,24 +532,36 @@ export class RebateFarmer {
     const pnl = side === "buy"
       ? (exitPx - entryPx) * size
       : (entryPx - exitPx) * size;
-    const fees = size * entryPx * MAKER_FEE_BPS * 2 / 10_000;
+    const fees = size * entryPx * this.currentMakerBps * 2 / 10_000;
     const net = pnl - fees;
+    const tradeVol = size * entryPx + size * exitPx; // both legs count
 
     this.stats.roundTrips++;
     this.stats.grossPnl += pnl;
     this.stats.fees += fees;
-    this.stats.volume += size * exitPx;
+    this.stats.volume += tradeVol;
+    this.sessionVolume += tradeVol;
+    this.allTimeVolume += tradeVol;
     if (net >= 0) this.stats.wins++;
     else {
       this.stats.losses++;
       this.dailyLoss += Math.abs(net);
     }
 
+    // Track per-coin performance
+    const spreadBps = side === "buy"
+      ? ((exitPx - entryPx) / entryPx) * 10_000
+      : ((entryPx - exitPx) / entryPx) * 10_000;
+    this.updateCoinPerf(coin, net >= 0, net, spreadBps);
+
     const symbol = net >= 0 ? "+" : "";
+    const sessHrs = (Date.now() - this.sessionStartTime) / 3_600_000;
+    const hourlyRate = sessHrs > 0.001 ? (this.stats.grossPnl - this.stats.fees) / sessHrs : 0;
     console.log(
       `[rebate-farmer] ROUND TRIP ${coin}: gross=${symbol}$${pnl.toFixed(4)} ` +
       `fees=-$${fees.toFixed(4)} net=${symbol}$${net.toFixed(4)} ` +
-      `[${this.stats.wins}W/${this.stats.losses}L]`,
+      `[${this.stats.wins}W/${this.stats.losses}L] vol=$${this.sessionVolume.toFixed(0)} ` +
+      `rate=$${hourlyRate.toFixed(2)}/hr`,
     );
 
     this.state = this.freshState();
@@ -608,6 +677,179 @@ export class RebateFarmer {
   }
 
   // ------------------------------------------------------------------
+  // Volume & fee tier tracking
+  // ------------------------------------------------------------------
+
+  private async fetchFeeTier(): Promise<void> {
+    try {
+      const address = process.env.HL_ACCOUNT_ADDRESS;
+      if (!address) return;
+
+      const res = await fetch(`${HL_API}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "userFees", user: address }),
+      });
+      const data = await res.json() as {
+        userCrossRate?: string;
+        userAddRate?: string;
+        activeReferralDiscount?: string;
+        dailyUserVlm?: Array<{ date: string; userCrossVlm: string; userAddVlm: string }>;
+      };
+
+      if (data.userAddRate) {
+        const realMakerRate = parseFloat(data.userAddRate);
+        this.currentMakerBps = realMakerRate * 10_000;
+      }
+
+      // Calculate 14-day rolling volume from daily data
+      let rollingVol = 0;
+      if (data.dailyUserVlm) {
+        const now = new Date();
+        for (const day of data.dailyUserVlm) {
+          const dayDate = new Date(day.date);
+          const daysAgo = (now.getTime() - dayDate.getTime()) / 86_400_000;
+          if (daysAgo <= 14) {
+            rollingVol += parseFloat(day.userCrossVlm || "0") + parseFloat(day.userAddVlm || "0");
+          }
+        }
+      }
+
+      // Determine current tier
+      let tier = FEE_TIERS[0];
+      for (const t of FEE_TIERS) {
+        if (rollingVol >= t.minVol) tier = t;
+      }
+      this.currentFeeTier = tier.label;
+
+      // Find next tier
+      const tierIdx = FEE_TIERS.indexOf(tier);
+      const nextTier = tierIdx < FEE_TIERS.length - 1 ? FEE_TIERS[tierIdx + 1] : null;
+      const volToNext = nextTier ? nextTier.minVol - rollingVol : 0;
+
+      console.log(
+        `[rebate-farmer] FEE TIER: ${tier.label} (maker=${this.currentMakerBps}bps) | ` +
+        `14d vol: $${this.fmtVol(rollingVol)}` +
+        (nextTier ? ` | $${this.fmtVol(volToNext)} to ${nextTier.label} (${nextTier.makerBps}bps)` : " | MAX TIER"),
+      );
+
+      this.lastFeeTierCheck = Date.now();
+    } catch (e) {
+      console.error("[rebate-farmer] fetchFeeTier failed:", (e as Error).message);
+    }
+  }
+
+  private async loadAllTimeVolume(): Promise<void> {
+    try {
+      const { data } = await this.supabase
+        .from("ai_agent_logs")
+        .select("details")
+        .eq("action", "rebate_farmer_daily")
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      if (data) {
+        this.allTimeVolume = data.reduce((sum, row) => {
+          const vol = (row.details as Record<string, number>)?.volume ?? 0;
+          return sum + vol;
+        }, 0);
+        console.log(`[rebate-farmer] All-time logged volume: $${this.fmtVol(this.allTimeVolume)}`);
+      }
+    } catch {}
+  }
+
+  private logVolumeStatus(): void {
+    const sessHrs = (Date.now() - this.sessionStartTime) / 3_600_000;
+    const net = this.stats.grossPnl - this.stats.fees;
+    const hourlyRate = sessHrs > 0.01 ? net / sessHrs : 0;
+    const hourlyVol = sessHrs > 0.01 ? this.sessionVolume / sessHrs : 0;
+    const winRate = this.stats.roundTrips > 0
+      ? (this.stats.wins / this.stats.roundTrips * 100).toFixed(0)
+      : "0";
+    const dailyVol24h = hourlyVol * 24;
+
+    // Projected time to next tier
+    let tierProjection = "";
+    const tierIdx = FEE_TIERS.findIndex(t => t.label === this.currentFeeTier);
+    if (tierIdx < FEE_TIERS.length - 1 && hourlyVol > 0) {
+      const nextTier = FEE_TIERS[tierIdx + 1];
+      const volNeeded = nextTier.minVol - this.sessionVolume;
+      if (volNeeded > 0) {
+        const hoursToNext = volNeeded / hourlyVol;
+        const daysToNext = hoursToNext / 24;
+        tierProjection = daysToNext < 1
+          ? ` | ${nextTier.label} in ~${hoursToNext.toFixed(0)}h`
+          : ` | ${nextTier.label} in ~${daysToNext.toFixed(0)}d`;
+      }
+    }
+
+    console.log(
+      `[rebate-farmer] ` +
+      `SESSION: ${sessHrs.toFixed(1)}h | ${this.stats.roundTrips} trades (${winRate}% win) | ` +
+      `net $${net.toFixed(4)} ($${hourlyRate.toFixed(2)}/hr)`,
+    );
+    console.log(
+      `[rebate-farmer] ` +
+      `VOLUME: session $${this.fmtVol(this.sessionVolume)} | today $${this.fmtVol(this.stats.volume)} | ` +
+      `rate $${this.fmtVol(hourlyVol)}/hr ($${this.fmtVol(dailyVol24h)}/day proj)`,
+    );
+    console.log(
+      `[rebate-farmer] ` +
+      `FEES: ${this.currentFeeTier} (${this.currentMakerBps}bps maker)${tierProjection}`,
+    );
+
+    // Log top coins
+    const topCoins = [...this.coinPerf.entries()]
+      .sort((a, b) => b[1].netPnl - a[1].netPnl)
+      .slice(0, 5);
+    if (topCoins.length > 0) {
+      const coinStr = topCoins
+        .map(([coin, p]) => {
+          const wr = p.trades > 0 ? (p.wins / p.trades * 100).toFixed(0) : "0";
+          return `${coin}(${p.trades}t ${wr}%w $${p.netPnl.toFixed(3)})`;
+        })
+        .join(" ");
+      console.log(`[rebate-farmer] TOP COINS: ${coinStr}`);
+    }
+  }
+
+  private updateCoinPerf(coin: string, isWin: boolean, net: number, spreadBps: number): void {
+    let perf = this.coinPerf.get(coin);
+    if (!perf) {
+      perf = { trades: 0, wins: 0, netPnl: 0, avgSpreadBps: 0, totalSpread: 0 };
+      this.coinPerf.set(coin, perf);
+    }
+    perf.trades++;
+    if (isWin) perf.wins++;
+    perf.netPnl += net;
+    perf.totalSpread += spreadBps;
+    perf.avgSpreadBps = perf.totalSpread / perf.trades;
+  }
+
+  private getPrioritizedCoins(): string[] {
+    const coins = [...this.config.coins];
+    if (this.coinPerf.size < 5) return coins;
+
+    // Sort by profitability: coins with more wins and higher PnL go first
+    return coins.sort((a, b) => {
+      const pa = this.coinPerf.get(a);
+      const pb = this.coinPerf.get(b);
+      if (!pa && !pb) return 0;
+      if (!pa) return 1;
+      if (!pb) return -1;
+      const scoreA = pa.netPnl * (pa.wins / Math.max(pa.trades, 1));
+      const scoreB = pb.netPnl * (pb.wins / Math.max(pb.trades, 1));
+      return scoreB - scoreA;
+    });
+  }
+
+  private fmtVol(v: number): string {
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M`;
+    if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
+    return v.toFixed(0);
+  }
+
+  // ------------------------------------------------------------------
   // Stats
   // ------------------------------------------------------------------
 
@@ -628,13 +870,27 @@ export class RebateFarmer {
   private logStats(): void {
     const s = this.stats;
     const net = s.grossPnl - s.fees;
+    const winRate = s.roundTrips > 0 ? (s.wins / s.roundTrips * 100).toFixed(0) : "0";
     console.log(
-      `[rebate-farmer] Summary: ${s.roundTrips} RTs (${s.wins}W/${s.losses}L) | ` +
-      `vol $${s.volume.toFixed(0)} | net $${net.toFixed(4)}`,
+      `[rebate-farmer] DAILY SUMMARY: ${s.roundTrips} trades (${winRate}% win, ${s.wins}W/${s.losses}L) | ` +
+      `vol $${this.fmtVol(s.volume)} | net $${net.toFixed(4)} | ` +
+      `${this.currentFeeTier} (${this.currentMakerBps}bps)`,
     );
+
+    const coinPerfSnapshot: Record<string, CoinPerf> = {};
+    for (const [coin, perf] of this.coinPerf) coinPerfSnapshot[coin] = { ...perf };
+
     this.supabase.from("ai_agent_logs").insert({
       action: "rebate_farmer_daily",
-      details: { ...s, net, date: new Date().toISOString().split("T")[0] },
+      details: {
+        ...s,
+        net,
+        date: new Date().toISOString().split("T")[0],
+        sessionVolume: this.sessionVolume,
+        feeTier: this.currentFeeTier,
+        makerBps: this.currentMakerBps,
+        coinPerf: coinPerfSnapshot,
+      },
     }).then(() => {}).catch(() => {});
   }
 
@@ -643,9 +899,12 @@ export class RebateFarmer {
     const net = s.grossPnl - s.fees;
     const phase = this.state.phase;
     const activeCoin = this.state.coin ?? "—";
+    const sessHrs = (Date.now() - this.sessionStartTime) / 3_600_000;
+    const hourlyRate = sessHrs > 0.01 ? net / sessHrs : 0;
     console.log(
       `[rebate-farmer] ${phase}${phase !== "idle" ? ` (${activeCoin})` : ""} | ` +
-      `${s.roundTrips} RTs (${s.wins}W/${s.losses}L) | net $${net.toFixed(4)} | vol $${s.volume.toFixed(0)}`,
+      `${s.roundTrips} trades (${s.wins}W/${s.losses}L) | net $${net.toFixed(4)} ($${hourlyRate.toFixed(2)}/hr) | ` +
+      `vol $${this.fmtVol(this.sessionVolume)} | ${this.currentFeeTier}`,
     );
   }
 
