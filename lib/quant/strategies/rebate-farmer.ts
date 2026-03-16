@@ -20,8 +20,9 @@ import { REBATE_FARMER_DEFAULTS } from "../types";
 const HL_API = "https://api.hyperliquid.xyz";
 
 const MAKER_FEE_BPS = 1.5; // Tier 0 maker fee: 0.015%
-// Need spread > 2× maker fee + healthy buffer for slippage/adverse selection
-const MIN_PROFITABLE_SPREAD_BPS = 5; // only trade when spread > 5 bps (was 3, caused losses)
+// Need spread >> 2× maker fee to survive adverse selection
+// STRK at 7.4bps was profitable. WIF at 5bps lost money.
+const MIN_PROFITABLE_SPREAD_BPS = 7;
 
 interface L2Snapshot {
   bestBid: number;
