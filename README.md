@@ -51,7 +51,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 The automation page is a three-tab dashboard for managing all automated trading activity.
 
 #### Tab 1: Server (24/7 Quant Engine)
-Runs on a dedicated Contabo VPS via `pm2` — no browser needed. The quant engine ticks every 30 seconds, evaluating all active strategies and placing orders via the Hyperliquid API wallet.
+Runs on a dedicated server via `pm2` — no browser needed. The quant engine ticks every 30 seconds, evaluating all active strategies and placing orders via the Hyperliquid API wallet.
 
 - **Engine status bar** — live indicator (running / paused / error), last tick time, "Reset Engine" button when in error state (clears stale drawdown, resets peak equity to current NAV)
 - **Key metrics row** — Total P&L (computed from actual closed trades + unrealized + funding), Funding Income, Unrealized P&L, NAV (live account value), Gross Exposure, Max Drawdown
@@ -83,7 +83,7 @@ Strategy backtesting and performance analysis tools.
 - **Data pipeline status** — candle storage counts, instruments tracked, data freshness
 
 #### Architecture
-- **Server strategies**: Contabo VPS runs `scripts/quant-server.ts` via pm2; signs orders with Hyperliquid API wallet key; writes to Supabase (`quant_strategies`, `quant_trades`, `quant_state`); frontend reads via `/api/quant/status` and `/api/quant/trades` API routes; AI Agent uses Vercel AI SDK with `generateObject()` for structured JSON outputs from both Gemini (analyst) and GPT-4o (trader)
+- **Server strategies**: Dedicated server runs `scripts/quant-server.ts` via pm2; signs orders with Hyperliquid API wallet key; writes to Supabase (`quant_strategies`, `quant_trades`, `quant_state`); frontend reads via `/api/quant/status` and `/api/quant/trades` API routes; AI Agent uses Vercel AI SDK with `generateObject()` for structured JSON outputs from both Gemini (analyst) and GPT-4o (trader)
 - **Browser strategies**: Zustand store + IndexedDB; executes in the browser's event loop; uses the connected wallet for signing
 - **PnL accuracy**: Fills are deduplicated by `tid` across main and xyz dexes; total PnL is computed from closed trade records (not stale engine state); funding income fetched separately from Hyperliquid's funding API
 - **Risk management**: 80% max total exposure, 50% max per position, 8% daily loss limit (pauses trading for 24h), 20% kill switch (stops engine, requires manual reset), $100 reserve; position sizes scale down with drawdown (4x multiplier)
@@ -204,7 +204,7 @@ Strategy backtesting and performance analysis tools.
 - **Engine reset** — "Reset Engine" button clears stale drawdown, resets peak equity to current NAV, and clears error state; available inline in the risk alert banner and in the header when engine is in error
 - **Live dashboard** — strategy cards with play/pause/delete, P&L stats, open positions, trade log, risk gauges; **borderless card design** matching `/dashboard` aesthetic (no outline borders, `gap-2` metric grids, system font for numbers)
 - **Accurate PnL** — total P&L computed from actual closed trade records (not stale engine state); fills deduplicated by `tid` to prevent double-counting from main+xyz dex overlap
-- **Server-side execution** — runs via `scripts/quant-server.ts` on Contabo VPS using pm2, no browser wallet popups
+- **Server-side execution** — runs via `scripts/quant-server.ts` on a dedicated server using pm2, no browser wallet popups
 - **API Wallet** — uses Hyperliquid API wallet key (separate from main wallet) for programmatic order signing
 - **Coincess volume attribution** — bot orders include the Coincess builder field and record notional volume, so all automated trades count toward platform volume and appear on the Coincess leaderboard
 - **Server-side Supabase tracking** — after each successful order, the executor calls `upsert_coincess_trader` with trade notional to increment both order count and Coincess-specific volume (non-blocking, won't fail trades if Supabase is down)
@@ -383,100 +383,21 @@ npm run dev
 - [ ] **Analytics** — the PHI tracker is already included; add Google Analytics or Plausible if desired
 - [ ] **Apple App Store / Google Play** — use PWABuilder or Capacitor to wrap the PWA into native apps
 
-### Fleet Management (100 Bot Accounts)
+### Fleet Management (Multi-Account Bot Runner)
 
-```bash
-# 1. Run migration in Supabase SQL Editor (adds coincess_volume + coincess_accounts table)
-#    Copy scripts/migrate-add-volume.sql into your Supabase Dashboard SQL Editor
+Scripts for managing multiple trading accounts running different strategies simultaneously. Supports account generation, agent approval, strategy distribution, and fleet-wide status monitoring.
 
-# 2. Generate 100 wallets
-npx tsx scripts/generate-accounts.ts 100
+### Twitter/X Growth Engine
 
-# 3. Whitelist all bot accounts for zero builder fees
-npx tsx scripts/whitelist-accounts.ts
+Automated content pipeline posting market data, funding rate alpha, educational threads, and engagement content to Twitter/X on a configurable schedule. Pulls live data from Hyperliquid for market movers, volume stats, and funding opportunities.
 
-# 4. Fund accounts with USDC on Hyperliquid (deposit to each address)
+### Roadmap
 
-# 5. Approve agent wallets for all funded accounts
-npx tsx scripts/approve-agents.ts
-
-# 6. Start the fleet
-npx tsx scripts/fleet-runner.ts
-
-# Check fleet status
-npx tsx scripts/fleet-runner.ts --status
-
-# Run only momentum bots
-npx tsx scripts/fleet-runner.ts --strategy momentum
-
-# Run first 10 accounts only
-npx tsx scripts/fleet-runner.ts --limit 10
-```
-
-### Twitter/X Growth Engine (@coincess)
-
-Automated content posting to grow the @coincess Twitter account.
-
-```bash
-# Add to .env.local:
-# X_API_KEY=your_api_key
-# X_API_SECRET=your_api_secret
-# X_ACCESS_TOKEN=your_access_token
-# X_ACCESS_TOKEN_SECRET=your_access_token_secret
-
-# Preview all content types (no posting)
-npx tsx scripts/twitter-engine.ts --dry-run --preview all
-
-# Post one piece of content immediately
-npx tsx scripts/twitter-engine.ts --post market    # market movers
-npx tsx scripts/twitter-engine.ts --post funding   # funding rate alpha
-npx tsx scripts/twitter-engine.ts --post volume    # volume update
-npx tsx scripts/twitter-engine.ts --post thread    # educational thread
-npx tsx scripts/twitter-engine.ts --post engage    # engagement post
-
-# Run the scheduler (posts 8x/day at optimal times)
-npx tsx scripts/twitter-engine.ts
-
-# Production (24/7 on VPS via pm2)
-pm2 start "npx tsx scripts/twitter-engine.ts" --name coincess-twitter
-```
-
-**Daily schedule (UTC):**
-| Time | Content |
-|------|---------|
-| 07:00 | Market Movers (top gainers/losers) |
-| 09:00 | Engagement (polls, hot takes) |
-| 11:00 | Funding Rate Alpha (farming opportunities) |
-| 13:00 | Engagement |
-| 15:00 | Volume Update (top traded coins) |
-| 17:00 | Educational Thread (4-6 tweet threads) |
-| 19:00 | Engagement |
-| 21:00 | Market Recap |
-
-**Content types:** Market movers with live Hyperliquid data, funding rate alpha, 24h volume stats, educational threads (funding farming, grid trading, position management, common mistakes), engagement posts (polls, opinions, questions).
-
-**Setup:** Create a developer app at [developer.x.com](https://developer.x.com), enable read+write permissions under User Authentication Settings, copy the 4 OAuth 1.0a keys to `.env.local`.
-
-### Optional / Future
-
-- [ ] **CNC token tiered builder fees** — Coincess's native token. Users who stake CNC get reduced trading fees (discount on both Simple and Advanced tiers):
-
-  | Tier | CNC Staked | Simple Fee | Advanced Fee |
-  |------|------------|------------|--------------|
-  | Free | 0 | 5bp (0.05%) | 1bp (0.01%) |
-  | Bronze | 1,000 CNC | 4bp | 0.8bp |
-  | Silver | 10,000 CNC | 2.5bp | 0.5bp |
-  | Gold | 100,000 CNC | 1bp | 0.2bp |
-  | Diamond | 1,000,000 CNC | 0bp | 0bp |
-
-  Implementation: read user's staked CNC balance from on-chain contract (Solana SPL), pass dynamic `f` value to the builder field per order via `builderFee` param.
-
-- [ ] **UI sounds** — audio feedback for order placed, order filled, order cancelled, position closed, errors (like Binance/HL trading terminal sounds). Toggle in Settings
-- [ ] **Visa debit card** — partner with a whitelabel card provider (e.g., Reap, Immersve) for crypto spend
-- [ ] **Server-side automation** — move strategies to Supabase Edge Functions for 24/7 execution without browser open
-- [ ] **Telegram bot** — add a `/trade` and `/alert` bot for notifications and quick orders
-- [ ] **Social features** — leaderboard, strategy sharing, social feed of top traders
-- [ ] **Token scanner / GMGN-style features** — new token alerts, smart money tracking, contract security checks (see "GMGN Integration" below)
+- Token-gated tiered fee discounts (native token staking)
+- UI sounds (order fills, alerts, errors)
+- Telegram bot for notifications and quick orders
+- Token scanner with smart money tracking
+- Server-side Edge Function automation
 
 ## Project Structure
 
@@ -694,4 +615,4 @@ npm start
 
 ## License
 
-Private project — All rights reserved.
+MIT
