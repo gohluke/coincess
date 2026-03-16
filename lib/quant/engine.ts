@@ -166,12 +166,29 @@ export class QuantEngine {
         return;
       }
 
-      // Fetch current mid prices for accurate close orders
-      const midsRes = await fetch(`${HL_API}/info`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "allMids" }),
-      });
+      // Fetch asset indices and current mid prices
+      const [metaRes, midsRes] = await Promise.all([
+        fetch(`${HL_API}/info`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "metaAndAssetCtxs" }),
+        }),
+        fetch(`${HL_API}/info`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "allMids" }),
+        }),
+      ]);
+      const [meta] = (await metaRes.json()) as [
+        { universe: Array<{ name: string; szDecimals: number }> },
+        unknown[],
+      ];
+      const coinToIndex = new Map<string, number>();
+      const coinToSzDec = new Map<string, number>();
+      for (let i = 0; i < meta.universe.length; i++) {
+        coinToIndex.set(meta.universe[i].name, i);
+        coinToSzDec.set(meta.universe[i].name, meta.universe[i].szDecimals);
+      }
       const allMids = (await midsRes.json()) as Record<string, string> | null;
 
       console.log(`[engine] Closing ${open.length} legacy positions...`);
@@ -180,22 +197,33 @@ export class QuantEngine {
         const szi = parseFloat(p.position.szi);
         const isBuy = szi < 0;
         const currentMid = allMids ? parseFloat(allMids[coin] ?? "0") : 0;
-        if (currentMid <= 0) {
-          console.warn(`[engine] No mid price for ${coin}, skipping`);
+        const assetIdx = coinToIndex.get(coin);
+        const szDec = coinToSzDec.get(coin) ?? 4;
+
+        if (currentMid <= 0 || assetIdx === undefined) {
+          console.warn(`[engine] No data for ${coin} (mid=${currentMid}, idx=${assetIdx}), skipping`);
           continue;
         }
+
+        const slippage = isBuy ? 1.005 : 0.995;
+        const limitPx = currentMid * slippage;
+        const sizeStr = Math.abs(szi).toFixed(szDec);
+        const priceStr = roundPrice(limitPx);
+
         try {
-          const result = await closePosition({
+          const result = await placeOrder({
             coin,
-            size: Math.abs(szi),
             isBuy,
-            markPrice: currentMid,
-            assetIndex: 0,
+            size: sizeStr,
+            price: priceStr,
+            reduceOnly: true,
+            tif: "Ioc",
+            assetIndex: assetIdx,
           });
           const side = szi > 0 ? "LONG" : "SHORT";
           const upnl = parseFloat(p.position.unrealizedPnl);
           console.log(
-            `[engine] Closed ${coin} ${side} ${Math.abs(szi)} @ $${currentMid.toFixed(4)}: ` +
+            `[engine] Closed ${coin} ${side} ${sizeStr} @ $${priceStr}: ` +
             `${result.success ? "OK" : result.error} (uPnL: $${upnl.toFixed(4)})`,
           );
         } catch (e) {
