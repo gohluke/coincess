@@ -350,6 +350,19 @@ export class QuantEngine {
     }
 
     if (isClose) {
+      // Only close positions the bot actually opened (protects manual trades)
+      const { data: botTrades } = await this.supabase
+        .from("quant_trades")
+        .select("id")
+        .eq("coin", signal.coin)
+        .eq("status", "open")
+        .limit(1);
+
+      if (!botTrades || botTrades.length === 0) {
+        console.log(`[engine] SKIP CLOSE ${signal.coin}: no bot-opened trade found (manual position?)`);
+        return;
+      }
+
       const result = await closePosition({
         coin: signal.coin,
         size: 1, // engine doesn't know exact size; executor handles it
