@@ -1,63 +1,57 @@
 /**
- * Rebate Farmer — High-frequency spread capture via maker-only orders.
+ * Rebate Farmer v2 — Risk-free spread capture via maker-only orders.
  *
- * Inspired by the Hyperliquid trader who turned $6.8K into $1.5M by
- * providing liquidity and earning rebates. At Tier 0 we pay 0.015% maker
- * fee instead of getting rebates, so we capture the bid-ask spread on
- * medium-cap coins where spread > 3 bps and profit on the delta.
- *
- * Strategy: one-sided quoting based on order book imbalance, immediate
- * inventory unwind, tight risk controls. Runs event-driven on the
- * WebSocket price feed — NOT on the 30s tick loop.
+ * RULES (learned from live testing):
+ * 1. Only enter when spread >= 7 bps (below that, fees eat all profit)
+ * 2. One position at a time globally (no multi-coin inventory)
+ * 3. NEVER use taker orders for unwind — always Alo (maker)
+ * 4. If stuck, cancel and accept the loss rather than spam IoC orders
+ * 5. Minimum imbalance threshold to avoid balanced/neutral books
  */
 
 import { placeOrder, cancelOrder, fetchPositions } from "../executor";
 import { PriceFeed } from "../price-feed";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { RebateFarmerConfig, OrderResult } from "../types";
+import type { RebateFarmerConfig } from "../types";
 import { REBATE_FARMER_DEFAULTS } from "../types";
 
 const HL_API = "https://api.hyperliquid.xyz";
 
-const MAKER_FEE_BPS = 1.5; // Tier 0 maker fee: 0.015%
-// Need spread >> 2× maker fee to survive adverse selection
-// STRK at 7.4bps was profitable. WIF at 5bps lost money.
-const MIN_PROFITABLE_SPREAD_BPS = 7;
+const MAKER_FEE_BPS = 1.5;
+const MIN_SPREAD_BPS = 7;
+const MIN_IMBALANCE = 0.10; // need clear directional bias
 
-interface L2Snapshot {
+interface L2Book {
   bestBid: number;
   bestAsk: number;
-  midPrice: number;
+  mid: number;
   spreadBps: number;
-  bidSize: number;
-  askSize: number;
-  imbalance: number; // [-1, 1]: positive = more bids (buy pressure)
+  imbalance: number; // [-1, 1]
 }
 
-interface ActiveQuote {
-  oid: number;
-  coin: string;
-  side: "buy" | "sell";
-  price: number;
+type Phase = "idle" | "quoting" | "unwinding";
+
+interface TradeState {
+  phase: Phase;
+  coin: string | null;
+  oid: number | null;
+  side: "buy" | "sell" | null;
+  entryPx: number;
   size: number;
+  assetIndex: number;
   placedAt: number;
-  assetIndex: number;
+  unwindOid: number | null;
+  lastUnwindAttempt: number;
+  unwindAttempts: number;
 }
 
-interface InventoryEntry {
-  coin: string;
-  netQty: number;
-  avgEntryPx: number;
-  assetIndex: number;
-}
-
-interface CycleStats {
-  fills: number;
-  cancels: number;
+interface Stats {
   roundTrips: number;
   grossPnl: number;
   fees: number;
   volume: number;
+  wins: number;
+  losses: number;
 }
 
 export class RebateFarmer {
@@ -67,24 +61,22 @@ export class RebateFarmer {
   private running = false;
   private cycleTimer: ReturnType<typeof setInterval> | null = null;
 
-  private activeQuotes: Map<string, ActiveQuote> = new Map(); // coin -> active order
-  private inventory: Map<string, InventoryEntry> = new Map();
   private assetIndices: Map<string, number> = new Map();
   private szDecimalsMap: Map<string, number> = new Map();
 
-  // Stats tracking
-  private dailyStats: CycleStats = { fills: 0, cancels: 0, roundTrips: 0, grossPnl: 0, fees: 0, volume: 0 };
+  // Single trade state — one position at a time for safety
+  private state: TradeState = this.freshState();
+  private stats: Stats = { roundTrips: 0, grossPnl: 0, fees: 0, volume: 0, wins: 0, losses: 0 };
   private dailyLoss = 0;
   private statsResetDay = -1;
 
-  // Stale quote protection
-  private readonly STALE_QUOTE_MS = 5_000;
-  private readonly MAX_INVENTORY_AGE_MS = 60_000;
-  private inventoryTimestamps: Map<string, number> = new Map();
-
-  // Diagnostic logging
   private cycleCount = 0;
-  private readonly DIAGNOSTIC_LOG_INTERVAL = 120; // log every 120 cycles (~60s at 500ms)
+  private coinIndex = 0; // rotate through coins
+
+  private readonly STALE_QUOTE_MS = 8_000;
+  private readonly UNWIND_COOLDOWN_MS = 10_000;
+  private readonly MAX_UNWIND_ATTEMPTS = 30; // ~5 min at 10s cooldown
+  private readonly DIAG_INTERVAL = 60; // log diagnostics every 60 cycles
 
   constructor(priceFeed: PriceFeed, config?: Partial<RebateFarmerConfig>) {
     this.config = { ...REBATE_FARMER_DEFAULTS, ...config };
@@ -96,43 +88,46 @@ export class RebateFarmer {
     this.supabase = createClient(url, key);
   }
 
+  private freshState(): TradeState {
+    return {
+      phase: "idle",
+      coin: null,
+      oid: null,
+      side: null,
+      entryPx: 0,
+      size: 0,
+      assetIndex: 0,
+      placedAt: 0,
+      unwindOid: null,
+      lastUnwindAttempt: 0,
+      unwindAttempts: 0,
+    };
+  }
+
   async start(): Promise<void> {
     if (this.running) return;
     this.running = true;
 
-    console.log("[rebate-farmer] Starting spread capture bot");
+    console.log("[rebate-farmer] v2 starting — risk-free mode");
     console.log(`[rebate-farmer]   coins: ${this.config.coins.join(", ")}`);
-    console.log(`[rebate-farmer]   orderSize: $${this.config.orderSizeUsd} | maxExposure: $${this.config.maxExposureUsd}`);
-    console.log(`[rebate-farmer]   spreadOffset: ${this.config.spreadBps} bps | cycle: ${this.config.cycleSleepMs}ms`);
+    console.log(`[rebate-farmer]   orderSize: $${this.config.orderSizeUsd} | minSpread: ${MIN_SPREAD_BPS}bps`);
+    console.log(`[rebate-farmer]   ONE position at a time | maker-only unwind`);
 
     await this.loadAssetMeta();
-    this.resetDailyStats();
+    this.resetStats();
 
-    // Real-time fill detection via WebSocket userEvents
     this.priceFeed.onUserEvent((event) => {
       if (event.type !== "fill" || !event.coin) return;
-      const quote = this.activeQuotes.get(event.coin);
-      if (!quote) return;
-      const fillSide = event.side === "B" ? "buy" : event.side === "A" ? "sell" : null;
-      if (!fillSide || fillSide !== quote.side) return;
-      const fillPx = event.price ?? quote.price;
-      const fillSz = event.size ?? quote.size;
-      console.log(`[rebate-farmer] WS FILL: ${fillSide} ${event.coin} ${fillSz} @ ${fillPx}`);
-      this.recordFill(event.coin, fillSide, fillSz, fillPx, quote.assetIndex);
-      this.activeQuotes.delete(event.coin);
-      this.dailyStats.fills++;
-      this.dailyStats.volume += fillSz * fillPx;
-      this.dailyStats.fees += (fillSz * fillPx) * 0.00015;
+      if (this.state.coin !== event.coin) return;
+      this.handleWsFill(event);
     });
 
-    // Event-driven cycle: runs every cycleSleepMs
     this.cycleTimer = setInterval(() => {
       this.cycle().catch((e) =>
         console.error("[rebate-farmer] cycle error:", (e as Error).message),
       );
     }, this.config.cycleSleepMs);
 
-    // Run first cycle immediately
     await this.cycle();
   }
 
@@ -142,99 +137,389 @@ export class RebateFarmer {
       clearInterval(this.cycleTimer);
       this.cycleTimer = null;
     }
-    // Cancel all resting orders
-    this.cancelAllQuotes().catch(() => {});
+    if (this.state.oid && this.state.coin) {
+      cancelOrder(this.state.assetIndex, this.state.oid).catch(() => {});
+    }
+    if (this.state.unwindOid && this.state.coin) {
+      cancelOrder(this.state.assetIndex, this.state.unwindOid).catch(() => {});
+    }
     console.log("[rebate-farmer] Stopped");
-    this.logDailyStats();
+    this.logStats();
   }
 
   // ------------------------------------------------------------------
-  // Core cycle: runs every ~500ms
+  // Core cycle
   // ------------------------------------------------------------------
 
   private async cycle(): Promise<void> {
     if (!this.running) return;
     this.cycleCount++;
+    this.maybeResetStats();
 
-    this.maybeResetDailyStats();
-
-    // Kill switch: daily loss
     if (this.dailyLoss >= this.config.maxDailyLossUsd) {
-      console.error(`[rebate-farmer] DAILY LOSS LIMIT HIT ($${this.dailyLoss.toFixed(2)}). Stopping.`);
+      console.error(`[rebate-farmer] DAILY LOSS $${this.dailyLoss.toFixed(2)} — pausing`);
       this.stop();
       return;
     }
 
-    const isDiagCycle = this.cycleCount === 3 || this.cycleCount % this.DIAGNOSTIC_LOG_INTERVAL === 0;
+    const isDiag = this.cycleCount % this.DIAG_INTERVAL === 0;
 
-    for (const coin of this.config.coins) {
-      try {
-        await this.processCoin(coin, isDiagCycle);
-      } catch (e) {
-        console.error(`[rebate-farmer] ${coin} error:`, (e as Error).message);
-      }
+    switch (this.state.phase) {
+      case "idle":
+        await this.findOpportunity(isDiag);
+        break;
+      case "quoting":
+        await this.manageQuote();
+        break;
+      case "unwinding":
+        await this.manageUnwind();
+        break;
     }
   }
 
-  private async processCoin(coin: string, diag = false): Promise<void> {
-    const assetIndex = this.assetIndices.get(coin);
-    if (assetIndex === undefined) return;
+  // ------------------------------------------------------------------
+  // Phase: IDLE — scan for opportunities
+  // ------------------------------------------------------------------
 
-    // Step 1: Fetch L2 book for this coin
+  private async findOpportunity(diag: boolean): Promise<void> {
+    const coins = this.config.coins;
+    if (coins.length === 0) return;
+
+    // Rotate through coins round-robin
+    const startIdx = this.coinIndex;
+    for (let i = 0; i < coins.length; i++) {
+      const idx = (startIdx + i) % coins.length;
+      const coin = coins[idx];
+      const assetIndex = this.assetIndices.get(coin);
+      if (assetIndex === undefined) continue;
+
+      const book = await this.fetchL2(coin);
+      if (!book) continue;
+
+      if (diag) {
+        const imb = book.imbalance >= 0 ? `+${book.imbalance.toFixed(2)}` : book.imbalance.toFixed(2);
+        console.log(
+          `[rebate-farmer] ${coin}: ${book.spreadBps.toFixed(1)}bps imb=${imb} mid=$${book.mid.toFixed(4)}`,
+        );
+      }
+
+      if (book.spreadBps < MIN_SPREAD_BPS) continue;
+      if (Math.abs(book.imbalance) < MIN_IMBALANCE) continue;
+
+      const side: "buy" | "sell" = book.imbalance > 0 ? "buy" : "sell";
+      this.coinIndex = (idx + 1) % coins.length;
+
+      await this.placeEntry(coin, side, book, assetIndex);
+      return; // placed one quote, done for this cycle
+    }
+
+    this.coinIndex = (startIdx + 1) % coins.length;
+  }
+
+  private async placeEntry(
+    coin: string,
+    side: "buy" | "sell",
+    book: L2Book,
+    assetIndex: number,
+  ): Promise<void> {
+    const offsetFrac = this.config.spreadBps / 10_000;
+    let price: number;
+    if (side === "buy") {
+      price = Math.min(book.bestBid * (1 + offsetFrac), book.mid * 0.9999);
+    } else {
+      price = Math.max(book.bestAsk * (1 - offsetFrac), book.mid * 1.0001);
+    }
+
+    const size = this.config.orderSizeUsd / price;
+    const sizeStr = this.roundSize(size, coin);
+    const priceStr = this.roundPrice(price);
+    const notional = parseFloat(sizeStr) * parseFloat(priceStr);
+
+    if (parseFloat(sizeStr) === 0 || notional < 10) return;
+
+    const result = await placeOrder({
+      coin,
+      isBuy: side === "buy",
+      size: sizeStr,
+      price: priceStr,
+      tif: "Alo",
+      assetIndex,
+    });
+
+    if (!result.success) return;
+
+    console.log(
+      `[rebate-farmer] ENTRY ${side.toUpperCase()} ${coin} $${notional.toFixed(0)} @ ${priceStr} ` +
+      `(spread=${book.spreadBps.toFixed(1)}bps, imb=${book.imbalance.toFixed(2)})`,
+    );
+
+    if (result.oid) {
+      this.state = {
+        phase: "quoting",
+        coin,
+        oid: result.oid,
+        side,
+        entryPx: price,
+        size: parseFloat(sizeStr),
+        assetIndex,
+        placedAt: Date.now(),
+        unwindOid: null,
+        lastUnwindAttempt: 0,
+        unwindAttempts: 0,
+      };
+    }
+
+    // Alo filled immediately (extremely rare)
+    if (result.avgPx) {
+      this.state = {
+        phase: "unwinding",
+        coin,
+        oid: null,
+        side,
+        entryPx: parseFloat(result.avgPx),
+        size: parseFloat(sizeStr),
+        assetIndex,
+        placedAt: Date.now(),
+        unwindOid: null,
+        lastUnwindAttempt: 0,
+        unwindAttempts: 0,
+      };
+      this.stats.volume += notional;
+      console.log(`[rebate-farmer] Immediate fill — switching to unwind`);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Phase: QUOTING — waiting for our entry to fill
+  // ------------------------------------------------------------------
+
+  private async manageQuote(): Promise<void> {
+    const { coin, oid, assetIndex } = this.state;
+    if (!coin || !oid) {
+      this.state = this.freshState();
+      return;
+    }
+
+    const age = Date.now() - this.state.placedAt;
+
+    // Cancel stale quotes
+    if (age > this.STALE_QUOTE_MS) {
+      await cancelOrder(assetIndex, oid).catch(() => {});
+      console.log(`[rebate-farmer] Cancelled stale quote on ${coin} (${(age / 1000).toFixed(0)}s)`);
+      this.state = this.freshState();
+      return;
+    }
+
+    // Check if the book has moved against us (cancel to avoid bad fill)
     const book = await this.fetchL2(coin);
     if (!book) return;
 
-    if (diag) {
-      const imb = book.imbalance > 0 ? `+${book.imbalance.toFixed(2)}` : book.imbalance.toFixed(2);
-      console.log(
-        `[rebate-farmer] ${coin}: spread=${book.spreadBps.toFixed(1)}bps mid=$${book.midPrice.toFixed(2)} ` +
-        `imb=${imb} (need>=${MIN_PROFITABLE_SPREAD_BPS.toFixed(1)}bps)`,
-      );
+    if (this.state.side === "buy" && this.state.entryPx >= book.bestAsk) {
+      await cancelOrder(assetIndex, oid).catch(() => {});
+      this.state = this.freshState();
+      return;
+    }
+    if (this.state.side === "sell" && this.state.entryPx <= book.bestBid) {
+      await cancelOrder(assetIndex, oid).catch(() => {});
+      this.state = this.freshState();
+      return;
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Phase: UNWINDING — trying to close at profit via maker order
+  // ------------------------------------------------------------------
+
+  private async manageUnwind(): Promise<void> {
+    const { coin, assetIndex, unwindOid, side, entryPx, size } = this.state;
+    if (!coin) {
+      this.state = this.freshState();
+      return;
     }
 
-    // Step 2: Check if existing quote should be cancelled
-    const existing = this.activeQuotes.get(coin);
-    if (existing) {
-      const priceMoved = this.shouldCancelQuote(existing, book);
-      const isStale = Date.now() - existing.placedAt > this.STALE_QUOTE_MS;
-
-      if (priceMoved || isStale) {
-        await this.cancelQuote(coin, existing);
-      } else {
-        return; // quote is still good, skip this coin
-      }
+    // Gave up on unwind — accept loss and reset
+    if (this.state.unwindAttempts >= this.MAX_UNWIND_ATTEMPTS) {
+      console.log(`[rebate-farmer] ABANDON ${coin} after ${this.state.unwindAttempts} unwind attempts — accepting loss`);
+      if (unwindOid) await cancelOrder(assetIndex, unwindOid).catch(() => {});
+      await this.forceClose(coin, side!, size, assetIndex, entryPx);
+      this.state = this.freshState();
+      return;
     }
 
-    // Step 3: Check if we need to unwind inventory first
-    const inv = this.inventory.get(coin);
-    if (inv && Math.abs(inv.netQty) > 0) {
-      await this.unwindInventory(coin, inv, book);
-      return; // focus on unwinding, don't add new quotes
+    // If we have a resting unwind order, check if it's still valid
+    if (unwindOid) {
+      const age = Date.now() - this.state.lastUnwindAttempt;
+      if (age < this.UNWIND_COOLDOWN_MS) return; // wait for cooldown
+
+      // Cancel stale unwind and try again
+      await cancelOrder(assetIndex, unwindOid).catch(() => {});
+      this.state.unwindOid = null;
     }
 
-    // Step 4: Check if spread is wide enough to be profitable
-    if (book.spreadBps < MIN_PROFITABLE_SPREAD_BPS) return;
+    // Cooldown between attempts
+    const sinceLast = Date.now() - this.state.lastUnwindAttempt;
+    if (sinceLast < this.UNWIND_COOLDOWN_MS) return;
 
-    // Step 5: Determine which side to quote based on imbalance
-    const side = this.chooseSide(book);
-    if (!side) return;
+    // Place new unwind order at profitable price
+    const book = await this.fetchL2(coin);
+    if (!book) return;
 
-    // Step 6: Check exposure limits
-    const totalExposure = this.getTotalExposureUsd(book.midPrice, coin);
-    if (totalExposure + this.config.orderSizeUsd > this.config.maxExposureUsd) return;
+    const unwindSide: "buy" | "sell" = side === "buy" ? "sell" : "buy";
+    const feeBuffer = MAKER_FEE_BPS * 2 / 10_000 + 0.0002; // fees + 2bps extra
 
-    // Step 7: Place the maker order
-    if (diag) {
-      console.log(`[rebate-farmer] QUOTING ${coin} ${side} @ spread=${book.spreadBps.toFixed(1)}bps`);
+    let unwindPx: number;
+    if (unwindSide === "sell") {
+      unwindPx = Math.max(book.bestAsk, entryPx * (1 + feeBuffer));
+    } else {
+      unwindPx = Math.min(book.bestBid, entryPx * (1 - feeBuffer));
     }
-    await this.placeQuote(coin, side, book, assetIndex);
+
+    const sizeStr = this.roundSize(size, coin);
+    const priceStr = this.roundPrice(unwindPx);
+    const notional = parseFloat(sizeStr) * parseFloat(priceStr);
+
+    if (parseFloat(sizeStr) === 0 || notional < 10) {
+      this.state.unwindAttempts++;
+      this.state.lastUnwindAttempt = Date.now();
+      return;
+    }
+
+    const result = await placeOrder({
+      coin,
+      isBuy: unwindSide === "buy",
+      size: sizeStr,
+      price: priceStr,
+      tif: "Alo",
+      assetIndex,
+    });
+
+    this.state.unwindAttempts++;
+    this.state.lastUnwindAttempt = Date.now();
+
+    if (result.success && result.oid) {
+      this.state.unwindOid = result.oid;
+    }
+
+    if (result.success && result.avgPx) {
+      // Filled immediately
+      const fillPx = parseFloat(result.avgPx);
+      this.completeRoundTrip(fillPx);
+    }
+  }
+
+  private async forceClose(
+    coin: string,
+    entrySide: "buy" | "sell",
+    size: number,
+    assetIndex: number,
+    entryPx: number,
+  ): Promise<void> {
+    // Use a single IoC close — one attempt only, no spam
+    const book = await this.fetchL2(coin);
+    if (!book) {
+      this.recordLoss(coin, entryPx, entryPx, size);
+      return;
+    }
+
+    const closeSide = entrySide === "buy" ? "sell" : "buy";
+    const slippage = closeSide === "buy" ? 1.005 : 0.995;
+    const price = book.mid * slippage;
+    const sizeStr = this.roundSize(size, coin);
+    const priceStr = this.roundPrice(price);
+
+    console.log(`[rebate-farmer] FORCE CLOSE ${coin} ${closeSide} ${sizeStr} @ ${priceStr}`);
+
+    const result = await placeOrder({
+      coin,
+      isBuy: closeSide === "buy",
+      size: sizeStr,
+      price: priceStr,
+      tif: "Ioc",
+      assetIndex,
+    });
+
+    if (result.success && result.avgPx) {
+      const fillPx = parseFloat(result.avgPx);
+      this.completeRoundTrip(fillPx);
+    } else {
+      // Couldn't close — log as loss at current mid
+      this.recordLoss(coin, entryPx, book.mid, size);
+    }
+  }
+
+  private recordLoss(coin: string, entryPx: number, exitPx: number, size: number): void {
+    const pnl = this.state.side === "buy"
+      ? (exitPx - entryPx) * size
+      : (entryPx - exitPx) * size;
+    const fees = size * exitPx * MAKER_FEE_BPS / 10_000;
+    const net = pnl - fees;
+
+    console.log(`[rebate-farmer] LOSS ${coin}: net $${net.toFixed(4)}`);
+    this.stats.roundTrips++;
+    this.stats.grossPnl += pnl;
+    this.stats.fees += fees;
+    this.stats.losses++;
+    if (net < 0) this.dailyLoss += Math.abs(net);
+  }
+
+  private completeRoundTrip(exitPx: number): void {
+    const { coin, side, entryPx, size } = this.state;
+    if (!coin || !side) return;
+
+    const pnl = side === "buy"
+      ? (exitPx - entryPx) * size
+      : (entryPx - exitPx) * size;
+    const fees = size * entryPx * MAKER_FEE_BPS * 2 / 10_000;
+    const net = pnl - fees;
+
+    this.stats.roundTrips++;
+    this.stats.grossPnl += pnl;
+    this.stats.fees += fees;
+    this.stats.volume += size * exitPx;
+    if (net >= 0) this.stats.wins++;
+    else {
+      this.stats.losses++;
+      this.dailyLoss += Math.abs(net);
+    }
+
+    const symbol = net >= 0 ? "+" : "";
+    console.log(
+      `[rebate-farmer] ROUND TRIP ${coin}: gross=${symbol}$${pnl.toFixed(4)} ` +
+      `fees=-$${fees.toFixed(4)} net=${symbol}$${net.toFixed(4)} ` +
+      `[${this.stats.wins}W/${this.stats.losses}L]`,
+    );
+
+    this.state = this.freshState();
+  }
+
+  // ------------------------------------------------------------------
+  // WebSocket fill handler
+  // ------------------------------------------------------------------
+
+  private handleWsFill(event: { coin?: string; side?: string; price?: number; size?: number }): void {
+    if (!event.coin || this.state.coin !== event.coin) return;
+
+    if (this.state.phase === "quoting") {
+      // Entry filled
+      this.state.phase = "unwinding";
+      this.state.oid = null;
+      if (event.price) this.state.entryPx = event.price;
+      if (event.size) this.state.size = event.size;
+      this.stats.volume += (event.size ?? this.state.size) * (event.price ?? this.state.entryPx);
+      console.log(`[rebate-farmer] WS FILL entry ${event.coin} @ ${event.price ?? "?"}`);
+    } else if (this.state.phase === "unwinding" && this.state.unwindOid) {
+      // Unwind filled
+      const exitPx = event.price ?? this.state.entryPx;
+      console.log(`[rebate-farmer] WS FILL unwind ${event.coin} @ ${exitPx}`);
+      this.completeRoundTrip(exitPx);
+    }
   }
 
   // ------------------------------------------------------------------
   // L2 Book
   // ------------------------------------------------------------------
 
-  private async fetchL2(coin: string): Promise<L2Snapshot | null> {
+  private async fetchL2(coin: string): Promise<L2Book | null> {
     try {
       const res = await fetch(`${HL_API}/info`, {
         method: "POST",
@@ -254,377 +539,24 @@ export class RebateFarmer {
 
       const bestBid = parseFloat(bids[0].px);
       const bestAsk = parseFloat(asks[0].px);
-      const midPrice = (bestBid + bestAsk) / 2;
-      const spreadBps = midPrice > 0 ? ((bestAsk - bestBid) / midPrice) * 10_000 : 0;
+      const mid = (bestBid + bestAsk) / 2;
+      const spreadBps = mid > 0 ? ((bestAsk - bestBid) / mid) * 10_000 : 0;
 
-      let bidSize = 0, askSize = 0;
-      const topN = 5;
-      for (let i = 0; i < Math.min(topN, bids.length); i++) bidSize += parseFloat(bids[i].sz);
-      for (let i = 0; i < Math.min(topN, asks.length); i++) askSize += parseFloat(asks[i].sz);
-      const total = bidSize + askSize;
-      const imbalance = total > 0 ? (bidSize - askSize) / total : 0;
+      let bidSz = 0, askSz = 0;
+      for (let i = 0; i < Math.min(5, bids.length); i++) bidSz += parseFloat(bids[i].sz);
+      for (let i = 0; i < Math.min(5, asks.length); i++) askSz += parseFloat(asks[i].sz);
+      const total = bidSz + askSz;
+      const imbalance = total > 0 ? (bidSz - askSz) / total : 0;
 
-      return { bestBid, bestAsk, midPrice, spreadBps, bidSize, askSize, imbalance };
+      return { bestBid, bestAsk, mid, spreadBps, imbalance };
     } catch {
       return null;
     }
   }
 
   // ------------------------------------------------------------------
-  // Quote management
-  // ------------------------------------------------------------------
-
-  private chooseSide(book: L2Snapshot): "buy" | "sell" | null {
-    // One-sided quoting: pick the side with MORE support (safer)
-    // If bids > asks (buy pressure), we JOIN the bids (buy side) to capture a fill
-    // then immediately sell the inventory at the ask
-    if (book.imbalance > 0.05) return "buy";
-    if (book.imbalance < -0.05) return "sell";
-
-    // If balanced, pick the side where our fill is more likely
-    // In balanced markets, prefer buying (more natural for crypto upward bias)
-    return null; // skip balanced books — no edge
-  }
-
-  private async placeQuote(
-    coin: string,
-    side: "buy" | "sell",
-    book: L2Snapshot,
-    assetIndex: number,
-  ): Promise<void> {
-    // Place at best bid/ask with a small offset toward mid to improve fill priority
-    const offsetBps = this.config.spreadBps;
-    const offsetFraction = offsetBps / 10_000;
-
-    let quotePrice: number;
-    if (side === "buy") {
-      // Place just above best bid to be first in queue
-      quotePrice = book.bestBid * (1 + offsetFraction);
-      // But never cross the mid
-      quotePrice = Math.min(quotePrice, book.midPrice * 0.9999);
-    } else {
-      // Place just below best ask
-      quotePrice = book.bestAsk * (1 - offsetFraction);
-      quotePrice = Math.max(quotePrice, book.midPrice * 1.0001);
-    }
-
-    const size = this.config.orderSizeUsd / quotePrice;
-    const sizeStr = this.roundSize(size, coin);
-    const priceStr = this.roundPrice(quotePrice);
-
-    if (parseFloat(sizeStr) === 0) return;
-
-    // Minimum notional check
-    const notional = parseFloat(sizeStr) * parseFloat(priceStr);
-    if (notional < 10) return;
-
-    const result = await placeOrder({
-      coin,
-      isBuy: side === "buy",
-      size: sizeStr,
-      price: priceStr,
-      tif: "Alo", // Add Liquidity Only — guarantees maker
-      assetIndex,
-    });
-
-    if (result.success) {
-      console.log(
-        `[rebate-farmer] PLACED ${side.toUpperCase()} ${coin} $${notional.toFixed(0)} @ ${priceStr} ` +
-        `(spread=${book.spreadBps.toFixed(1)}bps, ${result.oid ? "resting" : "filled"})`,
-      );
-
-      if (result.oid) {
-        this.activeQuotes.set(coin, {
-          oid: result.oid,
-          coin,
-          side,
-          price: quotePrice,
-          size: parseFloat(sizeStr),
-          placedAt: Date.now(),
-          assetIndex,
-        });
-      }
-
-      if (result.avgPx) {
-        const fillPx = parseFloat(result.avgPx);
-        this.recordFill(coin, side, parseFloat(sizeStr), fillPx, assetIndex);
-        this.dailyStats.fills++;
-        this.dailyStats.volume += notional;
-      }
-    }
-  }
-
-  private shouldCancelQuote(quote: ActiveQuote, book: L2Snapshot): boolean {
-    const thresholdBps = this.config.cancelThresholdBps;
-    const thresholdFraction = thresholdBps / 10_000;
-
-    if (quote.side === "buy") {
-      // Cancel if price dropped significantly (we'd be buying too high)
-      if (book.midPrice < quote.price * (1 - thresholdFraction)) return true;
-      // Cancel if our order is now above the best ask (crossed book)
-      if (quote.price >= book.bestAsk) return true;
-    } else {
-      if (book.midPrice > quote.price * (1 + thresholdFraction)) return true;
-      if (quote.price <= book.bestBid) return true;
-    }
-
-    return false;
-  }
-
-  private async cancelQuote(coin: string, quote: ActiveQuote): Promise<void> {
-    const result = await cancelOrder(quote.assetIndex, quote.oid);
-    this.activeQuotes.delete(coin);
-    if (result.success) {
-      this.dailyStats.cancels++;
-    }
-  }
-
-  private async cancelAllQuotes(): Promise<void> {
-    for (const [coin, quote] of this.activeQuotes) {
-      try {
-        await cancelOrder(quote.assetIndex, quote.oid);
-      } catch {}
-    }
-    this.activeQuotes.clear();
-  }
-
-  // ------------------------------------------------------------------
-  // Inventory management
-  // ------------------------------------------------------------------
-
-  private recordFill(
-    coin: string,
-    side: "buy" | "sell",
-    qty: number,
-    fillPx: number,
-    assetIndex: number,
-  ): void {
-    const signedQty = side === "buy" ? qty : -qty;
-    const inv = this.inventory.get(coin);
-
-    if (!inv) {
-      this.inventory.set(coin, { coin, netQty: signedQty, avgEntryPx: fillPx, assetIndex });
-      this.inventoryTimestamps.set(coin, Date.now());
-    } else {
-      const oldNotional = inv.netQty * inv.avgEntryPx;
-      inv.netQty += signedQty;
-
-      if (Math.abs(inv.netQty) < 1e-10) {
-        // Round trip complete
-        const pnl = side === "sell"
-          ? (fillPx - inv.avgEntryPx) * qty
-          : (inv.avgEntryPx - fillPx) * qty;
-        const estFees = qty * fillPx * MAKER_FEE_BPS * 2 / 10_000;
-        const netPnl = pnl - estFees;
-        this.dailyStats.roundTrips++;
-        this.dailyStats.grossPnl += pnl;
-        this.dailyStats.fees += estFees;
-        if (netPnl < 0) this.dailyLoss += Math.abs(netPnl);
-        console.log(
-          `[rebate-farmer] ROUND TRIP ${coin}: gross=${pnl >= 0 ? "+" : ""}$${pnl.toFixed(4)} ` +
-          `fees=-$${estFees.toFixed(4)} net=${netPnl >= 0 ? "+" : ""}$${netPnl.toFixed(4)}`,
-        );
-        this.inventory.delete(coin);
-        this.inventoryTimestamps.delete(coin);
-      } else {
-        // Update average entry
-        const newNotional = oldNotional + signedQty * fillPx;
-        inv.avgEntryPx = Math.abs(inv.netQty) > 0
-          ? Math.abs(newNotional / inv.netQty)
-          : fillPx;
-      }
-    }
-  }
-
-  private async unwindInventory(
-    coin: string,
-    inv: InventoryEntry,
-    book: L2Snapshot,
-  ): Promise<void> {
-    const age = Date.now() - (this.inventoryTimestamps.get(coin) ?? Date.now());
-    const urgent = age > this.MAX_INVENTORY_AGE_MS;
-
-    if (inv.netQty > 0) {
-      // We're long — need to sell
-      if (urgent) {
-        // Urgent: use taker to get out immediately
-        await this.marketUnwind(coin, inv, book);
-      } else {
-        // Patient: place maker sell at best ask
-        const existing = this.activeQuotes.get(coin);
-        if (!existing || existing.side !== "sell") {
-          if (existing) await this.cancelQuote(coin, existing);
-          await this.placeUnwindQuote(coin, "sell", inv, book);
-        }
-      }
-    } else if (inv.netQty < 0) {
-      // We're short — need to buy
-      if (urgent) {
-        await this.marketUnwind(coin, inv, book);
-      } else {
-        const existing = this.activeQuotes.get(coin);
-        if (!existing || existing.side !== "buy") {
-          if (existing) await this.cancelQuote(coin, existing);
-          await this.placeUnwindQuote(coin, "buy", inv, book);
-        }
-      }
-    }
-  }
-
-  private async placeUnwindQuote(
-    coin: string,
-    side: "buy" | "sell",
-    inv: InventoryEntry,
-    book: L2Snapshot,
-  ): Promise<void> {
-    const qty = Math.abs(inv.netQty);
-
-    // Calculate minimum profitable unwind price (entry ± round-trip fees)
-    const feeBuffer = MAKER_FEE_BPS * 2 / 10_000; // both entry and exit maker fees
-    let price: number;
-    if (side === "sell") {
-      // We're long, need to sell ABOVE entry + fees
-      const minProfitablePx = inv.avgEntryPx * (1 + feeBuffer + 0.0001); // +1 bps extra buffer
-      price = Math.max(book.bestAsk, minProfitablePx);
-    } else {
-      // We're short, need to buy BELOW entry - fees
-      const minProfitablePx = inv.avgEntryPx * (1 - feeBuffer - 0.0001);
-      price = Math.min(book.bestBid, minProfitablePx);
-    }
-
-    const sizeStr = this.roundSize(qty, coin);
-    const priceStr = this.roundPrice(price);
-
-    if (parseFloat(sizeStr) === 0) return;
-    const notional = parseFloat(sizeStr) * parseFloat(priceStr);
-    if (notional < 10) return;
-
-    const result = await placeOrder({
-      coin,
-      isBuy: side === "buy",
-      size: sizeStr,
-      price: priceStr,
-      tif: "Alo",
-      assetIndex: inv.assetIndex,
-    });
-
-    if (result.success && result.oid) {
-      this.activeQuotes.set(coin, {
-        oid: result.oid,
-        coin,
-        side,
-        price,
-        size: qty,
-        placedAt: Date.now(),
-        assetIndex: inv.assetIndex,
-      });
-    }
-
-    if (result.success && result.avgPx) {
-      const fillPx = parseFloat(result.avgPx);
-      this.recordFill(coin, side, qty, fillPx, inv.assetIndex);
-      this.dailyStats.fills++;
-      this.dailyStats.volume += notional;
-      this.activeQuotes.delete(coin);
-    }
-  }
-
-  private async marketUnwind(
-    coin: string,
-    inv: InventoryEntry,
-    book: L2Snapshot,
-  ): Promise<void> {
-    const qty = Math.abs(inv.netQty);
-    const isBuy = inv.netQty < 0;
-    const slippage = isBuy ? 1.003 : 0.997;
-    const price = book.midPrice * slippage;
-    const sizeStr = this.roundSize(qty, coin);
-    const priceStr = this.roundPrice(price);
-
-    if (parseFloat(sizeStr) === 0) return;
-    const notional = parseFloat(sizeStr) * parseFloat(priceStr);
-    if (notional < 10) return;
-
-    console.log(`[rebate-farmer] URGENT unwind ${coin}: ${isBuy ? "BUY" : "SELL"} ${sizeStr} @ ${priceStr}`);
-
-    const result = await placeOrder({
-      coin,
-      isBuy,
-      size: sizeStr,
-      price: priceStr,
-      tif: "Ioc", // taker order for urgent unwind
-      assetIndex: inv.assetIndex,
-    });
-
-    if (result.success && result.avgPx) {
-      const fillPx = parseFloat(result.avgPx);
-      this.recordFill(coin, isBuy ? "buy" : "sell", qty, fillPx, inv.assetIndex);
-      this.dailyStats.fills++;
-      this.dailyStats.volume += notional;
-      // Extra fee for taker
-      this.dailyStats.fees += notional * 0.00045;
-    }
-  }
-
-  // ------------------------------------------------------------------
-  // Fill detection via position polling
-  // ------------------------------------------------------------------
-
-  /**
-   * Called externally (by engine or a timer) to reconcile fills.
-   * Since Alo orders rest on the book, we detect fills by checking
-   * if our resting orders are gone + our position changed.
-   */
-  async reconcileFills(): Promise<void> {
-    if (this.activeQuotes.size === 0) return;
-
-    try {
-      const positions = await fetchPositions();
-      const posMap = new Map<string, number>();
-      for (const p of positions) {
-        const szi = parseFloat(p.position.szi);
-        if (szi !== 0) posMap.set(p.position.coin, szi);
-      }
-
-      for (const [coin, quote] of this.activeQuotes) {
-        const hlQty = posMap.get(coin) ?? 0;
-        const invQty = this.inventory.get(coin)?.netQty ?? 0;
-        const expectedQtyIfFilled = invQty + (quote.side === "buy" ? quote.size : -quote.size);
-
-        // If HL position matches what we'd expect after a fill, the order was filled
-        const tolerance = quote.size * 0.01;
-        if (Math.abs(hlQty - expectedQtyIfFilled) < tolerance) {
-          console.log(`[rebate-farmer] FILL detected: ${quote.side} ${coin} ${quote.size} @ ~${quote.price.toFixed(2)}`);
-          this.recordFill(coin, quote.side, quote.size, quote.price, quote.assetIndex);
-          this.activeQuotes.delete(coin);
-          this.dailyStats.fills++;
-          this.dailyStats.volume += quote.size * quote.price;
-          this.dailyStats.fees += (quote.size * quote.price) * 0.00015; // maker fee
-        }
-      }
-    } catch (e) {
-      console.error("[rebate-farmer] reconcile error:", (e as Error).message);
-    }
-  }
-
-  // ------------------------------------------------------------------
   // Helpers
   // ------------------------------------------------------------------
-
-  private getTotalExposureUsd(refPrice: number, excludeCoin?: string): number {
-    let total = 0;
-    for (const [coin, inv] of this.inventory) {
-      if (coin === excludeCoin) continue;
-      const px = this.priceFeed.getPrice(coin) ?? inv.avgEntryPx;
-      total += Math.abs(inv.netQty) * px;
-    }
-    // Also count active quotes as potential exposure
-    for (const [coin, quote] of this.activeQuotes) {
-      if (coin === excludeCoin) continue;
-      total += quote.size * quote.price;
-    }
-    return total;
-  }
 
   private async loadAssetMeta(): Promise<void> {
     try {
@@ -637,22 +569,19 @@ export class RebateFarmer {
         { universe: Array<{ name: string; szDecimals: number }> },
         unknown[],
       ];
-
       for (let i = 0; i < meta.universe.length; i++) {
-        const asset = meta.universe[i];
-        this.assetIndices.set(asset.name, i);
-        this.szDecimalsMap.set(asset.name, asset.szDecimals);
+        this.assetIndices.set(meta.universe[i].name, i);
+        this.szDecimalsMap.set(meta.universe[i].name, meta.universe[i].szDecimals);
       }
-
       const found = this.config.coins.filter((c) => this.assetIndices.has(c));
       const missing = this.config.coins.filter((c) => !this.assetIndices.has(c));
       console.log(`[rebate-farmer] Loaded ${found.length} coins: ${found.join(", ")}`);
       if (missing.length > 0) {
-        console.warn(`[rebate-farmer] Missing coins (removed): ${missing.join(", ")}`);
+        console.warn(`[rebate-farmer] Missing: ${missing.join(", ")}`);
         this.config.coins = found;
       }
     } catch (e) {
-      console.error("[rebate-farmer] Failed to load asset meta:", (e as Error).message);
+      console.error("[rebate-farmer] loadAssetMeta failed:", (e as Error).message);
     }
   }
 
@@ -673,64 +602,76 @@ export class RebateFarmer {
   }
 
   // ------------------------------------------------------------------
-  // Stats & logging
+  // Stats
   // ------------------------------------------------------------------
 
-  private maybeResetDailyStats(): void {
+  private maybeResetStats(): void {
     const day = new Date().getUTCDate();
     if (day !== this.statsResetDay) {
-      if (this.statsResetDay !== -1) this.logDailyStats();
-      this.resetDailyStats();
+      if (this.statsResetDay !== -1) this.logStats();
+      this.resetStats();
     }
   }
 
-  private resetDailyStats(): void {
-    this.dailyStats = { fills: 0, cancels: 0, roundTrips: 0, grossPnl: 0, fees: 0, volume: 0 };
+  private resetStats(): void {
+    this.stats = { roundTrips: 0, grossPnl: 0, fees: 0, volume: 0, wins: 0, losses: 0 };
     this.dailyLoss = 0;
     this.statsResetDay = new Date().getUTCDate();
   }
 
-  private logDailyStats(): void {
-    const s = this.dailyStats;
-    const netPnl = s.grossPnl - s.fees;
+  private logStats(): void {
+    const s = this.stats;
+    const net = s.grossPnl - s.fees;
     console.log(
-      `[rebate-farmer] Daily summary: ` +
-      `${s.fills} fills, ${s.roundTrips} round-trips, ${s.cancels} cancels | ` +
-      `volume $${s.volume.toFixed(0)} | gross $${s.grossPnl.toFixed(4)} | ` +
-      `fees $${s.fees.toFixed(4)} | net $${netPnl.toFixed(4)}`,
+      `[rebate-farmer] Summary: ${s.roundTrips} RTs (${s.wins}W/${s.losses}L) | ` +
+      `vol $${s.volume.toFixed(0)} | net $${net.toFixed(4)}`,
     );
-
-    // Log to Supabase
     this.supabase.from("ai_agent_logs").insert({
       action: "rebate_farmer_daily",
-      details: {
-        ...s,
-        netPnl,
-        coins: this.config.coins,
-        date: new Date().toISOString().split("T")[0],
-      },
-    }).then(() => {}).catch(() => {});
+      details: { ...s, net, date: new Date().toISOString().split("T")[0] },
+    }).catch(() => {});
   }
 
-  /** Periodic status log (call from engine every N ticks) */
   logStatus(): void {
-    const s = this.dailyStats;
-    const netPnl = s.grossPnl - s.fees;
-    const invCoins = [...this.inventory.entries()]
-      .filter(([, v]) => Math.abs(v.netQty) > 0)
-      .map(([coin, v]) => `${coin}:${v.netQty > 0 ? "+" : ""}${v.netQty.toFixed(4)}`);
-
+    const s = this.stats;
+    const net = s.grossPnl - s.fees;
+    const phase = this.state.phase;
+    const activeCoin = this.state.coin ?? "—";
     console.log(
-      `[rebate-farmer] Status: ${s.fills} fills / ${s.roundTrips} RTs / $${s.volume.toFixed(0)} vol / ` +
-      `net $${netPnl.toFixed(4)} | quotes: ${this.activeQuotes.size} | inv: [${invCoins.join(", ")}]`,
+      `[rebate-farmer] ${phase}${phase !== "idle" ? ` (${activeCoin})` : ""} | ` +
+      `${s.roundTrips} RTs (${s.wins}W/${s.losses}L) | net $${net.toFixed(4)} | vol $${s.volume.toFixed(0)}`,
     );
+  }
+
+  async reconcileFills(): Promise<void> {
+    if (this.state.phase !== "quoting" && this.state.phase !== "unwinding") return;
+    if (!this.state.coin) return;
+
+    try {
+      const positions = await fetchPositions();
+      const hlQty = positions
+        .filter((p) => p.position.coin === this.state.coin)
+        .reduce((sum, p) => sum + parseFloat(p.position.szi), 0);
+
+      if (this.state.phase === "quoting") {
+        const expected = this.state.side === "buy" ? this.state.size : -this.state.size;
+        if (Math.abs(hlQty - expected) < this.state.size * 0.05) {
+          console.log(`[rebate-farmer] Reconcile: entry ${this.state.coin} filled`);
+          this.state.phase = "unwinding";
+          this.state.oid = null;
+          this.stats.volume += this.state.size * this.state.entryPx;
+        }
+      } else if (this.state.phase === "unwinding") {
+        if (Math.abs(hlQty) < this.state.size * 0.05) {
+          console.log(`[rebate-farmer] Reconcile: unwind ${this.state.coin} complete`);
+          const mid = this.priceFeed.getPrice(this.state.coin!) ?? this.state.entryPx;
+          this.completeRoundTrip(mid);
+        }
+      }
+    } catch {}
   }
 
   get isRunning(): boolean {
     return this.running;
-  }
-
-  get stats(): CycleStats {
-    return { ...this.dailyStats };
   }
 }
