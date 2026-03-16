@@ -1,4 +1,4 @@
-export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion" | "market_maker" | "ai_agent" | "spike_reversion";
+export type StrategyType = "funding_rate" | "momentum" | "grid" | "mean_reversion" | "market_maker" | "ai_agent" | "spike_reversion" | "rebate_farmer";
 export type StrategyStatus = "active" | "paused" | "stopped" | "error";
 export type EngineStatus = "running" | "stopped" | "paused" | "error";
 export type TradeSide = "long" | "short";
@@ -147,6 +147,30 @@ export const SPIKE_REVERSION_DEFAULTS: SpikeReversionConfig = {
   cooldownMs: 300_000,
   minVolumeUsd: 1_000_000,
   capitalAllocationPct: 0.10,
+};
+
+export interface RebateFarmerConfig {
+  coins: string[];
+  spreadBps: number;          // offset from mid price in basis points (e.g. 2 = 0.02%)
+  orderSizeUsd: number;       // notional per order
+  maxExposureUsd: number;     // max net position in USD
+  maxInventoryCoins: number;  // max absolute coin qty before unwinding
+  cancelThresholdBps: number; // cancel resting order if price moves this many bps
+  cycleSleepMs: number;       // milliseconds between quoting cycles
+  maxDailyLossUsd: number;    // kill switch
+  unwindAggressiveness: number; // 0-1, how aggressively to unwind inventory
+}
+
+export const REBATE_FARMER_DEFAULTS: RebateFarmerConfig = {
+  coins: ["BTC", "ETH"],
+  spreadBps: 1.5,
+  orderSizeUsd: 100,
+  maxExposureUsd: 300,
+  maxInventoryCoins: 0.01,
+  cancelThresholdBps: 3,
+  cycleSleepMs: 500,
+  maxDailyLossUsd: 20,
+  unwindAggressiveness: 0.8,
 };
 
 export interface MarketBrief {

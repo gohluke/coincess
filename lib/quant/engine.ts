@@ -5,6 +5,7 @@ import { PriceFeed } from "./price-feed";
 import { PositionGuard } from "./position-guard";
 import { SpikeDetector } from "./spike-detector";
 import { SpikeReversionStrategy } from "./strategies/spike-reversion";
+import { RebateFarmer } from "./strategies/rebate-farmer";
 import * as fundingRate from "./strategies/funding-rate";
 import * as momentum from "./strategies/momentum";
 import * as grid from "./strategies/grid";
@@ -72,6 +73,7 @@ export class QuantEngine {
   private positionGuard: PositionGuard;
   private spikeDetector: SpikeDetector;
   private spikeReversion: SpikeReversionStrategy;
+  private rebateFarmer: RebateFarmer;
   private lastAiRunTime = 0;
   private lastAiPrices: Map<string, number> = new Map();
 
@@ -87,6 +89,13 @@ export class QuantEngine {
     this.positionGuard = new PositionGuard(this.priceFeed);
     this.spikeDetector = new SpikeDetector(this.priceFeed);
     this.spikeReversion = new SpikeReversionStrategy(this.walletAddress);
+    this.rebateFarmer = new RebateFarmer(this.priceFeed, {
+      coins: ["BTC", "ETH", "SOL", "DOGE", "SUI", "AVAX", "LINK"],
+      orderSizeUsd: 100,
+      maxExposureUsd: 300,
+      cycleSleepMs: 500,
+      maxDailyLossUsd: 20,
+    });
   }
 
   async start(): Promise<void> {
@@ -115,6 +124,9 @@ export class QuantEngine {
     });
     this.spikeDetector.start();
 
+    // Start rebate farmer (high-frequency spread capture, independent of tick loop)
+    await this.rebateFarmer.start();
+
     this.tickTimer = setInterval(() => {
       this.tick().catch((err) => {
         console.error("[engine] Tick error:", err);
@@ -132,6 +144,7 @@ export class QuantEngine {
       clearInterval(this.tickTimer);
       this.tickTimer = null;
     }
+    this.rebateFarmer.stop();
     this.spikeDetector.stop();
     this.spikeReversion.stop();
     this.positionGuard.stop();
@@ -263,6 +276,12 @@ export class QuantEngine {
           state.peak_equity > 0 ? (state.peak_equity - accountValue) / state.peak_equity : 0,
         ),
       });
+
+      // Rebate farmer: reconcile fills and log status
+      if (this.rebateFarmer.isRunning) {
+        await this.rebateFarmer.reconcileFills();
+        if (this.tickCount % 20 === 0) this.rebateFarmer.logStatus();
+      }
 
       const elapsed = Date.now() - start;
       const shouldLog = this.tickCount <= 3 || this.tickCount % 10 === 0 || allSignals.length > 0;

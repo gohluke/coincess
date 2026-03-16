@@ -58,7 +58,8 @@ async function main(): Promise<void> {
   const hasAiKeys = AI_ENV.every((k) => !!process.env[k]);
 
   console.log("┌──────────────────────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server  v5.1                  │");
+  console.log("│     Coincess Quant Trading Server  v6.0                  │");
+  console.log("│  NEW: Rebate Farmer — HF spread capture via Alo orders   │");
   console.log("│  Full TA + Order Book Imbalance + Flow Analysis          │");
   console.log("│  Trailing Stop + Partial Profit Taking                   │");
   console.log("│  Crowded Trade Detection + Session Awareness             │");
