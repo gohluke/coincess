@@ -57,19 +57,24 @@ async function main(): Promise<void> {
 
   const hasAiKeys = AI_ENV.every((k) => !!process.env[k]);
 
-  console.log("┌──────────────────────────────────────────────────┐");
-  console.log("│     Coincess Quant Trading Server  v4             │");
-  console.log("│  FR | MOM | GRID | MR | MM | AI + Combiner       │");
-  console.log("│  WebSocket Feed + Rule-Based SL/TP Guard          │");
-  console.log("│  AI every 5min | Risk-Based Position Sizing       │");
-  console.log("└──────────────────────────────────────────────────┘");
+  console.log("┌──────────────────────────────────────────────────────────┐");
+  console.log("│     Coincess Quant Trading Server  v5                    │");
+  console.log("│  FR | MOM | GRID | MR | MM | AI + Combiner              │");
+  console.log("│  NEW: Full TA Feed (RSI/MACD/BB/ATR) to AI              │");
+  console.log("│  NEW: AI Performance Feedback Loop                       │");
+  console.log("│  NEW: Trailing Stop Loss                                 │");
+  console.log("│  NEW: ATR-Dynamic Spike Thresholds                       │");
+  console.log("│  NEW: SL/TP on ALL strategies (FR, MOM, Spike)           │");
+  console.log("│  NEW: Smart Coin Universe (top 15 by vol+vol)            │");
+  console.log("│  NEW: Multi-Timeframe Trend Filter                       │");
+  console.log("└──────────────────────────────────────────────────────────┘");
   console.log();
   console.log(`Account: ${process.env.HL_ACCOUNT_ADDRESS}`);
   console.log(`Time:    ${new Date().toISOString()}`);
-  console.log(`AI:      ${hasAiKeys ? "Gemini ready (5-min cycle + event triggers)" : "MISSING KEYS (ai_agent strategy disabled)"}`);
+  console.log(`AI:      ${hasAiKeys ? "Gemini 2.5 Flash (5-min cycle + technical analysis)" : "MISSING KEYS (ai_agent strategy disabled)"}`);
   if (!hasAiKeys) {
     const missing = AI_ENV.filter((k) => !process.env[k]);
-    console.warn(`  ⚠ Missing: ${missing.join(", ")}`);
+    console.warn(`  Missing: ${missing.join(", ")}`);
     console.warn("  AI Agent strategies will fail until these are set.");
   }
   console.log();

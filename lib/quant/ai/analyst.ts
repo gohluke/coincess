@@ -2,7 +2,9 @@ import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { buildAnalystPrompt } from "./prompts";
+import type { RecentTradeResult } from "./prompts";
 import type { MarketSnapshot, PositionInfo, MarketBrief } from "../types";
+import type { TechnicalSnapshot } from "../market-analysis";
 
 const MarketBriefSchema = z.object({
   regime: z.enum(["trending", "ranging", "volatile", "quiet"]),
@@ -30,6 +32,8 @@ export async function analyzeMarkets(
   positions: PositionInfo[],
   accountValue: number,
   model = "gemini-2.5-flash",
+  technicals?: TechnicalSnapshot[],
+  recentTrades?: RecentTradeResult[],
 ): Promise<MarketBrief | null> {
   const now = Date.now();
   if (now - lastCallTime < MIN_INTERVAL_MS) {
@@ -38,7 +42,7 @@ export async function analyzeMarkets(
   }
   lastCallTime = now;
 
-  const prompt = buildAnalystPrompt(markets, positions, accountValue);
+  const prompt = buildAnalystPrompt(markets, positions, accountValue, technicals, recentTrades);
 
   try {
     const { object } = await generateObject({
@@ -50,11 +54,10 @@ export async function analyzeMarkets(
 
     const brief = object as MarketBrief;
 
-    // Filter out weak opportunities
     brief.topOpportunities = brief.topOpportunities
       .filter((o) => o.strength >= 40)
       .sort((a, b) => b.strength - a.strength)
-      .slice(0, 10);
+      .slice(0, 5); // Reduced from 10 to 5 — quality over quantity
 
     console.log(
       `[ai-analyst] Regime: ${brief.regime} | ${brief.topOpportunities.length} opportunities | ${brief.warnings.length} warnings`,

@@ -1,10 +1,15 @@
 /**
- * Rule-based Position Guard
+ * Position Guard v2 — Rule-Based SL/TP + Trailing Stop
  *
  * Checks all open trades against their stop-loss and take-profit levels
- * on every WebSocket price update.  Closes positions deterministically
- * without calling the LLM — the AI sets the levels, the guard enforces
- * them with sub-second latency.
+ * on every WebSocket price update. Now with trailing stop support:
+ * as price moves in your favor, the stop ratchets up to lock in profit.
+ *
+ * Trailing logic:
+ * - Track peak favorable price per trade (highest for longs, lowest for shorts)
+ * - Trail = peakPrice - (entryPrice * trailPct)  for longs
+ * - Trail = peakPrice + (entryPrice * trailPct)  for shorts
+ * - Only ratchet tighter, never looser than original SL
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -12,6 +17,11 @@ import { closePosition } from "./executor";
 import type { PriceFeed } from "./price-feed";
 
 const HL_API = "https://api.hyperliquid.xyz";
+
+// After price moves this far in your favor, switch from fixed SL to trailing
+const TRAIL_ACTIVATION_PCT = 0.005; // 0.5% in profit to activate trail
+// Trail distance as fraction of entry price
+const TRAIL_DISTANCE_PCT = 0.008; // 0.8% trailing distance
 
 interface GuardedTrade {
   id: string;
@@ -31,15 +41,17 @@ export class PositionGuard {
   private trades: Map<string, GuardedTrade> = new Map();
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private running = false;
-  /** Prevent duplicate close attempts for the same trade */
   private closingSet: Set<string> = new Set();
-  /** Trades that failed with "would increase position" — skip until next refresh */
   private skippedTrades: Set<string> = new Set();
   private lastCheckMs = 0;
   private checksRun = 0;
   private closesRun = 0;
-  /** Cache of perp asset indices (coin -> index) fetched once from meta */
   private perpIndexCache: Map<string, number> = new Map();
+
+  /** Track peak favorable price per trade for trailing stops */
+  private peakPrices: Map<string, number> = new Map();
+  /** Active trailing stop levels (ratcheted from peak) */
+  private trailingStops: Map<string, number> = new Map();
 
   constructor(priceFeed: PriceFeed) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -64,7 +76,7 @@ export class PositionGuard {
 
     this.priceFeed.onPrice((prices) => this.checkAllPositions(prices));
 
-    console.log(`[guard] Position guard started — tracking ${this.trades.size} open trade(s)`);
+    console.log(`[guard] Position guard v2 started — tracking ${this.trades.size} open trade(s) (trailing stops enabled)`);
   }
 
   stop(): void {
@@ -74,7 +86,12 @@ export class PositionGuard {
   }
 
   get stats() {
-    return { trackedTrades: this.trades.size, checksRun: this.checksRun, closesRun: this.closesRun };
+    return {
+      trackedTrades: this.trades.size,
+      checksRun: this.checksRun,
+      closesRun: this.closesRun,
+      activeTrailingStops: this.trailingStops.size,
+    };
   }
 
   // ------------------------------------------------------------------
@@ -101,13 +118,17 @@ export class PositionGuard {
       .select("id, coin, side, size, entry_px, strategy_id, meta")
       .eq("status", "open");
 
+    const newIds = new Set<string>();
     this.trades.clear();
     this.skippedTrades.clear();
+
     for (const t of data ?? []) {
       const meta = (t.meta ?? {}) as Record<string, unknown>;
       const sl = typeof meta.stopLoss === "number" ? meta.stopLoss : null;
       const tp = typeof meta.takeProfit === "number" ? meta.takeProfit : null;
-      if (!sl && !tp) continue; // nothing to guard
+      if (!sl && !tp) continue;
+
+      newIds.add(t.id);
       this.trades.set(t.id, {
         id: t.id,
         coin: t.coin,
@@ -120,13 +141,21 @@ export class PositionGuard {
         strategy_id: t.strategy_id,
       });
     }
+
+    // Clean up peak/trail data for trades that are gone
+    for (const id of this.peakPrices.keys()) {
+      if (!newIds.has(id)) {
+        this.peakPrices.delete(id);
+        this.trailingStops.delete(id);
+      }
+    }
   }
 
   private checkAllPositions(_prices: Map<string, number>): void {
     if (this.trades.size === 0) return;
 
     const now = Date.now();
-    if (now - this.lastCheckMs < 1000) return; // throttle to 1 check/sec
+    if (now - this.lastCheckMs < 1000) return;
     this.lastCheckMs = now;
     this.checksRun++;
 
@@ -136,7 +165,10 @@ export class PositionGuard {
       const price = this.priceFeed.getPrice(trade.coin);
       if (!price || price <= 0) continue;
 
-      const trigger = this.checkTrigger(trade, price);
+      // Update trailing stop
+      this.updateTrailingStop(id, trade, price);
+
+      const trigger = this.checkTrigger(trade, price, id);
       if (trigger) {
         this.closingSet.add(id);
         this.executeGuardClose(trade, price, trigger).catch((e) => {
@@ -148,11 +180,62 @@ export class PositionGuard {
     }
   }
 
-  private checkTrigger(t: GuardedTrade, px: number): "stop_loss" | "take_profit" | null {
+  /**
+   * Update trailing stop for a trade based on current price.
+   * Only activates after price moves TRAIL_ACTIVATION_PCT in profit.
+   */
+  private updateTrailingStop(id: string, trade: GuardedTrade, price: number): void {
+    const peak = this.peakPrices.get(id);
+
+    if (trade.side === "long") {
+      // Track highest price seen
+      if (!peak || price > peak) {
+        this.peakPrices.set(id, price);
+      }
+      const currentPeak = this.peakPrices.get(id)!;
+      const profitPct = (currentPeak - trade.entry_px) / trade.entry_px;
+
+      if (profitPct >= TRAIL_ACTIVATION_PCT) {
+        const trailStop = currentPeak * (1 - TRAIL_DISTANCE_PCT);
+        const existingTrail = this.trailingStops.get(id);
+        // Only ratchet up, never down — and never below original SL
+        const minStop = trade.stopLoss ?? 0;
+        const newTrail = Math.max(trailStop, existingTrail ?? 0, minStop);
+        if (!existingTrail || newTrail > existingTrail) {
+          this.trailingStops.set(id, newTrail);
+        }
+      }
+    } else {
+      // Short: track lowest price seen
+      if (!peak || price < peak) {
+        this.peakPrices.set(id, price);
+      }
+      const currentPeak = this.peakPrices.get(id)!;
+      const profitPct = (trade.entry_px - currentPeak) / trade.entry_px;
+
+      if (profitPct >= TRAIL_ACTIVATION_PCT) {
+        const trailStop = currentPeak * (1 + TRAIL_DISTANCE_PCT);
+        const existingTrail = this.trailingStops.get(id);
+        // Only ratchet down (tighter), never up — and never above original SL
+        const maxStop = trade.stopLoss ?? Infinity;
+        const newTrail = Math.min(trailStop, existingTrail ?? Infinity, maxStop);
+        if (!existingTrail || newTrail < existingTrail) {
+          this.trailingStops.set(id, newTrail);
+        }
+      }
+    }
+  }
+
+  private checkTrigger(t: GuardedTrade, px: number, id: string): "stop_loss" | "trailing_stop" | "take_profit" | null {
+    const trailStop = this.trailingStops.get(id);
+
     if (t.side === "long") {
+      // Check trailing stop first (tighter than original SL)
+      if (trailStop && px <= trailStop) return "trailing_stop";
       if (t.stopLoss && px <= t.stopLoss) return "stop_loss";
       if (t.takeProfit && px >= t.takeProfit) return "take_profit";
     } else {
+      if (trailStop && px >= trailStop) return "trailing_stop";
       if (t.stopLoss && px >= t.stopLoss) return "stop_loss";
       if (t.takeProfit && px <= t.takeProfit) return "take_profit";
     }
@@ -167,13 +250,17 @@ export class PositionGuard {
   private async executeGuardClose(
     trade: GuardedTrade,
     triggerPrice: number,
-    reason: "stop_loss" | "take_profit",
+    reason: "stop_loss" | "trailing_stop" | "take_profit",
   ): Promise<void> {
-    const label = reason === "stop_loss" ? "SL" : "TP";
-    const levelPx = reason === "stop_loss" ? trade.stopLoss : trade.takeProfit;
+    const label = reason === "stop_loss" ? "SL" : reason === "trailing_stop" ? "TRAIL" : "TP";
+    const trailStop = this.trailingStops.get(trade.id);
+    const levelPx = reason === "trailing_stop"
+      ? trailStop
+      : reason === "stop_loss" ? trade.stopLoss : trade.takeProfit;
     console.log(
       `[guard] ${label} triggered ${trade.coin} ${trade.side} @ ${triggerPrice.toFixed(4)} ` +
-      `(entry=${trade.entry_px.toFixed(4)}, ${label}=${levelPx})`,
+      `(entry=${trade.entry_px.toFixed(4)}, ${label}=${levelPx})` +
+      (trailStop ? ` [trail=${trailStop.toFixed(4)}, peak=${this.peakPrices.get(trade.id)?.toFixed(4)}]` : ""),
     );
 
     const assetIndex = this.resolveAssetIndex(trade);
@@ -202,7 +289,9 @@ export class PositionGuard {
           stopLoss: trade.stopLoss,
           takeProfit: trade.takeProfit,
           assetIndex,
-          close_reason: `Rule-based ${label} @ ${triggerPrice.toFixed(4)}`,
+          close_reason: reason === "trailing_stop"
+            ? `Trailing stop @ ${trailStop?.toFixed(4)} (peak=${this.peakPrices.get(trade.id)?.toFixed(4)})`
+            : `Rule-based ${label} @ ${triggerPrice.toFixed(4)}`,
         },
       }).eq("id", trade.id);
 
@@ -219,7 +308,6 @@ export class PositionGuard {
         }
       }
 
-      // Log for visibility in the AI agent logs panel
       try {
         await this.supabase.from("ai_agent_logs").insert({
           strategy_id: trade.strategy_id,
@@ -234,6 +322,8 @@ export class PositionGuard {
             triggerPrice,
             stopLoss: trade.stopLoss,
             takeProfit: trade.takeProfit,
+            trailingStop: trailStop ?? null,
+            peakPrice: this.peakPrices.get(trade.id) ?? null,
           },
           signals_generated: 0,
           error_message: null,
@@ -241,6 +331,8 @@ export class PositionGuard {
       } catch { /* non-critical */ }
 
       this.trades.delete(trade.id);
+      this.peakPrices.delete(trade.id);
+      this.trailingStops.delete(trade.id);
       console.log(
         `[guard] ${label} closed ${trade.coin} ${trade.side}: ` +
         `pnl=${pnl.toFixed(4)} (entry=${trade.entry_px.toFixed(4)}, exit=${fillPx.toFixed(4)})`,

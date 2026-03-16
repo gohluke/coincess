@@ -152,7 +152,8 @@ export class SpikeReversionStrategy {
     const limitPx = roundPrice(event.currentPrice * slippage);
 
     console.log(
-      `[spike-reversion] ${event.coin} ${event.direction} ${(event.magnitude * 100).toFixed(2)}% in ${(event.durationMs / 1000).toFixed(1)}s → ` +
+      `[spike-reversion] ${event.coin} ${event.direction} ${(event.magnitude * 100).toFixed(2)}% in ${(event.durationMs / 1000).toFixed(1)}s ` +
+      `(threshold=${((event.dynamicThreshold ?? this.config.spikeThresholdPct) * 100).toFixed(2)}%) → ` +
       `${side.toUpperCase()} $${sizeUsd.toFixed(0)} @ ${limitPx} (SL=${stopLoss.toFixed(4)}, TP=${takeProfit.toFixed(4)})`,
     );
 

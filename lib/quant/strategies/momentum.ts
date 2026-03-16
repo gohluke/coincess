@@ -107,6 +107,9 @@ export function evaluate(
       const stopLoss = newSignal === "long"
         ? data.currentPrice * (1 - cfg.trailingStopPct)
         : data.currentPrice * (1 + cfg.trailingStopPct);
+      const takeProfit = newSignal === "long"
+        ? data.currentPrice * (1 + cfg.trailingStopPct * 3) // 3:1 reward-to-risk
+        : data.currentPrice * (1 - cfg.trailingStopPct * 3);
 
       signals.push({
         coin: data.coin,
@@ -116,6 +119,7 @@ export function evaluate(
         assetIndex: data.assetIndex,
         reason: `MOM ${newSignal}: EMA${cfg.fastPeriod}=${lastFast.toFixed(2)} x EMA${cfg.slowPeriod}=${lastSlow.toFixed(2)}, RSI=${lastRsi.toFixed(1)}`,
         stopLoss,
+        takeProfit,
       });
 
       previousSignals.set(data.coin, newSignal);

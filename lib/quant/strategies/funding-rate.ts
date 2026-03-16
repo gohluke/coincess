@@ -4,9 +4,11 @@ export interface FundingRateConfig {
   entryThreshold: number;    // abs funding rate to enter (default 0.0001 = 0.01%/hr)
   exitThreshold: number;     // abs funding rate to exit (default 0.00005)
   maxHoldHours: number;      // max hold duration (default 8)
-  maxPositions: number;      // concurrent positions (default 5)
-  positionSizePct: number;   // % of account per position (default 0.02)
+  maxPositions: number;      // concurrent positions (default 3)
+  positionSizePct: number;   // % of account per position (default 0.08)
   leverage: number;          // leverage to use (default 3)
+  stopLossPct: number;       // SL as % of entry price (default 0.03 = 3%)
+  takeProfitPct: number;     // TP as % of entry price (default 0.02 = 2%)
 }
 
 const DEFAULT_CONFIG: FundingRateConfig = {
@@ -16,6 +18,8 @@ const DEFAULT_CONFIG: FundingRateConfig = {
   maxPositions: 3,
   positionSizePct: 0.08,
   leverage: 3,
+  stopLossPct: 0.03,
+  takeProfitPct: 0.02,
 };
 
 interface ActiveFundingPosition {
@@ -49,7 +53,7 @@ export function evaluate(
       signals.push({
         coin,
         side: pos.side === "long" ? "short" : "long",
-        size: 0, // engine handles sizing for closes
+        size: 0,
         price: market.markPx,
         assetIndex: market.assetIndex,
         reason: `FR exit: held ${hoursHeld.toFixed(1)}h, rate=${market?.funding.toFixed(6) ?? "N/A"}`,
@@ -69,16 +73,23 @@ export function evaluate(
     .filter((m) => Math.abs(m.funding) >= cfg.entryThreshold)
     .filter((m) => !activePositions.has(m.coin))
     .filter((m) => !ctx.positions.some((p) => p.coin === m.coin))
+    .filter((m) => m.volume24h >= 500_000) // min volume filter
     .sort((a, b) => Math.abs(b.funding) - Math.abs(a.funding));
 
   const slotsAvailable = cfg.maxPositions - openCount;
 
   for (const market of candidates.slice(0, slotsAvailable)) {
-    // Positive funding -> longs pay shorts -> go short to collect
-    // Negative funding -> shorts pay longs -> go long to collect
     const side: "long" | "short" = market.funding > 0 ? "short" : "long";
     const positionValue = ctx.accountValue * cfg.positionSizePct * cfg.leverage;
     const size = positionValue / market.markPx;
+
+    // Calculate SL/TP based on entry price
+    const stopLoss = side === "long"
+      ? market.markPx * (1 - cfg.stopLossPct)
+      : market.markPx * (1 + cfg.stopLossPct);
+    const takeProfit = side === "long"
+      ? market.markPx * (1 + cfg.takeProfitPct)
+      : market.markPx * (1 - cfg.takeProfitPct);
 
     signals.push({
       coin: market.coin,
@@ -87,6 +98,8 @@ export function evaluate(
       price: market.markPx,
       assetIndex: market.assetIndex,
       reason: `FR entry: rate=${(market.funding * 100).toFixed(4)}%, APR=${(Math.abs(market.funding) * 8760 * 100).toFixed(1)}%`,
+      stopLoss,
+      takeProfit,
     });
 
     activePositions.set(market.coin, {

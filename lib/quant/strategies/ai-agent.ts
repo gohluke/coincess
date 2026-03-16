@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { analyzeMarkets } from "../ai/analyst";
 import { makeTradeDecision } from "../ai/trader";
+import type { RecentTradeResult } from "../ai/prompts";
+import { selectTopCoins, buildTechnicalSnapshots } from "../market-analysis";
 import type {
   QuantStrategy,
   StrategySignal,
@@ -34,6 +36,32 @@ function getSupabase(): SupabaseClient | null {
   if (!url || !key) return null;
   _sb = createClient(url, key);
   return _sb;
+}
+
+async function fetchRecentTrades(): Promise<RecentTradeResult[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  try {
+    const { data } = await sb
+      .from("quant_trades")
+      .select("coin, side, entry_px, exit_px, pnl, meta, closed_at")
+      .eq("status", "closed")
+      .not("pnl", "is", null)
+      .order("closed_at", { ascending: false })
+      .limit(15);
+    if (!data) return [];
+    return data.map((t) => ({
+      coin: t.coin,
+      side: t.side as "long" | "short",
+      entryPx: Number(t.entry_px),
+      exitPx: Number(t.exit_px),
+      pnl: Number(t.pnl),
+      reason: (t.meta as Record<string, unknown>)?.close_reason as string ?? "unknown",
+      closedAt: t.closed_at ?? "",
+    }));
+  } catch {
+    return [];
+  }
 }
 
 async function persistLog(
@@ -117,12 +145,26 @@ export async function evaluate(
     return [];
   }
 
-  // Step 1: Analyst scans markets (Gemini Flash)
+  // Build enriched technical data for top coins (parallel candle fetches)
+  const topCoins = selectTopCoins(filteredMarkets, 15);
+  const technicals = await buildTechnicalSnapshots(topCoins);
+  console.log(`[ai-agent] Built technical snapshots for ${technicals.length} coins`);
+
+  // Fetch recent trade history for the AI to learn from
+  const recentTrades = await fetchRecentTrades();
+  if (recentTrades.length > 0) {
+    const wins = recentTrades.filter((t) => t.pnl > 0).length;
+    console.log(`[ai-agent] Feeding ${recentTrades.length} recent trades (${wins}W/${recentTrades.length - wins}L) to AI`);
+  }
+
+  // Step 1: Analyst scans markets with full technical data
   const brief = await analyzeMarkets(
     filteredMarkets,
     ctx.positions,
     ctx.accountValue,
     config.analystModel,
+    technicals,
+    recentTrades,
   );
 
   if (!brief || brief.topOpportunities.length === 0) {
@@ -132,22 +174,24 @@ export async function evaluate(
     return [];
   }
 
-  // Skip trader call if no opportunity is strong enough (>= 50)
-  const strongOpps = brief.topOpportunities.filter((o) => o.strength >= 50);
+  // Skip trader call if no opportunity is strong enough (raised to 60)
+  const strongOpps = brief.topOpportunities.filter((o) => o.strength >= 60);
   if (strongOpps.length === 0) {
-    console.log("[ai-agent] No strong opportunities (all below 50), skipping trader");
+    console.log("[ai-agent] No strong opportunities (all below 60), skipping trader");
     recentLogs.unshift({ timestamp: Date.now(), brief, decision: null, signalsGenerated: 0 });
     if (recentLogs.length > MAX_LOGS) recentLogs.pop();
     await persistLog(strategy.id, brief, null, 0, config);
     return [];
   }
 
-  // Step 2: Trader makes decisions (GPT-4o)
+  // Step 2: Trader makes decisions with performance context
   const decision = await makeTradeDecision(
     brief,
     ctx.positions,
     ctx.accountValue,
     config,
+    undefined,
+    recentTrades,
   );
 
   if (!decision || decision.actions.length === 0) {

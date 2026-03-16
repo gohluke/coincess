@@ -117,12 +117,12 @@ export interface AiAgentConfig {
 export const AI_AGENT_DEFAULTS: AiAgentConfig = {
   allowedMarkets: ["perps", "spot", "stocks", "commodities"],
   capitalAllocationPct: 0.30,
-  maxTradesPerHour: 10,
-  confidenceThreshold: 0.70,
-  maxPositions: 5,
+  maxTradesPerHour: 6,
+  confidenceThreshold: 0.75,
+  maxPositions: 4,
   defaultLeverage: 3,
-  stopLossPct: 0.05,
-  takeProfitPct: 0.10,
+  stopLossPct: 0.04,
+  takeProfitPct: 0.08,
   analystModel: "gemini-2.5-flash",
   traderModel: "gemini-2.5-flash",
 };

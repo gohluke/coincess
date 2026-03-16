@@ -3,6 +3,7 @@ import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { buildTraderPrompt } from "./prompts";
+import type { RecentTradeResult } from "./prompts";
 import type { MarketBrief, PositionInfo, TradeDecision, AiAgentConfig } from "../types";
 
 function getModel(modelName: string) {
@@ -48,6 +49,7 @@ export async function makeTradeDecision(
   accountValue: number,
   config: AiAgentConfig,
   model?: string,
+  recentTrades?: RecentTradeResult[],
 ): Promise<TradeDecision | null> {
   if (!checkHourlyLimit(config.maxTradesPerHour)) {
     console.log("[ai-trader] Hourly trade limit reached, skipping");
@@ -64,6 +66,7 @@ export async function makeTradeDecision(
     config.maxPositions,
     config.defaultLeverage,
     config.stopLossPct,
+    recentTrades,
   );
 
   try {
@@ -76,7 +79,7 @@ export async function makeTradeDecision(
 
     const decision = object as TradeDecision;
 
-    // Filter by confidence threshold
+    // Filter by confidence threshold (raised to 0.7 for quality)
     decision.actions = decision.actions.filter(
       (a) => a.action === "hold" || a.action === "close" || a.confidence >= config.confidenceThreshold,
     );
