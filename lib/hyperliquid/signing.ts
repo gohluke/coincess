@@ -1,5 +1,5 @@
 import { signL1Action, signUserSignedAction } from "@nktkas/hyperliquid/signing";
-import type { AbstractWallet } from "@nktkas/hyperliquid/signing";
+import type { AbstractWallet, AbstractViemLocalAccount } from "@nktkas/hyperliquid/signing";
 import { ApproveBuilderFeeTypes, ApproveAgentTypes, order as sdkOrder, modify as sdkModify } from "@nktkas/hyperliquid/api/exchange";
 import { HttpTransport } from "@nktkas/hyperliquid";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -181,10 +181,7 @@ function getProvider(): EthProvider {
 }
 
 /**
- * Create a viem WalletClient from the given provider, following the SDK's
- * Browser (viem) pattern. Passes account explicitly so viem doesn't need
- * to auto-discover it via eth_requestAccounts.
- *
+ * SDK Browser (viem) pattern — for native browser wallets (MetaMask etc.)
  * See: https://nktkas.gitbook.io/hyperliquid/signing
  */
 function createBrowserWallet(provider: EthProvider, account: `0x${string}`): AbstractWallet {
@@ -196,8 +193,35 @@ function createBrowserWallet(provider: EthProvider, account: `0x${string}`): Abs
 }
 
 /**
+ * SDK Custom pattern — for MPC/embedded wallets (Privy etc.) that already
+ * use viem internally. Wrapping them in another WalletClient causes infinite
+ * recursion, so we call eth_signTypedData_v4 directly.
+ *
+ * See: https://nktkas.gitbook.io/hyperliquid/signing (Custom tab)
+ */
+function createCustomWallet(provider: EthProvider, account: `0x${string}`): AbstractViemLocalAccount {
+  return {
+    address: account,
+    async signTypedData({ domain, types, primaryType, message }) {
+      const { EIP712Domain: _, ...typesWithoutDomain } = types as Record<string, unknown>;
+      const payload = JSON.stringify({
+        domain,
+        types: typesWithoutDomain,
+        primaryType,
+        message,
+      });
+      const sig = await provider.request({
+        method: "eth_signTypedData_v4",
+        params: [account, payload],
+      });
+      return sig as `0x${string}`;
+    },
+  };
+}
+
+/**
  * Get the best available provider and create a wallet for signing.
- * Prefers window.ethereum (MetaMask), falls back to Privy provider.
+ * Uses viem WalletClient for MetaMask, Custom adapter for Privy.
  */
 async function getSigningWallet(expectedAddress?: string): Promise<{ wallet: AbstractWallet; provider: EthProvider; address: string } | null> {
   const nativeEth = getNativeEthereum();
@@ -208,7 +232,7 @@ async function getSigningWallet(expectedAddress?: string): Promise<{ wallet: Abs
   await refreshPrivyProvider();
   if (_privyProvider) {
     const addr = await resolveAddressVia(_privyProvider, expectedAddress);
-    return { wallet: createBrowserWallet(_privyProvider, addr as `0x${string}`), provider: _privyProvider, address: addr };
+    return { wallet: createCustomWallet(_privyProvider, addr as `0x${string}`), provider: _privyProvider, address: addr };
   }
   return null;
 }
@@ -699,7 +723,9 @@ export async function signAndApproveBuilderFee(
     }
     const provider = nativeEth ?? _privyProvider ?? getProvider();
     const addr = await resolveAddressVia(provider, expectedAddress);
-    const wallet = createBrowserWallet(provider, addr as `0x${string}`);
+    const wallet = nativeEth
+      ? createBrowserWallet(provider, addr as `0x${string}`)
+      : createCustomWallet(provider, addr as `0x${string}`);
 
     const nonce = Date.now();
     const action = {
@@ -752,7 +778,9 @@ export async function signAndEnableDexAbstraction(
     }
     const provider = nativeEth ?? _privyProvider ?? getProvider();
     const address = await resolveAddressVia(provider, expectedAddress);
-    const wallet = createBrowserWallet(provider, address as `0x${string}`);
+    const wallet = nativeEth
+      ? createBrowserWallet(provider, address as `0x${string}`)
+      : createCustomWallet(provider, address as `0x${string}`);
 
     const nonce = Date.now();
     const action = {
