@@ -43,8 +43,9 @@ export function useWallet(): WalletState {
       try { localStorage.setItem("coincess:lastWallet", effectiveAddr); } catch {}
 
       if (preferredWallet) {
-        preferredWallet.getEthereumProvider().then((provider) => {
-          setPrivyProvider(provider);
+        const walletGetter = () => preferredWallet.getEthereumProvider();
+        walletGetter().then((provider) => {
+          setPrivyProvider(provider, walletGetter);
         }).catch(() => {});
       }
       return;

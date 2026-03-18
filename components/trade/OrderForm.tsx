@@ -502,7 +502,16 @@ export function OrderForm() {
                 setFeedback(null);
                 try {
                   toast.loading("Approving trading agent...", { id: "enable-trading" });
-                  const result = await signAndApproveAgent(address ?? undefined);
+                  let result = await signAndApproveAgent(address ?? undefined);
+                  if (!result.success && result.error?.includes("still loading")) {
+                    toast.loading("Wallet initializing, retrying...", { id: "enable-trading" });
+                    await new Promise((r) => setTimeout(r, 2000));
+                    result = await signAndApproveAgent(address ?? undefined);
+                    if (!result.success && result.error?.includes("still loading")) {
+                      await new Promise((r) => setTimeout(r, 3000));
+                      result = await signAndApproveAgent(address ?? undefined);
+                    }
+                  }
                   if (result.success) {
                     setAgentApproved(true);
 

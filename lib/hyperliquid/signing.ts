@@ -1,5 +1,5 @@
 import { signL1Action, signUserSignedAction } from "@nktkas/hyperliquid/signing";
-import type { AbstractViemJsonRpcAccount } from "@nktkas/hyperliquid/signing";
+import type { AbstractWallet } from "@nktkas/hyperliquid/signing";
 import { ApproveBuilderFeeTypes, ApproveAgentTypes, order as sdkOrder, modify as sdkModify } from "@nktkas/hyperliquid/api/exchange";
 import { HttpTransport } from "@nktkas/hyperliquid";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -54,6 +54,7 @@ type EthProvider = {
 };
 
 let _privyProvider: EthProvider | null = null;
+let _privyWalletGetter: (() => Promise<EthProvider>) | null = null;
 
 type SigningDebugEntry = {
   at: string;
@@ -113,8 +114,44 @@ function getErrorDetails(err: unknown) {
   };
 }
 
-export function setPrivyProvider(provider: EthProvider | null) {
+function unwrapSigningError(err: unknown): string {
+  const details = getErrorDetails(err);
+  const causeDetails = details.cause ? getErrorDetails(details.cause) : null;
+  const msg = causeDetails?.message || details.shortMessage || details.message || String(err);
+  if (msg.includes("User rejected") || msg.includes("user rejected") || msg.includes("denied")) {
+    return "Signature rejected. Please approve the signing request in your wallet.";
+  }
+  if (msg.includes("not initialized") || msg.includes("not ready")) {
+    return "Wallet is still loading. Please wait a moment and try again.";
+  }
+  return msg;
+}
+
+export function setPrivyProvider(
+  provider: EthProvider | null,
+  walletGetter?: () => Promise<EthProvider>,
+) {
   _privyProvider = provider;
+  if (walletGetter) _privyWalletGetter = walletGetter;
+  if (!provider) _privyWalletGetter = null;
+}
+
+async function refreshPrivyProvider(): Promise<EthProvider | null> {
+  if (_privyWalletGetter) {
+    try {
+      _privyProvider = await _privyWalletGetter();
+    } catch {
+      // keep existing _privyProvider
+    }
+  }
+  if (_privyProvider) {
+    try {
+      await _privyProvider.request({ method: "eth_requestAccounts" });
+    } catch {
+      // best-effort; some providers don't need this
+    }
+  }
+  return _privyProvider;
 }
 
 function getNativeEthereum(): EthProvider | null {
@@ -144,118 +181,36 @@ function getProvider(): EthProvider {
 }
 
 /**
- * Build a wallet adapter conforming to @nktkas/hyperliquid's AbstractViemJsonRpcAccount.
- * Internally delegates signTypedData to viem's WalletClient which correctly
- * handles EIP-712 encoding, EIP712Domain types, and JSON-RPC payload construction.
+ * Create a viem WalletClient from the given provider, following the SDK's
+ * Browser (viem) pattern. Passes account explicitly so viem doesn't need
+ * to auto-discover it via eth_requestAccounts.
  *
- * See SDK browser (viem) examples: https://nktkas.gitbook.io/hyperliquid/signing
+ * See: https://nktkas.gitbook.io/hyperliquid/signing
  */
-function createHyperliquidWallet(preferredAddress?: string): AbstractViemJsonRpcAccount {
-  const provider = getProvider();
-  return makeWalletAdapter(provider, preferredAddress);
+function createBrowserWallet(provider: EthProvider, account: `0x${string}`): AbstractWallet {
+  return createWalletClient({
+    account,
+    chain: arbitrum,
+    transport: custom(provider),
+  });
 }
 
 /**
- * Build a wallet adapter that talks to window.ethereum directly (MetaMask),
- * bypassing any Privy wrapper. Used for one-time EIP-712 approvals so the
- * signing popup goes straight to MetaMask on Arbitrum -- matching based.one.
+ * Get the best available provider and create a wallet for signing.
+ * Prefers window.ethereum (MetaMask), falls back to Privy provider.
  */
-function createNativeWallet(preferredAddress?: string): AbstractViemJsonRpcAccount {
-  const eth = getNativeEthereum();
-  if (!eth) throw new Error("No browser wallet detected. Please install MetaMask.");
-  return {
-    async getAddresses() {
-      const addr = await resolveAddressVia(eth, preferredAddress);
-      return [addr] as `0x${string}`[];
-    },
-
-    async getChainId() {
-      // Return the Hyperliquid signing chain (0x66eee = 421614) so the SDK's
-      // chain validation passes. The actual MetaMask chain doesn't matter for
-      // EIP-712 message signing — only the domain chainId matters.
-      return 421614;
-    },
-
-    async signTypedData(params) {
-      const addr = await resolveAddressVia(eth, preferredAddress);
-
-      // The SDK includes EIP712Domain in params.types, but MetaMask's
-      // eth_signTypedData_v4 auto-derives it from the domain object.
-      // Passing both causes MetaMask to error or hang. Strip it.
-      const { EIP712Domain: _, ...typesWithoutDomain } = params.types as Record<string, unknown>;
-
-      const payload = JSON.stringify({
-        domain: params.domain,
-        types: typesWithoutDomain,
-        primaryType: params.primaryType,
-        message: params.message,
-      });
-      pushSigningDebug("native.signTypedData.payload", {
-        address: addr,
-        domain: params.domain,
-        primaryType: params.primaryType,
-        typesStripped: Object.keys(typesWithoutDomain),
-        message: params.message,
-      });
-
-      let result: unknown;
-      try {
-        result = await eth.request({
-          method: "eth_signTypedData_v4",
-          params: [addr, payload],
-        });
-      } catch (err) {
-        pushSigningDebug("native.signTypedData.error", {
-          address: addr,
-          chainId: await eth.request({ method: "eth_chainId" }).catch(() => "unknown"),
-          error: getErrorDetails(err),
-        });
-        throw err;
-      }
-
-      pushSigningDebug("native.signTypedData.success", {
-        address: addr,
-        signaturePreview: typeof result === "string" ? `${result.slice(0, 10)}...${result.slice(-8)}` : result,
-      });
-
-      return result as `0x${string}`;
-    },
-  };
-}
-
-function makeWalletAdapter(provider: EthProvider, preferredAddress?: string): AbstractViemJsonRpcAccount {
-  return {
-    async getAddresses() {
-      const addr = await resolveAddressVia(provider, preferredAddress);
-      return [addr] as `0x${string}`[];
-    },
-
-    async getChainId() {
-      const chainId = (await provider.request({ method: "eth_chainId" })) as string;
-      return Number(chainId);
-    },
-
-    async signTypedData(params) {
-      const addr = await resolveAddressVia(provider, preferredAddress);
-      const domainChainId = params.domain?.chainId;
-      const signingChain = domainChainId != null
-        ? { ...arbitrum, id: Number(domainChainId) }
-        : arbitrum;
-
-      const client = createWalletClient({
-        account: addr as `0x${string}`,
-        chain: signingChain,
-        transport: custom(provider),
-      });
-
-      return client.signTypedData({
-        domain: params.domain as Parameters<typeof client.signTypedData>[0]["domain"],
-        types: params.types as Parameters<typeof client.signTypedData>[0]["types"],
-        primaryType: params.primaryType as string,
-        message: params.message as Record<string, unknown>,
-      });
-    },
-  };
+async function getSigningWallet(expectedAddress?: string): Promise<{ wallet: AbstractWallet; provider: EthProvider; address: string } | null> {
+  const nativeEth = getNativeEthereum();
+  if (nativeEth) {
+    const addr = await resolveAddressVia(nativeEth, expectedAddress);
+    return { wallet: createBrowserWallet(nativeEth, addr as `0x${string}`), provider: nativeEth, address: addr };
+  }
+  await refreshPrivyProvider();
+  if (_privyProvider) {
+    const addr = await resolveAddressVia(_privyProvider, expectedAddress);
+    return { wallet: createBrowserWallet(_privyProvider, addr as `0x${string}`), provider: _privyProvider, address: addr };
+  }
+  return null;
 }
 
 async function resolveAddressVia(provider: EthProvider, preferredAddress?: string): Promise<string> {
@@ -407,32 +362,15 @@ export function getMarketOrderPrice(isBuy: boolean, markPx: number): string {
 // Agent approval (one-time "Enable Trading")
 // ---------------------------------------------------------------------------
 
-/**
- * One-time agent approval: generates a local keypair, has the user sign an
- * ApproveAgent EIP-712 message directly via window.ethereum (bypasses Privy
- * so the popup goes to MetaMask), registers with Hyperliquid, and stores
- * the agent key in localStorage.
- *
- * NOTE: We intentionally do NOT switch the wallet to Arbitrum before signing.
- * The Hyperliquid EIP-712 domain uses chainId 0x66eee (421614) which doesn't
- * correspond to the wallet's active chain. MetaMask mobile rejects
- * eth_signTypedData_v4 if the domain chainId mismatches the active chain,
- * so any chain switch would cause a failure on iPhone.
- */
 export async function signAndApproveAgent(
   expectedAddress?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const nativeEth = getNativeEthereum();
-    if (!nativeEth) {
-      return {
-        success: false,
-        error: "Enable Trading requires MetaMask or another injected wallet.",
-      };
+    const resolved = await getSigningWallet(expectedAddress);
+    if (!resolved) {
+      return { success: false, error: "No wallet detected. Please connect your wallet first." };
     }
-
-    const wallet = createNativeWallet(expectedAddress);
-    const userAddr = await resolveAddressVia(nativeEth, expectedAddress);
+    const { wallet, address: userAddr } = resolved;
 
     const agentPrivateKey = generatePrivateKey();
     const agentAcc = privateKeyToAccount(agentPrivateKey);
@@ -446,17 +384,9 @@ export async function signAndApproveAgent(
       agentName: BRAND_CONFIG.name,
       nonce,
     };
-    pushSigningDebug("approveAgent.start", {
-      userAddr,
-      action,
-      activeWalletChainId: await nativeEth.request({ method: "eth_chainId" }).catch(() => "unknown"),
-    });
+    pushSigningDebug("approveAgent.start", { userAddr, action });
 
-    const signature = await signUserSignedAction({
-      wallet,
-      action,
-      types: ApproveAgentTypes,
-    });
+    const signature = await signUserSignedAction({ wallet, action, types: ApproveAgentTypes });
 
     const res = await fetch(EXCHANGE_URL, {
       method: "POST",
@@ -474,7 +404,6 @@ export async function signAndApproveAgent(
         approvedAt: Date.now(),
       });
 
-      // Auto-set referral code (non-blocking; safe to fail)
       if (BRAND_CONFIG.referral?.code) {
         try {
           await fetch(EXCHANGE_URL, {
@@ -485,25 +414,17 @@ export async function signAndApproveAgent(
               nonce: Date.now(),
             }),
           });
-        } catch {
-          // Referral is best-effort; don't block trading enablement
-        }
+        } catch { /* best-effort */ }
       }
 
       return { success: true };
     }
 
-    const apiError = typeof data.response === "string"
-      ? data.response
-      : JSON.stringify(data);
+    const apiError = typeof data.response === "string" ? data.response : JSON.stringify(data);
     return { success: false, error: `Hyperliquid rejected: ${apiError}` };
   } catch (err) {
     pushSigningDebug("approveAgent.error", getErrorDetails(err));
-    const msg = (err as Error).message || String(err);
-    if (msg.includes("User rejected") || msg.includes("user rejected") || msg.includes("denied")) {
-      return { success: false, error: "Signature rejected. Please approve the signing request in your wallet." };
-    }
-    return { success: false, error: msg };
+    return { success: false, error: unwrapSigningError(err) };
   }
 }
 
@@ -537,7 +458,7 @@ export async function signAndPlaceOrder(
   try {
     const userAddr = await resolveAddress(params.expectedAddress);
     const agentAcc = getAgentAccount(userAddr);
-    const wallet = agentAcc ?? createHyperliquidWallet(params.expectedAddress);
+    const wallet = agentAcc ?? createBrowserWallet(getProvider(), userAddr as `0x${string}`);
 
     pushSigningDebug("placeOrder.start", {
       userAddr,
@@ -638,7 +559,7 @@ export async function signAndModifyOrder(params: {
   try {
     const userAddr = await resolveAddress(params.expectedAddress);
     const agentAcc = getAgentAccount(userAddr);
-    const wallet = agentAcc ?? createHyperliquidWallet(params.expectedAddress);
+    const wallet = agentAcc ?? createBrowserWallet(getProvider(), userAddr as `0x${string}`);
 
     const market = params.markets.find((m) => m.name === params.coin);
     if (!market) throw new Error(`Market ${params.coin} not found`);
@@ -702,7 +623,7 @@ export async function signAndCancelOrder(
   try {
     const userAddr = await resolveAddress(expectedAddress);
     const agentAcc = getAgentAccount(userAddr);
-    const wallet = agentAcc ?? createHyperliquidWallet(expectedAddress);
+    const wallet = agentAcc ?? createBrowserWallet(getProvider(), userAddr as `0x${string}`);
 
     const nonce = Date.now();
     const action = { type: "cancel", cancels: [{ a: asset, o: oid }] };
@@ -743,7 +664,7 @@ export async function signAndUpdateLeverage(
   try {
     const userAddr = await resolveAddress(expectedAddress);
     const agentAcc = getAgentAccount(userAddr);
-    const wallet = agentAcc ?? createHyperliquidWallet(expectedAddress);
+    const wallet = agentAcc ?? createBrowserWallet(getProvider(), userAddr as `0x${string}`);
 
     const nonce = Date.now();
     const action = { type: "updateLeverage", asset, isCross, leverage };
@@ -773,8 +694,12 @@ export async function signAndApproveBuilderFee(
     const nativeEth = getNativeEthereum();
     if (nativeEth) {
       try { await switchToArbitrum(nativeEth); } catch { /* non-blocking */ }
+    } else {
+      await refreshPrivyProvider();
     }
-    const wallet = nativeEth ? createNativeWallet(expectedAddress) : createHyperliquidWallet(expectedAddress);
+    const provider = nativeEth ?? _privyProvider ?? getProvider();
+    const addr = await resolveAddressVia(provider, expectedAddress);
+    const wallet = createBrowserWallet(provider, addr as `0x${string}`);
 
     const nonce = Date.now();
     const action = {
@@ -820,13 +745,14 @@ export async function signAndEnableDexAbstraction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const nativeEth = getNativeEthereum();
-    // Best-effort chain switch — signing uses Hyperliquid's domain chainId (0x66eee),
-    // not the wallet's active chain, so Arbitrum isn't strictly required.
     if (nativeEth) {
       try { await switchToArbitrum(nativeEth); } catch { /* non-blocking */ }
+    } else {
+      await refreshPrivyProvider();
     }
-    const wallet = nativeEth ? createNativeWallet(expectedAddress) : createHyperliquidWallet(expectedAddress);
-    const address = await resolveAddress(expectedAddress);
+    const provider = nativeEth ?? _privyProvider ?? getProvider();
+    const address = await resolveAddressVia(provider, expectedAddress);
+    const wallet = createBrowserWallet(provider, address as `0x${string}`);
 
     const nonce = Date.now();
     const action = {
