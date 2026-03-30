@@ -926,7 +926,7 @@ export default function DashboardPage() {
               )
             ) : (
               polyTrades.length > 0 ? (
-                <PolyTradeTable trades={polyTrades} />
+                <PolyTradeTable trades={polyTrades} positions={polyPositions} />
               ) : (
                 <div className="text-center py-12 text-[#848e9c] text-sm">No Polymarket trades yet</div>
               )
@@ -2293,30 +2293,68 @@ function CoinTradeDetail({
 
 // ── Polymarket Trade Table ──────────────────────────────────
 
-function PolyTradeTable({ trades }: { trades: PolymarketTrade[] }) {
+function PolyTradeTable({ trades, positions }: { trades: PolymarketTrade[]; positions: PolymarketPosition[] }) {
   const sorted = [...trades].sort((a, b) => b.timestamp - a.timestamp);
+
+  const priceMap = useMemo(() => {
+    const m = new Map<string, { curPrice: number; avgPrice: number }>();
+    for (const p of positions) {
+      m.set(p.asset, { curPrice: p.curPrice, avgPrice: p.avgPrice });
+    }
+    return m;
+  }, [positions]);
+
+  const totalTradePnl = useMemo(() => {
+    let sum = 0;
+    for (const t of trades) {
+      const pos = priceMap.get(t.asset);
+      if (!pos) continue;
+      if (t.side === "BUY") {
+        sum += (pos.curPrice - t.price) * t.size;
+      } else {
+        sum += (t.price - pos.avgPrice) * t.size;
+      }
+    }
+    return sum;
+  }, [trades, priceMap]);
+
   return (
     <div className="bg-[#141620] rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
-        <p className="text-xs font-semibold text-white">Polymarket Trades</p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs font-semibold text-white">Polymarket Trades</p>
+          {positions.length > 0 && (
+            <span className={`text-xs font-bold ${totalTradePnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {totalTradePnl >= 0 ? "+" : ""}{formatUsd(totalTradePnl)}
+            </span>
+          )}
+        </div>
         <p className="text-[10px] text-[#848e9c]">Total: {trades.length}</p>
       </div>
-      <div className="grid grid-cols-7 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+      <div className="grid grid-cols-8 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
         <span>Date</span>
         <span className="col-span-2">Market</span>
         <span>Side</span>
         <span className="text-right">Price</span>
         <span className="text-right">Shares</span>
         <span className="text-right">Total</span>
+        <span className="text-right">P&L</span>
       </div>
       {sorted.map((t, i) => {
         const total = t.size * t.price;
         const isBuy = t.side === "BUY";
+        const pos = priceMap.get(t.asset);
+        let pnl: number | null = null;
+        if (pos) {
+          pnl = isBuy
+            ? (pos.curPrice - t.price) * t.size
+            : (t.price - pos.avgPrice) * t.size;
+        }
         return (
           <Link
             key={`${t.transactionHash}-${i}`}
             href={`/predict/${t.eventSlug}`}
-            className="grid grid-cols-7 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors"
+            className="grid grid-cols-8 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors"
           >
             <span className="text-[#848e9c]">
               {new Date(t.timestamp * 1000).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
@@ -2333,6 +2371,9 @@ function PolyTradeTable({ trades }: { trades: PolymarketTrade[] }) {
             <span className="text-right text-white">{(t.price * 100).toFixed(1)}¢</span>
             <span className="text-right text-white">{t.size.toFixed(2)}</span>
             <span className="text-right text-white">{formatUsd(total)}</span>
+            <span className={`text-right font-medium ${pnl === null ? "text-[#848e9c]" : pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {pnl === null ? "–" : `${pnl >= 0 ? "+" : ""}${formatUsd(pnl)}`}
+            </span>
           </Link>
         );
       })}
