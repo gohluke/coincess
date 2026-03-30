@@ -32,8 +32,8 @@ import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 import PortfolioChart from "@/components/dashboard/PortfolioChart";
 import { DepositButton } from "@/components/DepositModal";
-import { fetchPolymarketPositions } from "@/lib/polymarket/api";
-import type { PolymarketPosition } from "@/lib/polymarket/types";
+import { fetchPolymarketPositions, fetchPolymarketTrades } from "@/lib/polymarket/api";
+import type { PolymarketPosition, PolymarketTrade } from "@/lib/polymarket/types";
 
 // ── Round-trip trade grouping ──────────────────────────────
 
@@ -194,19 +194,20 @@ export default function DashboardPage() {
   const [ledger, setLedger] = useState<LedgerUpdate[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  const [historyView, setHistoryView] = useState<"trades" | "fills" | "calendar">("trades");
+  const [historyView, setHistoryView] = useState<"trades" | "fills" | "polymarket">("trades");
   const [portfolioTab, setPortfolioTab] = useState<"assets" | "history" | "performance" | "calendar">("assets");
 
   const automationInit = useAutomationStore((s) => s.init);
   const browserStrategies = useAutomationStore((s) => s.strategies);
   const [serverStrategies, setServerStrategies] = useState<{ status: string }[]>([]);
   const [polyPositions, setPolyPositions] = useState<PolymarketPosition[]>([]);
+  const [polyTrades, setPolyTrades] = useState<PolymarketTrade[]>([]);
   const [polyProxyWallet, setPolyProxyWallet] = useState<string | null>(null);
 
   const loadData = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, userLedger, quantStatus, polyData] = await Promise.all([
+      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, userLedger, quantStatus, polyData, polyTradeData] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
         fetchSpotClearinghouseState(addr).catch(() => null),
         fetchOpenOrders(addr),
@@ -216,6 +217,7 @@ export default function DashboardPage() {
         fetchUserLedger(addr).catch(() => [] as LedgerUpdate[]),
         fetch("/api/quant/status").then((r) => r.json()).catch(() => ({ strategies: [] })),
         fetchPolymarketPositions(addr).catch(() => ({ positions: [] as PolymarketPosition[], proxyWallet: null })),
+        fetchPolymarketTrades(addr, 200).catch(() => ({ trades: [] as PolymarketTrade[], proxyWallet: null })),
       ]);
       setCh(chState);
       setSpot(spotState);
@@ -226,7 +228,8 @@ export default function DashboardPage() {
       setLedger(userLedger);
       setServerStrategies(quantStatus.strategies ?? []);
       setPolyPositions(polyData.positions);
-      setPolyProxyWallet(polyData.proxyWallet);
+      setPolyTrades(polyTradeData.trades);
+      setPolyProxyWallet(polyData.proxyWallet ?? polyTradeData.proxyWallet);
       setLastRefresh(new Date());
     } catch (err) {
       console.error("Failed to load dashboard:", err);
@@ -263,22 +266,30 @@ export default function DashboardPage() {
       const d = new Date(ts);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     };
-    const map = new Map<string, { closed: number; fees: number; funding: number }>();
+    const map = new Map<string, { closed: number; fees: number; funding: number; poly: number }>();
     for (const f of fills) {
       const day = toLocalDate(f.time);
-      const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0 };
+      const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0, poly: 0 };
       entry.closed += parseFloat(f.closedPnl);
       entry.fees += parseFloat(f.fee);
       map.set(day, entry);
     }
     for (const fp of funding) {
       const day = toLocalDate(fp.time);
-      const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0 };
+      const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0, poly: 0 };
       entry.funding += parseFloat(fp.delta.usdc);
       map.set(day, entry);
     }
+    for (const pt of polyTrades) {
+      if (!pt.timestamp) continue;
+      const day = toLocalDate(pt.timestamp * 1000);
+      const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0, poly: 0 };
+      const tradeValue = pt.size * pt.price;
+      entry.poly += pt.side === "SELL" ? tradeValue : -tradeValue;
+      map.set(day, entry);
+    }
     return map;
-  }, [fills, funding]);
+  }, [fills, funding, polyTrades]);
 
   const dailyFills = useMemo(() => {
     const toLocalDate = (ts: number) => {
@@ -838,13 +849,17 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex bg-[#1a1d2e] rounded-lg p-0.5 text-[10px]">
-                {(["trades", "fills"] as const).map((v) => (
+                {([
+                  ["trades", `Trades (${trades.length})`],
+                  ["fills", `Fills (${fills.length})`],
+                  ["polymarket", `Polymarket (${polyTrades.length})`],
+                ] as [typeof historyView, string][]).map(([v, label]) => (
                   <button
                     key={v}
-                    onClick={() => setHistoryView(v === "trades" ? "trades" : "fills")}
-                    className={`px-3 py-1.5 rounded-md font-medium transition-colors capitalize ${historyView === v ? "bg-brand text-white" : "text-[#848e9c] hover:text-white"}`}
+                    onClick={() => setHistoryView(v)}
+                    className={`px-3 py-1.5 rounded-md font-medium transition-colors ${historyView === v ? "bg-brand text-white" : "text-[#848e9c] hover:text-white"}`}
                   >
-                    {v === "trades" ? `Trades (${trades.length})` : `Fills (${fills.length})`}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -859,11 +874,11 @@ export default function DashboardPage() {
             </div>
 
             {/* Aggregate stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               <div className="bg-[#141620] rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Total PnL</p>
-                <p className={`text-sm font-bold ${totalPnlAll >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                  {totalPnlAll >= 0 ? "+" : ""}{formatUsd(totalPnlAll)}
+                <p className={`text-sm font-bold ${(totalPnlAll + polyTotalPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {(totalPnlAll + polyTotalPnl) >= 0 ? "+" : ""}{formatUsd(totalPnlAll + polyTotalPnl)}
                 </p>
               </div>
               <div className="bg-[#141620] rounded-xl px-3 py-2.5">
@@ -879,6 +894,12 @@ export default function DashboardPage() {
                 </p>
               </div>
               <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Polymarket P&L</p>
+                <p className={`text-sm font-bold ${polyTotalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {polyTotalPnl >= 0 ? "+" : ""}{formatUsd(polyTotalPnl)}
+                </p>
+              </div>
+              <div className="bg-[#141620] rounded-xl px-3 py-2.5">
                 <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Win Rate</p>
                 <p className="text-sm font-bold text-white">
                   {winRate}%
@@ -887,36 +908,40 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {historyView === "trades" || historyView === "fills" ? (
-              historyView === "trades" ? (
-                trades.length > 0 ? (
-                  <div className="space-y-2">
-                    {trades.map((trade, i) => (
-                      <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} markets={markets} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-[#848e9c] text-sm">No trades yet</div>
-                )
+            {historyView === "trades" ? (
+              trades.length > 0 ? (
+                <div className="space-y-2">
+                  {trades.map((trade, i) => (
+                    <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} markets={markets} />
+                  ))}
+                </div>
               ) : (
-                fills.length > 0 ? (
-                  <TransactionTable fills={fills} />
-                ) : (
-                  <div className="text-center py-12 text-[#848e9c] text-sm">No fills yet</div>
-                )
+                <div className="text-center py-12 text-[#848e9c] text-sm">No trades yet</div>
               )
-            ) : null}
+            ) : historyView === "fills" ? (
+              fills.length > 0 ? (
+                <TransactionTable fills={fills} />
+              ) : (
+                <div className="text-center py-12 text-[#848e9c] text-sm">No fills yet</div>
+              )
+            ) : (
+              polyTrades.length > 0 ? (
+                <PolyTradeTable trades={polyTrades} />
+              ) : (
+                <div className="text-center py-12 text-[#848e9c] text-sm">No Polymarket trades yet</div>
+              )
+            )}
           </div>
         )}
 
         {/* ─── Performance Tab ─── */}
         {portfolioTab === "performance" && (
-          <CoinPerformance fills={fills} trades={trades} funding={funding} />
+          <CoinPerformance fills={fills} trades={trades} funding={funding} polyPositions={activePolyPositions} polyTrades={polyTrades} />
         )}
 
         {/* ─── PnL Calendar Tab ─── */}
         {portfolioTab === "calendar" && (
-          <PnlCalendar dailyPnl={dailyPnl} dailyFills={dailyFills} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} />
+          <PnlCalendar dailyPnl={dailyPnl} dailyFills={dailyFills} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} polyTrades={polyTrades} />
         )}
 
         
@@ -1424,12 +1449,14 @@ function PnlCalendar({
   totalClosedPnl,
   totalFundingPnl,
   totalPnlAll,
+  polyTrades,
 }: {
-  dailyPnl: Map<string, { closed: number; fees: number; funding: number }>;
+  dailyPnl: Map<string, { closed: number; fees: number; funding: number; poly: number }>;
   dailyFills: Map<string, Fill[]>;
   totalClosedPnl: number;
   totalFundingPnl: number;
   totalPnlAll: number;
+  polyTrades: PolymarketTrade[];
 }) {
   const [calMonth, setCalMonth] = useState(() => {
     const now = new Date();
@@ -1460,6 +1487,7 @@ function PnlCalendar({
   let monthTotalPnl = 0;
   let monthClosedPnl = 0;
   let monthFunding = 0;
+  let monthPoly = 0;
   let profitDays = 0;
   let lossDays = 0;
   let profitAmt = 0;
@@ -1472,11 +1500,12 @@ function PnlCalendar({
     dayKeys.push(key);
     const entry = dailyPnl.get(key);
     if (entry) {
-      const dayNet = entry.closed - entry.fees + entry.funding;
+      const dayNet = entry.closed - entry.fees + entry.funding + entry.poly;
       dayPnls.push(dayNet);
       monthTotalPnl += dayNet;
       monthClosedPnl += entry.closed;
       monthFunding += entry.funding;
+      monthPoly += entry.poly;
       if (dayNet > 0) { profitDays++; profitAmt += dayNet; }
       else if (dayNet < 0) { lossDays++; lossAmt += dayNet; }
     } else {
@@ -1492,6 +1521,17 @@ function PnlCalendar({
   const selectedFills = selectedDay ? (dailyFills.get(selectedDay) ?? []).sort((a, b) => b.time - a.time) : [];
   const selectedPnlEntry = selectedDay ? dailyPnl.get(selectedDay) : null;
 
+  const selectedDayPolyTrades = useMemo(() => {
+    if (!selectedDay) return [];
+    const toLocalDate = (ts: number) => {
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    return polyTrades
+      .filter((pt) => pt.timestamp && toLocalDate(pt.timestamp * 1000) === selectedDay)
+      .sort((a, b) => b.timestamp - a.timestamp);
+  }, [selectedDay, polyTrades]);
+
   return (
     <div className="space-y-3">
       {/* Header with month nav */}
@@ -1502,7 +1542,7 @@ function PnlCalendar({
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         <div className="bg-[#141620] rounded-xl px-3 py-2.5">
           <p className="text-[10px] text-[#848e9c] uppercase">Total PnL</p>
           <p className={`text-sm font-bold ${monthTotalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
@@ -1523,6 +1563,12 @@ function PnlCalendar({
           <p className="text-[10px] text-[#848e9c] uppercase">Funding</p>
           <p className={`text-sm font-bold ${monthFunding >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {monthFunding >= 0 ? "+" : ""}{formatUsd(monthFunding)}
+          </p>
+        </div>
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase">Polymarket</p>
+          <p className={`text-sm font-bold ${monthPoly >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {monthPoly >= 0 ? "+" : ""}{formatUsd(monthPoly)}
           </p>
         </div>
       </div>
@@ -1602,7 +1648,7 @@ function PnlCalendar({
                 {new Date(selectedDay + "T00:00:00").toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
               </p>
               {(() => {
-                const net = selectedPnlEntry.closed - selectedPnlEntry.fees + selectedPnlEntry.funding;
+                const net = selectedPnlEntry.closed - selectedPnlEntry.fees + selectedPnlEntry.funding + selectedPnlEntry.poly;
                 return (
                   <span className={`text-xs font-bold ${net >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                     {net >= 0 ? "+" : ""}{formatUsd(net)}
@@ -1633,6 +1679,14 @@ function PnlCalendar({
                 {selectedPnlEntry.funding >= 0 ? "+" : ""}{formatUsd(selectedPnlEntry.funding)}
               </span>
             </div>
+            {selectedPnlEntry.poly !== 0 && (
+              <div>
+                <span className="text-[#848e9c]">Polymarket: </span>
+                <span className={selectedPnlEntry.poly >= 0 ? "text-blue-400 font-medium" : "text-red-400 font-medium"}>
+                  {selectedPnlEntry.poly >= 0 ? "+" : ""}{formatUsd(selectedPnlEntry.poly)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Fill list */}
@@ -1667,8 +1721,48 @@ function PnlCalendar({
                 );
               })}
             </div>
-          ) : (
+          ) : selectedDayPolyTrades.length === 0 ? (
             <div className="px-4 py-4 text-center text-[10px] text-[#848e9c]">No fills for this day (funding only)</div>
+          ) : null}
+
+          {/* Polymarket trades for selected day */}
+          {selectedDayPolyTrades.length > 0 && (
+            <>
+              <div className="px-4 py-2 border-t border-[#2a2e3e]/50">
+                <p className="text-[10px] text-blue-400 font-medium">Polymarket Trades ({selectedDayPolyTrades.length})</p>
+              </div>
+              <div className="divide-y divide-[#2a2e3e]/30 max-h-[200px] overflow-y-auto">
+                {selectedDayPolyTrades.map((pt, i) => {
+                  const isBuy = pt.side === "BUY";
+                  const total = pt.size * pt.price;
+                  return (
+                    <Link
+                      key={`${pt.transactionHash}-${i}`}
+                      href={`/predict/${pt.eventSlug}`}
+                      className="flex items-center justify-between px-4 py-2 text-[10px] hover:bg-[#1a1d2e]/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded font-bold ${isBuy ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
+                          {pt.side}
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 font-bold">POLY</span>
+                        <span className="text-white font-medium truncate max-w-[180px]">{pt.title}</span>
+                        <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${pt.outcome === "Yes" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                          {pt.outcome}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-white">{pt.size.toFixed(2)} @ {(pt.price * 100).toFixed(1)}¢</span>
+                        <span className="text-[#848e9c]">{formatUsd(total)}</span>
+                        <span className="text-[#848e9c]">
+                          {new Date(pt.timestamp * 1000).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -1699,10 +1793,14 @@ function CoinPerformance({
   fills,
   trades,
   funding,
+  polyPositions,
+  polyTrades,
 }: {
   fills: Fill[];
   trades: RoundTripTrade[];
   funding: FundingPayment[];
+  polyPositions: PolymarketPosition[];
+  polyTrades: PolymarketTrade[];
 }) {
   const [expandedCoin, setExpandedCoin] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<"netPnl" | "fills" | "trades" | "winRate" | "volume">("netPnl");
@@ -1784,6 +1882,9 @@ function CoinPerformance({
     return arr;
   }, [coinStats, sortKey, sortAsc]);
 
+  const polyPnl = useMemo(() => polyPositions.reduce((s, p) => s + p.cashPnl, 0), [polyPositions]);
+  const polyVolume = useMemo(() => polyTrades.reduce((s, t) => s + t.size * t.price, 0), [polyTrades]);
+
   const totalNet = coinStats.reduce((s, c) => s + c.netPnl, 0);
   const totalGross = coinStats.reduce((s, c) => s + c.grossPnl, 0);
   const totalFees = coinStats.reduce((s, c) => s + c.fees, 0);
@@ -1816,16 +1917,16 @@ function CoinPerformance({
     );
   }
 
-  const maxAbsNet = Math.max(...coinStats.map((c) => Math.abs(c.netPnl)), 1);
+  const maxAbsNet = Math.max(...coinStats.map((c) => Math.abs(c.netPnl)), Math.abs(polyPnl), 1);
 
   return (
     <div className="space-y-4">
       {/* Overview cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         <div className="bg-[#141620] rounded-xl px-3 py-2.5">
           <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Net P&L</p>
-          <p className={`text-lg font-bold ${totalNet >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-            {totalNet >= 0 ? "+" : ""}{formatUsd(totalNet)}
+          <p className={`text-lg font-bold ${(totalNet + polyPnl) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {(totalNet + polyPnl) >= 0 ? "+" : ""}{formatUsd(totalNet + polyPnl)}
           </p>
         </div>
         <div className="bg-[#141620] rounded-xl px-3 py-2.5">
@@ -1834,6 +1935,13 @@ function CoinPerformance({
             {overallWinRate}%
             <span className="text-[10px] text-[#848e9c] font-normal ml-1">({totalWins}/{totalTrades})</span>
           </p>
+        </div>
+        <div className="bg-[#141620] rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5">Polymarket P&L</p>
+          <p className={`text-lg font-bold ${polyPnl >= 0 ? "text-blue-400" : "text-red-400"}`}>
+            {polyPnl >= 0 ? "+" : ""}{formatUsd(polyPnl)}
+          </p>
+          <p className="text-[10px] text-[#848e9c] mt-0.5">{polyPositions.length} position{polyPositions.length !== 1 ? "s" : ""} · {polyTrades.length} trades</p>
         </div>
         <div className="bg-[#141620] rounded-xl px-3 py-2.5">
           <p className="text-[10px] text-[#848e9c] uppercase tracking-wide mb-0.5 flex items-center gap-1">
@@ -1907,6 +2015,24 @@ function CoinPerformance({
               </button>
             );
           })}
+          {polyPositions.length > 0 && (
+            <div className="w-full">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-blue-400 w-20 text-left shrink-0">Polymarket</span>
+                <div className="flex-1 h-6 bg-[#0b0e11] rounded-md overflow-hidden relative">
+                  <div
+                    className={`h-full rounded-md transition-all ${polyPnl >= 0 ? "bg-blue-500/30" : "bg-red-500/30"}`}
+                    style={{ width: `${Math.max((Math.abs(polyPnl) / maxAbsNet) * 100, 2)}%` }}
+                  />
+                  <span className={`absolute inset-0 flex items-center px-2 text-[10px] font-bold ${polyPnl >= 0 ? "text-blue-400" : "text-red-400"}`}>
+                    {polyPnl >= 0 ? "+" : ""}{formatUsd(polyPnl)}
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#848e9c] w-16 text-right shrink-0">{polyTrades.length} trades</span>
+                <div className="h-3 w-3" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1985,6 +2111,61 @@ function CoinPerformance({
           trades={coinTrades}
           onClose={() => setExpandedCoin(null)}
         />
+      )}
+
+      {/* Polymarket Positions Performance */}
+      {polyPositions.length > 0 && (
+        <div className="bg-[#141620] rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-blue-400" />
+              <p className="text-xs font-semibold text-white">Polymarket Positions</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-bold ${polyPnl >= 0 ? "text-blue-400" : "text-red-400"}`}>
+                {polyPnl >= 0 ? "+" : ""}{formatUsd(polyPnl)}
+              </span>
+              <span className="text-[10px] text-[#848e9c]">Vol: {formatUsd(polyVolume)}</span>
+            </div>
+          </div>
+          <div className="divide-y divide-[#2a2e3e]/30 max-h-[400px] overflow-y-auto">
+            {polyPositions.map((p) => {
+              const isWin = p.cashPnl >= 0;
+              return (
+                <Link
+                  key={p.asset}
+                  href={`/predict/${p.eventSlug}`}
+                  className="flex items-center justify-between px-4 py-2.5 hover:bg-[#1a1d2e]/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    {p.icon ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.icon} alt="" className="h-6 w-6 rounded object-cover shrink-0" />
+                    ) : (
+                      <div className="h-6 w-6 rounded bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <Target className="h-3 w-3 text-blue-400" />
+                      </div>
+                    )}
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${p.outcome === "Yes" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                      {p.outcome.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-white font-medium truncate max-w-[250px]">{p.title}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-[#848e9c]">{p.size.toFixed(2)} @ {(p.avgPrice * 100).toFixed(1)}¢</span>
+                    <span className="text-xs font-bold text-white">{formatUsd(p.currentValue)}</span>
+                    <span className={`text-xs font-bold ${isWin ? "text-emerald-400" : "text-red-400"}`}>
+                      {isWin ? "+" : ""}{formatUsd(p.cashPnl)}
+                      {p.percentPnl !== 0 && (
+                        <span className="text-[10px] font-normal ml-0.5">({isWin ? "+" : ""}{p.percentPnl.toFixed(1)}%)</span>
+                      )}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -2106,6 +2287,55 @@ function CoinTradeDetail({
           <div className="px-4 py-6 text-center text-[10px] text-[#848e9c]">No completed round-trip trades for {coin}</div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Polymarket Trade Table ──────────────────────────────────
+
+function PolyTradeTable({ trades }: { trades: PolymarketTrade[] }) {
+  const sorted = [...trades].sort((a, b) => b.timestamp - a.timestamp);
+  return (
+    <div className="bg-[#141620] rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
+        <p className="text-xs font-semibold text-white">Polymarket Trades</p>
+        <p className="text-[10px] text-[#848e9c]">Total: {trades.length}</p>
+      </div>
+      <div className="grid grid-cols-7 px-4 py-2 text-[10px] text-[#848e9c] uppercase tracking-wider border-b border-[#2a2e3e]/50 font-medium">
+        <span>Date</span>
+        <span className="col-span-2">Market</span>
+        <span>Side</span>
+        <span className="text-right">Price</span>
+        <span className="text-right">Shares</span>
+        <span className="text-right">Total</span>
+      </div>
+      {sorted.map((t, i) => {
+        const total = t.size * t.price;
+        const isBuy = t.side === "BUY";
+        return (
+          <Link
+            key={`${t.transactionHash}-${i}`}
+            href={`/predict/${t.eventSlug}`}
+            className="grid grid-cols-7 items-center px-4 py-2.5 text-xs border-b border-[#2a2e3e]/20 hover:bg-[#1a1d2e]/50 transition-colors"
+          >
+            <span className="text-[#848e9c]">
+              {new Date(t.timestamp * 1000).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+            </span>
+            <span className="col-span-2 text-white font-medium truncate pr-2">
+              <span className={`text-[9px] px-1 py-0.5 rounded font-bold mr-1 ${t.outcome === "Yes" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                {t.outcome}
+              </span>
+              {t.title}
+            </span>
+            <span className={`font-medium ${isBuy ? "text-emerald-400" : "text-red-400"}`}>
+              {t.side}
+            </span>
+            <span className="text-right text-white">{(t.price * 100).toFixed(1)}¢</span>
+            <span className="text-right text-white">{t.size.toFixed(2)}</span>
+            <span className="text-right text-white">{formatUsd(total)}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

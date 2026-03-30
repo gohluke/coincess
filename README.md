@@ -99,14 +99,16 @@ Strategy backtesting and performance analysis tools.
 - **Portfolio chart** — Account Value and cumulative PNL over time (canvas-rendered with ResizeObserver, hover crosshair with date+time); toggle between "Account Value" and "PNL" pill tabs; reconstructs history from deposits/withdrawals (ledger API) + fills; crosshair snaps to nearest data point by time
 - **Asset distribution donut** — equity breakdown: USDC (remainder after positions) + per-position value (margin + unrealized PnL) + Polymarket value (blue slice); flat segment edges with gaps; center shows total equity
 - Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
-- PnL calendar — daily profit/loss heatmap with color-weighted intensity by P&L magnitude
+- **Transaction History tab** — three sub-tabs (Trades, Fills, Polymarket); aggregate stats row showing combined Total PnL (Hyperliquid + Polymarket), Closed PnL, Funding, Polymarket P&L, and Win Rate; Polymarket sub-tab displays a full trade table with date, market name (with outcome badge), side (BUY/SELL), price in cents, shares, and total value; each row links to `/predict/{eventSlug}`
 - Trade history with round-trip grouping and per-trade P&L; open trades show live unrealized PnL, current mark price, and return percentage; closed trades show net P&L with "Missed/Saved" phantom PnL
+- **PnL Calendar** — daily profit/loss heatmap with color-weighted intensity by P&L magnitude; daily net includes Polymarket trade flow (sells add, buys subtract); monthly summary cards include a Polymarket total; selected day detail shows Polymarket breakdown line and lists that day's Polymarket trades with outcome badges, share count, and price
 - **Performance tab** — per-coin P&L breakdown with:
-  - Overview cards: Net P&L, Win Rate, Best/Worst coin
+  - Overview cards: Net P&L (combined Hyperliquid + Polymarket), Win Rate, Polymarket P&L (with position/trade counts), Best/Worst coin
   - Breakdown row: Gross P&L, Total Fees, Funding
-  - Visual P&L bar chart per asset (sorted by profitability)
+  - Visual P&L bar chart per asset (sorted by profitability) + Polymarket bar (blue) with trade count
   - Sortable table: Coin, Net P&L, Trades, Win Rate, Fills, Volume, Best Trade, Worst Trade
   - Click any coin to drill down: stats grid (Gross P&L, Fees, Funding, Win Rate, Avg Win, Avg Loss) + full list of round-trip trades with direction, entry/exit, duration, fees, and P&L
+  - **Polymarket Positions** section: lists all active positions with icon, outcome badge, title, shares @ avg price, current value, and P&L ($ + %); each row links to the prediction page
 - Open orders overview
 - Quick-access cards for Trade, Predict, Automate
 - Active automation strategies preview
