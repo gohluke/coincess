@@ -32,6 +32,8 @@ import { BRAND, BRAND_CONFIG } from "@/lib/brand";
 import { Skeleton, SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 import PortfolioChart from "@/components/dashboard/PortfolioChart";
 import { DepositButton } from "@/components/DepositModal";
+import { fetchPolymarketPositions } from "@/lib/polymarket/api";
+import type { PolymarketPosition } from "@/lib/polymarket/types";
 
 // ── Round-trip trade grouping ──────────────────────────────
 
@@ -198,11 +200,13 @@ export default function DashboardPage() {
   const automationInit = useAutomationStore((s) => s.init);
   const browserStrategies = useAutomationStore((s) => s.strategies);
   const [serverStrategies, setServerStrategies] = useState<{ status: string }[]>([]);
+  const [polyPositions, setPolyPositions] = useState<PolymarketPosition[]>([]);
+  const [polyProxyWallet, setPolyProxyWallet] = useState<string | null>(null);
 
   const loadData = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, userLedger, quantStatus] = await Promise.all([
+      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, userLedger, quantStatus, polyData] = await Promise.all([
         fetchCombinedClearinghouseState(addr),
         fetchSpotClearinghouseState(addr).catch(() => null),
         fetchOpenOrders(addr),
@@ -211,6 +215,7 @@ export default function DashboardPage() {
         fetchUserFunding(addr),
         fetchUserLedger(addr).catch(() => [] as LedgerUpdate[]),
         fetch("/api/quant/status").then((r) => r.json()).catch(() => ({ strategies: [] })),
+        fetchPolymarketPositions(addr).catch(() => ({ positions: [] as PolymarketPosition[], proxyWallet: null })),
       ]);
       setCh(chState);
       setSpot(spotState);
@@ -220,6 +225,8 @@ export default function DashboardPage() {
       setFunding(userFunding);
       setLedger(userLedger);
       setServerStrategies(quantStatus.strategies ?? []);
+      setPolyPositions(polyData.positions);
+      setPolyProxyWallet(polyData.proxyWallet);
       setLastRefresh(new Date());
     } catch (err) {
       console.error("Failed to load dashboard:", err);
@@ -337,9 +344,22 @@ export default function DashboardPage() {
     [spotHoldings],
   );
 
-  const accountValue = spotUsdcBalance > 0
+  const activePolyPositions = useMemo(
+    () => polyPositions.filter((p) => p.currentValue > 0.01),
+    [polyPositions],
+  );
+  const polyTotalValue = useMemo(
+    () => activePolyPositions.reduce((s, p) => s + p.currentValue, 0),
+    [activePolyPositions],
+  );
+  const polyTotalPnl = useMemo(
+    () => activePolyPositions.reduce((s, p) => s + p.cashPnl, 0),
+    [activePolyPositions],
+  );
+
+  const accountValue = (spotUsdcBalance > 0
     ? spotUsdcBalance + totalPnl + spotTokensTotal
-    : perpsAccountValue + spotTokensTotal;
+    : perpsAccountValue + spotTokensTotal) + polyTotalValue;
   const activeStrategies =
     serverStrategies.filter((s) => s.status === "active").length +
     browserStrategies.filter((s) => s.status === "active").length;
@@ -369,11 +389,16 @@ export default function DashboardPage() {
       }
     }
 
+    if (polyTotalValue > 0.01) {
+      items.push({ label: "Polymarket", ticker: "POLY", value: polyTotalValue, color: "#3b82f6" });
+      allocated += polyTotalValue;
+    }
+
     const usdcSlice = accountValue - allocated;
     if (usdcSlice > 0.01) items.unshift({ label: "USDC", ticker: "USDC", value: usdcSlice, color: "#2775CA" });
     if (items.length === 0 && accountValue > 0) items.push({ label: "USDC", ticker: "USDC", value: accountValue, color: BRAND.hex });
     return items;
-  }, [positions, spotHoldings, accountValue, markets]);
+  }, [positions, spotHoldings, accountValue, markets, polyTotalValue]);
 
   if (walletLoading) {
     return (
@@ -519,8 +544,13 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <div className="bg-[#141620] rounded-xl px-4 py-3.5">
-                  <p className="text-[11px] text-[#848e9c] mb-1">EVM Balance</p>
-                  <p className="text-xl font-bold">{formatUsd(evmBalance)}</p>
+                  <p className="text-[11px] text-[#848e9c] mb-1">Polymarket</p>
+                  <p className="text-xl font-bold">{formatUsd(polyTotalValue)}</p>
+                  {activePolyPositions.length > 0 && (
+                    <p className={`text-[10px] mt-0.5 ${polyTotalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {polyTotalPnl >= 0 ? "+" : ""}{formatUsd(polyTotalPnl)} · {activePolyPositions.length} position{activePolyPositions.length !== 1 ? "s" : ""}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -679,6 +709,47 @@ export default function DashboardPage() {
                       </Link>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Polymarket Positions */}
+            {!firstLoad && activePolyPositions.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold">
+                    Polymarket ({activePolyPositions.length})
+                  </h2>
+                  <div className="flex items-center gap-3">
+                    {polyProxyWallet && (
+                      <a
+                        href={`https://polymarket.com/profile/${polyProxyWallet}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-brand hover:underline inline-flex items-center gap-1"
+                      >
+                        Profile <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    <Link href="/predict" className="text-xs text-brand hover:underline">Trade &rarr;</Link>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {activePolyPositions.map((p) => (
+                    <PolyPositionRow key={p.asset} position={p} />
+                  ))}
+                </div>
+                <div className="flex items-center justify-between mt-3 bg-[#141620] rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-blue-400" />
+                    <span className="text-sm font-semibold">Total Polymarket Value</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold">{formatUsd(polyTotalValue)}</span>
+                    <span className={`text-xs font-medium ml-2 ${polyTotalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {polyTotalPnl >= 0 ? "+" : ""}{formatUsd(polyTotalPnl)}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -2036,5 +2107,66 @@ function CoinTradeDetail({
         )}
       </div>
     </div>
+  );
+}
+
+// ── Polymarket Position Row ─────────────────────────────────
+
+function PolyPositionRow({ position: p }: { position: PolymarketPosition }) {
+  const isProfit = p.cashPnl >= 0;
+  const endDate = p.endDate ? new Date(p.endDate) : null;
+  const ended = endDate ? endDate.getTime() < Date.now() : false;
+
+  return (
+    <Link
+      href={`/predict/${p.eventSlug}`}
+      className="flex items-center gap-3 bg-[#141620] rounded-xl px-4 py-3.5 hover:bg-[#1a1d2e] transition-colors"
+    >
+      {p.icon ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={p.icon} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+      ) : (
+        <div className="h-8 w-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
+          <Target className="h-4 w-4 text-blue-400" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-semibold text-white truncate">{p.title}</span>
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+            p.outcome === "Yes" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+          }`}>
+            {p.outcome.toUpperCase()}
+          </span>
+          <span className="text-[10px] text-[#848e9c]">
+            {p.size.toLocaleString(undefined, { maximumFractionDigits: 2 })} shares @ {(p.avgPrice * 100).toFixed(1)}¢
+          </span>
+          {p.curPrice > 0 && (
+            <span className="text-[10px] text-[#848e9c]">
+              → now {(p.curPrice * 100).toFixed(1)}¢
+            </span>
+          )}
+          {endDate && (
+            <span className={`text-[10px] ${ended ? "text-amber-400" : "text-[#555a66]"}`}>
+              {ended ? "Ended" : `Ends ${endDate.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}`}
+            </span>
+          )}
+          {p.redeemable && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">REDEEM</span>
+          )}
+        </div>
+      </div>
+      <div className="text-right shrink-0">
+        <p className="text-sm font-semibold text-white tabular-nums">{formatUsd(p.currentValue)}</p>
+        <p className={`text-[11px] tabular-nums ${isProfit ? "text-emerald-400" : "text-red-400"}`}>
+          {isProfit ? "+" : ""}{formatUsd(p.cashPnl)}
+          {p.percentPnl !== 0 && (
+            <span className="ml-0.5">({isProfit ? "+" : ""}{p.percentPnl.toFixed(1)}%)</span>
+          )}
+        </p>
+      </div>
+    </Link>
   );
 }

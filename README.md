@@ -90,10 +90,11 @@ Strategy backtesting and performance analysis tools.
 - **UI**: Page background `bg-[#0b0e11]` matches `/dashboard`; cards use `bg-[#141620] rounded-xl` (borderless); system font for numbers; subtle row separators (`border-[#2a2e3e]/30`); hover states on position and trade rows
 
 ### Unified Portfolio Dashboard (`/dashboard`)
-- **Total Equity** — uses Spot USDC `total` as the single source of truth (unified account mode avoids double-counting perps backing); Available Balance = Spot total - Spot hold
-- **Balance breakdown cards** — Available Balance, USDC (Perps), Spot Balance, EVM Balance
+- **Total Equity** — uses Spot USDC `total` as the single source of truth (unified account mode avoids double-counting perps backing) + Polymarket position value; Available Balance = Spot total - Spot hold
+- **Balance breakdown cards** — Available Balance, USDC (Perps), Spot Balance, Polymarket (total position value + P&L + position count)
+- **Polymarket positions** — fetches user's Polymarket positions via Data API; auto-resolves EOA → proxy wallet via Gamma `/public-profile` endpoint; shows market icon, title, outcome (Yes/No), share count, avg price, current price, end date, redeemable status, current value, and P&L ($ + %); clicking a position navigates to `/predict/{eventSlug}` for in-app trading; total Polymarket value shown in summary row; profile link to Polymarket
 - **Portfolio chart** — Account Value and cumulative PNL over time (canvas-rendered with ResizeObserver, hover crosshair with date+time); toggle between "Account Value" and "PNL" pill tabs; reconstructs history from deposits/withdrawals (ledger API) + fills; crosshair snaps to nearest data point by time
-- **Asset distribution donut** — equity breakdown: USDC (remainder after positions) + per-position value (margin + unrealized PnL); flat segment edges with gaps; center shows total equity
+- **Asset distribution donut** — equity breakdown: USDC (remainder after positions) + per-position value (margin + unrealized PnL) + Polymarket value (blue slice); flat segment edges with gaps; center shows total equity
 - Live positions list with entry/mark prices, ROE, leverage, funding fees, liquidation price
 - PnL calendar — daily profit/loss heatmap with color-weighted intensity by P&L magnitude
 - Trade history with round-trip grouping and per-trade P&L; open trades show live unrealized PnL, current mark price, and return percentage; closed trades show net P&L with "Missed/Saved" phantom PnL

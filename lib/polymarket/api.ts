@@ -186,3 +186,31 @@ export function formatTimeRemaining(endDate: Date | null): string | null {
   const months = Math.floor(days / 30);
   return `${months}mo left`;
 }
+
+// ── Polymarket Data API (user positions & trades) ──────────
+
+import type { PolymarketPosition, PolymarketTrade } from "./types";
+
+export async function fetchPolymarketPositions(
+  address: string,
+): Promise<{ positions: PolymarketPosition[]; proxyWallet: string | null }> {
+  const url = new URL("/api/polymarket/positions", window.location.origin);
+  url.searchParams.set("address", address);
+  url.searchParams.set("sizeThreshold", "0");
+  url.searchParams.set("limit", "100");
+  const res = await fetch(url.toString());
+  if (!res.ok) return { positions: [], proxyWallet: null };
+  return res.json();
+}
+
+export async function fetchPolymarketTrades(
+  address: string,
+  limit = 100,
+): Promise<{ trades: PolymarketTrade[]; proxyWallet: string | null }> {
+  const url = new URL("/api/polymarket/user-trades", window.location.origin);
+  url.searchParams.set("address", address);
+  url.searchParams.set("limit", String(limit));
+  const res = await fetch(url.toString());
+  if (!res.ok) return { trades: [], proxyWallet: null };
+  return res.json();
+}
