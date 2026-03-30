@@ -87,7 +87,9 @@ function CalculatorInput({
           onChange={handleChange} onKeyDown={handleKeyDown} onPaste={handlePaste}
           onFocus={onFocus} onBlur={onBlur}
           readOnly={readOnly} autoComplete="off"
+          placeholder="–"
           className={`
+            placeholder-[#555a66]
             w-full rounded-lg border bg-[#1a1d26] text-white transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/50
             ${compact ? "h-10 text-sm" : "h-12"}
@@ -221,16 +223,18 @@ export function LeverageCalculator() {
   }
 
   const fmt = (num: number, decimals = 6): string => {
-    if (!isFinite(num) || isNaN(num)) return "0"
+    if (!isFinite(num) || isNaN(num)) return ""
     return parseFloat(num.toFixed(decimals)).toString()
   }
 
   const fmtUsdFull = (num: number): string => {
-    if (!isFinite(num) || isNaN(num)) return "$0.00"
+    if (!isFinite(num) || isNaN(num)) return "–"
     const abs = Math.abs(num)
     const formatted = abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     return (num < 0 ? "-$" : "$") + formatted
   }
+
+  const dash = (v: string, prefix = "", suffix = "") => v ? `${prefix}${v}${suffix}` : "–"
 
   const prevFeeType = useRef(feeType)
   useEffect(() => {
@@ -357,10 +361,21 @@ export function LeverageCalculator() {
 
   useEffect(() => {
     validate()
-    if (activeField === "margin" && initialMargin) calculate("margin")
-    else if (activeField === "pnl" && pnl) calculate("pnl")
-    else if (activeField === "roe" && roe) calculate("roe")
-    else if (leverage && quantity && entryPrice && exitPrice) calculate()
+    if (activeField === "margin") {
+      if (initialMargin) calculate("margin")
+      return
+    }
+    if (activeField === "pnl") {
+      if (pnl) calculate("pnl")
+      return
+    }
+    if (activeField === "roe") {
+      if (roe) calculate("roe")
+      return
+    }
+    if (leverage && quantity && entryPrice && exitPrice) {
+      calculate()
+    }
   }, [leverage, quantity, entryPrice, exitPrice, direction, fundingRate, durationHours, initialMargin, pnl, roe, activeField, entryFeeRate, exitFeeRate, validate, calculate])
 
   const netPnlNum = parseNumber(netPnl)
@@ -432,12 +447,13 @@ export function LeverageCalculator() {
               <div className="flex items-center gap-2">
                 <input
                   type="text" inputMode="decimal" value={leverage}
+                  placeholder="–"
                   onChange={(e) => {
                     const v = e.target.value.replace(/[^\d]/g, "")
                     const n = parseInt(v, 10)
                     if (v === "" || (n >= 0 && n <= 1000)) setLeverage(v)
                   }}
-                  className="w-16 text-right text-sm font-bold text-white bg-transparent border-b border-[#2a2e3e] focus:border-brand focus:outline-none transition-colors"
+                  className="w-16 text-right text-sm font-bold text-white bg-transparent border-b border-[#2a2e3e] focus:border-brand focus:outline-none transition-colors placeholder-[#555a66]"
                 />
                 <span className="text-sm font-bold text-[#555a66]">x</span>
               </div>
@@ -509,29 +525,29 @@ export function LeverageCalculator() {
 
           {/* Results Dashboard */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-            <StatCard label="Position Notional" value={fmtUsdFull(parseNumber(positionNotional))} sub={`${leverage}x leveraged`} color="brand" />
-            <StatCard label="Liquidation Price" value={`$${liquidationPrice}`}
-              sub={`${fmt(100 - marginRatioNum, 1)}% margin left`}
+            <StatCard label="Position Notional" value={positionNotional ? fmtUsdFull(parseNumber(positionNotional)) : "–"} sub={leverage ? `${leverage}x leveraged` : ""} color="brand" />
+            <StatCard label="Liquidation Price" value={dash(liquidationPrice, "$")}
+              sub={marginRatio ? `${fmt(100 - marginRatioNum, 1)}% margin left` : ""}
               color={marginRatioNum > 80 ? "red" : marginRatioNum > 50 ? "gray" : "green"} />
-            <StatCard label="Break-Even Price" value={`$${breakEvenPrice}`} sub="After fees + funding" color="gray" />
+            <StatCard label="Break-Even Price" value={dash(breakEvenPrice, "$")} sub="After fees + funding" color="gray" />
             <StatCard label="Margin Ratio"
-              value={`${marginRatio}%`}
-              sub={marginRatioNum > 80 ? "Danger zone" : marginRatioNum > 50 ? "Caution" : "Healthy"}
+              value={dash(marginRatio, "", "%")}
+              sub={marginRatio ? (marginRatioNum > 80 ? "Danger zone" : marginRatioNum > 50 ? "Caution" : "Healthy") : ""}
               color={marginRatioNum > 80 ? "red" : marginRatioNum > 50 ? "gray" : "green"} />
           </div>
 
           {/* Cost Breakdown */}
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
-            <StatCard label="Entry Fee" value={`-$${entryFee}`} sub={`${entryFeeRate}%`} color="red" />
-            <StatCard label="Exit Fee" value={`-$${exitFee}`} sub={`${exitFeeRate}%`} color="red" />
-            <StatCard label="Total Fees" value={`-$${totalFees}`} color="red" />
-            <StatCard label={`Funding (${durationHours}h)`}
-              value={`${totalFundingNum > 0 ? "-" : totalFundingNum < 0 ? "+" : ""}$${Math.abs(totalFundingNum).toFixed(2)}`}
-              sub={totalFundingNum > 0 ? "You pay" : totalFundingNum < 0 ? "You earn" : "Neutral"}
+            <StatCard label="Entry Fee" value={entryFee ? `-$${entryFee}` : "–"} sub={`${entryFeeRate}%`} color="red" />
+            <StatCard label="Exit Fee" value={exitFee ? `-$${exitFee}` : "–"} sub={`${exitFeeRate}%`} color="red" />
+            <StatCard label="Total Fees" value={totalFees ? `-$${totalFees}` : "–"} color="red" />
+            <StatCard label={`Funding (${durationHours || "–"}h)`}
+              value={totalFunding ? `${totalFundingNum > 0 ? "-" : totalFundingNum < 0 ? "+" : ""}$${Math.abs(totalFundingNum).toFixed(2)}` : "–"}
+              sub={totalFunding ? (totalFundingNum > 0 ? "You pay" : totalFundingNum < 0 ? "You earn" : "Neutral") : ""}
               color={totalFundingNum > 0 ? "red" : totalFundingNum < 0 ? "green" : "gray"} />
-            <StatCard label="Gross PNL" value={`${parseNumber(pnl) >= 0 ? "+" : ""}$${pnl}`}
+            <StatCard label="Gross PNL" value={pnl ? `${parseNumber(pnl) >= 0 ? "+" : ""}$${pnl}` : "–"}
               sub="Before costs" color={parseNumber(pnl) >= 0 ? "green" : "red"} />
-            <StatCard label="Gross ROE" value={`${parseNumber(roe) >= 0 ? "+" : ""}${roe}%`}
+            <StatCard label="Gross ROE" value={roe ? `${parseNumber(roe) >= 0 ? "+" : ""}${roe}%` : "–"}
               sub="Before costs" color={parseNumber(roe) >= 0 ? "green" : "red"} />
           </div>
 
@@ -553,13 +569,13 @@ export function LeverageCalculator() {
                     {netPnlNum >= 0 ? "+" : ""}{fmtUsdFull(netPnlNum)} ({netPnlNum >= 0 ? "+" : ""}{netRoe}%)
                   </p>
                   <p className="text-sm text-[#848e9c]">
-                    Net {netPnlNum >= 0 ? "profit" : "loss"} at ${exitPrice} after {durationHours}h
-                    <span className="text-[#555a66]"> — fees: ${fmtUsdFull(parseNumber(totalFees))}, funding: {fmtUsdFull(Math.abs(totalFundingNum))}</span>
+                    Net {netPnlNum >= 0 ? "profit" : "loss"} at {dash(exitPrice, "$")} after {durationHours || "–"}h
+                    <span className="text-[#555a66]"> — fees: {totalFees ? fmtUsdFull(parseNumber(totalFees)) : "–"}, funding: {totalFunding ? fmtUsdFull(Math.abs(totalFundingNum)) : "–"}</span>
                   </p>
                 </div>
                 <div className="text-right hidden md:block">
                   <p className="text-xs text-[#555a66]">Break-even</p>
-                  <p className="text-sm font-semibold text-white">${breakEvenPrice}</p>
+                  <p className="text-sm font-semibold text-white">{dash(breakEvenPrice, "$")}</p>
                 </div>
               </div>
             </div>
