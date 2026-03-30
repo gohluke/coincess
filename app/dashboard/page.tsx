@@ -280,16 +280,24 @@ export default function DashboardPage() {
       entry.funding += parseFloat(fp.delta.usdc);
       map.set(day, entry);
     }
+    const polyPriceMap = new Map<string, { curPrice: number; avgPrice: number }>();
+    for (const p of polyPositions) {
+      polyPriceMap.set(p.asset, { curPrice: p.curPrice, avgPrice: p.avgPrice });
+    }
     for (const pt of polyTrades) {
       if (!pt.timestamp) continue;
+      const pos = polyPriceMap.get(pt.asset);
+      if (!pos) continue;
+      const pnl = pt.side === "BUY"
+        ? (pos.curPrice - pt.price) * pt.size
+        : (pt.price - pos.avgPrice) * pt.size;
       const day = toLocalDate(pt.timestamp * 1000);
       const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0, poly: 0 };
-      const tradeValue = pt.size * pt.price;
-      entry.poly += pt.side === "SELL" ? tradeValue : -tradeValue;
+      entry.poly += pnl;
       map.set(day, entry);
     }
     return map;
-  }, [fills, funding, polyTrades]);
+  }, [fills, funding, polyTrades, polyPositions]);
 
   const dailyFills = useMemo(() => {
     const toLocalDate = (ts: number) => {
