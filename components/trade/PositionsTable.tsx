@@ -477,7 +477,7 @@ export function PositionsTable() {
                     const roe = parseFloat(pos.returnOnEquity) * 100;
                     const market = markets.find((m) => m.name === pos.coin);
                     const markPx = market ? parseFloat(market.markPx) : 0;
-                    const markPxStr = markPx > 0 ? markPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
+                    const markPxStr = markPx > 0 ? markPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }) : "—";
                     const fundingRate = market ? parseFloat(market.funding) : 0;
                     const fundingPct = (fundingRate * 100).toFixed(4);
                     const isPaying = isLong ? fundingRate > 0 : fundingRate < 0;
@@ -528,7 +528,7 @@ export function PositionsTable() {
                             {Math.abs(size).toFixed(4)}
                           </td>
                           <td className="text-right px-2 py-2 text-[#eaecef]">
-                            {pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
+                            {pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }) : "—"}
                           </td>
                           <td className="text-right px-2 py-2 text-[#eaecef]">{markPxStr}</td>
                           <td className="text-right px-2 py-2 text-[#f0b90b]">
@@ -652,7 +652,7 @@ export function PositionsTable() {
                 const roe = parseFloat(pos.returnOnEquity) * 100;
                 const mkt = markets.find((m) => m.name === pos.coin);
                 const mMarkPx = mkt ? parseFloat(mkt.markPx) : 0;
-                const markPxDisplay = mMarkPx > 0 ? mMarkPx.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
+                const markPxDisplay = mMarkPx > 0 ? mMarkPx.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }) : "—";
                 const mFundRate = mkt ? parseFloat(mkt.funding) : 0;
                 const mFundPct = (mFundRate * 100).toFixed(4);
                 const mIsPaying = isLong ? mFundRate > 0 : mFundRate < 0;
@@ -707,7 +707,7 @@ export function PositionsTable() {
                       </div>
                       <div>
                         <div className="text-[#848e9c]">Entry</div>
-                        <div className="text-[#eaecef]">{pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}</div>
+                        <div className="text-[#eaecef]">{pos.entryPx ? parseFloat(pos.entryPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }) : "—"}</div>
                       </div>
                       <div>
                         <div className="text-[#848e9c]">Mark</div>

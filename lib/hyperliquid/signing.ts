@@ -4,7 +4,6 @@ import { ApproveBuilderFeeTypes, ApproveAgentTypes, order as sdkOrder, modify as
 import { HttpTransport } from "@nktkas/hyperliquid";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { createWalletClient, custom } from "viem";
-import { arbitrum } from "viem/chains";
 import type { MarketInfo } from "./types";
 import { BRAND_CONFIG } from "@/lib/brand.config";
 import { getAgentAccount, storeAgent, clearStoredAgent, getStoredAgent } from "./agent";
@@ -185,9 +184,11 @@ function getProvider(): EthProvider {
  * See: https://nktkas.gitbook.io/hyperliquid/signing
  */
 function createBrowserWallet(provider: EthProvider, account: `0x${string}`): AbstractWallet {
+  // Omit `chain` so viem doesn't validate domain.chainId against the client's
+  // chain. Hyperliquid user-signed actions use signatureChainId 0x66eee (421614)
+  // while L1 actions use 42161 — the SDK handles domain construction internally.
   return createWalletClient({
     account,
-    chain: arbitrum,
     transport: custom(provider),
   });
 }
