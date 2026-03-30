@@ -122,13 +122,14 @@ export async function fetchOpenOrders(user: string): Promise<OpenOrder[]> {
 }
 
 export async function fetchUserFills(user: string): Promise<Fill[]> {
-  const [main, xyz] = await Promise.all([
+  const [main, xyz, spot] = await Promise.all([
     post<Fill[]>("/info", { type: "userFills", user }).catch(() => []),
     post<Fill[]>("/info", { type: "userFills", user, dex: "xyz" }).catch(() => []),
+    post<Fill[]>("/info", { type: "userFills", user, dex: "spot" }).catch(() => []),
   ]);
   const seen = new Set<number>();
   const deduped: Fill[] = [];
-  for (const f of [...main, ...xyz]) {
+  for (const f of [...main, ...xyz, ...spot]) {
     if (!seen.has(f.tid)) {
       seen.add(f.tid);
       deduped.push(f);
