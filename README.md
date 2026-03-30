@@ -42,9 +42,12 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **Browse trending events** — politics, sports, crypto, pop culture, business, science, technology
 - **Category filtering** — tabs including "Ending Soon" for markets about to close
 - **Search** — find specific markets by keyword
-- **Event detail pages** — full descriptions, all outcomes, volume/liquidity, time remaining
-- **Bet slips** — Buy Yes/No with potential payout calculator
-- **Market status** — visual indicators for closed/ended markets, urgency badges
+- **Event detail page (Based.app-style)** — two-column layout with:
+  - **Left column**: event header (icon, title, volume, liquidity, live countdown timer), collapsible description, searchable outcome table with % chance, volume, Buy Yes/Buy No buttons per row; user's active positions highlighted as badges on matching outcome rows
+  - **Right column (sticky sidebar)**: full bet slip with Buy/Sell toggle, Market/Limit selector, Yes/No outcome cards with cent prices, shares display, amount input with quick presets (+$2, +$20, +$100, Max), "To win" and avg price calculations, place order button
+  - **Your Positions panel**: shows all user positions for the current event with outcome badge, shares, avg price, current value, and P&L ($ + %)
+  - **Live countdown**: real-time `dd hh:mm:ss` countdown to market close, ticking every second
+- **Market status** — visual indicators for closed/ended/resolved markets, urgency badges
 
 ### Automation Suite (`/automate`)
 
@@ -412,7 +415,7 @@ coincess/
 │   │   ├── [coin]/page.tsx              # Perpetuals trading terminal (1bp fee)
 │   ├── predict/
 │   │   ├── page.tsx                     # Prediction markets browser
-│   │   └── [slug]/page.tsx             # Event detail + bet slips
+│   │   └── [slug]/page.tsx             # Event detail (two-column: outcome table + sticky bet slip sidebar, positions, countdown)
 │   ├── automate/
 │   │   ├── page.tsx                     # Automation dashboard
 │   │   ├── create/page.tsx             # Create strategy (DCA, Grid, etc.)
