@@ -6,7 +6,6 @@ import { X, Loader2, Share2, Download, Copy, Check, Bot, Pencil, ArrowLeftRight,
 import { useRouter } from "next/navigation";
 import { useTradingStore } from "@/lib/hyperliquid/store";
 import { signAndPlaceOrder, getMarketOrderPrice, signAndCancelOrder, signAndModifyOrder, STALE_AGENT_ERROR } from "@/lib/hyperliquid/signing";
-import { fetchUserFills } from "@/lib/hyperliquid/api";
 import type { Fill } from "@/lib/hyperliquid/types";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BRAND, BRAND_CONFIG } from "@/lib/brand";
@@ -47,13 +46,7 @@ export function PositionsTable({ fills: externalFills }: { fills?: Fill[] } = {}
     coin: string; szi: string; entryPx: string; markPx: string; posSize: string; leverage: string; isLong: boolean;
   } | null>(null);
 
-  const [ownFills, setOwnFills] = useState<Fill[]>([]);
-  const fills = externalFills ?? ownFills;
-
-  useEffect(() => {
-    if (externalFills || !address) { if (!address) setOwnFills([]); return; }
-    fetchUserFills(address).then(setOwnFills).catch(() => {});
-  }, [address, externalFills]);
+  const fills = externalFills ?? [];
 
   const getPositionOpenTime = useCallback((coin: string) => {
     // Find the most recent fill that opened a fresh position (startPosition was 0)

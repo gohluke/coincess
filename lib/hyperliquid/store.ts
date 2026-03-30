@@ -18,6 +18,7 @@ import {
   getSpotPairName,
 } from "./api";
 import { getWs } from "./websocket";
+import { useUserDataStore } from "./user-data-store";
 
 interface TradingState {
   // Markets
@@ -157,8 +158,12 @@ export const useTradingStore = create<TradingState>((set, get) => ({
 
   setAddress: (addr) => {
     set({ address: addr });
-    if (addr) get().loadUserState();
-    else set({ clearinghouse: null, spotClearinghouse: null, openOrders: [] });
+    if (addr) {
+      // Trigger REST refresh; WS streaming via user-data-store handles ongoing updates
+      get().loadUserState();
+    } else {
+      set({ clearinghouse: null, spotClearinghouse: null, openOrders: [] });
+    }
   },
 
   loadUserState: async () => {
@@ -172,6 +177,11 @@ export const useTradingStore = create<TradingState>((set, get) => ({
         fetchUserAbstraction(addr),
       ]);
       set({ clearinghouse: ch, spotClearinghouse: spotCh, openOrders: orders, abstractionMode: abstraction });
+      // Also push to user data store so both stay in sync after manual refresh
+      const uds = useUserDataStore.getState();
+      if (uds.address === addr) {
+        useUserDataStore.setState({ clearinghouse: ch, spotClearinghouse: spotCh, openOrders: orders, abstractionMode: abstraction });
+      }
     } catch (err) {
       console.error("Failed to load user state:", err);
     }

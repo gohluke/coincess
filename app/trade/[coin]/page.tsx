@@ -12,8 +12,7 @@ import { RecentTrades } from "@/components/trade/RecentTrades";
 import { useWallet } from "@/hooks/useWallet";
 import { useSettingsStore } from "@/lib/settings/store";
 import { getConnectedAddress, onAccountsChanged } from "@/lib/hyperliquid/wallet";
-import { fetchUserFills } from "@/lib/hyperliquid/api";
-import type { Fill } from "@/lib/hyperliquid/types";
+import { useUserDataStore } from "@/lib/hyperliquid/user-data-store";
 
 const TradingChart = dynamic(
   () => import("@/components/trade/TradingChart").then((m) => m.TradingChart),
@@ -63,15 +62,20 @@ export default function TradePageDynamic() {
   const marketsReady = markets.length > 0;
   const initialSynced = useRef(false);
 
-  const [userFills, setUserFills] = useState<Fill[]>([]);
+  // Real-time user data from WebSocket
+  const userData = useUserDataStore();
+  const userFills = userData.fills;
 
   const { address: walletAddr, source } = useWallet();
   const activeLinkedAddr = useSettingsStore((s) => s.getActiveAddress)();
 
-  // Sync wallet address to store
+  // Sync wallet address to trading store + user data stream
   useEffect(() => {
     const effective = activeLinkedAddr ?? walletAddr;
     if (effective && effective !== address) setAddress(effective);
+    if (effective) userData.connect(effective);
+    else userData.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletAddr, activeLinkedAddr, address, setAddress]);
 
   useEffect(() => {
@@ -141,19 +145,17 @@ export default function TradePageDynamic() {
     return unsub;
   }, [selectedMarket]);
 
+  // Sync WS-sourced clearinghouse/orders into useTradingStore for OrderForm etc.
   useEffect(() => {
-    if (!address) return;
-    const iv = setInterval(loadUserState, 10_000);
-    return () => clearInterval(iv);
-  }, [address, loadUserState]);
-
-  useEffect(() => {
-    if (!address) { setUserFills([]); return; }
-    const load = () => fetchUserFills(address).then(setUserFills).catch(() => {});
-    load();
-    const iv = setInterval(load, 30_000);
-    return () => clearInterval(iv);
-  }, [address]);
+    if (userData.clearinghouse) {
+      useTradingStore.setState({
+        clearinghouse: userData.clearinghouse,
+        spotClearinghouse: userData.spotClearinghouse,
+        openOrders: userData.openOrders,
+        abstractionMode: userData.abstractionMode,
+      });
+    }
+  }, [userData.clearinghouse, userData.spotClearinghouse, userData.openOrders, userData.abstractionMode]);
 
   return (
     <div className="h-screen flex flex-col bg-[#0b0e11] text-white overflow-hidden">

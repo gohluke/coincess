@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
-import { fetchCombinedClearinghouseState, fetchOpenOrders } from "@/lib/hyperliquid/api";
-import type { ClearinghouseState, OpenOrder } from "@/lib/hyperliquid/types";
+import { useUserDataStore } from "@/lib/hyperliquid/user-data-store";
 
 const MARKETING_ROUTES = ["/blog", "/swap-guide"];
 
@@ -26,31 +25,27 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
   );
 }
 
+const CONNECTION_COLORS: Record<string, { bg: string; title: string }> = {
+  connected: { bg: "bg-[#0ecb81]", title: "Live" },
+  connecting: { bg: "bg-[#f0b90b]", title: "Connecting..." },
+  disconnected: { bg: "bg-[#f6465d]", title: "Disconnected" },
+};
+
 export function StatusBar() {
   const pathname = usePathname();
   const { address } = useEffectiveAddress();
-  const [ch, setCh] = useState<ClearinghouseState | null>(null);
-  const [orders, setOrders] = useState<OpenOrder[]>([]);
+  const ch = useUserDataStore((s) => s.clearinghouse);
+  const orders = useUserDataStore((s) => s.openOrders);
+  const connectionState = useUserDataStore((s) => s.connectionState);
+  const connect = useUserDataStore((s) => s.connect);
+  const disconnect = useUserDataStore((s) => s.disconnect);
 
-  const load = useCallback(async (addr: string) => {
-    try {
-      const [chState, openOrders] = await Promise.all([
-        fetchCombinedClearinghouseState(addr),
-        fetchOpenOrders(addr),
-      ]);
-      setCh(chState);
-      setOrders(openOrders);
-    } catch {
-      /* silent */
-    }
-  }, []);
-
+  // Ensure user data stream is connected when we have an address
   useEffect(() => {
-    if (!address) { setCh(null); setOrders([]); return; }
-    load(address);
-    const id = setInterval(() => load(address), 10_000);
-    return () => clearInterval(id);
-  }, [address, load]);
+    if (address) connect(address);
+    else disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address]);
 
   const isMarketing = MARKETING_ROUTES.some(
     (r) => pathname === r || (r === "/blog" && pathname.startsWith("/blog/"))
@@ -102,9 +97,15 @@ export function StatusBar() {
 
   if (isMarketing || !address || !stats) return null;
 
+  const connInfo = CONNECTION_COLORS[connectionState] ?? CONNECTION_COLORS.disconnected;
+
   return (
     <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-40 bg-[#0f1116] border-t border-[#1e2130]">
       <div className="flex items-center gap-4 px-3 h-7 text-[11px] font-medium overflow-x-auto scrollbar-none whitespace-nowrap">
+        <div className="flex items-center gap-1.5 shrink-0" title={connInfo.title}>
+          <span className={`h-2 w-2 rounded-full ${connInfo.bg} ${connectionState === "connecting" ? "animate-pulse" : ""}`} />
+          <span className="text-[#5d6169]">WS</span>
+        </div>
         <Stat label="Open" value={fmt(stats.open)} />
         <Stat label="Longs" value={fmt(stats.longs)} color="text-[#0ecb81]" />
         <Stat label="Shorts" value={fmt(stats.shorts)} color="text-[#f6465d]" />

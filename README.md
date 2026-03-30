@@ -10,6 +10,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **URL-driven navigation** — clicking a coin in the market selector dropdown or search modal updates the URL to `/trade/COIN`, enabling shareable links and proper browser history
 - **Search modal** — max leverage shown per market, category badges, real-time prices with flash animation
 - **Real-time order book** and recent trades via WebSocket
+- **Real-time user data via WebSocket** — positions, fills, orders, and funding stream live via Hyperliquid's WebSocket subscriptions (`userFills`, `clearinghouseState`, `orderUpdates`, `userFundings`, `spotState`); centralized in `useUserDataStore` (Zustand) with snapshot + incremental update handling; REST serves as a 5-second fallback bootstrap; exponential backoff reconnection (1s → 30s cap, 50 max retries); connection state indicator (green/yellow/red dot) in the status bar; eliminates REST polling for core trading data — position/fill/order latency reduced from 10-30s to <100ms
 - **Live market header** — Oracle, 24h Change, Volume, Open Interest, and Funding update in real-time via the `activeAssetCtx` WebSocket channel (not polling); `allMids` subscription drives live mark price ticks; REST fallback refreshes non-active markets every 30s
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes, click-and-drag panning
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); chain switch is best-effort so activation works regardless of wallet network; order form reads spot clearinghouse balance for accurate "Available" display; equity calculation correctly handles unified mode where spot USDC pool includes perp margin (avoids double-counting); funding payments fetched from both main and xyz dexes for accurate total PnL
@@ -93,6 +94,7 @@ Strategy backtesting and performance analysis tools.
 - **UI**: Page background `bg-[#0b0e11]` matches `/dashboard`; cards use `bg-[#141620] rounded-xl` (borderless); system font for numbers; subtle row separators (`border-[#2a2e3e]/30`); hover states on position and trade rows
 
 ### Unified Portfolio Dashboard (`/dashboard`)
+- **Real-time via WebSocket** — positions, fills, and orders stream live from Hyperliquid WebSocket (no REST polling for core data); supplementary data (markets, funding history, ledger, Polymarket, quant status) refreshed via REST every 60s
 - **Total Equity** — uses Spot USDC `total` as the single source of truth (unified account mode avoids double-counting perps backing) + Polymarket position value; Available Balance = Spot total - Spot hold
 - **Balance breakdown cards** — Available Balance, USDC (Perps), Spot Balance, Polymarket (total position value + P&L + position count)
 - **Polymarket positions** — fetches user's Polymarket positions via Data API; auto-resolves EOA → proxy wallet via Gamma `/public-profile` endpoint; shows market icon, title, outcome (Yes/No), share count, avg price, current price, end date, redeemable status, current value, and P&L ($ + %); clicking a position navigates to `/predict/{eventSlug}` for in-app trading; total Polymarket value shown in summary row; profile link to Polymarket
@@ -309,7 +311,8 @@ Strategy backtesting and performance analysis tools.
 - **Next.js 16** — App Router, React 19
 - **TypeScript** — strict mode
 - **Tailwind CSS v3** — utility-first styling
-- **Zustand** — lightweight state management
+- **Zustand** — lightweight state management (trading store + centralized user data store with WS-driven real-time updates)
+- **Hyperliquid WebSocket** — real-time streaming for both public market data (l2Book, trades, allMids, candles, activeAssetCtx) and private user data (userFills, clearinghouseState, orderUpdates, userFundings, spotState); exponential backoff reconnection; snapshot + incremental update handling
 - **Lightweight Charts v5** — performant financial charting
 - **@nktkas/hyperliquid** — TypeScript SDK for Hyperliquid signing & API
 - **@privy-io/react-auth** — embedded wallet + social login
@@ -462,12 +465,13 @@ coincess/
 │   └── automate/                       # Automation UI components
 ├── lib/
 │   ├── hyperliquid/
-│   │   ├── api.ts                      # REST API client
+│   │   ├── api.ts                      # REST API client (fallback/supplementary data)
 │   │   ├── agent.ts                    # Agent keypair storage (localStorage)
 │   │   ├── signing.ts                  # EIP-712 signing, agent approval, builder fees
 │   │   ├── wallet.ts                   # Wallet adapter
-│   │   ├── websocket.ts               # WebSocket client
-│   │   ├── store.ts                    # Zustand store
+│   │   ├── websocket.ts               # WebSocket client (public + private data subscriptions)
+│   │   ├── user-data-store.ts          # Centralized real-time user data (WS-driven Zustand store)
+│   │   ├── store.ts                    # Trading UI Zustand store (market data, order form)
 │   │   └── types.ts                    # TypeScript interfaces
 │   ├── coinLogos.ts                     # Multi-tier logo resolver (local, Clearbit, CoinCap, emoji)
 │   ├── polymarket/

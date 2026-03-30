@@ -22,9 +22,10 @@ import {
   Flame,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
-import { fetchCombinedClearinghouseState, fetchOpenOrders, fetchAllMarkets, fetchUserFills, fetchUserFunding, fetchSpotClearinghouseState, fetchUserLedger, spotDisplayName } from "@/lib/hyperliquid/api";
+import { fetchAllMarkets, fetchUserFunding, fetchUserLedger, spotDisplayName } from "@/lib/hyperliquid/api";
 import type { LedgerUpdate } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
+import { useUserDataStore } from "@/lib/hyperliquid/user-data-store";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
 import { CoinLogo } from "@/components/CoinLogo";
@@ -236,11 +237,16 @@ function PnlBadge({ value }: { value: number }) {
 
 export default function DashboardPage() {
   const { address, loading: walletLoading, connect } = useEffectiveAddress();
-  const [ch, setCh] = useState<ClearinghouseState | null>(null);
-  const [spot, setSpot] = useState<SpotClearinghouseState | null>(null);
-  const [orders, setOrders] = useState<OpenOrder[]>([]);
+
+  // Real-time data from WebSocket via centralized store
+  const userData = useUserDataStore();
+  const ch = userData.clearinghouse;
+  const spot = userData.spotClearinghouse;
+  const orders = userData.openOrders;
+  const fills = userData.fills;
+
+  // Supplementary data fetched via REST (no WS equivalent)
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
-  const [fills, setFills] = useState<Fill[]>([]);
   const [funding, setFunding] = useState<FundingPayment[]>([]);
   const [ledger, setLedger] = useState<LedgerUpdate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -255,26 +261,19 @@ export default function DashboardPage() {
   const [polyTrades, setPolyTrades] = useState<PolymarketTrade[]>([]);
   const [polyProxyWallet, setPolyProxyWallet] = useState<string | null>(null);
 
-  const loadData = useCallback(async (addr: string) => {
+  // Supplementary REST fetch: markets, funding history, ledger, polymarket, quant status
+  const loadSupplementary = useCallback(async (addr: string) => {
     setLoading(true);
     try {
-      const [chState, spotState, openOrders, allMarkets, userFills, userFunding, userLedger, quantStatus, polyData, polyTradeData] = await Promise.all([
-        fetchCombinedClearinghouseState(addr),
-        fetchSpotClearinghouseState(addr).catch(() => null),
-        fetchOpenOrders(addr),
+      const [allMarkets, userFunding, userLedger, quantStatus, polyData, polyTradeData] = await Promise.all([
         fetchAllMarkets(),
-        fetchUserFills(addr),
         fetchUserFunding(addr),
         fetchUserLedger(addr).catch(() => [] as LedgerUpdate[]),
         fetch("/api/quant/status").then((r) => r.json()).catch(() => ({ strategies: [] })),
         fetchPolymarketPositions(addr).catch(() => ({ positions: [] as PolymarketPosition[], proxyWallet: null })),
         fetchPolymarketTrades(addr, 200).catch(() => ({ trades: [] as PolymarketTrade[], proxyWallet: null })),
       ]);
-      setCh(chState);
-      setSpot(spotState);
-      setOrders(openOrders);
       setMarkets(allMarkets);
-      setFills(userFills);
       setFunding(userFunding);
       setLedger(userLedger);
       setServerStrategies(quantStatus.strategies ?? []);
@@ -283,7 +282,7 @@ export default function DashboardPage() {
       setPolyProxyWallet(polyData.proxyWallet ?? polyTradeData.proxyWallet);
       setLastRefresh(new Date());
     } catch (err) {
-      console.error("Failed to load dashboard:", err);
+      console.error("Failed to load dashboard supplementary data:", err);
     }
     setLoading(false);
   }, []);
@@ -292,17 +291,25 @@ export default function DashboardPage() {
     automationInit();
   }, [automationInit]);
 
+  // Connect WS user data stream + fetch supplementary data
   useEffect(() => {
-    if (address) loadData(address);
-  }, [address, loadData]);
+    if (address) {
+      userData.connect(address);
+      loadSupplementary(address);
+    } else {
+      userData.disconnect();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, loadSupplementary]);
 
   const positions = ch?.assetPositions.filter((ap) => parseFloat(ap.position.szi) !== 0) ?? [];
 
+  // Slow supplementary data polling to 60s
   useEffect(() => {
     if (!address) return;
-    const interval = setInterval(() => loadData(address), positions.length > 0 ? 10000 : 30000);
+    const interval = setInterval(() => loadSupplementary(address), 60_000);
     return () => clearInterval(interval);
-  }, [address, loadData, positions.length]);
+  }, [address, loadSupplementary]);
   const trades = useMemo(() => groupFillsIntoTrades(fills), [fills]);
   const closedTrades = trades.filter((t) => !t.isOpen);
   const totalClosedPnl = fills.reduce((s, f) => s + parseFloat(f.closedPnl), 0);
@@ -601,7 +608,7 @@ export default function DashboardPage() {
                     Updated {lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                   </span>
                 )}
-                <button onClick={() => loadData(address)} className="p-2 text-[#848e9c] hover:text-white transition-colors" disabled={loading}>
+                <button onClick={() => { if (address) loadSupplementary(address); userData.refreshUserState(); }} className="p-2 text-[#848e9c] hover:text-white transition-colors" disabled={loading}>
                   <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 </button>
                 <DepositButton variant="default" />
