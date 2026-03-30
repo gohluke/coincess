@@ -96,7 +96,9 @@ function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
   const trades: RoundTripTrade[] = [];
 
   for (const [coin, coinFills] of byCoin) {
-    let pos = 0;
+    // Seed pos from the first fill's startPosition so truncated snapshots
+    // don't create phantom trades (e.g. WS returns only recent fills).
+    let pos = parseFloat(coinFills[0].startPosition ?? "0");
     let tradeFills: Fill[] = [];
     let openTime = 0;
     let direction: "Long" | "Short" = "Long";
@@ -104,10 +106,57 @@ function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
     let entrySize = 0;
     const coinTrades: RoundTripTrade[] = [];
 
+    // If pos is already non-zero, we're mid-trade from before our fill window.
+    // Consume closing fills until flat, then start fresh round-trips.
+    const skipPrefix = Math.abs(pos) > 1e-10;
+    let prefixFills: Fill[] = [];
+
     for (const f of coinFills) {
       const sz = parseFloat(f.sz);
       const px = parseFloat(f.px);
       const delta = f.side === "B" ? sz : -sz;
+
+      // Still unwinding a pre-existing position we don't have open fills for
+      if (skipPrefix && prefixFills !== null && Math.abs(pos) > 1e-10) {
+        const prevPos = pos;
+        pos += delta;
+        prefixFills.push(f);
+        const crossed = (prevPos > 0 && pos <= 0) || (prevPos < 0 && pos >= 0);
+        if (crossed || Math.abs(pos) < 1e-10) {
+          const pnl = prefixFills.reduce((s, tf) => s + parseFloat(tf.closedPnl), 0);
+          const fees = prefixFills.reduce((s, tf) => s + parseFloat(tf.fee), 0);
+          const cFills = prefixFills.filter((tf) => tf.dir.toLowerCase().includes("close"));
+          const exitCost = cFills.reduce((s, tf) => s + parseFloat(tf.px) * parseFloat(tf.sz), 0);
+          const exitSize = cFills.reduce((s, tf) => s + parseFloat(tf.sz), 0);
+          coinTrades.push({
+            coin,
+            direction: prevPos > 0 ? "Long" : "Short",
+            entryPx: 0,
+            exitPx: exitSize > 0 ? exitCost / exitSize : null,
+            maxSize: Math.abs(parseFloat(coinFills[0].startPosition ?? "0")),
+            openTime: prefixFills[0].time,
+            closeTime: f.time,
+            realizedPnl: pnl,
+            totalFees: fees,
+            netPnl: pnl - fees,
+            fills: prefixFills,
+            isOpen: false,
+          });
+          prefixFills = [];
+          if (Math.abs(pos) > 1e-10) {
+            tradeFills = [f];
+            openTime = f.time;
+            direction = pos > 0 ? "Long" : "Short";
+            entryCost = px * sz;
+            entrySize = sz;
+          }
+        }
+        continue;
+      }
+      // If we still have prefix fills left over (never closed), flush them
+      if (prefixFills.length > 0) {
+        prefixFills = [];
+      }
 
       if (tradeFills.length === 0) {
         openTime = f.time;
@@ -160,7 +209,26 @@ function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
       }
     }
 
-    if (tradeFills.length > 0) {
+    // Handle remaining prefix fills (pre-existing position never fully closed)
+    if (prefixFills.length > 0) {
+      const pnl = prefixFills.reduce((s, tf) => s + parseFloat(tf.closedPnl), 0);
+      const fees = prefixFills.reduce((s, tf) => s + parseFloat(tf.fee), 0);
+      const initPos = parseFloat(coinFills[0].startPosition ?? "0");
+      coinTrades.push({
+        coin,
+        direction: initPos > 0 ? "Long" : "Short",
+        entryPx: 0,
+        exitPx: null,
+        maxSize: Math.abs(initPos),
+        openTime: prefixFills[0].time,
+        closeTime: null,
+        realizedPnl: pnl,
+        totalFees: fees,
+        netPnl: pnl - fees,
+        fills: prefixFills,
+        isOpen: true,
+      });
+    } else if (tradeFills.length > 0) {
       const pnl = tradeFills.reduce((s, tf) => s + parseFloat(tf.closedPnl), 0);
       const fees = tradeFills.reduce((s, tf) => s + parseFloat(tf.fee), 0);
 
