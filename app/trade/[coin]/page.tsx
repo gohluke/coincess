@@ -143,17 +143,16 @@ export default function TradePageDynamic() {
 
   useEffect(() => {
     if (!address) return;
-    const interval = setInterval(() => {
-      loadUserState();
-      fetchUserFills(address).then(setUserFills).catch(() => {});
-    }, 10000);
-    return () => clearInterval(interval);
+    const iv = setInterval(loadUserState, 10_000);
+    return () => clearInterval(iv);
   }, [address, loadUserState]);
 
-  // Fetch user fills for chart markers (initial + on address change)
   useEffect(() => {
     if (!address) { setUserFills([]); return; }
-    fetchUserFills(address).then(setUserFills).catch(() => {});
+    const load = () => fetchUserFills(address).then(setUserFills).catch(() => {});
+    load();
+    const iv = setInterval(load, 30_000);
+    return () => clearInterval(iv);
   }, [address]);
 
   return (
@@ -207,7 +206,7 @@ export default function TradePageDynamic() {
           </div>
         </div>
         <div className="h-[200px] shrink-0 border-t border-[#2a2e39]">
-          <PositionsTable />
+          <PositionsTable fills={userFills} />
         </div>
       </div>
 
@@ -233,7 +232,7 @@ export default function TradePageDynamic() {
         )}
         {mobileTab === "positions" && (
           <div className="h-full overflow-y-auto">
-            <PositionsTable />
+            <PositionsTable fills={userFills} />
           </div>
         )}
       </div>

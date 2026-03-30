@@ -21,7 +21,7 @@ interface QuantTradeInfo {
   meta: { reason?: string } | null;
 }
 
-export function PositionsTable() {
+export function PositionsTable({ fills: externalFills }: { fills?: Fill[] } = {}) {
   const router = useRouter();
   const { clearinghouse, openOrders, address, markets, loadUserState } = useTradingStore();
   const [tab, setTab] = useState<Tab>("positions");
@@ -47,24 +47,13 @@ export function PositionsTable() {
     coin: string; szi: string; entryPx: string; markPx: string; posSize: string; leverage: string; isLong: boolean;
   } | null>(null);
 
-  const [fills, setFills] = useState<Fill[]>([]);
-
-  const positionCoins = useMemo(
-    () => (clearinghouse?.assetPositions ?? [])
-      .filter((p) => parseFloat(p.position.szi) !== 0)
-      .map((p) => p.position.coin)
-      .sort()
-      .join(","),
-    [clearinghouse],
-  );
+  const [ownFills, setOwnFills] = useState<Fill[]>([]);
+  const fills = externalFills ?? ownFills;
 
   useEffect(() => {
-    if (!address) { setFills([]); return; }
-    const load = () => fetchUserFills(address).then(setFills).catch(() => {});
-    load();
-    const iv = setInterval(load, 15_000);
-    return () => clearInterval(iv);
-  }, [address, positionCoins]);
+    if (externalFills || !address) { if (!address) setOwnFills([]); return; }
+    fetchUserFills(address).then(setOwnFills).catch(() => {});
+  }, [address, externalFills]);
 
   const getPositionOpenTime = useCallback((coin: string) => {
     // Find the most recent fill that opened a fresh position (startPosition was 0)
