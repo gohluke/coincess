@@ -427,15 +427,8 @@ export default function DashboardPage() {
       }
       polyAssetState.set(t.asset, state);
     }
-    for (const t of polyChron) {
-      if (t.side !== "BUY") continue;
-      const state = polyAssetState.get(t.asset);
-      const curPrice = polyCurPrices.get(t.asset);
-      if (state && state.shares > 0 && curPrice !== undefined) {
-        polyTradePnl.set(t.transactionHash, (curPrice - t.price) * t.size);
-      }
-    }
 
+    // Realized PnL from sells → assign to the sell's trade date
     for (const pt of polyTrades) {
       if (!pt.timestamp) continue;
       const pnl = polyTradePnl.get(pt.transactionHash) ?? 0;
@@ -444,6 +437,19 @@ export default function DashboardPage() {
       const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0, poly: 0 };
       entry.poly += pnl;
       map.set(day, entry);
+    }
+
+    // Unrealized PnL from remaining shares → assign to TODAY
+    const todayStr = toLocalDate(Date.now());
+    for (const [asset, state] of polyAssetState) {
+      if (state.shares < 0.01) continue;
+      const curPrice = polyCurPrices.get(asset);
+      if (curPrice === undefined) continue;
+      const unrealized = (curPrice - state.costBasis) * state.shares;
+      if (Math.abs(unrealized) < 0.01) continue;
+      const entry = map.get(todayStr) ?? { closed: 0, fees: 0, funding: 0, poly: 0 };
+      entry.poly += unrealized;
+      map.set(todayStr, entry);
     }
     return map;
   }, [fills, funding, polyTrades, polyPositions]);
@@ -2486,15 +2492,21 @@ function PolyTradeTable({ trades, positions }: { trades: PolymarketTrade[]; posi
       assetState.set(t.asset, state);
     }
 
-    // For BUY trades: compute unrealized PnL = (curPrice - buyPrice) * size
-    // But only if there are still open shares (i.e. not fully closed)
-    for (const t of chronological) {
+    // Unrealized PnL for remaining open shares (FIFO allocation)
+    const assetRemaining = new Map<string, number>();
+    for (const [asset, state] of assetState) {
+      if (state.shares >= 0.01) assetRemaining.set(asset, state.shares);
+    }
+    for (let i = chronological.length - 1; i >= 0; i--) {
+      const t = chronological[i];
       if (t.side !== "BUY") continue;
-      const state = assetState.get(t.asset);
+      const remaining = assetRemaining.get(t.asset) ?? 0;
+      if (remaining < 0.01) continue;
       const curPrice = curPriceMap.get(t.asset);
-      if (state && state.shares > 0 && curPrice !== undefined) {
-        pnlMap.set(t.transactionHash, (curPrice - t.price) * t.size);
-      }
+      if (curPrice === undefined) continue;
+      const allocated = Math.min(t.size, remaining);
+      pnlMap.set(t.transactionHash, (curPrice - t.price) * allocated);
+      assetRemaining.set(t.asset, remaining - allocated);
     }
 
     return pnlMap;
