@@ -52,6 +52,37 @@ interface RoundTripTrade {
   isOpen: boolean;
 }
 
+function rebuildTrade(coin: string, fills: Fill[], isOpen: boolean): RoundTripTrade {
+  const sortedFills = [...fills].sort((a, b) => a.time - b.time);
+  const openFills = sortedFills.filter((f) => f.dir.toLowerCase().includes("open"));
+  const closeFills = sortedFills.filter((f) => f.dir.toLowerCase().includes("close"));
+  const entryCost = openFills.reduce((s, f) => s + parseFloat(f.px) * parseFloat(f.sz), 0);
+  const entrySize = openFills.reduce((s, f) => s + parseFloat(f.sz), 0);
+  const exitCost = closeFills.reduce((s, f) => s + parseFloat(f.px) * parseFloat(f.sz), 0);
+  const exitSize = closeFills.reduce((s, f) => s + parseFloat(f.sz), 0);
+  const pnl = sortedFills.reduce((s, f) => s + parseFloat(f.closedPnl), 0);
+  const fees = sortedFills.reduce((s, f) => s + parseFloat(f.fee), 0);
+  const first = sortedFills[0];
+  const direction: "Long" | "Short" =
+    openFills.length > 0
+      ? openFills[0].side === "B" ? "Long" : "Short"
+      : first.side === "B" ? "Long" : "Short";
+  return {
+    coin,
+    direction,
+    entryPx: entrySize > 0 ? entryCost / entrySize : parseFloat(first.px),
+    exitPx: exitSize > 0 ? exitCost / exitSize : null,
+    maxSize: entrySize || Math.abs(parseFloat(first.sz)),
+    openTime: first.time,
+    closeTime: isOpen ? null : sortedFills[sortedFills.length - 1].time,
+    realizedPnl: pnl,
+    totalFees: fees,
+    netPnl: pnl - fees,
+    fills: sortedFills,
+    isOpen,
+  };
+}
+
 function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
   const sorted = [...fills].sort((a, b) => a.time - b.time);
   const byCoin = new Map<string, Fill[]>();
@@ -70,6 +101,7 @@ function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
     let direction: "Long" | "Short" = "Long";
     let entryCost = 0;
     let entrySize = 0;
+    const coinTrades: RoundTripTrade[] = [];
 
     for (const f of coinFills) {
       const sz = parseFloat(f.sz);
@@ -102,7 +134,7 @@ function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
         const exitCost = closeFills.reduce((s, tf) => s + parseFloat(tf.px) * parseFloat(tf.sz), 0);
         const exitSize = closeFills.reduce((s, tf) => s + parseFloat(tf.sz), 0);
 
-        trades.push({
+        coinTrades.push({
           coin,
           direction,
           entryPx: entrySize > 0 ? entryCost / entrySize : 0,
@@ -131,7 +163,7 @@ function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
       const pnl = tradeFills.reduce((s, tf) => s + parseFloat(tf.closedPnl), 0);
       const fees = tradeFills.reduce((s, tf) => s + parseFloat(tf.fee), 0);
 
-      trades.push({
+      coinTrades.push({
         coin,
         direction,
         entryPx: entrySize > 0 ? entryCost / entrySize : parseFloat(tradeFills[0].px),
@@ -146,6 +178,25 @@ function groupFillsIntoTrades(fills: Fill[]): RoundTripTrade[] {
         isOpen: true,
       });
     }
+
+    // Merge micro round-trips (duration < 2s) into adjacent trade
+    const MICRO_MS = 2000;
+    let i = 0;
+    while (i < coinTrades.length) {
+      const t = coinTrades[i];
+      if (!t.isOpen && t.closeTime != null && t.closeTime - t.openTime < MICRO_MS && coinTrades.length > 1) {
+        const neighborIdx = i + 1 < coinTrades.length ? i + 1 : i - 1;
+        const neighbor = coinTrades[neighborIdx];
+        const merged = rebuildTrade(coin, [...neighbor.fills, ...t.fills], neighbor.isOpen);
+        coinTrades[neighborIdx] = merged;
+        coinTrades.splice(i, 1);
+        if (neighborIdx < i) i--;
+      } else {
+        i++;
+      }
+    }
+
+    trades.push(...coinTrades);
   }
 
   trades.sort((a, b) => (b.closeTime ?? b.openTime) - (a.closeTime ?? a.openTime));
