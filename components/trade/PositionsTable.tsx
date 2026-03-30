@@ -49,10 +49,22 @@ export function PositionsTable() {
 
   const [fills, setFills] = useState<Fill[]>([]);
 
+  const positionCoins = useMemo(
+    () => (clearinghouse?.assetPositions ?? [])
+      .filter((p) => parseFloat(p.position.szi) !== 0)
+      .map((p) => p.position.coin)
+      .sort()
+      .join(","),
+    [clearinghouse],
+  );
+
   useEffect(() => {
     if (!address) { setFills([]); return; }
-    fetchUserFills(address).then(setFills).catch(() => {});
-  }, [address]);
+    const load = () => fetchUserFills(address).then(setFills).catch(() => {});
+    load();
+    const iv = setInterval(load, 15_000);
+    return () => clearInterval(iv);
+  }, [address, positionCoins]);
 
   const getPositionOpenTime = useCallback((coin: string) => {
     // Find the most recent fill that opened a fresh position (startPosition was 0)
