@@ -280,17 +280,40 @@ export default function DashboardPage() {
       entry.funding += parseFloat(fp.delta.usdc);
       map.set(day, entry);
     }
-    const polyPriceMap = new Map<string, { curPrice: number; avgPrice: number }>();
+    // Compute per-trade Polymarket P&L using running cost basis
+    const polyCurPrices = new Map<string, number>();
     for (const p of polyPositions) {
-      polyPriceMap.set(p.asset, { curPrice: p.curPrice, avgPrice: p.avgPrice });
+      if (p.curPrice > 0) polyCurPrices.set(p.asset, p.curPrice);
     }
+    const polyChron = [...polyTrades].sort((a, b) => a.timestamp - b.timestamp);
+    const polyAssetState = new Map<string, { shares: number; costBasis: number }>();
+    const polyTradePnl = new Map<string, number>();
+
+    for (const t of polyChron) {
+      const state = polyAssetState.get(t.asset) ?? { shares: 0, costBasis: 0 };
+      if (t.side === "BUY") {
+        state.costBasis = ((state.costBasis * state.shares) + (t.price * t.size)) / (state.shares + t.size);
+        state.shares += t.size;
+        polyTradePnl.set(t.transactionHash, 0);
+      } else {
+        polyTradePnl.set(t.transactionHash, (t.price - state.costBasis) * t.size);
+        state.shares = Math.max(state.shares - t.size, 0);
+      }
+      polyAssetState.set(t.asset, state);
+    }
+    for (const t of polyChron) {
+      if (t.side !== "BUY") continue;
+      const state = polyAssetState.get(t.asset);
+      const curPrice = polyCurPrices.get(t.asset);
+      if (state && state.shares > 0 && curPrice !== undefined) {
+        polyTradePnl.set(t.transactionHash, (curPrice - t.price) * t.size);
+      }
+    }
+
     for (const pt of polyTrades) {
       if (!pt.timestamp) continue;
-      const pos = polyPriceMap.get(pt.asset);
-      if (!pos) continue;
-      const pnl = pt.side === "BUY"
-        ? (pos.curPrice - pt.price) * pt.size
-        : (pt.price - pos.avgPrice) * pt.size;
+      const pnl = polyTradePnl.get(pt.transactionHash) ?? 0;
+      if (pnl === 0) continue;
       const day = toLocalDate(pt.timestamp * 1000);
       const entry = map.get(day) ?? { closed: 0, fees: 0, funding: 0, poly: 0 };
       entry.poly += pnl;
@@ -2304,38 +2327,67 @@ function CoinTradeDetail({
 function PolyTradeTable({ trades, positions }: { trades: PolymarketTrade[]; positions: PolymarketPosition[] }) {
   const sorted = [...trades].sort((a, b) => b.timestamp - a.timestamp);
 
-  const priceMap = useMemo(() => {
-    const m = new Map<string, { curPrice: number; avgPrice: number }>();
+  // Build current price map for active positions (used to value open shares)
+  const curPriceMap = useMemo(() => {
+    const m = new Map<string, number>();
     for (const p of positions) {
-      m.set(p.asset, { curPrice: p.curPrice, avgPrice: p.avgPrice });
+      if (p.curPrice > 0) m.set(p.asset, p.curPrice);
     }
     return m;
   }, [positions]);
 
-  const totalTradePnl = useMemo(() => {
-    let sum = 0;
-    for (const t of trades) {
-      const pos = priceMap.get(t.asset);
-      if (!pos) continue;
+  // Compute per-trade P&L using running cost basis (FIFO-style).
+  // Process trades chronologically per asset, track avg cost, realize on sells.
+  // Remaining open shares valued at curPrice from positions.
+  const tradePnlMap = useMemo(() => {
+    const chronological = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+    const assetState = new Map<string, { shares: number; costBasis: number }>();
+    const pnlMap = new Map<string, number>(); // key = `${txHash}-${index in sorted}`
+
+    for (const t of chronological) {
+      const state = assetState.get(t.asset) ?? { shares: 0, costBasis: 0 };
+      const key = t.transactionHash;
+
       if (t.side === "BUY") {
-        sum += (pos.curPrice - t.price) * t.size;
+        state.costBasis = ((state.costBasis * state.shares) + (t.price * t.size)) / (state.shares + t.size);
+        state.shares += t.size;
+        pnlMap.set(key, 0); // BUY: no realized PnL yet (unrealized computed later)
       } else {
-        sum += (t.price - pos.avgPrice) * t.size;
+        const realized = (t.price - state.costBasis) * t.size;
+        pnlMap.set(key, realized);
+        state.shares = Math.max(state.shares - t.size, 0);
+      }
+      assetState.set(t.asset, state);
+    }
+
+    // For BUY trades: compute unrealized PnL = (curPrice - buyPrice) * size
+    // But only if there are still open shares (i.e. not fully closed)
+    for (const t of chronological) {
+      if (t.side !== "BUY") continue;
+      const state = assetState.get(t.asset);
+      const curPrice = curPriceMap.get(t.asset);
+      if (state && state.shares > 0 && curPrice !== undefined) {
+        pnlMap.set(t.transactionHash, (curPrice - t.price) * t.size);
       }
     }
+
+    return pnlMap;
+  }, [trades, curPriceMap]);
+
+  const totalPnl = useMemo(() => {
+    let sum = 0;
+    for (const v of tradePnlMap.values()) sum += v;
     return sum;
-  }, [trades, priceMap]);
+  }, [tradePnlMap]);
 
   return (
     <div className="bg-[#141620] rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e3e]">
         <div className="flex items-center gap-3">
           <p className="text-xs font-semibold text-white">Polymarket Trades</p>
-          {positions.length > 0 && (
-            <span className={`text-xs font-bold ${totalTradePnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {totalTradePnl >= 0 ? "+" : ""}{formatUsd(totalTradePnl)}
-            </span>
-          )}
+          <span className={`text-xs font-bold ${totalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {totalPnl >= 0 ? "+" : ""}{formatUsd(totalPnl)}
+          </span>
         </div>
         <p className="text-[10px] text-[#848e9c]">Total: {trades.length}</p>
       </div>
@@ -2351,13 +2403,8 @@ function PolyTradeTable({ trades, positions }: { trades: PolymarketTrade[]; posi
       {sorted.map((t, i) => {
         const total = t.size * t.price;
         const isBuy = t.side === "BUY";
-        const pos = priceMap.get(t.asset);
-        let pnl: number | null = null;
-        if (pos) {
-          pnl = isBuy
-            ? (pos.curPrice - t.price) * t.size
-            : (t.price - pos.avgPrice) * t.size;
-        }
+        const pnl = tradePnlMap.get(t.transactionHash) ?? null;
+        const showPnl = pnl !== null && pnl !== 0;
         return (
           <Link
             key={`${t.transactionHash}-${i}`}
@@ -2379,8 +2426,8 @@ function PolyTradeTable({ trades, positions }: { trades: PolymarketTrade[]; posi
             <span className="text-right text-white">{(t.price * 100).toFixed(1)}¢</span>
             <span className="text-right text-white">{t.size.toFixed(2)}</span>
             <span className="text-right text-white">{formatUsd(total)}</span>
-            <span className={`text-right font-medium ${pnl === null ? "text-[#848e9c]" : pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {pnl === null ? "–" : `${pnl >= 0 ? "+" : ""}${formatUsd(pnl)}`}
+            <span className={`text-right font-medium ${!showPnl ? "text-[#555a66]" : pnl! >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {!showPnl ? "–" : `${pnl! >= 0 ? "+" : ""}${formatUsd(pnl!)}`}
             </span>
           </Link>
         );
