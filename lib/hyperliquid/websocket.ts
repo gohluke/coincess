@@ -220,7 +220,9 @@ export class HyperliquidWs {
   subscribeClearinghouseState(user: string, handler: (state: ClearinghouseState) => void, dex?: string) {
     const sub: Subscription = { type: "clearinghouseState", user };
     if (dex) sub.dex = dex;
-    return this.subscribe(sub, "clearinghouseState", handler as MessageHandler);
+    // Use dex-scoped channel key so handlers for different dexes don't collide
+    const channel = dex ? `clearinghouseState:${dex}` : "clearinghouseState";
+    return this.subscribe(sub, channel, handler as MessageHandler);
   }
 
   subscribeOrderUpdates(user: string, handler: (orders: WsOrder[]) => void) {

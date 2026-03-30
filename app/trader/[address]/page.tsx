@@ -347,9 +347,9 @@ export default function TraderProfilePage() {
     (ap) => Math.abs(parseFloat(ap.position.szi)) > 0
   ) ?? [];
 
-  const accountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
-  const totalNtlPos = parseFloat(ch?.marginSummary.totalNtlPos ?? "0");
-  const totalMargin = parseFloat(ch?.marginSummary.totalMarginUsed ?? "0");
+  const accountValue = parseFloat(ch?.marginSummary?.accountValue ?? "0");
+  const totalNtlPos = parseFloat(ch?.marginSummary?.totalNtlPos ?? "0");
+  const totalMargin = parseFloat(ch?.marginSummary?.totalMarginUsed ?? "0");
   const withdrawable = parseFloat(ch?.withdrawable ?? "0");
   const totalUnrealizedPnl = positions.reduce(
     (s, ap) => s + parseFloat(ap.position.unrealizedPnl), 0

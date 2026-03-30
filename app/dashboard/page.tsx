@@ -302,7 +302,7 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, loadSupplementary]);
 
-  const positions = ch?.assetPositions.filter((ap) => parseFloat(ap.position.szi) !== 0) ?? [];
+  const positions = ch?.assetPositions?.filter((ap) => parseFloat(ap.position.szi) !== 0) ?? [];
 
   // Slow supplementary data polling to 60s
   useEffect(() => {
@@ -396,7 +396,7 @@ export default function DashboardPage() {
   }, [fills]);
 
   const totalPnl = positions.reduce((sum, ap) => sum + parseFloat(ap.position.unrealizedPnl), 0);
-  const perpsAccountValue = parseFloat(ch?.marginSummary.accountValue ?? "0");
+  const perpsAccountValue = parseFloat(ch?.marginSummary?.accountValue ?? "0");
   const availableBalance = parseFloat(ch?.withdrawable ?? "0");
   const spotUsdcBalance = useMemo(() => {
     if (!spot?.balances) return 0;
