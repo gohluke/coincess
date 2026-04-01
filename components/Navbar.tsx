@@ -12,6 +12,7 @@ import { Logo } from "@/components/Logo";
 import { AuthButton } from "@/components/AuthButton";
 import { DepositButton } from "@/components/DepositModal";
 import { SearchModal } from "@/components/SearchModal";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const NAV_ICONS = [
   { href: "/dashboard", label: "Portfolio", icon: LayoutDashboard },
@@ -179,6 +180,9 @@ export function Navbar() {
           >
             <Search className="h-[18px] w-[18px]" />
           </button>
+
+          {/* Notifications */}
+          <NotificationBell />
 
           {/* Deposit */}
           <DepositButton variant="icon" />

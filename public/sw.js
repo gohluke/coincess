@@ -1,4 +1,4 @@
-const CACHE_NAME = "coincess-v2";
+const CACHE_NAME = "coincess-v3";
 const STATIC_ASSETS = ["/trade/BTC", "/predict", "/automate"];
 
 self.addEventListener("install", (event) => {
@@ -21,7 +21,6 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
 
-  // Network-first for API calls
   if (url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
@@ -34,5 +33,38 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => caches.match(event.request))
+  );
+});
+
+// ── Push Notifications ──────────────────────────────────────
+
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || "Coincess";
+  const options = {
+    body: data.body || "",
+    icon: "/assets/coincess-icon.png",
+    badge: "/favicon.png",
+    tag: data.tag || "coincess-" + Date.now(),
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: { url: data.url || "/dashboard" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/dashboard";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
   );
 });

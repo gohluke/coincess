@@ -42,3 +42,7 @@ next-env.d.ts
 
 # generated secrets
 scripts/generated-addresses.json
+
+# monitor service
+monitor/node_modules
+monitor/.env

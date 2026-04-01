@@ -124,9 +124,18 @@ Strategy backtesting and performance analysis tools.
 
 ### PWA (Progressive Web App)
 - Installable on iOS/Android home screen — feels like a native app
-- Service worker with offline caching
+- Service worker with offline caching + push notification handling
 - Standalone display mode (no browser chrome)
 - Dark splash screen matching app theme
+- **Push Notifications** — real-time alerts via Web Push (VAPID):
+  - **Limit order fills** — notified when Hyperliquid orders are filled
+  - **Price alerts** — set target prices, get notified when crossed
+  - **PnL thresholds** — alerts when daily PnL exceeds a threshold
+  - **Funding payments** — periodic funding payment notifications
+  - **Notification bell** — in-app UI to enable push, manage alerts, send test notifications
+  - **iOS install prompt** — detects Safari and shows "Add to Home Screen" guide for PWA installation
+  - **Contabo monitor** — server-side service (`/opt/coincess-monitor`) watches Hyperliquid WebSocket 24/7 and triggers pushes via `web-push`
+  - **Supabase backend** — `push_subscriptions`, `notification_alerts`, `notification_preferences` tables store subscription state per wallet
 
 ### Coinbase-Style Navigation
 - **Desktop** — all-icon circular navbar: Logo + Search pill + circular nav icons (Portfolio, Trade, Predict, Automate) with hover tooltips, separator, then utility icons (Deposit, More grid, Avatar)
@@ -381,6 +390,13 @@ npm run dev
   OPENAI_API_KEY=your_key
   ```
 
+### Push Notifications
+
+- [x] **VAPID keys** — generated and stored in `.env.local` + Contabo `.env`
+- [x] **Supabase tables** — `push_subscriptions`, `notification_alerts`, `notification_preferences` (run `scripts/migrate-push-notifications.sql`)
+- [x] **Contabo monitor** — deployed at `/opt/coincess-monitor`, managed by PM2
+- [ ] **Test end-to-end** — install PWA on iPhone, enable push via bell icon, send test notification
+
 ### Recommended
 
 - [ ] **Set up Privy** — sign up at [privy.io](https://privy.io), create an app, add to `.env.local`:
@@ -405,7 +421,7 @@ Automated content pipeline posting market data, funding rate alpha, educational 
 
 - Token-gated tiered fee discounts (native token staking)
 - UI sounds (order fills, alerts, errors)
-- Telegram bot for notifications and quick orders
+- Telegram bot for quick orders
 - Token scanner with smart money tracking
 - Server-side Edge Function automation
 
@@ -440,6 +456,10 @@ coincess/
 │   │   ├── quant/trades/route.ts       # Quant trade history
 │   │   ├── quant/status/route.ts       # Quant engine health
 │   │   ├── quant/ai-logs/route.ts     # AI agent decision logs
+│   │   ├── notifications/subscribe/    # Push subscription management (VAPID key, save, deactivate)
+│   │   ├── notifications/alerts/       # Notification alert rules CRUD
+│   │   ├── notifications/preferences/  # User notification preferences
+│   │   ├── notifications/test/         # Send test push notification
 │   │   ├── dayze/sync/route.ts        # Dayze activity sync proxy
 │   │   ├── polymarket/events/          # Gamma API proxy (CORS)
 │   │   ├── polymarket/tags/            # Tags proxy
@@ -453,7 +473,10 @@ coincess/
 │   │   ├── [slug]/page.tsx            # Dynamic article page (ISR, JSON-LD)
 │   │   └── .../page.tsx               # Legacy static articles (fallback)
 │   └── page.tsx                        # Landing page
+│   ├── hooks/
+│   │   └── usePushNotifications.ts    # Client-side push subscription + test hook
 ├── components/
+│   ├── NotificationBell.tsx            # Push notification bell icon + settings panel
 │   ├── AppShell.tsx                    # Client shell (Privy + MobileNav + AlertBanner)
 │   ├── MobileNav.tsx                   # Bottom navigation bar
 │   ├── CompoundingCalculator.tsx        # Industry-grade Monte Carlo compounding simulator (500 runs, percentile bands, risk metrics, drawdown/histogram charts)
@@ -516,6 +539,8 @@ coincess/
 │   │   └── sync.ts                     # Dayze activity sync + formatters
 │   ├── blog/
 │   │   └── index.ts                    # Blog data layer (Supabase + static fallback)
+│   ├── push/
+│   │   └── server.ts                   # Web Push sender (VAPID, sendPush, sendPushToWallet)
 │   ├── supabase/
 │   │   ├── client.ts                   # Supabase client (lazy-initialized)
 │   │   └── schema.sql                  # Database schema (journal + chat tables)
@@ -528,10 +553,22 @@ coincess/
 │   ├── whitelist-accounts.ts          # Update brand.config.ts feeWhitelist
 │   ├── create-traders-table.sql       # Full schema (fresh install)
 │   ├── migrate-add-volume.sql         # Migration: add coincess_volume + accounts table
-│   └── migrate-blog-posts.ts         # Seed blog_posts table from static content
+│   ├── migrate-blog-posts.ts         # Seed blog_posts table from static content
+│   ├── migrate-push-notifications.sql # Push notifications schema (subscriptions, alerts, preferences)
+│   └── migrate-push-notifications.ts  # Push migration runner / SQL printer
+├── monitor/                            # Contabo push notification monitor service
+│   ├── src/
+│   │   ├── index.ts                   # PM2 entry point
+│   │   ├── alert-engine.ts            # Hyperliquid WS monitoring + alert evaluation
+│   │   ├── push-sender.ts            # Web Push sender (VAPID)
+│   │   ├── ws-manager.ts             # Hyperliquid WebSocket manager
+│   │   └── supabase.ts               # Supabase client + types for monitor
+│   ├── ecosystem.config.cjs          # PM2 config
+│   ├── deploy.sh                      # rsync + PM2 deploy to Contabo
+│   └── package.json
 ├── public/
 │   ├── manifest.json                   # PWA manifest
-│   ├── sw.js                           # Service worker
+│   ├── sw.js                           # Service worker (caching + push handlers)
 │   └── assets/                         # Icons and images
 └── package.json
 ```
