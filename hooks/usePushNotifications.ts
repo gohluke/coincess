@@ -18,6 +18,7 @@ export function usePushNotifications(walletAddress: string | null) {
   const [state, setState] = useState<PushState>("loading");
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const standalone =
@@ -26,6 +27,11 @@ export function usePushNotifications(walletAddress: string | null) {
     setIsStandalone(standalone);
 
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setState("unsupported");
+      return;
+    }
+
+    if (typeof Notification === "undefined") {
       setState("unsupported");
       return;
     }
@@ -41,15 +47,35 @@ export function usePushNotifications(walletAddress: string | null) {
     });
   }, []);
 
-  const subscribe = useCallback(async () => {
-    if (!walletAddress) return false;
+  const subscribe = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    if (!walletAddress) return { ok: false, error: "Connect a wallet first" };
+    setError(null);
     setState("loading");
     try {
+      // iOS requires explicit permission request before pushManager.subscribe()
+      if (typeof Notification === "undefined") {
+        setState("unsupported");
+        return { ok: false, error: "Notifications are not supported on this device" };
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission === "denied") {
+        setState("denied");
+        return { ok: false, error: "Notification permission was denied. Enable in Settings." };
+      }
+      if (permission !== "granted") {
+        setState("default");
+        return { ok: false, error: "Notification permission was dismissed. Please try again." };
+      }
+
       const reg = await navigator.serviceWorker.ready;
 
       const vapidRes = await fetch("/api/notifications/subscribe");
       const { publicKey } = await vapidRes.json();
-      if (!publicKey) throw new Error("No VAPID key");
+      if (!publicKey) {
+        setState("default");
+        return { ok: false, error: "Server not configured for push notifications" };
+      }
 
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -64,7 +90,7 @@ export function usePushNotifications(walletAddress: string | null) {
             ? "Mac"
             : "Browser";
 
-      await fetch("/api/notifications/subscribe", {
+      const saveRes = await fetch("/api/notifications/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -74,12 +100,25 @@ export function usePushNotifications(walletAddress: string | null) {
         }),
       });
 
+      if (!saveRes.ok) {
+        const err = await saveRes.json().catch(() => ({}));
+        setState("default");
+        return { ok: false, error: err.error || "Failed to save subscription" };
+      }
+
       setSubscription(sub);
       setState("granted");
-      return true;
-    } catch {
-      setState(Notification.permission === "denied" ? "denied" : "default");
-      return false;
+      return { ok: true };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error enabling notifications";
+      console.error("[push] subscribe error:", msg);
+      setError(msg);
+      if (typeof Notification !== "undefined" && Notification.permission === "denied") {
+        setState("denied");
+      } else {
+        setState("default");
+      }
+      return { ok: false, error: msg };
     }
   }, [walletAddress]);
 
@@ -122,6 +161,7 @@ export function usePushNotifications(walletAddress: string | null) {
     subscription,
     isSubscribed: state === "granted" && !!subscription,
     isStandalone,
+    error,
     subscribe,
     unsubscribe,
     testPush,

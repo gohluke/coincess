@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Bell, BellRing, X, Plus, Trash2, Send, Smartphone } from "lucide-react";
+import { Bell, BellRing, X, Plus, Trash2, Send, Smartphone, CheckCircle, AlertTriangle } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
 
@@ -26,6 +26,7 @@ export function NotificationBell() {
     state,
     isSubscribed,
     isStandalone,
+    error: pushError,
     subscribe,
     unsubscribe,
     testPush,
@@ -41,6 +42,7 @@ export function NotificationBell() {
   const [showAddAlert, setShowAddAlert] = useState(false);
   const [newAlert, setNewAlert] = useState({ type: "price_above", coin: "BTC", threshold: "" });
   const [testing, setTesting] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,14 +76,28 @@ export function NotificationBell() {
   }, [open, address, loadData]);
 
   const handleSubscribe = async () => {
-    const ok = await subscribe();
-    if (ok) loadData();
+    setStatusMsg(null);
+    const result = await subscribe();
+    if (result.ok) {
+      setStatusMsg({ type: "success", text: "Notifications enabled!" });
+      loadData();
+      setTimeout(() => setStatusMsg(null), 4000);
+    } else {
+      setStatusMsg({ type: "error", text: result.error || "Failed to enable notifications" });
+      setTimeout(() => setStatusMsg(null), 6000);
+    }
   };
 
   const handleTest = async () => {
     setTesting(true);
-    await testPush();
+    const ok = await testPush();
     setTesting(false);
+    if (ok) {
+      setStatusMsg({ type: "success", text: "Test notification sent!" });
+    } else {
+      setStatusMsg({ type: "error", text: "Failed to send test notification" });
+    }
+    setTimeout(() => setStatusMsg(null), 3000);
   };
 
   const updatePref = async (key: keyof Preferences, value: boolean) => {
@@ -152,6 +168,22 @@ export function NotificationBell() {
           </div>
 
           <div className="max-h-[70vh] overflow-y-auto p-4 space-y-4">
+            {/* Status Message */}
+            {statusMsg && (
+              <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium ${
+                statusMsg.type === "success"
+                  ? "bg-emerald-400/10 text-emerald-400"
+                  : "bg-red-400/10 text-red-400"
+              }`}>
+                {statusMsg.type === "success" ? (
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span>{statusMsg.text}</span>
+              </div>
+            )}
+
             {/* iOS Install Prompt */}
             {needsInstall && (
               <div className="bg-[#1a1d26] rounded-xl p-3 text-xs text-[#848e9c] space-y-1">

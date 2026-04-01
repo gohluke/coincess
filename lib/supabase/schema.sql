@@ -9,12 +9,18 @@ create table if not exists journal_entries (
   pnl_amount numeric,
   coin text,
   mood text check (mood in ('confident', 'tilted', 'neutral', 'learning')),
+  is_public boolean not null default false,
+  published_at timestamptz,
+  slug text,
+  linked_trades jsonb default '[]',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index if not exists idx_journal_wallet on journal_entries(wallet_address);
 create index if not exists idx_journal_created on journal_entries(created_at desc);
+create unique index if not exists idx_journal_slug on journal_entries(slug) where slug is not null;
+create index if not exists idx_journal_public on journal_entries(is_public, published_at desc) where is_public = true;
 
 -- Chat message history for AI coach conversations
 create table if not exists chat_messages (

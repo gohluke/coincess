@@ -175,6 +175,11 @@ Strategy backtesting and performance analysis tools.
 ### Trade Journal (`/journal`)
 - **Rich markdown rendering** — headings, bold, italic, lists, code blocks, blockquotes, tables, links all render with proper dark-theme styling
 - **Write trade reflections** — title, content (markdown), tags, mood, coin, P&L amount
+- **AI journal generation** — "Generate from Trades" button fetches today's Hyperliquid fills and Polymarket trades, sends them to Gemini, and pre-fills the editor with a reflective journal draft including linked trade data
+- **Linked trades** — journal entries can attach structured trade data (platform, fills, summary with P&L and coin breakdown); rendered as inline trade cards below the markdown content
+- **Publish toggle** — entries are private by default; flip the toggle to publish with an auto-generated slug for shareable links (`/journal/how-i-lost-1k-on-polymarket`)
+- **Public feed** — `GET /api/journal?public=true` returns all published entries across wallets (future social feed)
+- **Slug-based public view** — `GET /api/journal/[slug]` fetches a single public entry by slug
 - **Tag system** — categorize entries (e.g. `brentoil`, `revenge-trading`, `lesson`, `rules`)
 - **Mood tracking** — confident, tilted, neutral, learning
 - **Search & filter** — find entries by keyword, tag, or mood
@@ -450,7 +455,9 @@ coincess/
 │   ├── trader/[address]/page.tsx      # Individual trader profile (Hyperbot-style)
 │   ├── scanner/page.tsx                # Contract scanner
 │   ├── api/
-│   │   ├── journal/route.ts            # Journal CRUD API
+│   │   ├── journal/route.ts            # Journal CRUD API (GET with ?public=true, POST/PUT with publish fields)
+│   │   ├── journal/[slug]/route.ts    # Public journal entry by slug
+│   │   ├── journal/generate/route.ts  # AI journal draft generator (Gemini + trade data)
 │   │   ├── chat/route.ts              # AI chat streaming (Gemini + tools)
 │   │   ├── quant/strategies/route.ts   # Quant strategy CRUD
 │   │   ├── quant/trades/route.ts       # Quant trade history
@@ -555,7 +562,9 @@ coincess/
 │   ├── migrate-add-volume.sql         # Migration: add coincess_volume + accounts table
 │   ├── migrate-blog-posts.ts         # Seed blog_posts table from static content
 │   ├── migrate-push-notifications.sql # Push notifications schema (subscriptions, alerts, preferences)
-│   └── migrate-push-notifications.ts  # Push migration runner / SQL printer
+│   ├── migrate-push-notifications.ts  # Push migration runner / SQL printer
+│   ├── migrate-journal-platform.sql   # Journal platform upgrade (is_public, slug, linked_trades)
+│   └── insert-journal-entry.ts        # Script to insert journal entries via Supabase service client
 ├── monitor/                            # Contabo push notification monitor service
 │   ├── src/
 │   │   ├── index.ts                   # PM2 entry point

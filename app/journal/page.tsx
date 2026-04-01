@@ -7,23 +7,40 @@ import {
   X,
   Save,
   Trash2,
-  Tag,
   ChevronDown,
   ChevronUp,
   Search,
   RefreshCw,
-  TrendingUp,
-  TrendingDown,
   Smile,
   Frown,
   Meh,
   GraduationCap,
   LogIn,
   Edit3,
+  Sparkles,
+  Globe,
+  Lock,
+  Link2,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
+
+interface LinkedTrade {
+  platform: string;
+  fills: Array<{
+    coin: string;
+    side: string;
+    size: string;
+    price: string;
+    pnl: string;
+    fee: string;
+    time: string;
+  }>;
+  summary: { totalPnl: number; tradeCount: number; coins: string[] };
+}
 
 interface JournalEntry {
   id: string;
@@ -35,6 +52,10 @@ interface JournalEntry {
   pnl_amount: number | null;
   coin: string | null;
   mood: "confident" | "tilted" | "neutral" | "learning" | null;
+  is_public: boolean;
+  slug: string | null;
+  published_at: string | null;
+  linked_trades: LinkedTrade[];
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +80,34 @@ function formatUsd(val: number): string {
   return val.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 }
 
+function TradeCard({ trade }: { trade: LinkedTrade }) {
+  const platformLabel = trade.platform === "hyperliquid" ? "Hyperliquid" : "Polymarket";
+  const pnl = trade.summary.totalPnl;
+
+  return (
+    <div className="bg-[#0b0e11] rounded-lg p-3 border border-[#2a2e3e]/50">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#848e9c]">
+          {platformLabel}
+        </span>
+        <span className={`text-xs font-bold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+          {pnl >= 0 ? "+" : ""}{formatUsd(pnl)}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {trade.summary.coins.map((c) => (
+          <span key={c} className="text-[9px] px-1.5 py-0.5 rounded bg-[#1a1d2e] text-[#848e9c] font-medium">
+            {c}
+          </span>
+        ))}
+      </div>
+      <div className="text-[10px] text-[#5a6070]">
+        {trade.summary.tradeCount} fills
+      </div>
+    </div>
+  );
+}
+
 export default function JournalPage() {
   const { address, connect, loading: walletLoading } = useEffectiveAddress();
 
@@ -76,7 +125,10 @@ export default function JournalPage() {
   const [pnlAmount, setPnlAmount] = useState("");
   const [coin, setCoin] = useState("");
   const [mood, setMood] = useState<JournalEntry["mood"]>(null);
+  const [isPublic, setIsPublic] = useState(false);
+  const [linkedTrades, setLinkedTrades] = useState<LinkedTrade[]>([]);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -107,6 +159,8 @@ export default function JournalPage() {
     setPnlAmount("");
     setCoin("");
     setMood(null);
+    setIsPublic(false);
+    setLinkedTrades([]);
   };
 
   const openEditor = (entry?: JournalEntry) => {
@@ -118,17 +172,68 @@ export default function JournalPage() {
       setPnlAmount(entry.pnl_amount != null ? String(entry.pnl_amount) : "");
       setCoin(entry.coin ?? "");
       setMood(entry.mood);
+      setIsPublic(entry.is_public);
+      setLinkedTrades(entry.linked_trades ?? []);
     } else {
       resetForm();
     }
     setEditing(true);
   };
 
+  const handleGenerate = async () => {
+    if (!address) return;
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/journal/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet_address: address }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.message || err.error || "Failed to generate draft");
+        return;
+      }
+      const data = await res.json();
+      if (!data.draft) {
+        alert(data.message || "No trades found for today.");
+        return;
+      }
+
+      setContent(data.draft);
+      setLinkedTrades(data.linked_trades ?? []);
+
+      if (!title) {
+        const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        setTitle(`Trade Journal — ${today}`);
+      }
+
+      const allCoins = (data.linked_trades as LinkedTrade[])
+        .flatMap((lt) => lt.summary.coins)
+        .map((c) => c.toLowerCase());
+      const totalPnl = (data.linked_trades as LinkedTrade[])
+        .reduce((s, lt) => s + lt.summary.totalPnl, 0);
+
+      if (allCoins.length > 0 && !coin) setCoin(allCoins[0].toUpperCase());
+      if (totalPnl !== 0 && !pnlAmount) setPnlAmount(totalPnl.toFixed(2));
+
+      const autoTags = [...new Set(allCoins)].filter((t) => !tags.includes(t));
+      if (autoTags.length > 0) setTags((prev) => [...prev, ...autoTags]);
+
+      if (!editing) setEditing(true);
+    } catch (err) {
+      console.error("Generate failed:", err);
+      alert("Failed to generate journal draft.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!address || !title.trim()) return;
     setSaving(true);
     try {
-      const body = {
+      const body: Record<string, unknown> = {
         ...(editId ? { id: editId } : {}),
         wallet_address: address,
         title: title.trim(),
@@ -137,6 +242,8 @@ export default function JournalPage() {
         pnl_amount: pnlAmount ? parseFloat(pnlAmount) : null,
         coin: coin.trim() || null,
         mood,
+        is_public: isPublic,
+        linked_trades: linkedTrades,
       };
 
       const res = await fetch("/api/journal", {
@@ -171,6 +278,10 @@ export default function JournalPage() {
     const t = tag.toLowerCase().trim();
     if (t && !tags.includes(t)) setTags([...tags, t]);
     setTagInput("");
+  };
+
+  const removeLinkedTrade = (idx: number) => {
+    setLinkedTrades((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const filtered = entries.filter((e) => {
@@ -219,6 +330,15 @@ export default function JournalPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="px-3 py-2 bg-purple-500/15 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-medium hover:bg-purple-500/25 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              title="Generate journal draft from today's trades"
+            >
+              {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              {generating ? "Generating..." : "Generate from Trades"}
+            </button>
             <button
               onClick={fetchEntries}
               disabled={loading}
@@ -290,13 +410,25 @@ export default function JournalPage() {
               className="w-full bg-[#0b0e11] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand"
             />
 
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What happened? What did you learn? Write in markdown..."
-              rows={10}
-              className="w-full bg-[#0b0e11] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand font-mono text-xs leading-relaxed resize-y"
-            />
+            <div className="relative">
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="What happened? What did you learn? Write in markdown..."
+                rows={12}
+                className="w-full bg-[#0b0e11] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#848e9c] focus:outline-none focus:border-brand font-mono text-xs leading-relaxed resize-y"
+              />
+              {!content && (
+                <button
+                  onClick={handleGenerate}
+                  disabled={generating}
+                  className="absolute top-3 right-3 px-2.5 py-1.5 bg-purple-500/15 text-purple-400 rounded-md text-[10px] font-medium hover:bg-purple-500/25 transition-colors flex items-center gap-1 disabled:opacity-50"
+                >
+                  {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  AI Draft
+                </button>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
@@ -340,6 +472,50 @@ export default function JournalPage() {
                 </div>
               </div>
             </div>
+
+            {/* Publish Toggle */}
+            <div className="flex items-center justify-between bg-[#0b0e11] rounded-lg px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                {isPublic ? <Globe className="h-3.5 w-3.5 text-emerald-400" /> : <Lock className="h-3.5 w-3.5 text-[#848e9c]" />}
+                <span className="text-xs text-[#848e9c]">
+                  {isPublic ? "Public — visible on the feed" : "Private — only you can see this"}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsPublic(!isPublic)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  isPublic ? "bg-emerald-400/30" : "bg-[#2a2e3e]"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-transform ${
+                    isPublic ? "translate-x-5 bg-emerald-400" : "translate-x-0 bg-[#5a6070]"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Linked Trades */}
+            {linkedTrades.length > 0 && (
+              <div>
+                <label className="text-[9px] text-[#848e9c] uppercase tracking-wider mb-2 block flex items-center gap-1">
+                  <Link2 className="h-3 w-3" /> Linked Trades
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {linkedTrades.map((lt, i) => (
+                    <div key={i} className="relative group">
+                      <TradeCard trade={lt} />
+                      <button
+                        onClick={() => removeLinkedTrade(i)}
+                        className="absolute top-2 right-2 p-1 bg-[#141620] rounded-md text-[#5a6070] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Tags */}
             <div>
@@ -405,12 +581,21 @@ export default function JournalPage() {
               {entries.length === 0 ? "No journal entries yet" : "No entries match your filter"}
             </p>
             {entries.length === 0 && (
-              <button
-                onClick={() => openEditor()}
-                className="mt-3 px-4 py-2 bg-brand/10 text-brand rounded-lg text-xs font-medium hover:bg-brand/20 transition-colors"
-              >
-                Write your first entry
-              </button>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => openEditor()}
+                  className="px-4 py-2 bg-brand/10 text-brand rounded-lg text-xs font-medium hover:bg-brand/20 transition-colors"
+                >
+                  Write your first entry
+                </button>
+                <button
+                  onClick={handleGenerate}
+                  disabled={generating}
+                  className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-lg text-xs font-medium hover:bg-purple-500/20 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> Generate from trades
+                </button>
+              </div>
             )}
           </div>
         ) : (
@@ -420,6 +605,7 @@ export default function JournalPage() {
               const moodCfg = entry.mood ? MOOD_CONFIG[entry.mood] : null;
               const MoodIcon = moodCfg?.icon;
               const pnl = entry.pnl_amount;
+              const trades = entry.linked_trades ?? [];
 
               return (
                 <div key={entry.id} className="bg-[#141620] rounded-xl overflow-hidden">
@@ -447,6 +633,11 @@ export default function JournalPage() {
                             <MoodIcon className="h-2.5 w-2.5" />
                           </span>
                         )}
+                        {entry.is_public && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-medium inline-flex items-center gap-0.5">
+                            <Globe className="h-2.5 w-2.5" /> Published
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] text-[#5a6070]">
@@ -461,6 +652,11 @@ export default function JournalPage() {
                               <span className="text-[9px] text-[#3a3e4e]">+{entry.tags.length - 3}</span>
                             )}
                           </div>
+                        )}
+                        {trades.length > 0 && (
+                          <span className="text-[9px] text-[#5a6070] flex items-center gap-0.5">
+                            <Link2 className="h-2.5 w-2.5" /> {trades.length} linked
+                          </span>
                         )}
                       </div>
                     </div>
@@ -478,6 +674,21 @@ export default function JournalPage() {
                           <p className="text-xs text-[#5a6070] italic">No content</p>
                         )}
                       </div>
+
+                      {/* Linked Trades Display */}
+                      {trades.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-[#2a2e3e]/30">
+                          <h4 className="text-[10px] font-semibold uppercase tracking-wider text-[#848e9c] mb-2 flex items-center gap-1">
+                            <Link2 className="h-3 w-3" /> Linked Trades
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {trades.map((lt, i) => (
+                              <TradeCard key={i} trade={lt} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {entry.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {entry.tags.map((t) => (
@@ -487,6 +698,7 @@ export default function JournalPage() {
                           ))}
                         </div>
                       )}
+
                       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#2a2e3e]/30">
                         <button
                           onClick={() => openEditor(entry)}
@@ -494,6 +706,14 @@ export default function JournalPage() {
                         >
                           <Edit3 className="h-3 w-3" /> Edit
                         </button>
+                        {entry.is_public && entry.slug && (
+                          <button
+                            onClick={() => navigator.clipboard.writeText(`${window.location.origin}/journal/${entry.slug}`)}
+                            className="px-3 py-1.5 text-[10px] text-emerald-400/70 rounded-lg hover:text-emerald-400 transition-colors flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" /> Copy Link
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDelete(entry.id)}
                           className="px-3 py-1.5 text-[10px] text-red-400/70 border border-red-400/20 rounded-lg hover:text-red-400 hover:border-red-400/40 transition-colors flex items-center gap-1"
