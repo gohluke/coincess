@@ -71,7 +71,16 @@ export function usePushNotifications(walletAddress: string | null) {
       const reg = await navigator.serviceWorker.ready;
 
       const vapidRes = await fetch("/api/notifications/subscribe");
-      const { publicKey } = await vapidRes.json();
+      const vapidData = await vapidRes.json().catch(() => ({}));
+      const publicKey = vapidData.publicKey as string | undefined;
+      const vapidError = vapidData.error as string | undefined;
+      if (!vapidRes.ok) {
+        setState("default");
+        return {
+          ok: false,
+          error: vapidError || "Push config missing on server. Set VAPID env vars in production.",
+        };
+      }
       if (!publicKey) {
         setState("default");
         return { ok: false, error: "Server not configured for push notifications" };
