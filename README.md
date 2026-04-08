@@ -1,5 +1,7 @@
 # Coincess
 
+**Product direction:** Coincess.com as a **quant / trading public hub** — one place to trade (perps + spot + predictions), run automation, study markets (blog, tools, trader discovery), and journal — rather than only a thin execution wrapper.
+
 A unified crypto trading super-app combining **perpetual futures** (Hyperliquid), **prediction markets** (Polymarket), and **automated strategies** — all in a single mobile-first PWA. Coincess earns builder/affiliate fees on every trade.
 
 ## Features

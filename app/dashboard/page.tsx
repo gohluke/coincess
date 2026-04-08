@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Wallet,
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
   BarChart3,
   Bot,
   ExternalLink,
   RefreshCw,
-  Zap,
   LogIn,
   Clock,
   ChevronDown,
@@ -31,7 +29,7 @@ import {
   HL_FILLS_NEAR_HISTORY_CAP_THRESHOLD,
 } from "@/lib/hyperliquid/api";
 import type { LedgerUpdate } from "@/lib/hyperliquid/api";
-import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
+import type { MarketInfo, AssetPosition, Fill, FundingPayment } from "@/lib/hyperliquid/types";
 import { useUserDataStore } from "@/lib/hyperliquid/user-data-store";
 import { useAutomationStore } from "@/lib/automation/store";
 import { FundingBanner } from "@/components/FundingBanner";
@@ -42,6 +40,18 @@ import PortfolioChart from "@/components/dashboard/PortfolioChart";
 import { DepositButton } from "@/components/DepositModal";
 import { fetchPolymarketPositions, fetchPolymarketTrades } from "@/lib/polymarket/api";
 import type { PolymarketPosition, PolymarketTrade } from "@/lib/polymarket/types";
+
+const SPOT_DONUT_COLORS = ["#8b5cf6", "#ec4899", "#f59e0b", "#06b6d4", "#84cc16", "#f97316", "#6366f1"] as const;
+
+/** Monotonic clock for live durations (avoids Date.now() during render). */
+function useNowMs(intervalMs = 1000): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
 
 // ── Round-trip trade grouping ──────────────────────────────
 
@@ -335,6 +345,7 @@ export default function DashboardPage() {
   const [polyPositions, setPolyPositions] = useState<PolymarketPosition[]>([]);
   const [polyTrades, setPolyTrades] = useState<PolymarketTrade[]>([]);
   const [polyProxyWallet, setPolyProxyWallet] = useState<string | null>(null);
+  const nowMs = useNowMs();
 
   // Supplementary REST fetch: markets, funding history, ledger, polymarket, quant status
   const loadSupplementary = useCallback(async (addr: string) => {
@@ -377,7 +388,10 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, loadSupplementary]);
 
-  const positions = ch?.assetPositions?.filter((ap) => parseFloat(ap.position.szi) !== 0) ?? [];
+  const positions = useMemo(
+    () => ch?.assetPositions?.filter((ap) => parseFloat(ap.position.szi) !== 0) ?? [],
+    [ch],
+  );
 
   // Slow supplementary data polling to 60s
   useEffect(() => {
@@ -545,8 +559,6 @@ export default function DashboardPage() {
     serverStrategies.filter((s) => s.status === "active").length +
     browserStrategies.filter((s) => s.status === "active").length;
 
-  const SPOT_COLORS = ["#8b5cf6", "#ec4899", "#f59e0b", "#06b6d4", "#84cc16", "#f97316", "#6366f1"];
-
   const assetDistribution = useMemo(() => {
     const items: { label: string; ticker: string; value: number; color: string }[] = [];
     let allocated = 0;
@@ -565,7 +577,7 @@ export default function DashboardPage() {
     for (let i = 0; i < spotHoldings.length; i++) {
       const h = spotHoldings[i];
       if (h.usd > 0.01) {
-        items.push({ label: h.displayName, ticker: h.displayName, value: h.usd, color: SPOT_COLORS[i % SPOT_COLORS.length] });
+        items.push({ label: h.displayName, ticker: h.displayName, value: h.usd, color: SPOT_DONUT_COLORS[i % SPOT_DONUT_COLORS.length] });
         allocated += h.usd;
       }
     }
@@ -630,7 +642,6 @@ export default function DashboardPage() {
 
   const perpsBalance = perpsAccountValue;
   const freeSpotBalance = spotUsdcBalance > 0 ? spotUsdcBalance - spotUsdcHold : availableBalance;
-  const evmBalance = 0;
   const firstLoad = !ch && loading;
 
   return (
@@ -1098,7 +1109,7 @@ export default function DashboardPage() {
               trades.length > 0 ? (
                 <div className="space-y-2">
                   {trades.map((trade, i) => (
-                    <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} markets={markets} />
+                    <TradeRow key={`${trade.coin}-${trade.openTime}-${i}`} trade={trade} positions={positions} markets={markets} nowMs={nowMs} />
                   ))}
                 </div>
               ) : (
@@ -1127,7 +1138,7 @@ export default function DashboardPage() {
 
         {/* ─── PnL Calendar Tab ─── */}
         {portfolioTab === "calendar" && (
-          <PnlCalendar dailyPnl={dailyPnl} dailyFills={dailyFills} totalClosedPnl={totalClosedPnl} totalFundingPnl={totalFundingPnl} totalPnlAll={totalPnlAll} polyTrades={polyTrades} />
+          <PnlCalendar dailyPnl={dailyPnl} dailyFills={dailyFills} polyTrades={polyTrades} />
         )}
 
         
@@ -1156,14 +1167,19 @@ function DonutChart({ items, total }: { items: { label: string; value: number; c
   }
 
   const gap = 1.5;
-  let cumAngle = -90;
-  const arcs = items.map((item) => {
-    const pct = item.value / total;
-    const angle = Math.max(pct * 360 - gap, 0.5);
-    const startAngle = cumAngle + gap / 2;
-    cumAngle += pct * 360;
-    return { ...item, startAngle, angle };
-  });
+  type Arc = { label: string; value: number; color: string; startAngle: number; angle: number };
+  const arcs: Arc[] = items.reduce(
+    (acc, item) => {
+      const pct = item.value / total;
+      const angle = Math.max(pct * 360 - gap, 0.5);
+      const startAngle = acc.cum + gap / 2;
+      return {
+        cum: acc.cum + pct * 360,
+        list: [...acc.list, { ...item, startAngle, angle }],
+      };
+    },
+    { cum: -90, list: [] as Arc[] },
+  ).list;
 
   const toRad = (deg: number) => (deg * Math.PI) / 180;
 
@@ -1216,12 +1232,12 @@ function resolveOrderCoin(coin: string, mkts: MarketInfo[]): string {
   return m?.displayName ?? spotDisplayName(bare);
 }
 
-function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positions: AssetPosition[]; markets: MarketInfo[] }) {
+function TradeRow({ trade, positions, markets, nowMs }: { trade: RoundTripTrade; positions: AssetPosition[]; markets: MarketInfo[]; nowMs: number }) {
   const [expanded, setExpanded] = useState(false);
   const bare = stripPrefix(trade.coin);
   const coinName = resolveOrderCoin(trade.coin, markets);
   const isSpotTrade = trade.coin.startsWith("@");
-  const duration = trade.closeTime ? trade.closeTime - trade.openTime : Date.now() - trade.openTime;
+  const duration = trade.closeTime ? trade.closeTime - trade.openTime : nowMs - trade.openTime;
   const isWin = trade.netPnl > 0;
 
   const matchPos = trade.isOpen ? positions.find((ap) => stripPrefix(ap.position.coin) === bare) : null;
@@ -1468,13 +1484,12 @@ function TradeRow({ trade, positions, markets }: { trade: RoundTripTrade; positi
 }
 
 function LiveDuration({ since }: { since: number }) {
-  const [, tick] = useState(0);
-  const ref = useRef<ReturnType<typeof setInterval>>(undefined);
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    ref.current = setInterval(() => tick((n) => n + 1), 1000);
-    return () => clearInterval(ref.current);
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
   }, []);
-  const elapsed = Date.now() - since;
+  const elapsed = now - since;
   const s = Math.floor(elapsed / 1000);
   const d = Math.floor(s / 86400);
   const h = Math.floor((s % 86400) / 3600);
@@ -1632,16 +1647,10 @@ function TransactionTable({ fills }: { fills: Fill[] }) {
 function PnlCalendar({
   dailyPnl,
   dailyFills,
-  totalClosedPnl,
-  totalFundingPnl,
-  totalPnlAll,
   polyTrades,
 }: {
   dailyPnl: Map<string, { closed: number; fees: number; funding: number; poly: number }>;
   dailyFills: Map<string, Fill[]>;
-  totalClosedPnl: number;
-  totalFundingPnl: number;
-  totalPnlAll: number;
   polyTrades: PolymarketTrade[];
 }) {
   const [calMonth, setCalMonth] = useState(() => {
@@ -2023,7 +2032,6 @@ function CoinPerformance({
 
     for (const t of trades) {
       if (t.isOpen) continue;
-      const bare = stripPrefix(t.coin);
       const s = getOrCreate(t.coin);
       s.trades++;
       if (t.netPnl > 0) s.wins++;
@@ -2395,8 +2403,8 @@ function CoinTradeDetail({
   trades: RoundTripTrade[];
   onClose: () => void;
 }) {
+  const nowMs = useNowMs();
   const wr = stats.trades > 0 ? ((stats.wins / stats.trades) * 100).toFixed(0) : "–";
-  const profitFactor = Math.abs(stats.avgLoss) > 0 ? Math.abs(stats.avgWin / stats.avgLoss) : stats.avgWin > 0 ? Infinity : 0;
 
   return (
     <div className="bg-[#141620] rounded-xl overflow-hidden">
@@ -2438,7 +2446,7 @@ function CoinTradeDetail({
       </div>
       <div className="divide-y divide-[#2a2e3e]/30 max-h-[400px] overflow-y-auto">
         {trades.map((t, i) => {
-          const duration = t.closeTime ? t.closeTime - t.openTime : Date.now() - t.openTime;
+          const duration = t.closeTime ? t.closeTime - t.openTime : nowMs - t.openTime;
           const isWin = t.netPnl > 0;
           const fmtTime = (ts: number) =>
             new Date(ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -2600,9 +2608,10 @@ function PolyTradeTable({ trades, positions }: { trades: PolymarketTrade[]; posi
 // ── Polymarket Position Row ─────────────────────────────────
 
 function PolyPositionRow({ position: p }: { position: PolymarketPosition }) {
+  const nowMs = useNowMs(60_000);
   const isProfit = p.cashPnl >= 0;
   const endDate = p.endDate ? new Date(p.endDate) : null;
-  const ended = endDate ? endDate.getTime() < Date.now() : false;
+  const ended = endDate ? endDate.getTime() < nowMs : false;
 
   return (
     <Link
