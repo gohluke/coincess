@@ -7,6 +7,7 @@ import {
   AlertCircle, LogIn, Bookmark, Trash2, Loader2, ChevronDown, ChevronUp,
 } from "lucide-react"
 import { getWs } from "@/lib/hyperliquid/websocket"
+import { fetchAllPerpUniverseNames } from "@/lib/hyperliquid/api"
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress"
 
 type Direction = "long" | "short"
@@ -14,13 +15,44 @@ type FeeType = "maker" | "taker"
 
 const COIN_PRIORITY = [
   "BTC", "ETH", "SOL", "HYPE", "DOGE", "XRP", "WIF", "TRUMP", "kPEPE", "LINK", "ARB", "AVAX", "OP", "MATIC", "BNB", "ADA", "DOT",
+  "xyz:CL", // crude (xyz perp dex) — surfaced near top for discoverability
 ]
 
-function orderedPerpCoinKeys(mids: Record<string, string>): string[] {
-  const keys = Object.keys(mids).filter((k) => !k.startsWith("@"))
-  const prio = COIN_PRIORITY.filter((p) => keys.includes(p))
-  const rest = keys.filter((k) => !prio.includes(k)).sort((a, b) => a.localeCompare(b))
-  return [...prio, ...rest].slice(0, 250)
+/** Discrete leverage steps for slider + pill buttons (must stay in sync). */
+const LEVERAGE_PRESETS = [1, 2, 5, 10, 20, 25, 50, 100, 500, 1000] as const
+
+function leverageToPresetSliderIndex(leverageNum: number): number {
+  const lev = Math.max(1, Math.min(1000, leverageNum || 1))
+  let best = 0
+  let bestDist = Infinity
+  LEVERAGE_PRESETS.forEach((p, i) => {
+    const d = Math.abs(p - lev)
+    if (d < bestDist) {
+      bestDist = d
+      best = i
+    }
+  })
+  return best
+}
+
+/** Perp-style keys only (exclude spot @ids and pair names like PURR/USDC). */
+function isPerpTickerKey(k: string): boolean {
+  return k.length > 0 && !k.startsWith("@") && !k.includes("/")
+}
+
+/**
+ * Full perp list: union of `allMids` keys and main + xyz `meta.universe` names (no 250 cap).
+ */
+function orderedPerpCoinKeys(mids: Record<string, string>, metaPerpNames: readonly string[]): string[] {
+  const fromMids = Object.keys(mids).filter(isPerpTickerKey)
+  const fromMeta = metaPerpNames.filter(isPerpTickerKey)
+  const set = new Set<string>([...fromMids, ...fromMeta])
+  const prio = COIN_PRIORITY.filter((p) => set.has(p))
+  const prioSet = new Set(prio)
+  const rest = Array.from(set)
+    .filter((k) => !prioSet.has(k))
+    .sort((a, b) => a.localeCompare(b))
+  return [...prio, ...rest]
 }
 
 /** Hyperliquid `funding` is hourly rate as decimal; calculator input is percent per hour. */
@@ -255,6 +287,7 @@ export function LeverageCalculator() {
   const [durationHours, setDurationHours] = useState("24")
 
   const [allMids, setAllMids] = useState<Record<string, string>>({})
+  const [metaPerpTickers, setMetaPerpTickers] = useState<string[]>([])
   const [midsLoading, setMidsLoading] = useState(true)
   const [liveCtx, setLiveCtx] = useState<{ mark?: string; oracle?: string }>({})
   const [selectedCoinKey, setSelectedCoinKey] = useState<string>("BTC")
@@ -282,8 +315,26 @@ export function LeverageCalculator() {
   const [activeField, setActiveField] = useState<"margin" | "pnl" | "roe" | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const marginLocked = useRef(false)
+  /** Last (coin, direction) we seeded entry/exit from mid — avoids overwriting on every WS tick. */
+  const midSeedKeyRef = useRef<string>("")
 
-  const coinKeys = orderedPerpCoinKeys(allMids)
+  const coinKeys = orderedPerpCoinKeys(allMids, metaPerpTickers)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const names = await fetchAllPerpUniverseNames()
+        if (cancelled) return
+        setMetaPerpTickers(names)
+      } catch {
+        /* ignore */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const ws = getWs()
@@ -310,8 +361,15 @@ export function LeverageCalculator() {
   )
 
   useEffect(() => {
-    if (!selectedCoinKey || !allMids[selectedCoinKey]) return
+    if (!selectedCoinKey) {
+      midSeedKeyRef.current = ""
+      return
+    }
+    if (!allMids[selectedCoinKey]) return
+    const key = `${selectedCoinKey}:${direction}`
+    if (midSeedKeyRef.current === key) return
     applyCoinMid(selectedCoinKey, direction, allMids)
+    midSeedKeyRef.current = key
   }, [allMids, selectedCoinKey, direction, applyCoinMid])
 
   useEffect(() => {
@@ -386,6 +444,7 @@ export function LeverageCalculator() {
     setFundingRate(snap.fundingRate)
     setDurationHours(snap.durationHours)
     setSelectedCoinKey(snap.coinSymbol ?? "")
+    midSeedKeyRef.current = snap.coinSymbol ? `${snap.coinSymbol}:${snap.direction}` : ""
     fundingEditedByUser.current = true
     marginLocked.current = false
     setActiveField(null)
@@ -592,7 +651,7 @@ export function LeverageCalculator() {
   const totalFundingNum = parseNumber(totalFunding)
   const marginRatioNum = parseNumber(marginRatio)
 
-  const leveragePresets = [1, 2, 5, 10, 20, 25, 50, 100, 500, 1000]
+  const leverageSliderMax = LEVERAGE_PRESETS.length - 1
 
   return (
     <div className="w-full">
@@ -616,19 +675,13 @@ export function LeverageCalculator() {
             <div>
               <label className="block text-xs font-medium text-[#848e9c] mb-2">Direction</label>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => {
-                  setDirection("long")
-                  if (selectedCoinKey && allMids[selectedCoinKey]) applyCoinMid(selectedCoinKey, "long", allMids)
-                }}
+                <button type="button" onClick={() => setDirection("long")}
                   className={`flex items-center justify-center gap-1.5 py-2.5 rounded-full font-medium text-sm transition-all ${
                     direction === "long" ? "bg-emerald-500 text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
                   <ArrowUp className="h-4 w-4" /> Long
                 </button>
-                <button type="button" onClick={() => {
-                  setDirection("short")
-                  if (selectedCoinKey && allMids[selectedCoinKey]) applyCoinMid(selectedCoinKey, "short", allMids)
-                }}
+                <button type="button" onClick={() => setDirection("short")}
                   className={`flex items-center justify-center gap-1.5 py-2.5 rounded-full font-medium text-sm transition-all ${
                     direction === "short" ? "bg-red-500 text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
@@ -668,7 +721,6 @@ export function LeverageCalculator() {
                     fundingEditedByUser.current = false
                     setSelectedCoinKey(v)
                     marginLocked.current = false
-                    if (v && allMids[v]) applyCoinMid(v, direction, allMids)
                   }}
                   className="w-[8.25rem] h-9 rounded-lg border border-[#2a2e3e] bg-[#0b0e11] text-white text-xs font-mono px-2 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/50"
                 >
@@ -707,7 +759,7 @@ export function LeverageCalculator() {
               </div>
             </div>
             <p className="text-[10px] text-[#555a66] mt-2">
-              With a ticker selected, entry/exit track mid in real time (~3% favorable exit). Funding rate syncs from the market unless you edit it.
+              Changing ticker or long/short seeds entry and a ~3% default exit from mid once. Live mid/mark/oracle keep updating for reference; entry/exit stay as you set them (e.g. exit slider). Funding syncs from the market unless you edit it.
             </p>
           </div>
 
@@ -730,17 +782,20 @@ export function LeverageCalculator() {
               </div>
             </div>
             <input
-              type="range" min="0" max="100"
-              value={Math.round(Math.log(Math.max(1, parseNumber(leverage))) / Math.log(1000) * 100)}
+              type="range"
+              min={0}
+              max={leverageSliderMax}
+              step={1}
+              value={leverageToPresetSliderIndex(parseNumber(leverage))}
               onChange={(e) => {
-                const pct = parseInt(e.target.value, 10)
-                const val = Math.round(Math.pow(1000, pct / 100))
-                setLeverage(String(Math.max(1, Math.min(1000, val))))
+                const i = parseInt(e.target.value, 10)
+                const preset = LEVERAGE_PRESETS[Math.min(leverageSliderMax, Math.max(0, i))]
+                setLeverage(String(preset))
               }}
               className="w-full h-1.5 rounded-full appearance-none bg-[#2a2e3e] accent-brand cursor-pointer"
             />
             <div className="flex gap-1 mt-2">
-              {leveragePresets.map((l) => (
+              {LEVERAGE_PRESETS.map((l) => (
                 <button key={l} type="button" onClick={() => setLeverage(String(l))}
                   className={`flex-1 py-1 rounded text-[10px] font-medium transition-colors ${
                     parseNumber(leverage) === l ? "bg-brand text-white" : "bg-[#1a1d26] text-[#555a66] hover:text-[#848e9c]"

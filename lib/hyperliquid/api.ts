@@ -38,6 +38,22 @@ export async function fetchAllMids(): Promise<AllMids> {
   return post<AllMids>("/info", { type: "allMids" });
 }
 
+/** All perp `coin` names: main dex + every builder dex from `perpDexs` (e.g. xyz, flx). */
+export async function fetchAllPerpUniverseNames(): Promise<string[]> {
+  const dexs = await post<(null | { name: string })[]>("/info", { type: "perpDexs" });
+  const fetches: Promise<MetaAndAssetCtxs>[] = [fetchMetaAndAssetCtxs()];
+  for (let i = 1; i < dexs.length; i++) {
+    const d = dexs[i];
+    if (d?.name) fetches.push(fetchMetaAndAssetCtxs(d.name));
+  }
+  const metas = await Promise.all(fetches);
+  const names: string[] = [];
+  for (const m of metas) {
+    for (const a of m.meta.universe) names.push(a.name);
+  }
+  return names;
+}
+
 export async function fetchL2Book(coin: string, nSigFigs?: number): Promise<L2Book> {
   const body: Record<string, unknown> = { type: "l2Book", coin };
   if (nSigFigs) body.nSigFigs = nSigFigs;

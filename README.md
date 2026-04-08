@@ -255,10 +255,10 @@ Strategy backtesting and performance analysis tools.
 
 ### Leverage Calculator (`/crypto-leverage-calculator`)
 - **Industry-grade perpetual futures calculator** with interactive position planning
-- **Live market (WebSocket)** — compact **Ticker** dropdown from Hyperliquid `allMids` (prioritized BTC/ETH/SOL… then A–Z); **mid** streams from `allMids`, **mark** and **oracle** from `activeAssetCtx`; with a ticker selected, entry/exit track mid in real time (~3% favorable default by side). **Funding rate** auto-fills from the market’s hourly rate unless you edit the field. **Custom** clears the ticker when you edit entry manually
+- **Live market (WebSocket)** — compact **Ticker** dropdown lists **every** main + builder perp (from `perpDexs` + `metaAndAssetCtxs`, including **xyz** and e.g. `xyz:CL`), merged with `allMids` keys; no artificial cap. **mid** streams from `allMids`, **mark** and **oracle** from `activeAssetCtx`; changing ticker or long/short **once** seeds entry and a ~3% default exit from mid; after that, entry/exit stay as you set them while live prices keep updating for display. **Funding rate** auto-fills from the market’s hourly rate unless you edit the field. **Custom** clears the ticker when you edit entry manually
 - **Saved scenarios (Supabase)** — connect wallet → optional label + **Save current**; list shows **date & time** (`created_at`), Load / Delete; API `GET/POST/DELETE /api/leverage-calculations`; table `leverage_calculator_saves` (see `scripts/migrate-leverage-calculations.sql`)
 - **Dark Coincess theme** — matches dashboard design (`bg-[#0b0e11]`, `bg-[#141620]` cards, borderless), uses the dark Navbar (not the marketing Header)
-- **Up to 1000x leverage** — logarithmic slider for fine control at low values and quick access to extreme leverage; editable text input for exact values; presets: 1x, 2x, 5x, 10x, 20x, 25x, 50x, 100x, 500x, 1000x
+- **Up to 1000x leverage** — slider snaps to the same discrete steps as the preset pills (1x–1000x set); editable text input for any value 1–1000; presets: 1x, 2x, 5x, 10x, 20x, 25x, 50x, 100x, 500x, 1000x
 - **Margin-locked recalculation** — when you slide leverage, margin stays fixed and quantity adjusts (the way real traders think); typing into Quantity unlocks margin recalculation
 - **Exit price slider + % change** — drag slider from -50% to +100% of entry; preset buttons (-25% to +50%); live percentage change label (green/red) shows distance from entry price
 - **Maker/taker fee toggle** — Hyperliquid defaults (0.010% maker, 0.035% taker), fully customizable entry & exit rates
@@ -513,7 +513,7 @@ coincess/
 │   └── automate/                       # Automation UI components
 ├── lib/
 │   ├── hyperliquid/
-│   │   ├── api.ts                      # REST API client (fallback/supplementary data)
+│   │   ├── api.ts                      # REST client; includes `fetchAllPerpUniverseNames` (main + all `perpDexs` builder books) for full perp ticker lists
 │   │   ├── agent.ts                    # Agent keypair storage (localStorage)
 │   │   ├── signing.ts                  # EIP-712 signing, agent approval, builder fees
 │   │   ├── wallet.ts                   # Wallet adapter
