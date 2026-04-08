@@ -1,13 +1,49 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, ChangeEvent, KeyboardEvent } from "react"
+import Link from "next/link"
 import {
   ArrowUp, ArrowDown, Calculator, TrendingUp, TrendingDown,
-  AlertCircle,
+  AlertCircle, LogIn, Bookmark, Trash2, Loader2, ChevronDown, ChevronUp,
 } from "lucide-react"
+import { fetchAllMids } from "@/lib/hyperliquid/api"
+import { useEffectiveAddress } from "@/hooks/useEffectiveAddress"
 
 type Direction = "long" | "short"
 type FeeType = "maker" | "taker"
+
+const COIN_PRIORITY = [
+  "BTC", "ETH", "SOL", "HYPE", "DOGE", "XRP", "WIF", "TRUMP", "kPEPE", "LINK", "ARB", "AVAX", "OP", "MATIC", "BNB", "ADA", "DOT",
+]
+
+function orderedPerpCoinKeys(mids: Record<string, string>): string[] {
+  const keys = Object.keys(mids).filter((k) => !k.startsWith("@"))
+  const prio = COIN_PRIORITY.filter((p) => keys.includes(p))
+  const rest = keys.filter((k) => !prio.includes(k)).sort((a, b) => a.localeCompare(b))
+  return [...prio, ...rest].slice(0, 250)
+}
+
+export type LeverageCalcSnapshot = {
+  leverage: string
+  quantity: string
+  entryPrice: string
+  exitPrice: string
+  direction: Direction
+  feeType: FeeType
+  entryFeeRate: string
+  exitFeeRate: string
+  fundingRate: string
+  durationHours: string
+  coinSymbol: string | null
+}
+
+interface SavedCalculationRow {
+  id: string
+  wallet_address: string
+  title: string | null
+  payload: LeverageCalcSnapshot
+  created_at: string
+}
 
 interface CalculatorInputProps {
   id: string
@@ -188,6 +224,8 @@ function ExitPriceSlider({ entryPrice, exitPrice, setExitPrice, parseNumber }: {
 }
 
 export function LeverageCalculator() {
+  const { address, connect, loading: walletLoading } = useEffectiveAddress()
+
   const [leverage, setLeverage] = useState("10")
   const [quantity, setQuantity] = useState("1")
   const [entryPrice, setEntryPrice] = useState("84250")
@@ -198,6 +236,15 @@ export function LeverageCalculator() {
   const [exitFeeRate, setExitFeeRate] = useState("0.035")
   const [fundingRate, setFundingRate] = useState("0.0031")
   const [durationHours, setDurationHours] = useState("24")
+
+  const [allMids, setAllMids] = useState<Record<string, string>>({})
+  const [midsLoading, setMidsLoading] = useState(true)
+  const [selectedCoinKey, setSelectedCoinKey] = useState<string>("BTC")
+  const [savedCalcs, setSavedCalcs] = useState<SavedCalculationRow[]>([])
+  const [savesLoading, setSavesLoading] = useState(false)
+  const [saveBusy, setSaveBusy] = useState(false)
+  const [saveTitle, setSaveTitle] = useState("")
+  const [savesOpen, setSavesOpen] = useState(true)
 
   const [initialMargin, setInitialMargin] = useState("")
   const [pnl, setPnl] = useState("")
@@ -216,6 +263,141 @@ export function LeverageCalculator() {
   const [activeField, setActiveField] = useState<"margin" | "pnl" | "roe" | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const marginLocked = useRef(false)
+
+  const coinKeys = orderedPerpCoinKeys(allMids)
+
+  const refreshMids = useCallback(async () => {
+    try {
+      const mids = await fetchAllMids()
+      setAllMids(mids)
+    } catch {
+      /* ignore */
+    } finally {
+      setMidsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshMids()
+    const id = setInterval(refreshMids, 30_000)
+    return () => clearInterval(id)
+  }, [refreshMids])
+
+  const applyCoinMid = useCallback(
+    (key: string, dir: Direction, mids: Record<string, string>) => {
+      const raw = mids[key]
+      const p = raw ? parseFloat(raw) : 0
+      if (!isFinite(p) || p <= 0) return
+      marginLocked.current = false
+      const entryStr = parseFloat(p.toFixed(4)).toString()
+      const bump = dir === "long" ? 1.03 : 0.97
+      const exitStr = parseFloat((p * bump).toFixed(4)).toString()
+      setEntryPrice(entryStr)
+      setExitPrice(exitStr)
+    },
+    [],
+  )
+
+  const didSeedPrice = useRef(false)
+  useEffect(() => {
+    if (didSeedPrice.current) return
+    if (Object.keys(allMids).length === 0) return
+    if (selectedCoinKey && allMids[selectedCoinKey]) {
+      applyCoinMid(selectedCoinKey, direction, allMids)
+      didSeedPrice.current = true
+    }
+  }, [allMids, selectedCoinKey, direction, applyCoinMid])
+
+  const fetchSaved = useCallback(async () => {
+    if (!address) {
+      setSavedCalcs([])
+      return
+    }
+    setSavesLoading(true)
+    try {
+      const res = await fetch(`/api/leverage-calculations?wallet=${encodeURIComponent(address)}`)
+      if (!res.ok) throw new Error()
+      const data = (await res.json()) as SavedCalculationRow[]
+      setSavedCalcs(Array.isArray(data) ? data : [])
+    } catch {
+      setSavedCalcs([])
+    } finally {
+      setSavesLoading(false)
+    }
+  }, [address])
+
+  useEffect(() => {
+    fetchSaved()
+  }, [fetchSaved])
+
+  const buildSnapshot = useCallback((): LeverageCalcSnapshot => ({
+    leverage,
+    quantity,
+    entryPrice,
+    exitPrice,
+    direction,
+    feeType,
+    entryFeeRate,
+    exitFeeRate,
+    fundingRate,
+    durationHours,
+    coinSymbol: selectedCoinKey ? selectedCoinKey : null,
+  }), [
+    leverage, quantity, entryPrice, exitPrice, direction, feeType,
+    entryFeeRate, exitFeeRate, fundingRate, durationHours, selectedCoinKey,
+  ])
+
+  const loadSnapshot = useCallback((snap: LeverageCalcSnapshot) => {
+    setLeverage(snap.leverage)
+    setQuantity(snap.quantity)
+    setEntryPrice(snap.entryPrice)
+    setExitPrice(snap.exitPrice)
+    setDirection(snap.direction)
+    setFeeType(snap.feeType)
+    setEntryFeeRate(snap.entryFeeRate)
+    setExitFeeRate(snap.exitFeeRate)
+    setFundingRate(snap.fundingRate)
+    setDurationHours(snap.durationHours)
+    setSelectedCoinKey(snap.coinSymbol ?? "")
+    marginLocked.current = false
+    setActiveField(null)
+  }, [])
+
+  const handleSaveSnapshot = async () => {
+    if (!address) return
+    setSaveBusy(true)
+    try {
+      const res = await fetch("/api/leverage-calculations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet_address: address,
+          title: saveTitle.trim() || null,
+          payload: buildSnapshot(),
+        }),
+      })
+      if (!res.ok) throw new Error()
+      setSaveTitle("")
+      await fetchSaved()
+    } catch {
+      /* silent */
+    } finally {
+      setSaveBusy(false)
+    }
+  }
+
+  const handleDeleteSave = async (id: string) => {
+    if (!address) return
+    try {
+      await fetch(
+        `/api/leverage-calculations?id=${encodeURIComponent(id)}&wallet=${encodeURIComponent(address)}`,
+        { method: "DELETE" },
+      )
+      await fetchSaved()
+    } catch {
+      /* silent */
+    }
+  }
 
   const parseNumber = (value: string): number => {
     const num = parseFloat(value.replace(/[^\d.-]/g, ""))
@@ -379,7 +561,6 @@ export function LeverageCalculator() {
   }, [leverage, quantity, entryPrice, exitPrice, direction, fundingRate, durationHours, initialMargin, pnl, roe, activeField, entryFeeRate, exitFeeRate, validate, calculate])
 
   const netPnlNum = parseNumber(netPnl)
-  const netRoeNum = parseNumber(netRoe)
   const totalFundingNum = parseNumber(totalFunding)
   const marginRatioNum = parseNumber(marginRatio)
 
@@ -407,13 +588,19 @@ export function LeverageCalculator() {
             <div>
               <label className="block text-xs font-medium text-[#848e9c] mb-2">Direction</label>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setDirection("long")}
+                <button type="button" onClick={() => {
+                  setDirection("long")
+                  if (selectedCoinKey && allMids[selectedCoinKey]) applyCoinMid(selectedCoinKey, "long", allMids)
+                }}
                   className={`flex items-center justify-center gap-1.5 py-2.5 rounded-full font-medium text-sm transition-all ${
                     direction === "long" ? "bg-emerald-500 text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
                   <ArrowUp className="h-4 w-4" /> Long
                 </button>
-                <button type="button" onClick={() => setDirection("short")}
+                <button type="button" onClick={() => {
+                  setDirection("short")
+                  if (selectedCoinKey && allMids[selectedCoinKey]) applyCoinMid(selectedCoinKey, "short", allMids)
+                }}
                   className={`flex items-center justify-center gap-1.5 py-2.5 rounded-full font-medium text-sm transition-all ${
                     direction === "short" ? "bg-red-500 text-white" : "bg-[#1a1d26] text-[#848e9c] hover:text-white"
                   }`}>
@@ -438,6 +625,53 @@ export function LeverageCalculator() {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Coin + live mid */}
+          <div className="mb-6 p-4 rounded-xl bg-[#1a1d26] border border-[#2a2e3e]">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+              <div className="flex-1 min-w-0">
+                <label className="block text-xs font-medium text-[#848e9c] mb-1.5">Market (live mid)</label>
+                <select
+                  value={selectedCoinKey}
+                  disabled={midsLoading && coinKeys.length === 0}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    setSelectedCoinKey(v)
+                    marginLocked.current = false
+                    if (v && allMids[v]) applyCoinMid(v, direction, allMids)
+                  }}
+                  className="w-full h-11 rounded-lg border border-[#2a2e3e] bg-[#0b0e11] text-white text-sm px-3 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/50"
+                >
+                  <option value="">Custom (manual entry / exit)</option>
+                  {coinKeys.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 sm:pb-0.5">
+                {selectedCoinKey && allMids[selectedCoinKey] ? (
+                  <span className="text-sm font-mono text-emerald-400 tabular-nums">
+                    ${parseFloat(allMids[selectedCoinKey]).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                  </span>
+                ) : (
+                  <span className="text-xs text-[#555a66]">{midsLoading ? "Loading prices…" : "Pick a coin or use custom"}</span>
+                )}
+                <button
+                  type="button"
+                  disabled={!selectedCoinKey || !allMids[selectedCoinKey]}
+                  onClick={() => selectedCoinKey && applyCoinMid(selectedCoinKey, direction, allMids)}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#2a2e3e] text-[#c8ccd4] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                >
+                  Refresh price
+                </button>
+              </div>
+            </div>
+            <p className="text-[10px] text-[#555a66] mt-2">
+              Entry = mid; exit defaults to ~3% favorable move (adjust below). Mid updates every 30s — use Refresh to apply the latest to your fields.
+            </p>
           </div>
 
           {/* Leverage slider / presets */}
@@ -485,7 +719,7 @@ export function LeverageCalculator() {
             <CalculatorInput id="quantity" label="Quantity" value={quantity}
               onChange={(v) => { marginLocked.current = false; setQuantity(v) }}
               hint="Size in contracts" error={errors.quantity} compact />
-            <CalculatorInput id="entryPrice" label="Entry Price" value={entryPrice} onChange={setEntryPrice}
+            <CalculatorInput id="entryPrice" label="Entry Price" value={entryPrice} onChange={(v) => { setSelectedCoinKey(""); setEntryPrice(v); marginLocked.current = false }}
               prefix="$" error={errors.entryPrice} compact />
             <CalculatorInput id="exitPrice" label="Exit Price" value={exitPrice} onChange={setExitPrice}
               prefix="$" error={errors.exitPrice} compact />
@@ -581,6 +815,120 @@ export function LeverageCalculator() {
             </div>
           )}
 
+          {/* Saved scenarios */}
+          <div className="mt-8 border-t border-[#2a2e3e] pt-6">
+            <button
+              type="button"
+              onClick={() => setSavesOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-semibold text-white mb-4 w-full text-left"
+            >
+              {savesOpen ? <ChevronUp className="h-4 w-4 text-brand" /> : <ChevronDown className="h-4 w-4 text-brand" />}
+              <Bookmark className="h-4 w-4 text-brand" />
+              Saved scenarios
+              {address && savedCalcs.length > 0 && (
+                <span className="text-xs font-normal text-[#848e9c] ml-1">({savedCalcs.length})</span>
+              )}
+            </button>
+
+            {savesOpen && (
+              <div className="space-y-4">
+                {walletLoading && (
+                  <div className="flex items-center gap-2 text-xs text-[#848e9c] py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Checking wallet…
+                  </div>
+                )}
+                {!address && !walletLoading && (
+                  <div className="rounded-xl border border-[#2a2e3e] bg-[#1a1d26] p-4 text-center">
+                    <p className="text-sm text-[#848e9c] mb-3">Connect your wallet to save and reload calculator setups.</p>
+                    <button
+                      type="button"
+                      onClick={() => connect()}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand hover:bg-brand-hover text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      <LogIn className="h-4 w-4" /> Connect wallet
+                    </button>
+                  </div>
+                )}
+
+                {address && (
+                  <>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={saveTitle}
+                        onChange={(e) => setSaveTitle(e.target.value)}
+                        placeholder="Optional label (e.g. BTC swing plan)"
+                        className="flex-1 h-10 rounded-lg border border-[#2a2e3e] bg-[#0b0e11] text-white text-sm px-3 placeholder:text-[#555a66] focus:outline-none focus:ring-2 focus:ring-brand/30"
+                      />
+                      <button
+                        type="button"
+                        disabled={saveBusy}
+                        onClick={handleSaveSnapshot}
+                        className="h-10 px-4 rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-medium disabled:opacity-50 inline-flex items-center justify-center gap-2 shrink-0"
+                      >
+                        {saveBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className="h-4 w-4" />}
+                        Save current
+                      </button>
+                    </div>
+
+                    {savesLoading ? (
+                      <div className="flex items-center gap-2 text-xs text-[#848e9c] py-2">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Loading saves…
+                      </div>
+                    ) : savedCalcs.length === 0 ? (
+                      <p className="text-xs text-[#555a66]">No saved scenarios yet. Tune the calculator and click Save current.</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {savedCalcs.map((row) => {
+                          const p = row.payload
+                          const when = new Date(row.created_at).toLocaleString(undefined, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })
+                          const summary = row.title?.trim()
+                            ? row.title
+                            : `${p.coinSymbol ?? "Custom"} · ${p.leverage}x · ${p.direction}`
+                          return (
+                            <li
+                              key={row.id}
+                              className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-xl border border-[#2a2e3e] bg-[#1a1d26] px-3 py-2.5"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white truncate">{summary}</p>
+                                <p className="text-[11px] text-[#848e9c] mt-0.5">
+                                  Saved {when}
+                                  <span className="text-[#555a66] mx-1">·</span>
+                                  Entry ${p.entryPrice} → ${p.exitPrice}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => loadSnapshot(p)}
+                                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#2a2e3e] text-white hover:bg-[#3a3e4e] transition-colors"
+                                >
+                                  Load
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSave(row.id)}
+                                  className="p-1.5 rounded-lg text-[#848e9c] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                  aria-label="Delete save"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Disclaimer */}
           <p className="mt-5 text-[11px] text-[#555a66] leading-relaxed">
             Calculations are estimates. Actual margin = initial margin + open loss (difference between order price and mark price).
@@ -591,10 +939,12 @@ export function LeverageCalculator() {
 
         {/* CTA */}
         <div className="px-6 py-4 border-t border-[#2a2e3e]">
-          <a href="/trade/BTC" rel="noopener noreferrer"
-            className="block w-full text-center py-3 px-6 bg-brand hover:bg-brand-hover text-white font-medium rounded-full transition-colors">
+          <Link
+            href="/trade/BTC"
+            className="block w-full text-center py-3 px-6 bg-brand hover:bg-brand-hover text-white font-medium rounded-full transition-colors"
+          >
             Start Trading on Coincess
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -255,6 +255,8 @@ Strategy backtesting and performance analysis tools.
 
 ### Leverage Calculator (`/crypto-leverage-calculator`)
 - **Industry-grade perpetual futures calculator** with interactive position planning
+- **Live market dropdown** — pick a perp from Hyperliquid `allMids` (prioritized BTC/ETH/SOL… then A–Z); shows current mid next to the select; **Refresh price** reapplies mid to entry/exit (~3% favorable default by side); mids poll every 30s; **Custom** mode when you edit entry manually
+- **Saved scenarios (Supabase)** — connect wallet → optional label + **Save current**; list shows **date & time** (`created_at`), Load / Delete; API `GET/POST/DELETE /api/leverage-calculations`; table `leverage_calculator_saves` (see `scripts/migrate-leverage-calculations.sql`)
 - **Dark Coincess theme** — matches dashboard design (`bg-[#0b0e11]`, `bg-[#141620]` cards, borderless), uses the dark Navbar (not the marketing Header)
 - **Up to 1000x leverage** — logarithmic slider for fine control at low values and quick access to extreme leverage; editable text input for exact values; presets: 1x, 2x, 5x, 10x, 25x, 50x, 100x, 500x, 1000x
 - **Margin-locked recalculation** — when you slide leverage, margin stays fixed and quantity adjusts (the way real traders think); typing into Quantity unlocks margin recalculation
@@ -401,6 +403,7 @@ npm run dev
   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
   ```
+- [x] **Leverage calculator saves** — `scripts/migrate-leverage-calculations.sql` creates `leverage_calculator_saves` (applied on Coincess Supabase; run the same script for any new/staging project).
 - [ ] **Gemini API key** — get a free key from [Google AI Studio](https://aistudio.google.com/apikey), add to `.env.local`:
   ```
   GOOGLE_GENERATIVE_AI_API_KEY=your_key
@@ -576,6 +579,7 @@ coincess/
 │   ├── create-traders-table.sql       # Full schema (fresh install)
 │   ├── migrate-add-volume.sql         # Migration: add coincess_volume + accounts table
 │   ├── migrate-blog-posts.ts         # Seed blog_posts table from static content
+│   ├── migrate-leverage-calculations.sql # Saved scenarios for /crypto-leverage-calculator
 │   ├── migrate-push-notifications.sql # Push notifications schema (subscriptions, alerts, preferences)
 │   ├── migrate-push-notifications.ts  # Push migration runner / SQL printer
 │   ├── migrate-journal-platform.sql   # Journal platform upgrade (is_public, slug, linked_trades)
