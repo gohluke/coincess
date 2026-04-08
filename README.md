@@ -10,7 +10,7 @@ A unified crypto trading super-app combining **perpetual futures** (Hyperliquid)
 - **URL-driven navigation** — clicking a coin in the market selector dropdown or search modal updates the URL to `/trade/COIN`, enabling shareable links and proper browser history
 - **Search modal** — max leverage shown per market, category badges, real-time prices with flash animation
 - **Real-time order book** and recent trades via WebSocket
-- **Real-time user data via WebSocket** — positions, fills, orders, and funding stream live via Hyperliquid's WebSocket subscriptions (`userFills`, `clearinghouseState`, `orderUpdates`, `userFundings`, `spotState`); centralized in `useUserDataStore` (Zustand) with snapshot + incremental update handling; REST serves as a 5-second fallback bootstrap; exponential backoff reconnection (1s → 30s cap, 50 max retries); connection state indicator (green/yellow/red dot) in the status bar; eliminates REST polling for core trading data — position/fill/order latency reduced from 10-30s to <100ms
+- **Real-time user data via WebSocket** — positions, fills, orders, and funding stream live via Hyperliquid's WebSocket subscriptions (`userFills`, `clearinghouseState`, `orderUpdates`, `userFundings`, `spotState`); centralized in `useUserDataStore` (Zustand). **Fills:** immediate REST hydration (`fetchUserFills`: main + `xyz` + `spot`, deduped by `tid`) merged with WS updates so partial snapshots never wipe older history; if any dex slice returns 2,000 rows, `userFillsByTime` is paginated up to Hyperliquid’s ~10k cap (see **Hyperliquid fill history** below); a second REST merge runs ~5s after connect. Exponential backoff reconnection (1s → 30s cap, 50 max retries); connection state indicator (green/yellow/red dot) in the status bar; clearinghouse/orders still polled on a 10s interval (REST) due to multi-dex WS quirks — fill/order latency for new executions remains sub-second via WS
 - **Live market header** — Oracle, 24h Change, Volume, Open Interest, and Funding update in real-time via the `activeAssetCtx` WebSocket channel (not polling); `allMids` subscription drives live mark price ticks; REST fallback refreshes non-active markets every 30s
 - **Interactive TradingView-style charts** with candlestick + volume, multiple timeframes, click-and-drag panning
 - **Unified Account support** — enables trading HIP-3/RWA markets (stocks, commodities, forex); chain switch is best-effort so activation works regardless of wallet network; order form reads spot clearinghouse balance for accurate "Available" display; equity calculation correctly handles unified mode where spot USDC pool includes perp margin (avoids double-counting); funding payments fetched from both main and xyz dexes for accurate total PnL
@@ -94,7 +94,8 @@ Strategy backtesting and performance analysis tools.
 - **UI**: Page background `bg-[#0b0e11]` matches `/dashboard`; cards use `bg-[#141620] rounded-xl` (borderless); system font for numbers; subtle row separators (`border-[#2a2e3e]/30`); hover states on position and trade rows
 
 ### Unified Portfolio Dashboard (`/dashboard`)
-- **Real-time via WebSocket** — positions, fills, and orders stream live from Hyperliquid WebSocket (no REST polling for core data); supplementary data (markets, funding history, ledger, Polymarket, quant status) refreshed via REST every 60s
+- **Real-time via WebSocket** — fills stream live and merge with REST-backed history (`lib/hyperliquid/user-data-store.ts`); clearinghouse and open orders updated via REST polling (10s) plus WS where applicable; supplementary data (markets, funding history, ledger, Polymarket, quant status) refreshed via REST every 60s
+- **Fill history notice** — when loaded fills reach ~9,500 rows (near Hyperliquid’s ~10k API ceiling), an amber banner explains that older executions may not appear in the app or on HL’s public API
 - **Total Equity** — uses Spot USDC `total` as the single source of truth (unified account mode avoids double-counting perps backing) + Polymarket position value; Available Balance = Spot total - Spot hold
 - **Balance breakdown cards** — Available Balance, USDC (Perps), Spot Balance, Polymarket (total position value + P&L + position count)
 - **Polymarket positions** — fetches user's Polymarket positions via Data API; auto-resolves EOA → proxy wallet via Gamma `/public-profile` endpoint; shows market icon, title, outcome (Yes/No), share count, avg price, current price, end date, redeemable status, current value, and P&L ($ + %); clicking a position navigates to `/predict/{eventSlug}` for in-app trading; total Polymarket value shown in summary row; profile link to Polymarket
@@ -319,6 +320,18 @@ Strategy backtesting and performance analysis tools.
 - **Migration script** — `scripts/migrate-blog-posts.ts` seeds the Supabase table with existing static articles
 - **robots.txt** — allows all crawlers, disallows `/api/`, `/settings`, `/admin`
 - **Extended keywords** — 18 keyword phrases covering crypto leverage trading, perpetual futures, DCA, grid trading, copy trading, portfolio tracker
+
+## Hyperliquid fill history
+
+Hyperliquid’s public **info** API does not expose unlimited fill history. Implementation details in `lib/hyperliquid/api.ts` (`fetchUserFills`):
+
+| Limit | Behavior |
+|--------|-----------|
+| **`userFills`** | At most **2,000** fills per request. Coincess requests **main**, **`xyz`**, and **`spot`** dex slices and dedupes by `tid`. |
+| **`userFillsByTime`** | At most **2,000** fills per page; only the **10,000** most recent fills are available in total. Coincess paginates backward in time when any `userFills` slice is saturated (≥2,000 rows). |
+| **Older than ~10k fills** | Not available through the standard API; use your own indexer or export if you need a full archival ledger. |
+
+**UI:** Portfolio dashboard shows a short warning when fill count is near the ceiling (`HL_FILLS_NEAR_HISTORY_CAP_THRESHOLD` in `api.ts`).
 
 ## Tech Stack
 

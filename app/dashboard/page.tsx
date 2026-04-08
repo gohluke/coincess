@@ -20,9 +20,16 @@ import {
   Trophy,
   Target,
   Flame,
+  AlertTriangle,
 } from "lucide-react";
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress";
-import { fetchAllMarkets, fetchUserFunding, fetchUserLedger, spotDisplayName } from "@/lib/hyperliquid/api";
+import {
+  fetchAllMarkets,
+  fetchUserFunding,
+  fetchUserLedger,
+  spotDisplayName,
+  HL_FILLS_NEAR_HISTORY_CAP_THRESHOLD,
+} from "@/lib/hyperliquid/api";
 import type { LedgerUpdate } from "@/lib/hyperliquid/api";
 import type { ClearinghouseState, OpenOrder, MarketInfo, AssetPosition, Fill, FundingPayment, SpotClearinghouseState } from "@/lib/hyperliquid/types";
 import { useUserDataStore } from "@/lib/hyperliquid/user-data-store";
@@ -649,6 +656,22 @@ export default function DashboardPage() {
             </button>
           ))}
         </div>
+
+        {address && fills.length >= HL_FILLS_NEAR_HISTORY_CAP_THRESHOLD && (
+          <div
+            className="flex gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-100/95"
+            role="status"
+          >
+            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400/90 mt-0.5" aria-hidden />
+            <div>
+              <p className="font-medium text-amber-50">Trade history may be incomplete</p>
+              <p className="text-[13px] text-amber-100/80 mt-0.5 leading-snug">
+                Hyperliquid’s API returns at most about the 10,000 most recent fills. This wallet is near that limit ({fills.length.toLocaleString()}{" "}
+                loaded)—older executions might not appear here or in HL’s public API. Use the refresh control if you just expect newer fills.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ─── Assets Tab ─── */}
         {portfolioTab === "assets" && (

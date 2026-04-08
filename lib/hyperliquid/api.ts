@@ -121,21 +121,75 @@ export async function fetchOpenOrders(user: string): Promise<OpenOrder[]> {
   return [...main, ...xyz];
 }
 
+/** Hyperliquid caps `userFills` at 2000 per dex slice; only the 10k most recent fills are queryable via `userFillsByTime`. */
+const USER_FILLS_PAGE_CAP = 2000;
+const USER_FILLS_HISTORY_CAP = 10_000;
+
+/** When loaded fills reach this count, the portfolio UI warns that history may be near Hyperliquid’s API ceiling. */
+export const HL_FILLS_NEAR_HISTORY_CAP_THRESHOLD = 9500;
+
+function dedupFillsByTid(fills: Fill[]): Fill[] {
+  const seen = new Set<number>();
+  const out: Fill[] = [];
+  for (const f of fills) {
+    if (!seen.has(f.tid)) {
+      seen.add(f.tid);
+      out.push(f);
+    }
+  }
+  return out;
+}
+
+async function fetchUserFillsByTimeWindow(
+  user: string,
+  startTime: number,
+  endTime: number,
+): Promise<Fill[]> {
+  return post<Fill[]>("/info", {
+    type: "userFillsByTime",
+    user,
+    startTime,
+    endTime,
+  }).catch(() => []);
+}
+
+/** Paginate backward in time until fewer than 2000 rows or API limit (~10k fills). */
+async function fetchUserFillsByTimePaginated(user: string): Promise<Fill[]> {
+  const all: Fill[] = [];
+  let endTime = Date.now();
+  const startTime = 0;
+  while (all.length < USER_FILLS_HISTORY_CAP) {
+    const batch = await fetchUserFillsByTimeWindow(user, startTime, endTime);
+    if (batch.length === 0) break;
+    all.push(...batch);
+    if (batch.length < USER_FILLS_PAGE_CAP) break;
+    const oldestMs = Math.min(...batch.map((f) => f.time));
+    const nextEnd = oldestMs - 1;
+    if (nextEnd < startTime) break;
+    endTime = nextEnd;
+  }
+  return dedupFillsByTid(all);
+}
+
 export async function fetchUserFills(user: string): Promise<Fill[]> {
   const [main, xyz, spot] = await Promise.all([
     post<Fill[]>("/info", { type: "userFills", user }).catch(() => []),
     post<Fill[]>("/info", { type: "userFills", user, dex: "xyz" }).catch(() => []),
     post<Fill[]>("/info", { type: "userFills", user, dex: "spot" }).catch(() => []),
   ]);
-  const seen = new Set<number>();
-  const deduped: Fill[] = [];
-  for (const f of [...main, ...xyz, ...spot]) {
-    if (!seen.has(f.tid)) {
-      seen.add(f.tid);
-      deduped.push(f);
-    }
+  const anySliceSaturated =
+    main.length >= USER_FILLS_PAGE_CAP ||
+    xyz.length >= USER_FILLS_PAGE_CAP ||
+    spot.length >= USER_FILLS_PAGE_CAP;
+
+  let merged = dedupFillsByTid([...main, ...xyz, ...spot]);
+
+  if (anySliceSaturated) {
+    const paged = await fetchUserFillsByTimePaginated(user);
+    merged = dedupFillsByTid([...merged, ...paged]);
   }
-  return deduped;
+
+  return merged;
 }
 
 export interface LedgerUpdate {

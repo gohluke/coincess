@@ -90,7 +90,6 @@ export const useUserDataStore = create<UserDataState>((set, get) => ({
     });
 
     const ws = getWs();
-    let receivedFills = false;
 
     const connUnsub = ws.onConnectionStateChange((state) => {
       set({ connectionState: state });
@@ -98,19 +97,24 @@ export const useUserDataStore = create<UserDataState>((set, get) => ({
     cleanups.push(connUnsub);
     set({ connectionState: ws.connectionState });
 
-    // WS: userFills (snapshot replaces, incremental appends with dedup)
+    // Eager REST hydrate so we are not stuck with a partial WS snapshot only.
+    // HL WS can deliver a truncated snapshot; previously REST ran only if no WS
+    // message arrived within 5s, which hid older fills.
+    fetchUserFills(address)
+      .then((fills) => {
+        if (get().address !== address) return;
+        set((s) => ({ fills: dedupFills([...fills, ...s.fills]) }));
+      })
+      .catch(() => {});
+
+    // WS: userFills — merge snapshots/increments with REST-backed history (dedup by tid)
     const fillsUnsub = ws.subscribeUserFills(address, (data: WsUserFills) => {
-      receivedFills = true;
-      if (data.isSnapshot) {
-        set({ fills: dedupFills(data.fills) });
-      } else {
-        set((s) => {
-          const merged = [...data.fills, ...s.fills];
-          const deduped = dedupFills(merged);
-          if (deduped.length === s.fills.length) return s;
-          return { fills: deduped };
-        });
-      }
+      set((s) => {
+        const merged = [...data.fills, ...s.fills];
+        const deduped = dedupFills(merged);
+        if (deduped.length === s.fills.length) return s;
+        return { fills: deduped };
+      });
     });
     cleanups.push(fillsUnsub);
 
@@ -208,15 +212,15 @@ export const useUserDataStore = create<UserDataState>((set, get) => ({
     loadPositions();
     positionPollTimer = setInterval(loadPositions, 10_000);
 
-    // REST fallback for fills if WS hasn't delivered within 5s
+    // Secondary REST refresh: catches cases where WS reconnects before eager fetch finishes
     restFallbackTimer = setTimeout(async () => {
       if (get().address !== address) return;
-      if (!receivedFills) {
-        try {
-          const fills = await fetchUserFills(address);
-          if (get().address === address) set({ fills: dedupFills(fills) });
-        } catch { /* silent */ }
-      }
+      try {
+        const fills = await fetchUserFills(address);
+        if (get().address === address) {
+          set((s) => ({ fills: dedupFills([...fills, ...s.fills]) }));
+        }
+      } catch { /* silent */ }
     }, 5000);
   },
 
