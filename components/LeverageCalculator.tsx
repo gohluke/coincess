@@ -6,7 +6,7 @@ import {
   ArrowUp, ArrowDown, Calculator, TrendingUp, TrendingDown,
   AlertCircle, LogIn, Bookmark, Trash2, Loader2, ChevronDown, ChevronUp,
 } from "lucide-react"
-import { fetchAllMids } from "@/lib/hyperliquid/api"
+import { getWs } from "@/lib/hyperliquid/websocket"
 import { useEffectiveAddress } from "@/hooks/useEffectiveAddress"
 
 type Direction = "long" | "short"
@@ -21,6 +21,23 @@ function orderedPerpCoinKeys(mids: Record<string, string>): string[] {
   const prio = COIN_PRIORITY.filter((p) => keys.includes(p))
   const rest = keys.filter((k) => !prio.includes(k)).sort((a, b) => a.localeCompare(b))
   return [...prio, ...rest].slice(0, 250)
+}
+
+/** Hyperliquid `funding` is hourly rate as decimal; calculator input is percent per hour. */
+function fundingApiDecimalToPercentInput(apiFunding: string): string {
+  const n = parseFloat(apiFunding)
+  if (!isFinite(n)) return ""
+  const pct = n * 100
+  let s = pct.toFixed(6)
+  if (s.includes(".")) s = s.replace(/\.?0+$/, "")
+  return s === "" || s === "-" ? "0" : s
+}
+
+function fmtPxLabel(raw: string | undefined): string {
+  if (raw === undefined || raw === "") return "—"
+  const n = parseFloat(raw)
+  if (!isFinite(n)) return "—"
+  return `$${n.toLocaleString(undefined, { maximumFractionDigits: 6 })}`
 }
 
 export type LeverageCalcSnapshot = {
@@ -239,7 +256,9 @@ export function LeverageCalculator() {
 
   const [allMids, setAllMids] = useState<Record<string, string>>({})
   const [midsLoading, setMidsLoading] = useState(true)
+  const [liveCtx, setLiveCtx] = useState<{ mark?: string; oracle?: string }>({})
   const [selectedCoinKey, setSelectedCoinKey] = useState<string>("BTC")
+  const fundingEditedByUser = useRef(false)
   const [savedCalcs, setSavedCalcs] = useState<SavedCalculationRow[]>([])
   const [savesLoading, setSavesLoading] = useState(false)
   const [saveBusy, setSaveBusy] = useState(false)
@@ -266,22 +285,14 @@ export function LeverageCalculator() {
 
   const coinKeys = orderedPerpCoinKeys(allMids)
 
-  const refreshMids = useCallback(async () => {
-    try {
-      const mids = await fetchAllMids()
-      setAllMids(mids)
-    } catch {
-      /* ignore */
-    } finally {
-      setMidsLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    refreshMids()
-    const id = setInterval(refreshMids, 30_000)
-    return () => clearInterval(id)
-  }, [refreshMids])
+    const ws = getWs()
+    const unsub = ws.subscribeAllMids((mids) => {
+      setAllMids(mids)
+      setMidsLoading(false)
+    })
+    return () => unsub()
+  }, [])
 
   const applyCoinMid = useCallback(
     (key: string, dir: Direction, mids: Record<string, string>) => {
@@ -298,15 +309,31 @@ export function LeverageCalculator() {
     [],
   )
 
-  const didSeedPrice = useRef(false)
   useEffect(() => {
-    if (didSeedPrice.current) return
-    if (Object.keys(allMids).length === 0) return
-    if (selectedCoinKey && allMids[selectedCoinKey]) {
-      applyCoinMid(selectedCoinKey, direction, allMids)
-      didSeedPrice.current = true
-    }
+    if (!selectedCoinKey || !allMids[selectedCoinKey]) return
+    applyCoinMid(selectedCoinKey, direction, allMids)
   }, [allMids, selectedCoinKey, direction, applyCoinMid])
+
+  useEffect(() => {
+    if (!selectedCoinKey) {
+      setLiveCtx({})
+      return
+    }
+    setLiveCtx({})
+    const ws = getWs()
+    const unsub = ws.subscribeActiveAssetCtx(selectedCoinKey, (data) => {
+      const ctx = data.ctx
+      setLiveCtx({
+        mark: ctx.markPx,
+        oracle: ctx.oraclePx,
+      })
+      if (!fundingEditedByUser.current && ctx.funding !== undefined) {
+        const next = fundingApiDecimalToPercentInput(ctx.funding)
+        if (next) setFundingRate(next)
+      }
+    })
+    return () => unsub()
+  }, [selectedCoinKey])
 
   const fetchSaved = useCallback(async () => {
     if (!address) {
@@ -359,6 +386,7 @@ export function LeverageCalculator() {
     setFundingRate(snap.fundingRate)
     setDurationHours(snap.durationHours)
     setSelectedCoinKey(snap.coinSymbol ?? "")
+    fundingEditedByUser.current = true
     marginLocked.current = false
     setActiveField(null)
   }, [])
@@ -564,7 +592,7 @@ export function LeverageCalculator() {
   const totalFundingNum = parseNumber(totalFunding)
   const marginRatioNum = parseNumber(marginRatio)
 
-  const leveragePresets = [1, 2, 5, 10, 25, 50, 100, 500, 1000]
+  const leveragePresets = [1, 2, 5, 10, 20, 25, 50, 100, 500, 1000]
 
   return (
     <div className="w-full">
@@ -627,23 +655,24 @@ export function LeverageCalculator() {
             </div>
           </div>
 
-          {/* Coin + live mid */}
+          {/* Ticker + live prices (WebSocket) */}
           <div className="mb-6 p-4 rounded-xl bg-[#1a1d26] border border-[#2a2e3e]">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-              <div className="flex-1 min-w-0">
-                <label className="block text-xs font-medium text-[#848e9c] mb-1.5">Market (live mid)</label>
+            <div className="flex flex-wrap items-start gap-3">
+              <div className="shrink-0">
+                <label className="block text-xs font-medium text-[#848e9c] mb-1.5">Ticker</label>
                 <select
                   value={selectedCoinKey}
                   disabled={midsLoading && coinKeys.length === 0}
                   onChange={(e) => {
                     const v = e.target.value
+                    fundingEditedByUser.current = false
                     setSelectedCoinKey(v)
                     marginLocked.current = false
                     if (v && allMids[v]) applyCoinMid(v, direction, allMids)
                   }}
-                  className="w-full h-11 rounded-lg border border-[#2a2e3e] bg-[#0b0e11] text-white text-sm px-3 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/50"
+                  className="w-[8.25rem] h-9 rounded-lg border border-[#2a2e3e] bg-[#0b0e11] text-white text-xs font-mono px-2 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/50"
                 >
-                  <option value="">Custom (manual entry / exit)</option>
+                  <option value="">Custom</option>
                   {coinKeys.map((k) => (
                     <option key={k} value={k}>
                       {k}
@@ -651,26 +680,34 @@ export function LeverageCalculator() {
                   ))}
                 </select>
               </div>
-              <div className="flex flex-wrap items-center gap-2 sm:pb-0.5">
-                {selectedCoinKey && allMids[selectedCoinKey] ? (
-                  <span className="text-sm font-mono text-emerald-400 tabular-nums">
-                    ${parseFloat(allMids[selectedCoinKey]).toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                  </span>
+              <div className="flex-1 min-w-[200px] space-y-1">
+                <p className="text-[10px] font-medium text-[#848e9c] uppercase tracking-wide">Live (Hyperliquid WS)</p>
+                {selectedCoinKey ? (
+                  <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs font-mono tabular-nums text-[#c8ccd4]">
+                    <span>
+                      <span className="text-[#555a66] mr-1">Mid</span>
+                      {allMids[selectedCoinKey] ? (
+                        <span className="text-emerald-400">{fmtPxLabel(allMids[selectedCoinKey])}</span>
+                      ) : (
+                        <span className="text-[#555a66]">—</span>
+                      )}
+                    </span>
+                    <span>
+                      <span className="text-[#555a66] mr-1">Mark</span>
+                      <span className="text-white">{fmtPxLabel(liveCtx.mark)}</span>
+                    </span>
+                    <span>
+                      <span className="text-[#555a66] mr-1">Oracle</span>
+                      <span className="text-white">{fmtPxLabel(liveCtx.oracle)}</span>
+                    </span>
+                  </div>
                 ) : (
-                  <span className="text-xs text-[#555a66]">{midsLoading ? "Loading prices…" : "Pick a coin or use custom"}</span>
+                  <p className="text-xs text-[#555a66]">{midsLoading ? "Connecting…" : "Choose a ticker for live prices & funding, or stay on Custom."}</p>
                 )}
-                <button
-                  type="button"
-                  disabled={!selectedCoinKey || !allMids[selectedCoinKey]}
-                  onClick={() => selectedCoinKey && applyCoinMid(selectedCoinKey, direction, allMids)}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#2a2e3e] text-[#c8ccd4] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
-                >
-                  Refresh price
-                </button>
               </div>
             </div>
             <p className="text-[10px] text-[#555a66] mt-2">
-              Entry = mid; exit defaults to ~3% favorable move (adjust below). Mid updates every 30s — use Refresh to apply the latest to your fields.
+              With a ticker selected, entry/exit track mid in real time (~3% favorable exit). Funding rate syncs from the market unless you edit it.
             </p>
           </div>
 
@@ -734,8 +771,11 @@ export function LeverageCalculator() {
               suffix="%" hint={feeType === "maker" ? "Maker 0.010%" : "Taker 0.035%"} compact />
             <CalculatorInput id="exitFeeRate" label="Exit Fee" value={exitFeeRate} onChange={setExitFeeRate}
               suffix="%" hint="Applied on close" compact />
-            <CalculatorInput id="fundingRate" label="Funding Rate" value={fundingRate} onChange={setFundingRate}
-              suffix="%/hr" allowNegative hint="~0.003% typical" compact />
+            <CalculatorInput id="fundingRate" label="Funding Rate" value={fundingRate}
+              onChange={(v) => { fundingEditedByUser.current = true; setFundingRate(v) }}
+              suffix="%/hr" allowNegative
+              hint={selectedCoinKey ? "Live from market unless edited" : "~0.003% typical"}
+              compact />
             <CalculatorInput id="durationHours" label="Duration" value={durationHours} onChange={setDurationHours}
               suffix="hours" hint="Hold time" compact />
           </div>

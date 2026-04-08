@@ -255,14 +255,14 @@ Strategy backtesting and performance analysis tools.
 
 ### Leverage Calculator (`/crypto-leverage-calculator`)
 - **Industry-grade perpetual futures calculator** with interactive position planning
-- **Live market dropdown** — pick a perp from Hyperliquid `allMids` (prioritized BTC/ETH/SOL… then A–Z); shows current mid next to the select; **Refresh price** reapplies mid to entry/exit (~3% favorable default by side); mids poll every 30s; **Custom** mode when you edit entry manually
+- **Live market (WebSocket)** — compact **Ticker** dropdown from Hyperliquid `allMids` (prioritized BTC/ETH/SOL… then A–Z); **mid** streams from `allMids`, **mark** and **oracle** from `activeAssetCtx`; with a ticker selected, entry/exit track mid in real time (~3% favorable default by side). **Funding rate** auto-fills from the market’s hourly rate unless you edit the field. **Custom** clears the ticker when you edit entry manually
 - **Saved scenarios (Supabase)** — connect wallet → optional label + **Save current**; list shows **date & time** (`created_at`), Load / Delete; API `GET/POST/DELETE /api/leverage-calculations`; table `leverage_calculator_saves` (see `scripts/migrate-leverage-calculations.sql`)
 - **Dark Coincess theme** — matches dashboard design (`bg-[#0b0e11]`, `bg-[#141620]` cards, borderless), uses the dark Navbar (not the marketing Header)
-- **Up to 1000x leverage** — logarithmic slider for fine control at low values and quick access to extreme leverage; editable text input for exact values; presets: 1x, 2x, 5x, 10x, 25x, 50x, 100x, 500x, 1000x
+- **Up to 1000x leverage** — logarithmic slider for fine control at low values and quick access to extreme leverage; editable text input for exact values; presets: 1x, 2x, 5x, 10x, 20x, 25x, 50x, 100x, 500x, 1000x
 - **Margin-locked recalculation** — when you slide leverage, margin stays fixed and quantity adjusts (the way real traders think); typing into Quantity unlocks margin recalculation
 - **Exit price slider + % change** — drag slider from -50% to +100% of entry; preset buttons (-25% to +50%); live percentage change label (green/red) shows distance from entry price
 - **Maker/taker fee toggle** — Hyperliquid defaults (0.010% maker, 0.035% taker), fully customizable entry & exit rates
-- **Hourly funding rate** — realistic default 0.0031%/hr; calculates total funding cost over configurable trade duration
+- **Hourly funding rate** — with a ticker selected, live rate from Hyperliquid asset context (shown as %/hr in the input); default 0.0031%/hr in Custom mode; calculates total funding over configurable trade duration
 - **Break-even price** — exact price needed to cover all fees + funding before you profit
 - **Liquidation price** — simplified liq estimate with margin ratio health indicator
 - **Full number display** — net PNL banner shows complete dollar amounts ($8,362.50) not shorthand ($8.36K); all fees and funding amounts also show full precision
